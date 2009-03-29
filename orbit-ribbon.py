@@ -1,12 +1,16 @@
 #!/usr/bin/python
 
+print "Loading..."
+
 import pygame
 from pygame.locals import *
-
-print "Loading..."
+from OpenGL.GL import *
+from OpenGL.GLU import *
 
 pygame.init()
 pygame.joystick.init()
+
+display = pygame.display.set_mode((640,480), OPENGL|DOUBLEBUF)
 
 clock = pygame.time.Clock()
 
