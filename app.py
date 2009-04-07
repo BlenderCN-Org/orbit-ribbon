@@ -55,7 +55,7 @@ def ui_init():
 	
 	glutInit(sys.argv) # GLUT is only used for drawing text
 	
-	glClearColor(1.0, 1.0, 1.0, 0.0)
+	glClearColor(0.8, 0.8, 1.0, 0.0)
 	glEnable(GL_BLEND)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 	
