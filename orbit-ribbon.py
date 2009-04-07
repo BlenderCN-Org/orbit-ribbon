@@ -11,7 +11,9 @@ from util import *
 app.ui_init()
 app.sim_init()
 
-app.objects.append(testobj.Cube(Point(1.5, 0.0, -7.0)))
+o = testobj.Cube(Point(2.0, 0.0, -7.0))
+o.body.addForce((-4, 1, 0))
+app.objects.append(o)
 
 #profile.run('app.run()', 'profile')
 app.run()

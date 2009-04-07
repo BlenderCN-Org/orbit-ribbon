@@ -106,7 +106,7 @@ class GameObj(object):
 
 	def _set_vel(self, vel):
 		if self._body != None:
-			self.body.setLinearVel(vel.fake_3d_tuple())
+			self.body.setLinearVel(vel)
 	
 #	def _get_ang(self): return self._ang
 #	
@@ -150,7 +150,7 @@ class GameObj(object):
 	
 	def _set_ode_pos(self, odething):
 		"""Sets the position in an ODE object (body or geom) from the GameObj's position."""
-		odething.setPosition(self._pos.fake_3d_tuple())
+		odething.setPosition(self._pos)
 	
 	def sync_ode(self):
 		"""Sets position and rotation based on the ODE state, cancels non-two-dimensional motion.
