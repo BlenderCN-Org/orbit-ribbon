@@ -35,7 +35,7 @@ class Collision:
 		self.geom = geom
 		self.cpoints = cpoints[:]
 		
-		self.avg_pos = Point(0,0)
+		self.avg_pos = Point()
 		for p in cpoints:
 			self.avg_pos += p
 		self.avg_pos /= len(self.cpoints)
@@ -79,7 +79,7 @@ class Props:
 		if len(contacts) > 0:
 			cpoints = []
 			for c in contacts:
-				cpoints.append(Point(c.getContactGeomParams()[0][0], c.getContactGeomParams()[0][1]))
+				cpoints.append(Point(c.getContactGeomParams()[0][0], c.getContactGeomParams()[0][1], c.getContactGeomParams()[0][2]))
 				
 			for (a,b) in ((id(geom1), geom2), (id(geom2), geom1)):
 				if not app.collisions.has_key(a):

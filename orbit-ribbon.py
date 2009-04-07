@@ -3,10 +3,7 @@
 import profile
 
 import app
-import gameobj
-import colors
-import consenv
-import collision
+import testobj
 
 from geometry import *
 from util import *
@@ -14,7 +11,7 @@ from util import *
 app.ui_init()
 app.sim_init()
 
-# Insert objects here
+app.objects.append(testobj.Cube(Point(1.5, 0.0, -7.0)))
 
 #profile.run('app.run()', 'profile')
 app.run()
