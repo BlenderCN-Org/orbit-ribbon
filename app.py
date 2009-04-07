@@ -55,7 +55,19 @@ def ui_init():
 	
 	glutInit(sys.argv) # GLUT is only used for drawing text
 	
+	glViewport(0, 0, winsize[0], winsize[1])
+	glMatrixMode(GL_PROJECTION)
+	glLoadIdentity()
+	gluPerspective(45, 1.0*(winsize[0]/winsize[1]), 0.1, 100.0)
+	glMatrixMode(GL_MODELVIEW)
+	glLoadIdentity()
+	
+	glShadeModel(GL_SMOOTH)
 	glClearColor(0.8, 0.8, 1.0, 0.0)
+	glClearDepth(1.0)
+	glEnable(GL_DEPTH_TEST)
+	glDepthFunc(GL_LEQUAL)
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
 	glEnable(GL_BLEND)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 	
@@ -138,9 +150,9 @@ def _sim_step():
 		o.step()
 
 def _draw_frame():
-	glClear(GL_COLOR_BUFFER_BIT)
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 	glLoadIdentity();
-	gluOrtho2D(0.0, winsize[0]*zoom, winsize[1]*zoom, 0.0) #This makes the y-axis go in the direction we want
+	# FIXME: Incorporate zoom
 	
 	#Draw all the objects
 	glPushMatrix()
@@ -154,7 +166,6 @@ def _draw_frame():
 			w.draw()
 	
 	glLoadIdentity()
-	gluOrtho2D(0.0, winsize[0], winsize[1], 0.0) #No zoom factor for UI elements
 	cons.draw()
 	
 	glFlush()
