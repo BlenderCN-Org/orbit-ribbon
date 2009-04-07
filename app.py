@@ -6,11 +6,12 @@ import pygame
 from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
+from OpenGL.GLUT import *
 
 pygame.init()
 pygame.joystick.init()
 
-display = pygame.display.set_mode((640,480), OPENGL|DOUBLEBUF)
+screen = pygame.display.set_mode((640,480), OPENGL|DOUBLEBUF)
 
 clock = pygame.time.Clock()
 
@@ -52,19 +53,24 @@ AXIS_NAMES = dict([ (AXIS_NUMS[n], n) for n in AXIS_NUMS.keys() ])
 
 print "Begins."
 
-while True:
-	clock.tick(100)
-	for e in pygame.event.get():
-		if e.type == pygame.QUIT:
-			raise QuitException
-		elif e.type == pygame.KEYDOWN and e.key == pygame.K_q:
-			raise QuitException
-		elif e.type == pygame.JOYAXISMOTION:
-			if e.axis in AXIS_NAMES:
-				print "A %s  %f" % (AXIS_NAMES[e.axis], e.value)
-		elif e.type == pygame.JOYBUTTONDOWN:
-			if e.button in BUTTON_NAMES:
-				print "DOWN %s" % (BUTTON_NAMES[e.button])
-		elif e.type == pygame.JOYBUTTONUP:
-			if e.button in BUTTON_NAMES:
-				print "UP   %s" % (BUTTON_NAMES[e.button])
+def run():
+	try:
+		while True:
+			clock.tick(100)
+			
+			for e in pygame.event.get():
+				if e.type == pygame.QUIT:
+					raise QuitException
+				elif e.type == pygame.KEYDOWN and e.key == pygame.K_q:
+					raise QuitException
+				elif e.type == pygame.JOYAXISMOTION:
+					if e.axis in AXIS_NAMES:
+						print "A %s  %f" % (AXIS_NAMES[e.axis], e.value)
+				elif e.type == pygame.JOYBUTTONDOWN:
+					if e.button in BUTTON_NAMES:
+						print "DOWN %s" % (BUTTON_NAMES[e.button])
+				elif e.type == pygame.JOYBUTTONUP:
+					if e.button in BUTTON_NAMES:
+						print "UP   %s" % (BUTTON_NAMES[e.button])
+	except QuitException:
+		pass
