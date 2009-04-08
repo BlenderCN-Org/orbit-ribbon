@@ -62,18 +62,31 @@ def ui_init():
 	glMatrixMode(GL_MODELVIEW)
 	glLoadIdentity()
 	
-	glShadeModel(GL_SMOOTH)
-	glClearColor(0.8, 0.8, 1.0, 0.0)
-	glClearDepth(1.0)
 	glEnable(GL_DEPTH_TEST)
 	glDepthFunc(GL_LEQUAL)
+	
+	glClearColor(0.8, 0.8, 1.0, 0.0)
+	glClearDepth(1.0)
+	
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
+	
 	glEnable(GL_BLEND)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-	
+	glShadeModel(GL_SMOOTH)
 	glEnable(GL_POINT_SMOOTH)
 	glEnable(GL_LINE_SMOOTH)
 	glEnable(GL_POLYGON_SMOOTH)
+
+	LightAmbient = (0.5, 0.5, 0.5, 1.0)
+	LightDiffuse = (1.0, 1.0, 1.0, 1.0)
+	LightPosition = (0.0, 10.0, 2.0, 1.0)
+	glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient)
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse)
+	glLightfv(GL_LIGHT1, GL_POSITION, LightPosition)
+	glEnable(GL_LIGHT1)
+	glEnable(GL_LIGHTING)
+	glColorMaterial(GL_FRONT, GL_DIFFUSE)
+	glEnable(GL_COLOR_MATERIAL)
 	
 	glPointSize(4)
 	glLineWidth(2)
