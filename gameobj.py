@@ -153,16 +153,13 @@ class GameObj(object):
 		odething.setPosition(self._pos)
 	
 	def sync_ode(self):
-		"""Sets position and rotation based on the ODE state, cancels non-two-dimensional motion.
+		"""Sets position and rotation based on the ODE state.
 		
 		This is called automatically by the main loop after the simstep is ran.
 		"""
 		
 		if self._body != None:
-			#Load pos and ang, then set them both back into ODE, sans 3rd dimension
 			self._fetch_ode_from(self._body)
-			self._set_ode_pos(self._body)
-			#self._set_ode_ang(self._body)
 		elif self._geom != None:
 			self._fetch_ode_from(self._geom)
 	

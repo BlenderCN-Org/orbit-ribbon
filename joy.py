@@ -88,3 +88,11 @@ def getAxes():
 		else:
 			ret[name] = 0.0
 	return ret
+
+def getButtons():
+	"""Returns a dictionary mapping button name to UP/DOWN, describing the current state of all the buttons on the joystick."""
+	ret = {}
+	for name, num in BUTTON_NUMS.iteritems():
+		v = _js.get_button(num)
+		ret[name] = DOWN if _js.get_button(num) else UP
+	return ret

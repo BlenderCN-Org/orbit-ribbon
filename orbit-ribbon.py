@@ -2,7 +2,7 @@
 
 import profile
 
-import app, testobj, colors
+import app, testobj, colors, avatar
 
 from geometry import *
 from util import *
@@ -10,7 +10,7 @@ from util import *
 app.ui_init()
 app.sim_init()
 
-o = testobj.Cube(Point(0.0, 0.0, 0.0))
+o = avatar.Avatar(Point(0.0, 0.0, 0.0))
 app.objects.append(o)
 
 o = testobj.Cube(Point(0.0, 0.0, 8.0), color = colors.green)

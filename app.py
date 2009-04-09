@@ -21,6 +21,10 @@ objects = None
 #Input events (from PyGame) which occurred this step
 events = []
 
+#The result of calls to joy.getAxes and joy.getButtons at the beginning of this simstep
+axes = {}
+buttons = {}
+
 #Dictionary of collisions between geoms logged this step
 #Each key is the id of an ODE geom
 #Value is an array of ODE geoms (the geoms themselves, not ids) that the key geom collided with
@@ -189,8 +193,9 @@ def _draw_frame():
 	glFlush()
 	pygame.display.flip()
 
+
 def _proc_input():
-	global events
+	global events, axes, buttons
 	events = []
 	for event in pygame.event.get():
 		cons.handle(event)
@@ -198,25 +203,11 @@ def _proc_input():
 			raise QuitException
 		elif event.type == pygame.KEYDOWN and event.key == pygame.K_BACKSPACE:
 			raise QuitException
-		elif event.type in (pygame.JOYBUTTONUP, pygame.JOYBUTTONDOWN, pygame.JOYAXISMOTION):
-			joyEvent = joy.procEvent(event)
-			if joyEvent and joyEvent[0] is joy.AXIS:
-				if joyEvent[1] is joy.LX:
-					pass
-				elif joyEvent[1] is joy.LY:
-					pass
 		else:
 			events.append(event)
 	
 	axes = joy.getAxes()
-	if axes[joy.LX] != 0.0:
-		objects[0].body.addRelForce((-axes[joy.LX], 0, 0))
-	if axes[joy.LY] != 0.0:
-		objects[0].body.addRelForce((0, -axes[joy.LY], 0))
-	if axes[joy.L2] != 0.0:
-		objects[0].body.addRelForce((0, 0, -axes[joy.L2]))
-	elif axes[joy.R2] != 0.0:
-		objects[0].body.addRelForce((0, 0, axes[joy.R2]))
+	buttons = joy.getButtons()
 
 
 def run():
@@ -242,10 +233,6 @@ def run():
 				
 				#Run the simulation the desired number of steps
 				for i in range(steps):
-					# FIXME: Camera control code belongs elsewhere
-					global camera, camera_tgt
-					camera = objects[0].pos.__copy__(); camera[0] += 0; camera[1] += 2; camera[2] -= 10
-					camera_tgt = objects[0].pos
 					_proc_input()
 					_sim_step()
 				
