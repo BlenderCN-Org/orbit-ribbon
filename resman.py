@@ -28,7 +28,7 @@ class Texture(object):
 			obj.filename = filename
 			Texture.cache[filename] = obj
 			obj.glname = glGenTextures(1)
-			fullpath = os.path.join('imgs', filename)
+			fullpath = os.path.join('images', filename)
 			surf = pygame.image.load(fullpath)
 			obj.surf = surf
 			obj.size = (surf.get_width(), surf.get_height())
