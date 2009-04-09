@@ -33,7 +33,7 @@ def wclear(num = -1):
 
 def wfps(num = 0):
 	"""Sets a given watcher (#0 by default) to show the FPS."""
-	app.watchers[num].expr = "app.clock"
+	app.watchers[num].expr = "'%.2f' % app.clock.get_fps()"
 
 def objs():
 	"""Short for 'print app.objects'"""

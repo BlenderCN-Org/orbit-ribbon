@@ -7,7 +7,12 @@ import app
 import colors
 import consenv
 
-helphelp = "Interactive Python help is not available. You can still use help(class) or help(module)."
+helphelp = """
+Interactive Python help is not available. You can use help(class or module).
+Use 'wset(n, "expr")' to have a watcher box (n in [0,1,2,3]) run expr.
+Use 'wfps()' to display an FPS counter in watcher box 0.
+Use 'wclear()' to clear all watcher boxes, or 'wclear(n)' to clear watcher box n.
+"""
 quithelp = "To close the debugging console, hit the escape key."
 
 class PseudoOut:
@@ -136,7 +141,7 @@ class OutputBox:
 		"""Draws the OutputBox."""
 		
 		#Draw a background box for the display
-		glColor4f(0.0, 0.0, 0.0, 0.9)
+		glColor4f(0.0, 0.0, 0.0, 0.8)
 		glBegin(GL_QUADS)
 		glVertex2f(self.rect.left-5, self.rect.top-5)
 		glVertex2f(self.rect.right+5, self.rect.top-5)

@@ -76,7 +76,7 @@ def ui_init():
 	glEnable(GL_POINT_SMOOTH)
 	glEnable(GL_LINE_SMOOTH)
 	glEnable(GL_POLYGON_SMOOTH)
-
+	
 	LightAmbient = (0.5, 0.5, 0.5, 1.0)
 	LightDiffuse = (1.0, 1.0, 1.0, 1.0)
 	LightPosition = (0.0, 10.0, 2.0, 1.0)
@@ -84,7 +84,6 @@ def ui_init():
 	glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse)
 	glLightfv(GL_LIGHT1, GL_POSITION, LightPosition)
 	glEnable(GL_LIGHT1)
-	glEnable(GL_LIGHTING)
 	glColorMaterial(GL_FRONT, GL_DIFFUSE)
 	glEnable(GL_COLOR_MATERIAL)
 	
@@ -95,10 +94,10 @@ def ui_init():
 	watchers = []
 	sys.stderr = cons.pseudofile
 	sys.stdout = cons.pseudofile
-	watchers.append(console.Watcher(pygame.Rect(20, winsize[1]/3-30, winsize[0]/4, winsize[1]/3-20)))
-	watchers.append(console.Watcher(pygame.Rect(20, 2*winsize[1]/3-30, winsize[0]/4, winsize[1]/3-20)))
-	watchers.append(console.Watcher(pygame.Rect(3*winsize[0]/4 - 20, winsize[1]/3-30, winsize[0]/4, winsize[1]/3-20)))
-	watchers.append(console.Watcher(pygame.Rect(3*winsize[0]/4 - 20, 2*winsize[1]/3-30, winsize[0]/4, winsize[1]/3-20)))
+	watchers.append(console.Watcher(pygame.Rect(20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	watchers.append(console.Watcher(pygame.Rect(20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	watchers.append(console.Watcher(pygame.Rect(5*winsize[0]/6 - 20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	watchers.append(console.Watcher(pygame.Rect(5*winsize[0]/6 - 20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
 
 def ui_deinit():
 	global screen, clock, cons, watchers
@@ -171,6 +170,7 @@ def _draw_frame():
 	glLoadIdentity()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 	glEnable(GL_DEPTH_TEST)
+	glEnable(GL_LIGHTING)
 	
 	# Position the camera
 	gluLookAt(camera[0], camera[1], camera[2], camera_tgt[0], camera_tgt[1], camera_tgt[2], 0, 1, 0)
@@ -188,6 +188,7 @@ def _draw_frame():
 	glLoadIdentity()
 	gluOrtho2D(0.0, winsize[0], winsize[1], 0.0)
 	glDisable(GL_DEPTH_TEST)
+	glDisable(GL_LIGHTING)
 	
 	# Draw the watchers
 	for w in watchers:
