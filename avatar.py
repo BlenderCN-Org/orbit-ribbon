@@ -34,12 +34,13 @@ class Avatar(gameobj.GameObj):
 		elif app.axes[joy.R2] != 0.0:
 			self.body.addRelForce((0, 0, app.axes[joy.R2]*(MAX_ACCEL/app.maxfps)))
 					
-		app.camera = self.pos.__copy__(); app.camera[0] += 0; app.camera[1] += 1; app.camera[2] -= 6
+		app.camera = self.pos.__copy__(); app.camera += Point(0, 1.1, -6)
 		app.camera_tgt = self.pos.__copy__()
 	
 	def indraw(self):
 		# The cylinder body
-		glTranslatef(0, 0, -1.0)
+		glTranslatef(0, 0, -1)
+		glRotatef(180, 0, 0, 1)
 		glEnable(GL_TEXTURE_2D)
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
 		glBindTexture(GL_TEXTURE_2D, self._tex.glname)
