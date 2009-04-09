@@ -5,7 +5,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import collision, util, console, resman, app
+import collision, util, console, resman, app, joy
 from geometry import *
 
 #The ODE simulation
@@ -52,6 +52,8 @@ def ui_init():
 	pygame.mouse.set_visible(0)
 	screen = pygame.display.set_mode(winsize, DOUBLEBUF | OPENGL)
 	clock = pygame.time.Clock()
+
+	joy.init()
 	
 	glutInit(sys.argv) # GLUT is only used for drawing text
 	
@@ -193,8 +195,22 @@ def _proc_input():
 			raise QuitException
 		elif event.type == pygame.KEYDOWN and event.key == pygame.K_BACKSPACE:
 			raise QuitException
+		elif event.type in (pygame.JOYBUTTONUP, pygame.JOYBUTTONDOWN, pygame.JOYAXISMOTION):
+			joyEvent = joy.procEvent(event)
+			if joyEvent and joyEvent[0] is joy.AXIS:
+				if joyEvent[1] is joy.LX:
+					pass
+				elif joyEvent[1] is joy.LY:
+					pass
 		else:
 			events.append(event)
+	
+	axes = joy.getAxes()
+	if axes[joy.LX] != 0.0:
+		objects[0].body.addForce((axes[joy.LX], 0, 0))
+	if axes[joy.LY] != 0.0:
+		objects[0].body.addForce((0, 0, axes[joy.LY]))
+
 
 def run():
 	"""Runs the game.

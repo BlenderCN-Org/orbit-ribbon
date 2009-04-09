@@ -11,7 +11,7 @@ app.ui_init()
 app.sim_init()
 
 o = testobj.Cube(Point(1.0, -1.0, -15.0))
-o.body.addForce((0, 0, 20))
+#o.body.addForce((0, 0, 20))
 app.objects.append(o)
 
 o = testobj.Cube(Point(1.0, -1.0, -7.0), color = colors.green)
