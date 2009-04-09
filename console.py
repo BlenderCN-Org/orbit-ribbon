@@ -7,8 +7,11 @@ import app
 import colors
 import consenv
 
-helphelp = """
-Interactive Python help is not available. You can use help(class or module).
+helphelp = """Interactive Python help is not available. You can use help(class) and help(module).
+
+This debugging console allows you to run arbitrary Python statements.
+
+Some convenience functions:
 Use 'wset(n, "expr")' to have a watcher box (n in [0,1,2,3]) run expr.
 Use 'wfps()' to display an FPS counter in watcher box 0.
 Use 'wclear()' to clear all watcher boxes, or 'wclear(n)' to clear watcher box n.
