@@ -63,14 +63,6 @@ def ui_init():
 	
 	glutInit(sys.argv) # GLUT is only used for drawing text and basic geometrical objects, not its full rigamarole of app control
 	
-	glViewport(0, 0, winsize[0], winsize[1])
-	glMatrixMode(GL_PROJECTION)
-	glLoadIdentity()
-	gluPerspective(45, 1.0*(winsize[0]/winsize[1]), 0.1, 100.0)
-	glMatrixMode(GL_MODELVIEW)
-	glLoadIdentity()
-	
-	glEnable(GL_DEPTH_TEST)
 	glDepthFunc(GL_LEQUAL)
 	
 	glClearColor(0.8, 0.8, 1.0, 0.0)
@@ -171,24 +163,39 @@ def _sim_step():
 		o.step()
 
 def _draw_frame():
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+	# 3D drawing mode
+	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
+	gluPerspective(45, 1.0*(winsize[0]/winsize[1]), 0.1, 100.0)
+	glMatrixMode(GL_MODELVIEW)
+	glLoadIdentity()
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+	glEnable(GL_DEPTH_TEST)
 	
+	# Position the camera
 	gluLookAt(camera[0], camera[1], camera[2], camera_tgt[0], camera_tgt[1], camera_tgt[2], 0, 1, 0)
 	# FIXME: Incorporate zoom
+	# FIXME: Manage camera orientation somehow
 	
-	#Draw all the objects
-	glPushMatrix()
+	# Draw all objects
 	for o in objects:
 		o.draw()
-	glPopMatrix()
 	
+	# 2D drawing mode
+	glMatrixMode(GL_PROJECTION)
+	glLoadIdentity()
+	glMatrixMode(GL_MODELVIEW)
+	glLoadIdentity()
+	gluOrtho2D(0.0, winsize[0], winsize[1], 0.0)
+	glDisable(GL_DEPTH_TEST)
+	
+	# Draw the watchers
 	for w in watchers:
 		if w.expr != None:
 			w.update()
 			w.draw()
 	
-	glLoadIdentity()
+	# Draw the console, if it's up
 	cons.draw()
 	
 	glFlush()
@@ -202,7 +209,7 @@ def _proc_input():
 		cons.handle(event)
 		if event.type == pygame.QUIT:
 			raise QuitException
-		elif event.type == pygame.KEYDOWN and event.key == pygame.K_BACKSPACE:
+		elif event.type == pygame.KEYDOWN and event.key == pygame.K_F4:
 			raise QuitException
 		else:
 			events.append(event)
