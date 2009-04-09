@@ -32,7 +32,8 @@ contactgroup = ode.JointGroup()
 
 winsize = (800, 600) #Size of the display window in pixels; TODO: should be a user setting
 maxfps = 60 #Max frames per second, and absolute sim-steps per second
-camera = Point() #Where, in game meters, the view is centered
+camera = Point() #A point in global coordinates for the camera position
+camera_tgt = Point() #A point for the camera to look at
 zoom = 1.0 #The zoom factor for the camera (1.0 is neutral)
 screen = None #The PyGame screen
 clock = None #An instance of pygame.time.Clock() used for timing; use step count, not this for game-logic timing
@@ -166,7 +167,9 @@ def _sim_step():
 
 def _draw_frame():
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-	glLoadIdentity();
+	glLoadIdentity()
+	
+	gluLookAt(camera[0], camera[1], camera[2], camera_tgt[0], camera_tgt[1], camera_tgt[2], 0, 1, 0)
 	# FIXME: Incorporate zoom
 	
 	#Draw all the objects
@@ -207,9 +210,9 @@ def _proc_input():
 	
 	axes = joy.getAxes()
 	if axes[joy.LX] != 0.0:
-		objects[0].body.addForce((axes[joy.LX], 0, 0))
+		objects[0].body.addRelForce((-axes[joy.LX], 0, 0))
 	if axes[joy.LY] != 0.0:
-		objects[0].body.addForce((0, 0, axes[joy.LY]))
+		objects[0].body.addRelForce((0, 0, -axes[joy.LY]))
 
 
 def run():
@@ -235,6 +238,10 @@ def run():
 				
 				#Run the simulation the desired number of steps
 				for i in range(steps):
+					# FIXME: Camera control code belongs elsewhere
+					global camera, camera_tgt
+					camera = objects[0].pos.__copy__(); camera[0] += 0; camera[1] += 2; camera[2] -= 10
+					camera_tgt = objects[0].pos
 					_proc_input()
 					_sim_step()
 				
