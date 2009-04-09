@@ -209,10 +209,15 @@ def _proc_input():
 			events.append(event)
 	
 	axes = joy.getAxes()
+	print axes[joy.L2]
 	if axes[joy.LX] != 0.0:
 		objects[0].body.addRelForce((-axes[joy.LX], 0, 0))
 	if axes[joy.LY] != 0.0:
-		objects[0].body.addRelForce((0, 0, -axes[joy.LY]))
+		objects[0].body.addRelForce((0, -axes[joy.LY], 0))
+	if axes[joy.L2] != 0.0:
+		objects[0].body.addRelForce((0, 0, -axes[joy.L2]))
+	elif axes[joy.R2] != 0.0:
+		objects[0].body.addRelForce((0, 0, axes[joy.R2]))
 
 
 def run():

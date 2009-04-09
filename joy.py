@@ -51,6 +51,16 @@ def init():
 	_js.init()
 
 
+def _normalizeShoulderAxis(a, v):
+	"""Maps the given value from [-1,1] to [0,1], if the given axis is a shoulder button axis.
+	
+	The PS3 shoulder button's rest position is -1, and full depression is 1. We'd like to treat it as though it's
+	a thumbstick that can only move up from its rest position."""
+	if a in (L2, R2):
+		return (v+1)/2.0
+	return v
+
+
 def procEvent(e):
 	"""Given a JOYAXISMOTION event, a JOYBUTTONDOWN event, or a JOYBUTTONUP event, returns PS3 controller info.
 	
@@ -60,7 +70,7 @@ def procEvent(e):
 	"""
 	if e.type == pygame.JOYAXISMOTION:
 		if e.axis in AXIS_NAMES:
-			return (AXIS, AXIS_NAMES[e.axis], e.value)
+			return (AXIS, AXIS_NAMES[e.axis], _normalizeShoulderAxis(AXIS_NAMES[e.axis], e.value))
 	elif e.type == pygame.JOYBUTTONDOWN or e.type == pygame.JOYBUTTONUP:
 		if e.button in BUTTON_NAMES:
 			value = UP if e.type == pygame.JOYBUTTONUP else DOWN
@@ -72,7 +82,7 @@ def getAxes():
 	ret = {}
 	delta = 0.01 # Dead zone threshold
 	for name, num in AXIS_NUMS.iteritems():
-		v = _js.get_axis(num)
+		v = _normalizeShoulderAxis(name, _js.get_axis(num))
 		if abs(v) >= delta:
 			ret[name] = v
 		else:
