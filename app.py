@@ -54,13 +54,14 @@ def ui_init():
 
 	pygame.init()
 	pygame.display.set_caption('Orbit Ribbon')
+	pygame.display.set_icon(pygame.image.load(os.path.join('images', 'logo.png')))
 	pygame.mouse.set_visible(0)
 	screen = pygame.display.set_mode(winsize, DOUBLEBUF | OPENGL)
 	clock = pygame.time.Clock()
-
+	
 	joy.init()
 	
-	glutInit(sys.argv) # GLUT is only used for drawing text
+	glutInit(sys.argv) # GLUT is only used for drawing text and basic geometrical objects, not its full rigamarole of app control
 	
 	glViewport(0, 0, winsize[0], winsize[1])
 	glMatrixMode(GL_PROJECTION)
