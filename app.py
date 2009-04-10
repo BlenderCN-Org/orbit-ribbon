@@ -166,9 +166,10 @@ def _sim_step():
 	for o in objects:
 		o.sync_ode()
 	
-	#Have each object do any simulation stuff it needs
+	#Have each object do any simulation stuff it needs, and damp its linear and angular velocity
 	for o in objects:
 		o.step()
+		o.damp()
 
 def _draw_frame():
 	# 3D drawing mode

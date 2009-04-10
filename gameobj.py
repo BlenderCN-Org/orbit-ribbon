@@ -4,6 +4,9 @@ from OpenGL.GL import *
 import app, util
 from geometry import *
 
+DEFAULT_VEL_DAMP_COEF = -0.25
+DEFAULT_ANG_DAMP_COEF = -0.06
+
 class GameObj(object):
 	"""The base class for in-game objects of all kinds.
 	
@@ -33,6 +36,8 @@ class GameObj(object):
 		pos and rot are overwritten. Also, the geom will be given
 		a "gameobj" attribute so you can get back to a GameObj from
 		its geom.
+	velDamp - A 3-tuple of damping coefficients for the body's linear velocity axes
+	angDamp - A 3-tuple of damping coefficients for the body's angular velocity axes
 	"""
 	
 	def __init__(self, pos = None, rot = None, body = None, geom = None):
@@ -46,11 +51,15 @@ class GameObj(object):
 		if pos == None:
 			pos = Point()
 		self.pos = pos
-
+		
 		#Also overwrite ODE rotation matrix
 		if rot == None:
 			rot = (1, 0, 0,   0, 1, 0,   0, 0, 1,) # Column-major 3x3 matrix
 		self.rot = rot
+		
+		#Default damping values (can be adjusted by subclass/external user as needed)
+		self.velDamp = Point(DEFAULT_VEL_DAMP_COEF, DEFAULT_VEL_DAMP_COEF, DEFAULT_VEL_DAMP_COEF)
+		self.angDamp = Point(DEFAULT_ANG_DAMP_COEF, DEFAULT_ANG_DAMP_COEF, DEFAULT_ANG_DAMP_COEF)
 	
 	def __str__(self):
 		return "(%s)" % (
@@ -174,9 +183,12 @@ class GameObj(object):
 		
 		When this is called, the correct GL matrix is already in place, and matrix changes made within will be popped afterwards."""
 		pass
-		
+	
 	def draw(self):
-		"""Draws the object; pushes correct GL matrix, calls indraw(), restores GL."""
+		"""Draws the object; pushes correct GL matrix, calls indraw(), restores GL.
+		
+		Subclasses should override indraw(), not this.
+		"""
 		glPushMatrix()
 		glTranslatef(*self.pos)
 		r = self.rot
@@ -197,6 +209,15 @@ class GameObj(object):
 			return
 		self._body.setLinearVel((0, 0, 0))
 		self._body.setAngularVel((0, 0, 0))
+	
+	def damp(self):
+		"""Applies damping to linear and angular velocity. Called by app module after each object's step."""
+		if self._body == None:
+			return
+		vel = self.body.vectorFromWorld(self.body.getLinearVel())
+		self.body.addRelForce((vel[0]*self.velDamp[0]/app.maxfps, vel[1]*self.velDamp[1]/app.maxfps, vel[2]*self.velDamp[2]/app.maxfps))
+		avel = self.body.vectorFromWorld(self.body.getAngularVel())
+		self.body.addRelTorque((avel[0]*self.angDamp[0]/app.maxfps, avel[1]*self.angDamp[1]/app.maxfps, avel[2]*self.angDamp[2]/app.maxfps))
 	
 	pos = property(_get_pos, _set_pos)
 	vel = property(_get_vel, _set_vel)

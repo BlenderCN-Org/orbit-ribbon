@@ -15,7 +15,7 @@ MAX_LOOK = 0.4
 ROLL = 0.4
 
 # Camera offset relative to avatar
-CAMERA_OFFSET_Y = 0.9
+CAMERA_OFFSET_Y = 1.1
 CAMERA_OFFSET_Z = -6
 
 class Avatar(gameobj.GameObj):
@@ -29,6 +29,7 @@ class Avatar(gameobj.GameObj):
 		gluQuadricTexture(self._quad, GLU_TRUE)
 		self._tex = resman.Texture("lava.png")
 		self._relThrustVec = Point() # Used to indicate to the drawing routine how much we're thrusting in each direction
+		self.angDamp = Point(-0.12, -0.12, -0.12)
 	
 	def __del__(self):
 		gluDeleteQuadric(self._quad)
@@ -70,9 +71,6 @@ class Avatar(gameobj.GameObj):
 			self.body.addRelTorque((0.0, 0.0, -ROLL/app.maxfps))
 		elif app.buttons[joy.R1] == joy.DOWN:
 			self.body.addRelTorque((0.0, 0.0, ROLL/app.maxfps))
-		
-		# Damp the body's rotation
-		dampAngularVel(self.body)
 	
 	def indraw(self):
 		# The cylinder body

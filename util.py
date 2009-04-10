@@ -39,11 +39,6 @@ def cap_ang_diff(ang, max):
 	else:
 		return ang
 
-def dampAngularVel(body, coef = -0.002):
-	"""Damps the angular velocity of body by the given coefficient."""
-	avel = body.getAngularVel()
-	body.addTorque((avel[0]*coef, avel[1]*coef, avel[2]*coef))
-
 def anchored_joint(joint_type, obj1, anchor = None, obj2 = None):
 	"""Creates a new joint of the given type between two GameObjs, calls setAnchor on it.
 
