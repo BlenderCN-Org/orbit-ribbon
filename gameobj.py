@@ -5,11 +5,11 @@ import app, util
 from geometry import *
 
 class GameObj(object):
-	# FIXME - Bring back ang as something useful in 3 dimensions
 	"""The base class for in-game objects of all kinds.
 	
 	Data attributes:
 	pos -- A Point of the absolute location of the center of the object.
+	rot -- A 3x3 column-major rotation matrix describing the current orientation of the object.
 	vel -- The linear velocity of the object.
 		Set these instead of calling methods on body or geom: ODE
 		will automatically be updated when these are set, and
@@ -20,32 +20,38 @@ class GameObj(object):
 		Setting body automatically adjusts geom as needed
 		(i.e. setting collision groups, calling set_body(), etc).
 		The old body is also automatically unassociated and destroyed.
-		Additionally, pos and ang are automatically loaded from body
-		after it is set, and geom's ang and pos are overwritten.
+		Additionally, pos and rot are automatically loaded from body
+		after it is set, and geom's pos and rot are overwritten.
 		Also, the body will be given a "gameobj" attribute so you can
 		get back to a GameObj from its body.
 	geom -- The ODE geometry used for collision detection.
 		This can be None if you don't want an object to ever collide.
 		Setting geom will cause it to be associated with
 		body, if there is one set. The old geom is also automatically
-		unassociated and destroyed. Additionally, pos and ang
+		unassociated and destroyed. Additionally, pos and rot
 		are automatically loaded from geom after it is set, and body's
-		ang and pos are overwritten. Also, the geom will be given
+		pos and rot are overwritten. Also, the geom will be given
 		a "gameobj" attribute so you can get back to a GameObj from
 		its geom.
 	"""
 	
-	def __init__(self, pos = None, body = None, geom = None):
-		"""Creates a GameObj. Pos and given overrides the position of body and/or geom."""
+	def __init__(self, pos = None, rot = None, body = None, geom = None):
+		"""Creates a GameObj. Pos and rot given overrides the position of body and/or geom."""
 		self._body = None
 		self._geom = None
 		self.body = body #This calls the smart setter,
 		self.geom = geom #This also calls smart setter, which associates if possible
 		
-		if pos == None: self.pos = Point()
-		else: self.pos = pos #Overwrite ODE position with the passed-in position
-		#self.ang = ang #Overwrite ODE angle too
-		
+		#Overwrite ODE position with the passed-in position, or origin by default
+		if pos == None:
+			pos = Point()
+		self.pos = pos
+
+		#Also overwrite ODE rotation matrix
+		if rot == None:
+			rot = (1, 0, 0,   0, 1, 0,   0, 0, 1,) # Column-major 3x3 matrix
+		self.rot = rot
+	
 	def __str__(self):
 		return "(%s)" % (
 			str(self.pos),
@@ -59,14 +65,14 @@ class GameObj(object):
 			self._geom.setBody(None)
 			app.odeworld.remove(self._geom)
 		
-		#Set the new geom, load its ang and pos, and associate it if possible
+		#Set the new geom, load its rot and pos, and associate it if possible
 		self._geom = geom
 		if self._geom != None:
 			self._geom.gameobj = self
 			self._fetch_ode_from(self._geom)
 			if self._body != None:
 				self._set_ode_pos(self._body)
-				#self._set_ode_ang(self._body)
+				self._set_ode_rot(self._body)
 				self._geom.setBody(self._body)
 	
 	def _get_body(self): return self._body
@@ -78,14 +84,14 @@ class GameObj(object):
 		
 		#FIXME: Figure out a way to actually delete bodies from the world
 		
-		#Set the new body, load its positional data, and associate it if possible
+		#Set the new body, load its position and rotation data, and associate it if possible
 		self._body = body
 		if self._body != None:
 			self._body.gameobl = self
 			self._fetch_ode_from(self._body)
 			if self._geom != None:
 				self._set_ode_pos(self._geom)
-				#self._set_ode_ang(self._geom)
+				self._set_ode_rot(self._geom)
 		if self._geom != None:
 			self._geom.setBody(self._body)
 	
@@ -94,7 +100,7 @@ class GameObj(object):
 	def _set_pos(self, pos):	
 		self._pos = pos
 		
-		#If body and geom are connected, setting pos or ang in one sets it in both
+		#If body and geom are connected, setting pos or rot in one sets it in both
 		if self._body != None: self._set_ode_pos(self._body)
 		elif self._geom != None: self._set_ode_pos(self._geom)
 	
@@ -108,45 +114,41 @@ class GameObj(object):
 		if self._body != None:
 			self.body.setLinearVel(vel)
 	
-#	def _get_ang(self): return self._ang
-#	
-#	def _set_ang(self, ang):
-#		#Wrap to [0-1) revolutions
-#		self._ang = ang % 1
-#		
-#		#If body and geom are connected, setting pos or ang in one sets it in both
-#		if self._body != None: self._set_ode_ang(self._body)
-#		elif self._geom != None: self._set_ode_ang(self._geom)
+	def _get_rot(self): return self._rot
 	
+	def _set_rot(self, rot):
+		if len(rot) != 9:
+			raise TypeError("Supplied rot value must be a 9-tuple")
+		self._rot = tuple(rot)
+		
+		#If body and geom are connected, setting pos or rot in one sets it in both
+		if self._body != None: self._set_ode_rot(self._body)
+		elif self._geom != None: self._set_ode_rot(self._geom)
 	
 	def _fetch_ode_from(self, odething):
-		"""Loads positional data from the given ODE object (either a body or a geom)."""
+		"""Loads position and rotation data from the given ODE object (either a body or a geom)."""
 		
 		#Get the position
 		odepos = odething.getPosition()
 		self._pos = Point(odepos[0], odepos[1], odepos[2])
 		
-		#Convert ccw radians to cw revolutions
-		#rot = odething.getRotation()
-		#uncos = math.acos(rot[0])
-		#unsin = math.asin(rot[1])
-		#self._ang = uncos/(-2.0 * math.pi)
-		#if unsin < 0:
-		#	self._ang = -self._ang
-
-		#Wrap to [0-1) revolutions
-		#self._ang = self.ang % 1
-	
-#	def _set_ode_ang(self, odething):
-#		"""Sets the angle in an ODE object (body or geom) from the GameObj's angle.
-#		
-#		Converts from GameObj angles (cw revolutions) to ODE angles (ccw radians).
-#		"""
-#		a = util.rev2rad(self._ang)
-#		s = math.sin(a)
-#		c = math.cos(a)
-#		rotmatr = (c, s, 0.0, -s, c, 0.0, 0.0, 0.0, 1.0)
-#		odething.setRotation(rotmatr)
+		# Get the rotation matrix
+		oderot = odething.getRotation()
+		self._rot = ( # Convert 3x3 row-major to 4x4 column-major
+			oderot[0], oderot[3], oderot[6],
+			oderot[1], oderot[4], oderot[7],
+			oderot[2], oderot[5], oderot[8],
+		)
+		
+	def _set_ode_rot(self, odething):
+		"""Sets the rotation in an ODE object (body or geom) from the GameObj's rotation matrix."""
+		
+		r = self._rot
+		odething.setRotation(( # Column-major to row-major
+			r[0], r[3], r[6],
+			r[1], r[4], r[7],
+			r[2], r[5], r[8],
+		))
 	
 	def _set_ode_pos(self, odething):
 		"""Sets the position in an ODE object (body or geom) from the GameObj's position."""
@@ -170,16 +172,20 @@ class GameObj(object):
 	def indraw(self):
 		"""Does whatever is required to draw the object; can be implemented by subclasses.
 		
-		When this is called, the correct GL matrix is already in place, and matrix changes made within will be popped."""
+		When this is called, the correct GL matrix is already in place, and matrix changes made within will be popped afterwards."""
 		pass
 		
 	def draw(self):
 		"""Draws the object; pushes correct GL matrix, calls indraw(), restores GL."""
 		glPushMatrix()
-		glTranslatef(self.pos[0], self.pos[1], self.pos[2])
-		# FIXME: Must rotate with angle here
-		#if self.ang > 0.00001:
-		#	glRotatef(util.rev2deg(self.ang), 0, 0, 1)
+		glTranslatef(*self.pos)
+		r = self.rot
+		glMultMatrixf(( # Pad out with 4th row and column for OpenGL
+			r[0], r[1], r[2], 0,
+			r[3], r[4], r[5], 0,
+			r[6], r[7], r[8], 0,
+			   0,    0,    0, 1,
+		))
 		
 		self.indraw()
 		
@@ -189,12 +195,11 @@ class GameObj(object):
 		"""Kills the object's linear and angular velocity."""
 		if self._body == None:
 			return
-		
 		self._body.setLinearVel((0, 0, 0))
 		self._body.setAngularVel((0, 0, 0))
 	
 	pos = property(_get_pos, _set_pos)
 	vel = property(_get_vel, _set_vel)
-	#ang = property(_get_ang, _set_ang)
+	rot = property(_get_rot, _set_rot)
 	body = property(_get_body, _set_body)
 	geom = property(_get_geom, _set_geom)
