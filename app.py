@@ -165,7 +165,7 @@ def _draw_frame():
 	# 3D drawing mode
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
-	gluPerspective(45, 1.0*(winsize[0]/winsize[1]), 0.1, 100.0)
+	gluPerspective(45, 1.0*(winsize[0]/winsize[1]), 0.1, 5000.0)
 	glMatrixMode(GL_MODELVIEW)
 	glLoadIdentity()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
