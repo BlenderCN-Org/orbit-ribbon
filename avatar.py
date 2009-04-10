@@ -28,6 +28,7 @@ class Avatar(gameobj.GameObj):
 		self._quad = gluNewQuadric()
 		gluQuadricTexture(self._quad, GLU_TRUE)
 		self._tex = resman.Texture("lava.png")
+		self._relThrustVec = Point() # Used to indicate to the drawing routine how much we're thrusting in each direction
 	
 	def __del__(self):
 		gluDeleteQuadric(self._quad)
@@ -39,17 +40,24 @@ class Avatar(gameobj.GameObj):
 		app.camera_up = Point(*self.body.vectorToWorld((0, CAMERA_OFFSET_Y+1, CAMERA_OFFSET_Z)))
 		
 		# TODO: Make joystick range circular (see example code on pygame help pages)
-		# Strafing
+		# Strafing left/right
+		tx, ty, tz = 0,0,0
 		if app.axes[joy.LX] != 0.0:
-			self.body.addRelForce((-app.axes[joy.LX]*(MAX_STRAFE/app.maxfps), 0, 0))
+			tx = -app.axes[joy.LX]*(MAX_STRAFE/app.maxfps)
+			self.body.addRelForce((tx, 0, 0))
 		if app.axes[joy.LY] != 0.0:
-			self.body.addRelForce((0, -app.axes[joy.LY]*(MAX_STRAFE/app.maxfps), 0))
+			ty = -app.axes[joy.LY]*(MAX_STRAFE/app.maxfps)
+			self.body.addRelForce((0, ty, 0))
 		
 		# Forward/backward
 		if app.axes[joy.L2] != 0.0:
-			self.body.addRelForce((0, 0, -app.axes[joy.L2]*(MAX_ACCEL/app.maxfps)))
+			tz = -app.axes[joy.L2]*(MAX_ACCEL/app.maxfps)
+			self.body.addRelForce((0, 0, tz))
 		elif app.axes[joy.R2] != 0.0:
-			self.body.addRelForce((0, 0, app.axes[joy.R2]*(MAX_ACCEL/app.maxfps)))
+			tz = app.axes[joy.R2]*(MAX_ACCEL/app.maxfps)
+			self.body.addRelForce((0, 0, tz))
+
+		self._relThrustVec = Point(tx, ty, tz)
 		
 		# Look-around
 		if app.axes[joy.RX] != 0.0:
@@ -62,7 +70,7 @@ class Avatar(gameobj.GameObj):
 			self.body.addRelTorque((0.0, 0.0, -ROLL/app.maxfps))
 		elif app.buttons[joy.R1] == joy.DOWN:
 			self.body.addRelTorque((0.0, 0.0, ROLL/app.maxfps))
-
+		
 		# Damp the body's rotation
 		dampAngularVel(self.body)
 	
@@ -83,11 +91,30 @@ class Avatar(gameobj.GameObj):
 		glutSolidSphere(0.25, 15, 15)
 		
 		# The jetpack
-		glTranslatef(0, -0.1, 1.0)
+		glTranslatef(0, -0.1, 1)
 		glColor3f(*colors.gray)
 		glutSolidSphere(0.15, 15, 15)
 		
 		# Back up to the head
-		glTranslatef(0, 0.1, 1.0)
+		glTranslatef(0, 0.1, 1)
 		glColor3f(*colors.red)
 		glutSolidSphere(0.20, 15, 15)
+		
+		# Back to the center for thrust indication cones
+		glTranslatef(0, 0, -1)
+		glColor3f(*colors.white)
+		for offset, rot, value in (
+			(0.25, (90, 0, 1, 0), self._relThrustVec[0]),
+			(0.25, (-90, 1, 0, 0), self._relThrustVec[1]),
+			(1.25, (180, 0, 1, 0), self._relThrustVec[2]),
+		):
+			if abs(value) > 0.01:
+				glPushMatrix()
+				# Orient so we're facing away from the direction we're accelerating in
+				glRotatef(*rot)
+				if value > 0:
+					glTranslatef(0, 0, offset)
+				else:
+					glTranslatef(0, 0, -offset)
+				glutSolidCone(0.15, value*3, 10, 5)
+				glPopMatrix()
