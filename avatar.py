@@ -1,3 +1,4 @@
+from __future__ import division
 import ode
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -8,10 +9,14 @@ from geometry import *
 from util import *
 
 # All values below in units per second
-MAX_STRAFE = 10.0
+MAX_STRAFE = 15.0
 MAX_ACCEL = 35.0
-MAX_LOOK = 0.2
-ROLL = 0.2
+MAX_LOOK = 0.4
+ROLL = 0.4
+
+# Camera offset relative to avatar
+CAMERA_OFFSET_Y = 1.1
+CAMERA_OFFSET_Z = -6
 
 class Avatar(gameobj.GameObj):
 	"""The player character."""
@@ -27,7 +32,12 @@ class Avatar(gameobj.GameObj):
 	def __del__(self):
 		gluDeleteQuadric(self._quad)
 	
-	def step(self):
+	def step(self):	
+		# Set camera position
+		app.camera_tgt = Point(*self.body.getPosition())
+		app.camera = Point(*self.body.getRelPointPos((0, CAMERA_OFFSET_Y, CAMERA_OFFSET_Z)))
+		app.camera_up = Point(*self.body.vectorToWorld((0, CAMERA_OFFSET_Y+1, CAMERA_OFFSET_Z)))
+		
 		# TODO: Make joystick range circular (see example code on pygame help pages)
 		# Strafing
 		if app.axes[joy.LX] != 0.0:
@@ -55,9 +65,6 @@ class Avatar(gameobj.GameObj):
 
 		# Damp the body's rotation
 		dampAngularVel(self.body)
-		
-		app.camera = self.pos.__copy__(); app.camera += Point(0, 1.1, -6)
-		app.camera_tgt = self.pos.__copy__()
 	
 	def indraw(self):
 		# The cylinder body

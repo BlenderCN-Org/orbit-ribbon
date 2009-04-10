@@ -1,4 +1,5 @@
 from __future__ import division
+
 import ode, sys, math, pygame
 from pygame.locals import *
 from OpenGL.GL import *
@@ -36,9 +37,9 @@ contactgroup = ode.JointGroup()
 
 winsize = (800, 600) #Size of the display window in pixels; TODO: should be a user setting
 maxfps = 60 #Max frames per second, and absolute sim-steps per second
-camera = Point() #A point in global coordinates for the camera position
-camera_tgt = Point() #A point for the camera to look at
-zoom = 1.0 #The zoom factor for the camera (1.0 is normal zoom, 2.0 is twice as zoomed in, etc.)
+camera = Point() #A point in global coordinates for the camera position. Passed to gluLookAt
+camera_tgt = Point() #A point in global coordinates for the camera to look at. Passed to gluLookAt
+camera_up = Point() #A vector in global coordinates for the camera's up direction. Passed to gluLookAt
 screen = None #The PyGame screen
 clock = None #An instance of pygame.time.Clock() used for timing; use step count, not this for game-logic timing
 totalsteps = 0L #Number of simulation steps we've ran
@@ -114,18 +115,22 @@ def ui_deinit():
 	sys.stdout = sys.__stdout__
 
 def sim_init():
-	"""Initializes the simulation, including ODE.
+	"""Initializes the camera and simulation, including ODE.
 	
 	You must call this before calling run().
 	"""
 	
-	global odeworld, static_space, dyn_space, objects, totalsteps
+	global odeworld, static_space, dyn_space, objects, totalsteps, camera, camera_tgt, camera_up
 	totalsteps = 0L
 	odeworld = ode.World()
 	odeworld.setQuickStepNumIterations(10)
 	static_space = ode.HashSpace()
 	dyn_space = ode.HashSpace()
 	objects = []
+	
+	camera = Point(0,0,0)
+	camera_tgt = Point(0,0,10)
+	camera_up = Point(0,1,0)
 
 def sim_deinit():
 	"""Deinitializes the camera and simulation, including ODE.
@@ -134,12 +139,16 @@ def sim_deinit():
 	Other than that, you don't need to call this.
 	"""
 
-	global odeworld, static_space, dyn_space, objects
+	global odeworld, static_space, dyn_space, objects, camera, camera_tgt, camera_up
 	odeworld = None
 	static_space = None
 	dyn_space = None
 	objects = None
 	ode.CloseODE()
+	
+	camera = Point()
+	camera_tgt = Point()
+	camera_up = Point()
 
 def _sim_step():
 	"""Runs one step of the simulation. This is (1/maxfps)th of a simulated second."""
@@ -165,7 +174,7 @@ def _draw_frame():
 	# 3D drawing mode
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
-	gluPerspective(45, 1.0*(winsize[0]/winsize[1]), 0.1, 5000.0)
+	gluPerspective(45, winsize[0]/winsize[1], 0.1, 5000.0)
 	glMatrixMode(GL_MODELVIEW)
 	glLoadIdentity()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -173,9 +182,7 @@ def _draw_frame():
 	glEnable(GL_LIGHTING)
 	
 	# Position the camera
-	gluLookAt(camera[0], camera[1], camera[2], camera_tgt[0], camera_tgt[1], camera_tgt[2], 0, 1, 0)
-	# FIXME: Incorporate zoom
-	# FIXME: Manage camera orientation somehow
+	gluLookAt(camera[0], camera[1], camera[2], camera_tgt[0], camera_tgt[1], camera_tgt[2], camera_up[0], camera_up[1], camera_up[2])
 	
 	# Draw all objects
 	for o in objects:
