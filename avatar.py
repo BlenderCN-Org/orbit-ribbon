@@ -7,8 +7,11 @@ import app, gameobj, colors, collision, joy, resman
 from geometry import *
 from util import *
 
-MAX_STRAFE = 10.0 # In N/s
-MAX_ACCEL = 35.0 # In N/s
+# All values below in units per second
+MAX_STRAFE = 10.0
+MAX_ACCEL = 35.0
+MAX_LOOK = 0.2
+ROLL = 0.01
 
 class Avatar(gameobj.GameObj):
 	"""The player character."""
@@ -25,15 +28,31 @@ class Avatar(gameobj.GameObj):
 		gluDeleteQuadric(self._quad)
 	
 	def step(self):
+		# TODO: Make joystick range circular (see example code on pygame help pages)
+		# Strafing
 		if app.axes[joy.LX] != 0.0:
 			self.body.addRelForce((-app.axes[joy.LX]*(MAX_STRAFE/app.maxfps), 0, 0))
 		if app.axes[joy.LY] != 0.0:
 			self.body.addRelForce((0, -app.axes[joy.LY]*(MAX_STRAFE/app.maxfps), 0))
+		
+		# Forward/backward
 		if app.axes[joy.L2] != 0.0:
 			self.body.addRelForce((0, 0, -app.axes[joy.L2]*(MAX_ACCEL/app.maxfps)))
 		elif app.axes[joy.R2] != 0.0:
 			self.body.addRelForce((0, 0, app.axes[joy.R2]*(MAX_ACCEL/app.maxfps)))
-					
+		
+		# Look-around
+		if app.axes[joy.RX] != 0.0:
+			self.body.addRelTorque((0.0, -app.axes[joy.RX]*(MAX_LOOK/app.maxfps), 0.0))
+		if app.axes[joy.RY] != 0.0:
+			self.body.addRelTorque((app.axes[joy.RY]*(MAX_LOOK/app.maxfps), 0.0, 0.0))
+		
+		# Roll
+		if app.buttons[joy.L1] == joy.DOWN:
+			self.body.addRelTorque((0.0, 0.0, -ROLL))
+		elif app.buttons[joy.R1] == joy.DOWN:
+			self.body.addRelTorque((0.0, 0.0, ROLL))
+		
 		app.camera = self.pos.__copy__(); app.camera += Point(0, 1.1, -6)
 		app.camera_tgt = self.pos.__copy__()
 	
@@ -49,11 +68,16 @@ class Avatar(gameobj.GameObj):
 		gluCylinder(self._quad, 0.25, 0.15, 2.0, 30, 10)
 		glDisable(GL_TEXTURE_2D)
 		
-		# The "feet"
+		# The feet
 		glColor3f(*colors.cyan)
 		glutSolidSphere(0.25, 15, 15)
 		
-		# Back up to the "head"
-		glTranslatef(0, 0, 2.0)
+		# The jetpack
+		glTranslatef(0, -0.1, 1.0)
+		glColor3f(*colors.gray)
+		glutSolidSphere(0.15, 15, 15)
+		
+		# Back up to the head
+		glTranslatef(0, 0.1, 1.0)
 		glColor3f(*colors.red)
 		glutSolidSphere(0.20, 15, 15)
