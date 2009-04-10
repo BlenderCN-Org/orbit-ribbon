@@ -11,7 +11,7 @@ from util import *
 MAX_STRAFE = 10.0
 MAX_ACCEL = 35.0
 MAX_LOOK = 0.2
-ROLL = 0.01
+ROLL = 0.2
 
 class Avatar(gameobj.GameObj):
 	"""The player character."""
@@ -49,9 +49,9 @@ class Avatar(gameobj.GameObj):
 		
 		# Roll
 		if app.buttons[joy.L1] == joy.DOWN:
-			self.body.addRelTorque((0.0, 0.0, -ROLL))
+			self.body.addRelTorque((0.0, 0.0, -ROLL/app.maxfps))
 		elif app.buttons[joy.R1] == joy.DOWN:
-			self.body.addRelTorque((0.0, 0.0, ROLL))
+			self.body.addRelTorque((0.0, 0.0, ROLL/app.maxfps))
 		
 		app.camera = self.pos.__copy__(); app.camera += Point(0, 1.1, -6)
 		app.camera_tgt = self.pos.__copy__()
