@@ -23,6 +23,8 @@ class Avatar(gameobj.GameObj):
 		self._quad = gluNewQuadric()
 		gluQuadricTexture(self._quad, GLU_TRUE)
 		self._tex = resman.Texture("lava.png")
+
+		# Attach an angular motor to damp rotation
 	
 	def __del__(self):
 		gluDeleteQuadric(self._quad)
@@ -52,6 +54,9 @@ class Avatar(gameobj.GameObj):
 			self.body.addRelTorque((0.0, 0.0, -ROLL/app.maxfps))
 		elif app.buttons[joy.R1] == joy.DOWN:
 			self.body.addRelTorque((0.0, 0.0, ROLL/app.maxfps))
+
+		# Damp the body's rotation
+		dampAngularVel(self.body)
 		
 		app.camera = self.pos.__copy__(); app.camera += Point(0, 1.1, -6)
 		app.camera_tgt = self.pos.__copy__()
