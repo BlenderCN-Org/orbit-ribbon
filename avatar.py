@@ -15,7 +15,7 @@ MAX_LOOK = 0.4
 ROLL = 0.4
 
 # Camera offset relative to avatar
-CAMERA_OFFSET_Y = 1.1
+CAMERA_OFFSET_Y = 0.9
 CAMERA_OFFSET_Z = -6
 
 class Avatar(gameobj.GameObj):
@@ -35,7 +35,7 @@ class Avatar(gameobj.GameObj):
 	
 	def step(self):	
 		# Set camera position
-		app.camera_tgt = Point(*self.body.getPosition())
+		app.camera_tgt = Point(*self.body.getRelPointPos((0, CAMERA_OFFSET_Y, 0)))
 		app.camera = Point(*self.body.getRelPointPos((0, CAMERA_OFFSET_Y, CAMERA_OFFSET_Z)))
 		app.camera_up = Point(*self.body.vectorToWorld((0, CAMERA_OFFSET_Y+1, CAMERA_OFFSET_Z)))
 		
