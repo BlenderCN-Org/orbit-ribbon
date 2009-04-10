@@ -23,8 +23,6 @@ class Avatar(gameobj.GameObj):
 		self._quad = gluNewQuadric()
 		gluQuadricTexture(self._quad, GLU_TRUE)
 		self._tex = resman.Texture("lava.png")
-
-		# Attach an angular motor to damp rotation
 	
 	def __del__(self):
 		gluDeleteQuadric(self._quad)
