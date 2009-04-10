@@ -20,14 +20,21 @@ import resman
 from util import *
 
 def wset(num, expr):
-	"""Shortcut for 'app.watchers[num].expr = expr'."""
+	"""Shortcut for 'app.watchers[num].expr = expr', and clears modVal."""
 	app.watchers[num].expr = expr
+	app.watchers[num].modVal = None
+
+def wmod(num, expr, v):
+	"""Shortcut for 'app.watchers[num].expr = expr; app.watchers[num].modVal = v'."""
+	app.watchers[num].expr = expr
+	app.watchers[num].modVal = v
 	
 def wclear(num = -1):
 	"""Clears all Watchers in app.watchers, or just the specified one."""
 	if num == -1:
 		for w in app.watchers:
 			w.expr = None
+			w.modVal = None
 	else:
 		app.watchers[num].expr = None
 

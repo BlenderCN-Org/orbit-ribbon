@@ -9,6 +9,8 @@ from OpenGL.GLUT import *
 import collision, util, console, resman, app, joy
 from geometry import *
 
+FOV = 45
+
 #The ODE simulation
 #Objects in static_space do not collide with one another.
 #Objects in dyn_space collide with those in static_space, as well as with each other.
@@ -95,10 +97,10 @@ def ui_init():
 	watchers = []
 	sys.stderr = cons.pseudofile
 	sys.stdout = cons.pseudofile
-	watchers.append(console.Watcher(pygame.Rect(20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
-	watchers.append(console.Watcher(pygame.Rect(20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
-	watchers.append(console.Watcher(pygame.Rect(5*winsize[0]/6 - 20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
-	watchers.append(console.Watcher(pygame.Rect(5*winsize[0]/6 - 20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	watchers.append(console.Watcher("q", "a", pygame.Rect(20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	watchers.append(console.Watcher("d", "c", pygame.Rect(20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	watchers.append(console.Watcher("p", "l", pygame.Rect(5*winsize[0]/6 - 20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	watchers.append(console.Watcher("j", "n", pygame.Rect(5*winsize[0]/6 - 20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
 
 def ui_deinit():
 	global screen, clock, cons, watchers
@@ -175,7 +177,7 @@ def _draw_frame():
 	# 3D drawing mode
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
-	gluPerspective(45, winsize[0]/winsize[1], 0.1, 5000.0)
+	gluPerspective(FOV, winsize[0]/winsize[1], 0.1, 5000.0)
 	glMatrixMode(GL_MODELVIEW)
 	glLoadIdentity()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -221,7 +223,8 @@ def _proc_input():
 		elif event.type == pygame.KEYDOWN and event.key == pygame.K_F4:
 			raise QuitException
 		else:
-			events.append(event)
+			if not cons.active:
+				events.append(event)
 	
 	axes = joy.getAxes()
 	buttons = joy.getButtons()

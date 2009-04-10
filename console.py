@@ -13,6 +13,7 @@ This debugging console allows you to run arbitrary Python statements.
 
 Some convenience functions:
 Use 'wset(n, "expr")' to have a watcher box (n in [0,1,2,3]) run expr.
+Use 'wmod(n, "expr", v)' to have a watcher box modify expr by +/- v on keypress.
 Use 'wfps()' to display an FPS counter in watcher box 0.
 Use 'wclear()' to clear all watcher boxes, or 'wclear(n)' to clear watcher box n.
 """
@@ -229,39 +230,57 @@ class OutputBox:
 class Watcher(OutputBox):
 	"""Displays continually-updated information to an on-screen debugging window.
 	
-	Caller is expected to make sure that expr is non-Null before calling update().
+	Caller is expected to make sure that expr is non-None before calling update().
 	
 	Data attributes:
 	expr -- Runs this expression on each call to update(), sets buffer to the result.
+	modVal -- If not None, then the Watcher runs "expr += 1" on posKey events and "expr -= 1" on negKey events.
+		Also, it displays a message indicating that this is so.
+	posKey -- The letter or number that is pressed to increment the expr by modVal, if modVal supplied.
+	negKey -- The letter or number that is pressed to decrement the expr by modVal, if modVal supplied.
 	"""
-	def __init__(self, rect = None, expr = None):
+	def __init__(self, posKey, negKey, rect = None, expr = None, modVal = None):
 		OutputBox.__init__(self, rect)
+		self.posKey = posKey
+		self.negKey = negKey
 		self.expr = expr
+		self.modVal = modVal
 		self.bufferlen = self.dispsize()
 	
 	def update(self):
 		self.clear()
 		try:
-			self.append(self.expr + ":\n\n" + repr(eval(self.expr, consenv.__dict__)))
+			self.append(str(self.expr) + ":\n\n" + repr(eval(self.expr, consenv.__dict__)))
+			if self.modVal is not None:
+				self.append("\n%s/%s +/- %.4f" % (self.posKey, self.negKey, self.modVal))
+				for event in app.events:
+					if event.type == KEYDOWN and event.unicode in (self.posKey, self.negKey):
+						op = "+="
+						if event.unicode == self.negKey:
+							op = "-="
+						# Have to use an InteractiveConsole to do non-expression statements
+						intercons = code.InteractiveConsole(consenv.__dict__)
+						intercons.push("%s %s %s" % (str(self.expr), op, str(self.modVal)))
 		except Exception, e:
-			self.append(self.expr + "\nEXCEPTION: " + repr(e) + " : " + e.__str__())
+			print repr(e), e.__str__()
+			self.append(str(self.expr) + "\nEXCEPTION: " + repr(e) + " : " + e.__str__())
 		except:
-			self.append(self.expr + "\nUNKNOWN EXCEPTION")
+			self.append(str(self.expr) + "\nUNKNOWN EXCEPTION")
 
 #This has to be done here to avoid circularity issues
 import consenv
 
 class Console:
 	"""An in-game debugging console.
-
+	
 	Activate and de-activate by providing ~ key (tilde key) events.
-
+	
 	PgUp and PgDn scroll through history. Shift+PgUp and Shift+PgDn jump to top and bottom of history.
 	
 	Data attributes:
 	edit -- An EditBox used for inputting commands.
 	out -- An OutputBox used to display command feedback and information.
-	active -- If this is false, then the console never draws or accepts input.
+	active -- If this is False, then the console never draws or accepts input.
 	pseudofile -- The stdout/stderr redirection target (also sends to the real stderr).
 	hist -- The command history (more recent commands have higher indices).
 	histpos -- User's current index in the command history. If not in history, then is len(hist).
@@ -269,8 +288,8 @@ class Console:
 	"""
 	
 	def __init__(self):
-		"""Creates a Console. By default, the active flag is off."""
-		self.active = 0
+		"""Creates a Console. By default, the active flag is False."""
+		self.active = False
 		self.hist = []
 		self.histpos = 0
 		self.intercons = code.InteractiveConsole(consenv.__dict__)
@@ -298,8 +317,8 @@ class Console:
 		if event.type != KEYDOWN:
 			return
 		
-		if event.unicode == "~" and self.active == 0:
-			self.active = 1
+		if event.unicode == "~" and self.active is False:
+			self.active = True
 			pygame.key.set_repeat(400, 30)
 			return
 		
@@ -309,7 +328,7 @@ class Console:
 		self.edit.handle(event)
 
 		if event.key == K_ESCAPE:
-			self.active = 0
+			self.active = False
 			pygame.key.set_repeat()
 		elif event.key == K_UP:
 			#Browse backwards in history
