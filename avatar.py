@@ -95,7 +95,7 @@ class Avatar(gameobj.GameObj):
 		
 		# Back up to the head
 		glTranslatef(0, 0.1, 1)
-		glColor3f(*colors.red)
+		glColor3f(*colors.yellow)
 		glutSolidSphere(0.20, 15, 15)
 		
 		# Back to the center for thrust indication cones

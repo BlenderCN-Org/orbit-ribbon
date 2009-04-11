@@ -80,13 +80,6 @@ def ui_init():
 	glEnable(GL_LINE_SMOOTH)
 	glEnable(GL_POLYGON_SMOOTH)
 	
-	LightAmbient = (0.5, 0.5, 0.5, 1.0)
-	LightDiffuse = (1.0, 1.0, 1.0, 1.0)
-	LightPosition = (0.0, 10.0, 2.0, 1.0)
-	glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient)
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse)
-	glLightfv(GL_LIGHT1, GL_POSITION, LightPosition)
-	glEnable(GL_LIGHT1)
 	glColorMaterial(GL_FRONT, GL_DIFFUSE)
 	glEnable(GL_COLOR_MATERIAL)
 	
@@ -186,6 +179,18 @@ def _draw_frame():
 	
 	# Position the camera
 	gluLookAt(camera[0], camera[1], camera[2], camera_tgt[0], camera_tgt[1], camera_tgt[2], camera_up[0], camera_up[1], camera_up[2])
+	
+	# Set up lighting
+	LightPosition = (0.0, 10.0, 2.0, 1.0)
+	LightAmbient = (0.5, 0.5, 0.5, 1.0)
+	LightDiffuse = (1.0, 1.0, 1.0, 1.0)
+	glPushMatrix()
+	glTranslatef(0.0, 100.0, 0.0)
+	glLightfv(GL_LIGHT1, GL_POSITION, (0.0, 0.0, 0.0, 1.0))
+	glPopMatrix()
+	glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient)
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse)
+	glEnable(GL_LIGHT1)
 	
 	# Draw all objects
 	for o in objects:
