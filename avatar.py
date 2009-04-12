@@ -46,6 +46,7 @@ class Avatar(gameobj.GameObj):
 		app.camera = Point(*self.body.getRelPointPos((0, CAMERA_OFFSET_Y, CAMERA_OFFSET_Z)))
 		app.camera_up = Point(*self.body.vectorToWorld((0, CAMERA_OFFSET_Y+1, CAMERA_OFFSET_Z)))
 		
+		# TODO: Consider adding linear and angular velocity caps
 		# TODO: Make joystick range circular (see example code on pygame help pages)
 		
 		tx, ty, tz = 0, 0, 0
@@ -148,5 +149,5 @@ class Avatar(gameobj.GameObj):
 					glTranslatef(0, 0, offset)
 				else:
 					glTranslatef(0, 0, -offset)
-				glutSolidCone(0.15, value*3, 10, 5)
+				glutSolidCone(0.15, value/100, 10, 5)
 				glPopMatrix()
