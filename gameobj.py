@@ -5,8 +5,8 @@ import app
 from geometry import *
 from util import *
 
-DEFAULT_VEL_DAMP_COEF = 0.5
-DEFAULT_ANG_DAMP_COEF = 0.5
+DEFAULT_VEL_DAMP_COEF = 0.15
+DEFAULT_ANG_DAMP_COEF = 0.15
 
 class GameObj(object):
 	"""The base class for in-game objects of all kinds.
@@ -221,11 +221,11 @@ class GameObj(object):
 		
 		vel = self.body.vectorFromWorld(self.body.getLinearVel())
 		self.body.addRelForce(tuple(
-			[signSq(vel[n]) * -self.velDamp[n]/app.maxfps for n in range(3)]
+			[vel[n] * -self.velDamp[n]/app.maxfps for n in range(3)]
 		))
 		avel = self.body.vectorFromWorld(self.body.getAngularVel())
 		self.body.addRelTorque(tuple(
-			[signSq(avel[n]) * -self.angDamp[n]/app.maxfps for n in range(3)]
+			[avel[n] * -self.angDamp[n]/app.maxfps for n in range(3)]
 		))
 	
 	pos = property(_get_pos, _set_pos)

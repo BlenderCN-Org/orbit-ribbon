@@ -5,13 +5,6 @@ import pygame, os, ode, math
 import app, collision
 from geometry import *
 		
-def signSq(n):
-	"""Returns n squared but with n's original sign."""
-	r = n*n
-	if (r > 0) != (n > 0):
-		r *= -1
-	return r		
-
 def rev2rad(ang):
 	"""Converts an angle in cw revolutions to ccw radians.
 	

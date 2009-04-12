@@ -79,7 +79,7 @@ class Avatar(gameobj.GameObj):
 			sy = -app.axes[joy.RX]*(MAX_TURN/app.maxfps)
 			self.body.addRelTorque((0.0, sy, 0.0))
 		else:
-			csy = signSq(avel[1])*-CTURN_COEF/app.maxfps
+			csy = avel[1]*-CTURN_COEF/app.maxfps
 			self.body.addRelTorque((0.0, csy, 0.0))
 		
 		# Y-turn and Y-counterturn
@@ -87,7 +87,7 @@ class Avatar(gameobj.GameObj):
 			sx = app.axes[joy.RY]*(MAX_TURN/app.maxfps)
 			self.body.addRelTorque((sx, 0.0, 0.0))
 		else:
-			csx = signSq(avel[0])*-CTURN_COEF/app.maxfps
+			csx = avel[0]*-CTURN_COEF/app.maxfps
 			self.body.addRelTorque((csx, 0.0, 0.0))
 		
 		# Roll and counterroll
@@ -98,7 +98,7 @@ class Avatar(gameobj.GameObj):
 			sz = MAX_ROLL/app.maxfps
 			self.body.addRelTorque((0.0, 0.0, sz))
 		else:
-			csz = signSq(avel[2])*-CROLL_COEF/app.maxfps
+			csz = avel[2]*-CROLL_COEF/app.maxfps
 			self.body.addRelTorque((0.0, 0.0, csz))
 
 		self._reqlTorqueVec = Point(sx, sy, sz)
