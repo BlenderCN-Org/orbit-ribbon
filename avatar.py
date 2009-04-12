@@ -73,6 +73,8 @@ class Avatar(gameobj.GameObj):
 		sx, sy, sz = 0, 0, 0
 		csx, csy, csz = 0, 0, 0
 		avel = self.body.vectorFromWorld(self.body.getAngularVel())
+
+		# TODO : Maybe introduce counterturn assistance if user is turning opposite their angular velocity?
 		
 		# X-turn and X-counterturn
 		if app.axes[joy.RX] != 0.0:
