@@ -1,11 +1,12 @@
 import math, ode
 from OpenGL.GL import *
 
-import app, util
+import app
 from geometry import *
+from util import *
 
-DEFAULT_VEL_DAMP_COEF = -0.25
-DEFAULT_ANG_DAMP_COEF = -0.06
+DEFAULT_VEL_DAMP_COEF = 0.5
+DEFAULT_ANG_DAMP_COEF = 0.5
 
 class GameObj(object):
 	"""The base class for in-game objects of all kinds.
@@ -36,8 +37,11 @@ class GameObj(object):
 		pos and rot are overwritten. Also, the geom will be given
 		a "gameobj" attribute so you can get back to a GameObj from
 		its geom.
-	velDamp - A 3-tuple of damping coefficients for the body's linear velocity axes
-	angDamp - A 3-tuple of damping coefficients for the body's angular velocity axes
+	velDamp - A 3-tuple of drag coefficients for the body's linear velocity axes
+	angDamp - A 3-tuple of drag coefficients for the body's angular velocity axes
+		These are not real drag coefficients like an aerodynamics engineers would use, just
+		convenience values which are multiplied by the square of the object's
+		velocity to find how much force per second is applied.
 	"""
 	
 	def __init__(self, pos = None, rot = None, body = None, geom = None):
@@ -115,7 +119,7 @@ class GameObj(object):
 	
 	def _get_vel(self):
 		if self._body != None:
-			return Point(*self.body.getLinearVel()[0:3])
+			return Point(*self.body.getLinearVel())
 		else:
 			return Point()
 
@@ -148,7 +152,7 @@ class GameObj(object):
 			oderot[1], oderot[4], oderot[7],
 			oderot[2], oderot[5], oderot[8],
 		)
-		
+	
 	def _set_ode_rot(self, odething):
 		"""Sets the rotation in an ODE object (body or geom) from the GameObj's rotation matrix."""
 		
@@ -214,10 +218,15 @@ class GameObj(object):
 		"""Applies damping to linear and angular velocity. Called by app module after each object's step."""
 		if self._body == None:
 			return
+		
 		vel = self.body.vectorFromWorld(self.body.getLinearVel())
-		self.body.addRelForce((vel[0]*self.velDamp[0]/app.maxfps, vel[1]*self.velDamp[1]/app.maxfps, vel[2]*self.velDamp[2]/app.maxfps))
+		self.body.addRelForce(tuple(
+			[signSq(vel[n]) * -self.velDamp[n]/app.maxfps for n in range(3)]
+		))
 		avel = self.body.vectorFromWorld(self.body.getAngularVel())
-		self.body.addRelTorque((avel[0]*self.angDamp[0]/app.maxfps, avel[1]*self.angDamp[1]/app.maxfps, avel[2]*self.angDamp[2]/app.maxfps))
+		self.body.addRelTorque(tuple(
+			[signSq(avel[n]) * -self.angDamp[n]/app.maxfps for n in range(3)]
+		))
 	
 	pos = property(_get_pos, _set_pos)
 	vel = property(_get_vel, _set_vel)

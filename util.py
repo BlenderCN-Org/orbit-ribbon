@@ -4,6 +4,13 @@ import pygame, os, ode, math
 
 import app, collision
 from geometry import *
+		
+def signSq(n):
+	"""Returns n squared but with n's original sign."""
+	r = n*n
+	if (r > 0) != (n > 0):
+		r *= -1
+	return r		
 
 def rev2rad(ang):
 	"""Converts an angle in cw revolutions to ccw radians.
@@ -56,18 +63,37 @@ def anchored_joint(joint_type, obj1, anchor = None, obj2 = None):
 	joint.setAnchor((obj1.pos[0] + anchor[0], obj1.pos[1] + anchor[1], 0))
 	return joint
 
-def sphere_body(density, radius):
-	"""Creates an ODE body which is a sphere of the given density and radius.
+def sphere_body(mass, radius):
+	"""Creates an ODE body which is a sphere of the given mass and radius.
 	
 	It will be given a body_type data attribute set to "sphere".
-	It will be given radius and density data attributes, set to the given arguments.
+	It will be given a radius attribute set to the given radius argument.
 	"""
 	
 	body = ode.Body(app.odeworld)
 	omass = ode.Mass()
-	omass.setSphere(density, radius)
+	omass.setSphereTotal(mass, radius)
 	body.setMass(omass)
 	body.radius = radius
-	body.density = density
 	body.body_type = "sphere"
 	return body
+
+def ccyl_body(mass, radius, total_length):
+	"""Creates an ODE body which is a capped cylinder of the given mass, radius, and total length.
+
+	The total length must be greater than twice the radius.
+	
+	The cylinder will be oriented down the body's Z axis, and centered at the body's center of mass.
+	
+	It will be given a body_type data attribute set to "ccyl".
+	It will be given radius and total_length attributes set to the given arguments.
+	"""
+	
+	body = ode.Body(app.odeworld)
+	omass = ode.Mass()
+	omass.setCappedCylinderTotal(mass, 3, radius, total_length - radius*2)
+	body.setMass(omass)
+	body.radius, body.total_length = radius, total_length
+	body.body_type = "ccyl"
+	return body
+

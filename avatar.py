@@ -8,11 +8,16 @@ import app, gameobj, colors, collision, joy, resman
 from geometry import *
 from util import *
 
-# All values below in units per second
-MAX_STRAFE = 15.0
-MAX_ACCEL = 35.0
-MAX_LOOK = 0.4
-ROLL = 0.4
+# Maximum amount of force per second applied by various maneuvers
+MAX_STRAFE = 5000.0
+MAX_ACCEL = 15000.0
+MAX_TURN = 1000.0
+MAX_ROLL = 800.0
+
+# Counter-turn and counter-roll coefficients
+# These act like damping coefficients, but are only turned on when the axis's controls are released
+CTURN_COEF = 700
+CROLL_COEF = 700
 
 # Camera offset relative to avatar
 CAMERA_OFFSET_Y = 1.1
@@ -24,12 +29,13 @@ class Avatar(gameobj.GameObj):
 	def __init__(self, pos):
 		geom = ode.GeomCapsule(app.dyn_space, 0.25, 2.0) # 2.5 total length: a 2.0-long cylinder, and two 0.25-radius caps
 		geom.coll_props = collision.Props()
-		super(Avatar, self).__init__(pos = pos, body = sphere_body(1, 0.2), geom = geom)
+		super(Avatar, self).__init__(pos = pos, body = sphere_body(80, 0.5), geom = geom)
 		self._quad = gluNewQuadric()
 		gluQuadricTexture(self._quad, GLU_TRUE)
 		self._tex = resman.Texture("lava.png")
-		self._relThrustVec = Point() # Used to indicate to the drawing routine how much we're thrusting in each direction
-		self.angDamp = Point(-0.12, -0.12, -0.12)
+		self._relThrustVec = Point() # Indicates to the drawing routine how much the player is thrusting in each direction
+		self._relTorqueVec = Point() # Indicates to the drawing routine how much the player is torquing along each axis
+		self._relCTorqueVec = Point() # Indicates to the drawing routine how much automatic counter-torque is being applied along each axis
 	
 	def __del__(self):
 		gluDeleteQuadric(self._quad)
@@ -41,11 +47,15 @@ class Avatar(gameobj.GameObj):
 		app.camera_up = Point(*self.body.vectorToWorld((0, CAMERA_OFFSET_Y+1, CAMERA_OFFSET_Z)))
 		
 		# TODO: Make joystick range circular (see example code on pygame help pages)
-		# Strafing left/right
-		tx, ty, tz = 0,0,0
+		
+		tx, ty, tz = 0, 0, 0
+		
+		# X-strafing
 		if app.axes[joy.LX] != 0.0:
 			tx = -app.axes[joy.LX]*(MAX_STRAFE/app.maxfps)
 			self.body.addRelForce((tx, 0, 0))
+		
+		# Y-strafing
 		if app.axes[joy.LY] != 0.0:
 			ty = -app.axes[joy.LY]*(MAX_STRAFE/app.maxfps)
 			self.body.addRelForce((0, ty, 0))
@@ -57,20 +67,42 @@ class Avatar(gameobj.GameObj):
 		elif app.axes[joy.R2] != 0.0:
 			tz = app.axes[joy.R2]*(MAX_ACCEL/app.maxfps)
 			self.body.addRelForce((0, 0, tz))
-
+		
 		self._relThrustVec = Point(tx, ty, tz)
 		
-		# Look-around
-		if app.axes[joy.RX] != 0.0:
-			self.body.addRelTorque((0.0, -app.axes[joy.RX]*(MAX_LOOK/app.maxfps), 0.0))
-		if app.axes[joy.RY] != 0.0:
-			self.body.addRelTorque((app.axes[joy.RY]*(MAX_LOOK/app.maxfps), 0.0, 0.0))
+		sx, sy, sz = 0, 0, 0
+		csx, csy, csz = 0, 0, 0
+		avel = self.body.vectorFromWorld(self.body.getAngularVel())
 		
-		# Roll
+		# X-turn and X-counterturn
+		if app.axes[joy.RX] != 0.0:
+			sy = -app.axes[joy.RX]*(MAX_TURN/app.maxfps)
+			self.body.addRelTorque((0.0, sy, 0.0))
+		else:
+			csy = signSq(avel[1])*-CTURN_COEF/app.maxfps
+			self.body.addRelTorque((0.0, csy, 0.0))
+		
+		# Y-turn and Y-counterturn
+		if app.axes[joy.RY] != 0.0:
+			sx = app.axes[joy.RY]*(MAX_TURN/app.maxfps)
+			self.body.addRelTorque((sx, 0.0, 0.0))
+		else:
+			csx = signSq(avel[0])*-CTURN_COEF/app.maxfps
+			self.body.addRelTorque((csx, 0.0, 0.0))
+		
+		# Roll and counterroll
 		if app.buttons[joy.L1] == joy.DOWN:
-			self.body.addRelTorque((0.0, 0.0, -ROLL/app.maxfps))
+			sz = -MAX_ROLL/app.maxfps
+			self.body.addRelTorque((0.0, 0.0, sz))
 		elif app.buttons[joy.R1] == joy.DOWN:
-			self.body.addRelTorque((0.0, 0.0, ROLL/app.maxfps))
+			sz = MAX_ROLL/app.maxfps
+			self.body.addRelTorque((0.0, 0.0, sz))
+		else:
+			csz = signSq(avel[2])*-CROLL_COEF/app.maxfps
+			self.body.addRelTorque((0.0, 0.0, csz))
+
+		self._reqlTorqueVec = Point(sx, sy, sz)
+		self._reqlCTorqueVec = Point(csz, csy, csz)
 	
 	def indraw(self):
 		# The cylinder body
