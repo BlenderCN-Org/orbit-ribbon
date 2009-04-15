@@ -19,47 +19,48 @@ class GameObj(object):
 		will automatically be updated when these are set, and
 		changes in ODE will be restored back to these when restorePhys()
 		is called.
-	body -- The ODE body used for physical dynamics.
+	body -- The ODE body used for physical dynamics. Defaults to None.
 		This can be None if you don't want an object to ever move.
-		Setting body automatically adjusts geom as needed
-		(i.e. setting collision groups, calling set_body(), etc).
-		The old body is also automatically unassociated and destroyed.
-		Additionally, pos and rot are automatically loaded from body
-		after it is set, and geom's pos and rot are overwritten.
+		Do not change this value once the GameObj is created.
 		Also, the body will be given a "gameobj" attribute so you can
 		get back to a GameObj from its body.
 	geom -- The ODE geometry used for collision detection.
 		This can be None if you don't want an object to ever collide.
-		Setting geom will cause it to be associated with
-		body, if there is one set. The old geom is also automatically
-		unassociated and destroyed. Additionally, pos and rot
-		are automatically loaded from geom after it is set, and body's
-		pos and rot are overwritten. Also, the geom will be given
-		a "gameobj" attribute so you can get back to a GameObj from
-		its geom.
+		Do not change this value once the GameObj is created.
+		You may also supply a Space if you want to have several associated geoms.
+		This will be automatically associated with body if body is also supplied.
+		Also, the geom and all its children will be given a "gameobj" attribute
+		so you can get back to a GameObj from its geom.
+		GameObj will descend recursively into Spaces to find
+		all non-Space Geoms to associate with body and assign "gameobj" attrs.
 	velDamp - A 3-tuple of drag coefficients for the body's linear velocity axes
 	angDamp - A 3-tuple of drag coefficients for the body's angular velocity axes
-		These are not real drag coefficients like an aerodynamics engineers would use, just
-		convenience values which are multiplied by the square of the object's
-		velocity to find how much force per second is applied.
+		These are not real drag coefficients like an aerodynamics engineers
+		would use, just convenience values which are multiplied by the object's
+		velocity to find how much drag force per second is applied.
 	"""
+	
+	# TODO: Add a del routine that removs bodies and geoms
 	
 	def __init__(self, pos = None, rot = None, body = None, geom = None):
 		"""Creates a GameObj. Pos and rot given overrides the position of body and/or geom."""
-		self._body = None
-		self._geom = None
-		self.body = body #This calls the smart setter,
-		self.geom = geom #This also calls smart setter, which associates if possible
+		self.body = body
+		self.geom = geom
+		if self.body is not None:
+			self.body.gameobj = self
+		# If we got both a body and a geom, associate them, if necessary descending recursively into spaces
+		if self.body is not None and self.geom is not None:
+			self._assoc_geom(self.geom)
 		
 		#Overwrite ODE position with the passed-in position, or origin by default
 		if pos == None:
 			pos = Point()
-		self.pos = pos
+		self.pos = pos # Calls _set_pos
 		
 		#Also overwrite ODE rotation matrix
 		if rot == None:
 			rot = (1, 0, 0,   0, 1, 0,   0, 0, 1,) # Column-major 3x3 matrix
-		self.rot = rot
+		self.rot = rot # Calls _set_rot
 		
 		#Default damping values (can be adjusted by subclass/external user as needed)
 		self.velDamp = Point(DEFAULT_VEL_DAMP_COEF, DEFAULT_VEL_DAMP_COEF, DEFAULT_VEL_DAMP_COEF)
@@ -70,43 +71,13 @@ class GameObj(object):
 			str(self.pos),
 		)
 	
-	def _get_geom(self): return self._geom
-	
-	def _set_geom(self, geom):
-		#Remove and disassociate existing geom if any
-		if self._geom != None:
-			self._geom.setBody(None)
-			app.odeworld.remove(self._geom)
-		
-		#Set the new geom, load its rot and pos, and associate it if possible
-		self._geom = geom
-		if self._geom != None:
-			self._geom.gameobj = self
-			self._fetch_ode_from(self._geom)
-			if self._body != None:
-				self._set_ode_pos(self._body)
-				self._set_ode_rot(self._body)
-				self._geom.setBody(self._body)
-	
-	def _get_body(self): return self._body
-	
-	def _set_body(self, body):
-		#Remove and disassociate existing body if any
-		if self._geom != None:
-			self._geom.setBody(None)
-		
-		#FIXME: Figure out a way to actually delete bodies from the world
-		
-		#Set the new body, load its position and rotation data, and associate it if possible
-		self._body = body
-		if self._body != None:
-			self._body.gameobl = self
-			self._fetch_ode_from(self._body)
-			if self._geom != None:
-				self._set_ode_pos(self._geom)
-				self._set_ode_rot(self._geom)
-		if self._geom != None:
-			self._geom.setBody(self._body)
+	def _assoc_geom(self, tgt):
+		tgt.gameobj = self
+		if tgt.isSpace():
+			for subtgt in tgt:
+				self._assoc_geom(subtgt)
+		else:
+			tgt.setBody(self.body)
 	
 	def _get_pos(self): return self._pos
 	
@@ -114,17 +85,17 @@ class GameObj(object):
 		self._pos = pos
 		
 		#If body and geom are connected, setting pos or rot in one sets it in both
-		if self._body != None: self._set_ode_pos(self._body)
-		elif self._geom != None: self._set_ode_pos(self._geom)
+		if self.body != None: self._set_ode_pos(self.body)
+		elif self.geom != None and not self.geom.isSpace(): self._set_ode_pos(self.geom)
 	
 	def _get_vel(self):
-		if self._body != None:
+		if self.body != None:
 			return Point(*self.body.getLinearVel())
 		else:
 			return Point()
-
+	
 	def _set_vel(self, vel):
-		if self._body != None:
+		if self.body != None:
 			self.body.setLinearVel(vel)
 	
 	def _get_rot(self): return self._rot
@@ -135,8 +106,8 @@ class GameObj(object):
 		self._rot = tuple(rot)
 		
 		#If body and geom are connected, setting pos or rot in one sets it in both
-		if self._body != None: self._set_ode_rot(self._body)
-		elif self._geom != None: self._set_ode_rot(self._geom)
+		if self.body != None: self._set_ode_rot(self.body)
+		elif self.geom != None and not self.geom.isSpace(): self._set_ode_rot(self.geom)
 	
 	def _fetch_ode_from(self, odething):
 		"""Loads position and rotation data from the given ODE object (either a body or a geom)."""
@@ -147,7 +118,7 @@ class GameObj(object):
 		
 		# Get the rotation matrix
 		oderot = odething.getRotation()
-		self._rot = ( # Convert 3x3 row-major to 4x4 column-major
+		self._rot = ( # Convert row-major to column-major
 			oderot[0], oderot[3], oderot[6],
 			oderot[1], oderot[4], oderot[7],
 			oderot[2], oderot[5], oderot[8],
@@ -173,10 +144,10 @@ class GameObj(object):
 		This is called automatically by the main loop after the simstep is ran.
 		"""
 		
-		if self._body != None:
-			self._fetch_ode_from(self._body)
-		elif self._geom != None:
-			self._fetch_ode_from(self._geom)
+		if self.body != None:
+			self._fetch_ode_from(self.body)
+		elif self.geom != None and not self.geom.isSpace():
+			self._fetch_ode_from(self.geom)
 	
 	def step(self):
 		"""Does whatever required for each simulation step of the object; can be implemented by subclasses."""
@@ -209,14 +180,14 @@ class GameObj(object):
 	
 	def freeze(self):
 		"""Kills the object's linear and angular velocity."""
-		if self._body == None:
+		if self.body == None:
 			return
-		self._body.setLinearVel((0, 0, 0))
-		self._body.setAngularVel((0, 0, 0))
+		self.body.setLinearVel((0, 0, 0))
+		self.body.setAngularVel((0, 0, 0))
 	
 	def damp(self):
 		"""Applies damping to linear and angular velocity. Called by app module after each object's step."""
-		if self._body == None:
+		if self.body == None:
 			return
 		
 		vel = self.body.vectorFromWorld(self.body.getLinearVel())
@@ -231,5 +202,3 @@ class GameObj(object):
 	pos = property(_get_pos, _set_pos)
 	vel = property(_get_vel, _set_vel)
 	rot = property(_get_rot, _set_rot)
-	body = property(_get_body, _set_body)
-	geom = property(_get_geom, _set_geom)

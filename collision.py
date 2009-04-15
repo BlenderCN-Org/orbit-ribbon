@@ -14,8 +14,10 @@ def collision_cb(contactgroup, geom1, geom2):
 	
 	#If both geoms either have collision properties or are spaces, then perform a collision
 	if g1_coll_props != None and g2_coll_props != None:
+		# Collision between two non-spaces, handle it directly
 		g1_coll_props.handle_collision(geom1, geom2, contactgroup)
 	elif (geom1.isSpace() or g1_coll_props != None) and (geom2.isSpace() or g2_coll_props != None):
+		# At least one of these two objects is a space, descend recursively
 		ode.collide2(geom1, geom2, contactgroup, collision_cb)
 
 class Collision:
@@ -45,7 +47,7 @@ class Props:
 
 	You must assign one of these to the "coll_props" attribute of any non-Space Geom
 	in the system if you expect the engine to pay attention to collisions involving
-	those Geoms.
+	those Geoms. Do not assign "coll_props" attributes to Spaces.
 
 	You can disable the generation of contact joints by setting intersec_push
 	to False. This is useful if you're planning to use the collision engine for logic
