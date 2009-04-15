@@ -161,7 +161,7 @@ def _sim_step():
 	for o in objects:
 		o.sync_ode()
 	
-	#Have each object do any simulation stuff it needs, and damp its linear and angular velocity
+	#Have each object do any simulation stuff it needs, then damp its linear and angular velocity to simulate air friction
 	for o in objects:
 		o.step()
 		o.damp()

@@ -42,7 +42,18 @@ class Collision:
 
 class Props:
 	"""Defines the collision properties of some object.
-		
+
+	You must assign one of these to the "coll_props" attribute of any non-Space Geom
+	in the system if you expect the engine to pay attention to collisions involving
+	those Geoms.
+
+	You can disable the generation of contact joints by setting intersec_push
+	to False. This is useful if you're planning to use the collision engine for logic
+	rather than to represent a physical object. To do that, in the step method
+	of your GameObj derivative class, check for the id of your object's geom
+	in app.collisions, and you can find out the id of any other geom it collided
+	with.
+	
 	The basis of the intersec_pri stuff it that is that two objects that
 	collide physically may require either a ContactJoint between them if they've
 	got equal collision priority, or may require a ContactJoint between the world
@@ -74,19 +85,21 @@ class Props:
 		Newly created contact joints are placed into cjointgroup."""
 		
 		contacts = ode.collide(geom1, geom2)
+		if len(contacts) == 0:
+			return
 		
 		# Add the collision to app.collisions
-		if len(contacts) > 0:
-			cpoints = []
-			for c in contacts:
-				cpoints.append(Point(c.getContactGeomParams()[0][0], c.getContactGeomParams()[0][1], c.getContactGeomParams()[0][2]))
-				
-			for (a,b) in ((id(geom1), geom2), (id(geom2), geom1)):
-				if not app.collisions.has_key(a):
-					app.collisions[a] = [Collision(b, cpoints)]
-				else:
-					app.collisions[a].append(Collision(b, cpoints))
-					
+		cpoints = []
+		for c in contacts:
+			cpoints.append(Point(c.getContactGeomParams()[0][0], c.getContactGeomParams()[0][1], c.getContactGeomParams()[0][2]))
+			
+		for (a,b) in ((id(geom1), geom2), (id(geom2), geom1)):
+			if not app.collisions.has_key(a):
+				app.collisions[a] = [Collision(b, cpoints)]
+			else:
+				app.collisions[a].append(Collision(b, cpoints))
+		
+		# Create contact joints if appropriate
 		if self.intersec_push and geom2.coll_props.intersec_push:
 			for c in contacts:
 				c.setMode(ode.ContactApprox1 | ode.ContactBounce)
@@ -96,13 +109,10 @@ class Props:
 				#FIXME: Collision priority stuff doesn't work very well when higher priority object pushes
 				if self.intersec_pri == geom2.coll_props.intersec_pri:
 					#Push both objects away from each other
-					cjoint = ode.ContactJoint(app.odeworld, cjointgroup, c)
 					cjoint.attach(geom1.getBody(), geom2.getBody())
 				elif self.intersec_pri > geom2.coll_props.intersec_pri:
 					#Push the other object, but not this one
-					cjoint = ode.ContactJoint(app.odeworld, cjointgroup, c)
 					cjoint.attach(None, geom2.getBody())
 				else:
 					#Push this object, not the other one
-					cjoint = ode.ContactJoint(app.odeworld, cjointgroup, c)
 					cjoint.attach(geom1.getBody(), None)
