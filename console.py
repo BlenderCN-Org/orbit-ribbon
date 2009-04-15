@@ -262,7 +262,6 @@ class Watcher(OutputBox):
 						intercons = code.InteractiveConsole(consenv.__dict__)
 						intercons.push("%s %s %s" % (str(self.expr), op, str(self.modVal)))
 		except Exception, e:
-			print repr(e), e.__str__()
 			self.append(str(self.expr) + "\nEXCEPTION: " + repr(e) + " : " + e.__str__())
 		except:
 			self.append(str(self.expr) + "\nUNKNOWN EXCEPTION")
