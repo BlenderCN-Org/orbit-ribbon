@@ -22,25 +22,27 @@ def collision_cb(contactgroup, geom1, geom2):
 
 class Collision:
 	"""Describes a collision that took place between two ODE geoms.
-
+	
 	This object is meant to be kept in sub-arrays of the app.collisions dictionary. That dictionary
 	is keyed by the id of a geom, so this object only needs to keep track of the 2nd geom that the
 	key geom collided with.
-
+	
 	Data attributes:
 	geom -- The ODE geom that the key geom collided with.
 	pos -- An array of all the points where the objects collide; weirdly-shaped objects can collide in several spots.
-	avg_pos -- Average Point of cpoints, in absolute coordinates.
 	"""
-
+	
 	def __init__(self, geom, cpoints):
 		self.geom = geom
 		self.cpoints = cpoints[:]
-		
-		self.avg_pos = Point()
+	
+	def avg_pos(self):
+		"""Returns an average Point of all the cpoints, in absolute coordinates."""
+		r = Point()
 		for p in cpoints:
-			self.avg_pos += p
-		self.avg_pos /= len(self.cpoints)
+			r += p
+		r /= len(self.cpoints)
+		return r
 
 class Props:
 	"""Defines the collision properties of some object.

@@ -4,7 +4,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import app, gameobj, colors, collision, joy, resman
+import app, gameobj, colors, collision, joy, resman, avatar
 from geometry import *
 from util import *
 
@@ -36,17 +36,19 @@ class Ring(gameobj.GameObj):
 		
 		super(Ring, self).__init__(pos = pos, body = None, geom = subspace)
 		
-		self._passingThru = False # True while something is in the process of passing through the ring
+		self._passedThru = False # True once the player has passed through the ring
 		self._thruSound = resman.SoundClip("/usr/share/sounds/question.wav")
 	
 	def step(self):
-		if id(self._logicGeom) in app.collisions:
-			if self._passingThru is False:
-				self._passingThru = True
-				self._thruSound.snd.play()
-		else:
-			self._passingThru = False
+		if self._passedThru is False and id(self._logicGeom) in app.collisions:
+			for coll in app.collisions[id(self._logicGeom)]:
+				if isinstance(coll.geom.gameobj, avatar.Avatar):
+					self._passedThru = True
+					self._thruSound.snd.play()
 	
 	def indraw(self):
-		glColor3f(*colors.red)
+		if self._passedThru:
+			glColor3f(*colors.blue)
+		else:
+			glColor3f(*colors.red)
 		glutSolidTorus(self.INNER_RAD, self.OUTER_RAD, 20, self.STEPS)
