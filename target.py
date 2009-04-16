@@ -15,25 +15,37 @@ class Ring(gameobj.GameObj):
 	STEPS = 35
 	
 	def __init__(self, pos):
-		space = ode.SimpleSpace(app.dyn_space)
+		# A space for the geoms associated with this ring
+		subspace = ode.SimpleSpace(app.static_space)
+		
+		# Collision geoms for the ring substance
 		for i in xrange(self.STEPS):
-			subgeom = ode.GeomSphere(None, radius = self.INNER_RAD)
-			subgeomT = ode.GeomTransform(space)
-			subgeomT.setGeom(subgeom)
+			subgeomT = ode.GeomTransform(subspace)
 			subgeomT.setInfo(1)
 			subgeomT.coll_props = collision.Props()
 			s = math.sin(2*math.pi*(i/self.STEPS))
 			c = math.cos(2*math.pi*(i/self.STEPS))
+			subgeom = ode.GeomSphere(space = None, radius = self.INNER_RAD)
 			subgeom.setPosition((c*self.OUTER_RAD, s*self.OUTER_RAD, 0.0))
+			subgeomT.setGeom(subgeom)
 		
-		super(Ring, self).__init__(pos = pos, body = None, geom = space)
+		# Logical geom for detecting when something has passed through the ring
+		# FIXME: PyODE's GeomCylinder doesn't seem to work, but that's really what I need to use here.
+		self._logicGeom = ode.GeomCapsule(subspace, radius = self.OUTER_RAD-self.INNER_RAD/2, length = self.INNER_RAD*1.5)
+		self._logicGeom.coll_props = collision.Props(intersec_push = False)
 		
+		super(Ring, self).__init__(pos = pos, body = None, geom = subspace)
+		
+		self._passingThru = False # True while something is in the process of passing through the ring
 		self._thruSound = resman.SoundClip("/usr/share/sounds/question.wav")
 	
 	def step(self):
-		for e in app.events:
-			if joy.procEvent(e) == (joy.BUTTON, joy.X, joy.DOWN):
+		if id(self._logicGeom) in app.collisions:
+			if self._passingThru is False:
+				self._passingThru = True
 				self._thruSound.snd.play()
+		else:
+			self._passingThru = False
 	
 	def indraw(self):
 		glColor3f(*colors.red)

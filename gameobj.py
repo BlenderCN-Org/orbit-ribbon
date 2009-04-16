@@ -77,8 +77,7 @@ class GameObj(object):
 			for subtgt in tgt:
 				self._assoc_geom(subtgt)
 		else:
-			if self.body is not None:
-				tgt.setBody(self.body)
+			tgt.setBody(self.body)
 	
 	def _get_pos(self): return self._pos
 	

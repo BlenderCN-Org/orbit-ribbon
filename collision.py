@@ -44,17 +44,16 @@ class Collision:
 
 class Props:
 	"""Defines the collision properties of some object.
-
+	
 	You must assign one of these to the "coll_props" attribute of any non-Space Geom
 	in the system if you expect the engine to pay attention to collisions involving
 	those Geoms. Do not assign "coll_props" attributes to Spaces.
-
+	
 	You can disable the generation of contact joints by setting intersec_push
 	to False. This is useful if you're planning to use the collision engine for logic
 	rather than to represent a physical object. To do that, in the step method
 	of your GameObj derivative class, check for the id of your object's geom
-	in app.collisions, and you can find out the id of any other geom it collided
-	with.
+	in app.collisions, and you can find any other geom it collided with.
 	
 	The basis of the intersec_pri stuff it that is that two objects that
 	collide physically may require either a ContactJoint between them if they've
@@ -64,7 +63,7 @@ class Props:
 	of this system is to allow things like moving platforms that have bodies
 	and geoms but cannot be pushed around by the player, although they can push
 	the player around.
-
+	
 	Data attributes:
 	intersec_push -- If True, creates contact joints at intersections to push this object, the other, or both away.
 		Both objects must have this flag on for any intersection prevention to occur.
@@ -94,7 +93,7 @@ class Props:
 		cpoints = []
 		for c in contacts:
 			cpoints.append(Point(c.getContactGeomParams()[0][0], c.getContactGeomParams()[0][1], c.getContactGeomParams()[0][2]))
-			
+		
 		for (a,b) in ((id(geom1), geom2), (id(geom2), geom1)):
 			if not app.collisions.has_key(a):
 				app.collisions[a] = [Collision(b, cpoints)]
