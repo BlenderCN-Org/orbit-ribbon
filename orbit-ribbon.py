@@ -66,7 +66,7 @@ app.objects.append(
 
 app.mission_control = mission.MissionControl(
 	win_cond_func = mission.AllRingsPassedFunction(),
-	timer_start_func = mission.MinDistanceFunction(app.objects[0], app.objects[0].pos.__copy__(), 0.1)
+	timer_start_func = mission.MinDistanceFunction(app.objects[0], app.objects[0].pos.__copy__(), 1.0)
 )
 
 #profile.run('app.run()', 'profile')
