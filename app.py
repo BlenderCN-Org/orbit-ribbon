@@ -55,11 +55,14 @@ class QuitException:
 def ui_init():
 	global screen, clock, cons, watchers
 
-	pygame.init()
+	pygame.display.init()
 	pygame.display.set_caption('Orbit Ribbon')
 	pygame.display.set_icon(pygame.image.load(os.path.join('images', 'logo.png')))
 	pygame.mouse.set_visible(0)
 	screen = pygame.display.set_mode(winsize, DOUBLEBUF | OPENGL)
+
+	pygame.mixer.init(22050, -16, 2, 256)
+
 	clock = pygame.time.Clock()
 	
 	joy.init()

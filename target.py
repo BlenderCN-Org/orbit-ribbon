@@ -4,7 +4,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import app, gameobj, colors, collision, joy
+import app, gameobj, colors, collision, joy, resman
 from geometry import *
 from util import *
 
@@ -17,18 +17,24 @@ class Ring(gameobj.GameObj):
 	def __init__(self, pos):
 		space = ode.SimpleSpace(app.dyn_space)
 		for i in xrange(self.STEPS):
-			subgeom = ode.GeomCapsule(None, radius = self.INNER_RAD*10, length = 2*math.pi*self.OUTER_RAD/self.STEPS)
+			subgeom = ode.GeomCapsule(None, radius = self.INNER_RAD, length = 2*math.pi*self.OUTER_RAD/self.STEPS)
 			subgeomT = ode.GeomTransform(space)
 			subgeomT.setGeom(subgeom)
+			subgeomT.setInfo(1)
+			subgeomT.coll_props = collision.Props()
 			s = math.sin(2*math.pi*(i/self.STEPS))
 			c = math.cos(2*math.pi*(i/self.STEPS))
-			#subgeom.setPosition((c*(self.OUTER_RAD-self.INNER_RAD), s*(self.OUTER_RAD-self.INNER_RAD), 0.0))
+			subgeom.setPosition((c*(self.OUTER_RAD-self.INNER_RAD), s*(self.OUTER_RAD-self.INNER_RAD), 0.0))
 			#subgeom.setRotation() # Need to figure out what goes here
 		
 		super(Ring, self).__init__(pos = pos, body = sphere_body(2000, 1), geom = space)
+		
+		self._thruSound = resman.SoundClip("/usr/share/sounds/question.wav")
 	
 	def step(self):
-		pass
+		for e in app.events:
+			if joy.procEvent(e) == (joy.BUTTON, joy.X, joy.DOWN):
+				self._thruSound.snd.play()
 	
 	def indraw(self):
 		glColor3f(*colors.red)
