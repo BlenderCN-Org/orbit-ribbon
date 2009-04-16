@@ -41,6 +41,12 @@ class _CoordLike(list):
 			self.append(b)
 			self.append(c)
 	
+	def __str__(self):
+		return ",".join(["%+013.4f" % x for x in self])
+	
+	def __repr__(self):
+		return ",".join(["%+013.4f" % x for x in self])
+	
 	def __add__(self, y):
 		ret = _coordlike_copy(self)
 		ret += y
