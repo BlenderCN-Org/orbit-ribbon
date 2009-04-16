@@ -25,7 +25,7 @@ class SoundClip(object):
 			obj = object.__new__(cls)
 			obj.filename = filename
 			SoundClip._cache[filename] = obj
-			#fullpath = os.path.join('images', filename) #FIXME: Turn this on when we eventually have some actual Orbit Ribbon sounds
+			#fullpath = os.path.join('sounds', filename) #FIXME: Turn this on when we eventually have some actual Orbit Ribbon sounds
 			fullpath = filename
 			obj.snd = pygame.mixer.Sound(fullpath)
 			return obj

@@ -77,7 +77,8 @@ class GameObj(object):
 			for subtgt in tgt:
 				self._assoc_geom(subtgt)
 		else:
-			tgt.setBody(self.body)
+			if self.body is not None:
+				tgt.setBody(self.body)
 	
 	def _get_pos(self): return self._pos
 	
@@ -86,7 +87,7 @@ class GameObj(object):
 		
 		#If body and geom are connected, setting pos or rot in one sets it in both
 		if self.body != None: self._set_ode_pos(self.body)
-		elif self.geom != None and not self.geom.isSpace(): self._set_ode_pos(self.geom)
+		elif self.geom != None: self._set_ode_pos(self.geom)
 	
 	def _get_vel(self):
 		if self.body != None:
@@ -107,7 +108,7 @@ class GameObj(object):
 		
 		#If body and geom are connected, setting pos or rot in one sets it in both
 		if self.body != None: self._set_ode_rot(self.body)
-		elif self.geom != None and not self.geom.isSpace(): self._set_ode_rot(self.geom)
+		elif self.geom != None: self._set_ode_rot(self.geom)
 	
 	def _fetch_ode_from(self, odething):
 		"""Loads position and rotation data from the given ODE object (either a body or a geom)."""
@@ -126,17 +127,24 @@ class GameObj(object):
 	
 	def _set_ode_rot(self, odething):
 		"""Sets the rotation in an ODE object (body or geom) from the GameObj's rotation matrix."""
-		
-		r = self._rot
-		odething.setRotation(( # Column-major to row-major
-			r[0], r[3], r[6],
-			r[1], r[4], r[7],
-			r[2], r[5], r[8],
-		))
+		if isinstance(odething, ode.SpaceBase):
+			for subthing in odething:
+				self._set_ode_rot(subthing)
+		else:
+			r = self._rot
+			odething.setRotation(( # Column-major to row-major
+				r[0], r[3], r[6],
+				r[1], r[4], r[7],
+				r[2], r[5], r[8],
+			))
 	
 	def _set_ode_pos(self, odething):
 		"""Sets the position in an ODE object (body or geom) from the GameObj's position."""
-		odething.setPosition(self._pos)
+		if isinstance(odething, ode.SpaceBase):
+			for subthing in odething:
+				self._set_ode_pos(subthing)
+		else:
+			odething.setPosition(self._pos)
 	
 	def sync_ode(self):
 		"""Sets position and rotation based on the ODE state.
