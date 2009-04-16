@@ -21,6 +21,10 @@ dyn_space = None
 #A list of all the various game objects
 objects = None
 
+#An instance of mission.MissionControl defining the mission parameters.
+#FIXME: Currently, must be set externally. Will eventually become responsibility of level loader.
+mission_control = None
+
 #Input events (from PyGame) which occurred this step
 events = []
 
@@ -39,18 +43,23 @@ contactgroup = ode.JointGroup()
 
 winsize = (800, 600) #Size of the display window in pixels; TODO: should be a user setting
 maxfps = 60 #Max frames per second, and absolute sim-steps per second
+
 camera = Point() #A point in global coordinates for the camera position. Passed to gluLookAt
 camera_tgt = Point() #A point in global coordinates for the camera to look at. Passed to gluLookAt
 camera_up = Point() #A vector in global coordinates for the camera's up direction. Passed to gluLookAt
+
 screen = None #The PyGame screen
+
 clock = None #An instance of pygame.time.Clock() used for timing; use step count, not this for game-logic timing
 totalsteps = 0L #Number of simulation steps we've ran
+
 cons = None #An instances of console.Console used for in-game debugging
 watchers = [] #A sequence of console.Watchers used for in-game debugging
 
 class QuitException:
 	"""Raised when something wants the main loop to end."""
 	pass
+
 
 def ui_init():
 	global screen, clock, cons, watchers
@@ -61,7 +70,7 @@ def ui_init():
 	pygame.mouse.set_visible(0)
 	screen = pygame.display.set_mode(winsize, DOUBLEBUF | OPENGL)
 
-	pygame.mixer.init(22050, -16, 2, 256)
+	pygame.mixer.init(22050, -16, 2, 512)
 
 	clock = pygame.time.Clock()
 	
@@ -98,6 +107,7 @@ def ui_init():
 	watchers.append(console.Watcher("p", "l", pygame.Rect(5*winsize[0]/6 - 20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
 	watchers.append(console.Watcher("j", "n", pygame.Rect(5*winsize[0]/6 - 20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
 
+
 def ui_deinit():
 	global screen, clock, cons, watchers
 	
@@ -130,6 +140,7 @@ def sim_init():
 	camera_tgt = Point(0,0,10)
 	camera_up = Point(0,1,0)
 
+
 def sim_deinit():
 	"""Deinitializes the camera and simulation, including ODE.
 	
@@ -148,10 +159,14 @@ def sim_deinit():
 	camera_tgt = Point()
 	camera_up = Point()
 
+
 def _sim_step():
 	"""Runs one step of the simulation. This is (1/maxfps)th of a simulated second."""
 	
 	global collisions, contactgroup
+
+	#Update mission status
+	mission_control.step()
 	
 	#Calculate collisions, run ODE simulation
 	contactgroup.empty()
@@ -168,6 +183,7 @@ def _sim_step():
 	for o in objects:
 		o.step()
 		o.damp()
+
 
 def _draw_frame():
 	# 3D drawing mode
@@ -208,6 +224,9 @@ def _draw_frame():
 	glDisable(GL_DEPTH_TEST)
 	glDisable(GL_LIGHTING)
 	
+	# Draw the mission control HUD elements
+	mission_control.draw()
+	
 	# Draw the watchers
 	for w in watchers:
 		if w.expr != None:
@@ -217,6 +236,7 @@ def _draw_frame():
 	# Draw the console, if it's up
 	cons.draw()
 	
+	# Output and flip buffers
 	glFlush()
 	pygame.display.flip()
 
@@ -263,8 +283,7 @@ def run():
 				for i in range(steps):
 					_proc_input()
 					_sim_step()
-				
-				totalsteps += steps
+					totalsteps += 1
 			else:
 				_proc_input()
 			

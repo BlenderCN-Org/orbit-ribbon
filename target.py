@@ -9,7 +9,11 @@ from geometry import *
 from util import *
 
 class Ring(gameobj.GameObj):
-	"""A ring that the player is intended to pass through."""
+	"""A ring that the player is intended to pass through.
+	
+	Data attributes:
+	passedThru - Becomes True once the player has passed through the ring.
+	"""
 	OUTER_RAD = 7.0
 	INNER_RAD = 1.0
 	STEPS = 35
@@ -36,18 +40,18 @@ class Ring(gameobj.GameObj):
 		
 		super(Ring, self).__init__(pos = pos, body = None, geom = subspace)
 		
-		self._passedThru = False # True once the player has passed through the ring
+		self.passedThru = False # True once the player has passed through the ring
 		self._thruSound = resman.SoundClip("/usr/share/sounds/question.wav")
 	
 	def step(self):
-		if self._passedThru is False and id(self._logicGeom) in app.collisions:
+		if self.passedThru is False and id(self._logicGeom) in app.collisions:
 			for coll in app.collisions[id(self._logicGeom)]:
 				if isinstance(coll.geom.gameobj, avatar.Avatar):
-					self._passedThru = True
+					self.passedThru = True
 					self._thruSound.snd.play()
 	
 	def indraw(self):
-		if self._passedThru:
+		if self.passedThru:
 			glColor3f(*colors.blue)
 		else:
 			glColor3f(*colors.red)

@@ -165,14 +165,12 @@ class Point(_CoordLike, object):
 		return self.__copy__()
 	
 	def mag(self):
-		# FIXME : Needs to be 3D
-		"""Returns the distsance between the origin and this point."""
-		return math.sqrt(self[0]*self[0] + self[1]*self[1])
+		"""Returns the distance between the origin and this point."""
+		return math.sqrt(math.sqrt(self[0]**2.0 + self[1]**2.0)**2.0 + self[2]**2.0)
 	
 	def dist_to(self, other):
-		# FIXME : Needs to be 3D
 		"""Returns the distance between this point and another."""
-		return math.sqrt((self[0]-other[0])**2.0 + (self[1]-other[1])**2.0)
+		return math.sqrt(math.sqrt((self[0]-other[0])**2.0 + (self[1]-other[1])**2.0)**2.0 + (self[2]-other[2])**2.0)
 	
 	def ang(self):
 		# FIXME : Needs to be 3D
@@ -182,7 +180,7 @@ class Point(_CoordLike, object):
 	def ang_to(self, other):
 		# FIXME : Needs to be 3D
 		"""Returns the angle from this point to another in clockwise revolutions.
-	
+		
 		If other is directly to the right of this point, then the angle is zero."""
 		return math.atan2(other[1]-self[1], other[0]-self[0])/(2*math.pi)
 	
