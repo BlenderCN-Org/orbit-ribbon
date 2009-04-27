@@ -44,7 +44,16 @@ class SkyStuff(gameobj.GameObj):
 		self._t3_tex = resman.Texture("t3.png")
 		self._gold_tex = resman.Texture("gold.png")
 	
-	def indraw(self):
+	def indraw(self):	
+		# The Smoke Ring
+		# FIXME - Faked out values to achieve thin-line look
+		glColor4f(1.0, 1.0, 1.0, 0.3)
+		glPushMatrix()
+		glTranslatef(0, 0, GOLD_DIST*299)
+		glRotatef(90, 1, 0, 0)
+		glutSolidTorus(SMOKE_RING_RADIUS, GOLD_DIST*300, 100, 20)
+		glPopMatrix()
+
 		# FIXME - Verify that this makes T3 spin in the correct direction
 		t3_pos = Point(math.sin(rev2rad(self.day_elapsed))*T3_DIST, 0, math.cos(rev2rad(self.day_elapsed))*T3_DIST)
 		
@@ -89,10 +98,3 @@ class SkyStuff(gameobj.GameObj):
 		draw_billboard((GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
 		
 		glDisable(GL_TEXTURE_2D)
-		
-		# The Smoke Ring
-		glColor4f(1.0, 1.0, 1.0, 0.2)
-		glPushMatrix()
-		glRotatef(90, 1, 0, 0)
-		glutSolidTorus(SMOKE_RING_RADIUS, GOLD_DIST, 100, 20)
-		glPopMatrix()

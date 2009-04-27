@@ -84,7 +84,7 @@ def ui_init():
 	
 	glDepthFunc(GL_LEQUAL)
 	
-	glClearColor(0.8, 0.8, 1.0, 0.0)
+	glClearColor(0.5, 0.5, 1.0, 0.0)
 	glClearDepth(1.0)
 	
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
