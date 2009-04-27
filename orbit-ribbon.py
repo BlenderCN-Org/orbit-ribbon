@@ -2,7 +2,7 @@
 
 import profile
 
-import app, testobj, colors, avatar, target, mission
+import app, testobj, colors, avatar, target, mission, sky
 
 from geometry import *
 from util import *
@@ -68,6 +68,8 @@ app.mission_control = mission.MissionControl(
 	win_cond_func = mission.AllRingsPassedFunction(),
 	timer_start_func = mission.MinDistanceFunction(app.objects[0], app.objects[0].pos.__copy__(), 1.0)
 )
+
+app.sky_stuff = sky.SkyStuff(pos = Point(0,0,sky.GOLD_DIST), day_elapsed = 0.1)
 
 #profile.run('app.run()', 'profile')
 app.run()

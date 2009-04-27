@@ -11,12 +11,18 @@ import pydoc
 from pygame.locals import *
 
 import app
+import avatar
 import collision
 import colors
 import console
 import gameobj
 from geometry import *
+import joy
+import mission
 import resman
+import sky
+import target
+import testobj
 from util import *
 
 def wset(num, expr):
@@ -37,6 +43,7 @@ def wclear(num = -1):
 			w.modVal = None
 	else:
 		app.watchers[num].expr = None
+		app.watchers[num].modVal = None
 
 def wfps(num = 0):
 	"""Sets a given watcher (#0 by default) to show the FPS."""

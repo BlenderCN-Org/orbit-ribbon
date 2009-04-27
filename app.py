@@ -25,6 +25,10 @@ objects = None
 #FIXME: Currently, must be set externally. Will eventually become responsibility of level loader.
 mission_control = None
 
+#An instance of sky.SkyStuff with defining the location of Voy and other distant objects
+#FIXME: Currently, must be set externally. Will eventually become responsibility of level loader.
+sky_stuff = None
+
 #Input events (from PyGame) which occurred this step
 events = []
 
@@ -164,7 +168,7 @@ def _sim_step():
 	"""Runs one step of the simulation. This is (1/maxfps)th of a simulated second."""
 	
 	global collisions, contactgroup
-
+	
 	#Update mission status
 	mission_control.step()
 	
@@ -186,14 +190,12 @@ def _sim_step():
 
 
 def _draw_frame():
-	# 3D drawing mode
-	glMatrixMode(GL_PROJECTION)
-	glLoadIdentity()
-	gluPerspective(FOV, winsize[0]/winsize[1], 0.1, 5000.0)
+	# Reset state
 	glMatrixMode(GL_MODELVIEW)
 	glLoadIdentity()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-	glEnable(GL_DEPTH_TEST)
+	
+	# Enable lighting for 3D drawing
 	glEnable(GL_LIGHTING)
 	
 	# Position the camera
@@ -211,7 +213,24 @@ def _draw_frame():
 	glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse)
 	glEnable(GL_LIGHT1)
 	
-	# Draw all objects
+	# 3D projection mode for far objects with no depth-testing
+	glDisable(GL_DEPTH_TEST)
+	glMatrixMode(GL_PROJECTION)
+	glLoadIdentity()
+	gluPerspective(FOV, winsize[0]/winsize[1], 1.0, 1e12)
+	glMatrixMode(GL_MODELVIEW)
+
+	# Draw the various sky objects
+	sky_stuff.draw()
+	
+	# 3D projection mode for near objects with depth-testing
+	glEnable(GL_DEPTH_TEST)
+	glMatrixMode(GL_PROJECTION)
+	glLoadIdentity()
+	gluPerspective(FOV, winsize[0]/winsize[1], 0.1, 5000.0)
+	glMatrixMode(GL_MODELVIEW)
+	
+	# Draw all objects in the list
 	for o in objects:
 		o.draw()
 	
