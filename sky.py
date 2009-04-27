@@ -1,4 +1,4 @@
-import ode
+import ode, math
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 
@@ -43,16 +43,18 @@ class SkyStuff(gameobj.GameObj):
 		self._gold_tex = resman.Texture("gold.png")
 	
 	def indraw(self):
+		# FIXME - Verify that this makes T3 spin in the correct direction
+		t3_pos = Point(math.sin(rev2rad(self.day_elapsed))*T3_DIST, 0, math.cos(rev2rad(self.day_elapsed))*T3_DIST)
+		
 		glEnable(GL_TEXTURE_2D)
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
 
 		# Set up lighting parameters for the two stars
 		# Since lighting is disabled at this time, this does not affect the drawing of the sky objects themselves
-	
+		
 		# T3
 		glPushMatrix()
-		glRotatef(self.day_elapsed*360,0,1,0)
-		glTranslatef(0,0,T3_DIST)
+		glTranslatef(*t3_pos)
 		glLightfv(GL_LIGHT1, GL_POSITION, (0.0, 0.0, 0.0, 1.0))
 		glPopMatrix()
 		glLightfv(GL_LIGHT1, GL_AMBIENT, (0.7, 0.7, 0.7, 1.0))
@@ -62,10 +64,9 @@ class SkyStuff(gameobj.GameObj):
 		# Voy
 		# FIXME - Set up lighting for Voy
 		
-		def draw_billboard(rot, pos, tex, width, height):
+		def draw_billboard(pos, tex, width, height):
 			glBindTexture(GL_TEXTURE_2D, tex.glname)
 			glPushMatrix()
-			glRotatef(*rot)
 			glTranslatef(*pos)
 			# FIXME - Rotate to orient towards camera
 			glBegin(GL_QUADS)
@@ -81,8 +82,8 @@ class SkyStuff(gameobj.GameObj):
 			glPopMatrix()
 		
 		# FIXME - Sort from farthest to closest; depending on position and time of day, Gold or Voy may be closer
-		draw_billboard((self.day_elapsed*360,0,1,0), (0,0,T3_DIST),   self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)
-		draw_billboard((0,0,0,0),                    (0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)
-		draw_billboard((0,0,0,0),                    (GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)
+		draw_billboard(t3_pos,          self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)
+		draw_billboard((0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)
+		draw_billboard((GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)
 		
 		glDisable(GL_TEXTURE_2D)
