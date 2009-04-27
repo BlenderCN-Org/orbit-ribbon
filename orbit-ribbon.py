@@ -69,7 +69,7 @@ app.mission_control = mission.MissionControl(
 	timer_start_func = mission.MinDistanceFunction(app.objects[0], app.objects[0].pos.__copy__(), 1.0)
 )
 
-app.sky_stuff = sky.SkyStuff(pos = Point(0,0,sky.GOLD_DIST), day_elapsed = 0.1)
+app.sky_stuff = sky.SkyStuff(pos = Point(0,0,sky.GOLD_DIST), day_elapsed = 0.7)
 
 #profile.run('app.run()', 'profile')
 app.run()

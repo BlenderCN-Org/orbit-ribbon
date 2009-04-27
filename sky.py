@@ -14,7 +14,7 @@ TORUS_OUTSIDE_DIST = 1e9 # From book
 TORUS_INSIDE_DIST = 1e7 # Guessed
 TORUS_RADIUS = TORUS_OUTSIDE_DIST - TORUS_INSIDE_DIST # Assuming a circular torus, which probably isn't quite right
 GOLD_DIST = 2.6e7 # From book; also, assuming that Gold is in precise middle of Smoke Ring
-GOLD_RADIUS = 1e7 # Guessed; includes the storm around Gold
+GOLD_RADIUS = 5e6 # Guessed; includes the storm around Gold
 SMOKE_RING_RADIUS = 1.4e7 # Calculated; book says that SR has volume of 1e14 cubic km, and assumed a circular torus...
 SMOKE_RING_INSIDE_DIST = GOLD_DIST - SMOKE_RING_RADIUS
 SMOKE_RING_OUTSIDE_DIST = GOLD_DIST + SMOKE_RING_RADIUS
@@ -24,8 +24,8 @@ class SkyStuff(gameobj.GameObj):
 	
 	The origin of this object is the location of Voy. Gold is on the local x axis.
 	
-	It is important to draw this object each frame before anything else. Furthermore, before drawing, one must
-	disable depth testing, and set the far clipping plane to at least 1e12 away.
+	It is important to draw this object each frame before anything else. Also, before drawing, you must
+	disable depth testing and lighting, and set the far clipping plane to at least 1e12 away.
 	
 	No dynamics or geometry are involved with this object, since everything is so far away that there's
 	no reason for the player to ever interact with it.
@@ -45,6 +45,22 @@ class SkyStuff(gameobj.GameObj):
 	def indraw(self):
 		glEnable(GL_TEXTURE_2D)
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
+
+		# Set up lighting parameters for the two stars
+		# Since lighting is disabled at this time, this does not affect the drawing of the sky objects themselves
+	
+		# T3
+		glPushMatrix()
+		glRotatef(self.day_elapsed*360,0,1,0)
+		glTranslatef(0,0,T3_DIST)
+		glLightfv(GL_LIGHT1, GL_POSITION, (0.0, 0.0, 0.0, 1.0))
+		glPopMatrix()
+		glLightfv(GL_LIGHT1, GL_AMBIENT, (0.7, 0.7, 0.7, 1.0))
+		glLightfv(GL_LIGHT1, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))
+		glEnable(GL_LIGHT1)
+
+		# Voy
+		# FIXME - Set up lighting for Voy
 		
 		def draw_billboard(rot, pos, tex, width, height):
 			glBindTexture(GL_TEXTURE_2D, tex.glname)

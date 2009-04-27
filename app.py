@@ -195,36 +195,23 @@ def _draw_frame():
 	glLoadIdentity()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 	
-	# Enable lighting for 3D drawing
-	glEnable(GL_LIGHTING)
-	
 	# Position the camera
 	gluLookAt(camera[0], camera[1], camera[2], camera_tgt[0], camera_tgt[1], camera_tgt[2], camera_up[0], camera_up[1], camera_up[2])
 	
-	# Set up lighting
-	LightPosition = (0.0, 10.0, 2.0, 1.0)
-	LightAmbient = (0.5, 0.5, 0.5, 1.0)
-	LightDiffuse = (1.0, 1.0, 1.0, 1.0)
-	glPushMatrix()
-	glTranslatef(0.0, 100.0, 0.0)
-	glLightfv(GL_LIGHT1, GL_POSITION, (0.0, 0.0, 0.0, 1.0))
-	glPopMatrix()
-	glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient)
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse)
-	glEnable(GL_LIGHT1)
-	
-	# 3D projection mode for far objects with no depth-testing
+	# 3D projection mode for far objects with no depth-testing or lighting
 	glDisable(GL_DEPTH_TEST)
+	glDisable(GL_LIGHTING)
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
 	gluPerspective(FOV, winsize[0]/winsize[1], 1.0, 1e12)
 	glMatrixMode(GL_MODELVIEW)
-
+	
 	# Draw the various sky objects
 	sky_stuff.draw()
 	
 	# 3D projection mode for near objects with depth-testing
 	glEnable(GL_DEPTH_TEST)
+	glEnable(GL_LIGHTING)
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
 	gluPerspective(FOV, winsize[0]/winsize[1], 0.1, 5000.0)
