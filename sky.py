@@ -9,7 +9,7 @@ from util import *
 # Distances in meters from Voy to other sky objects, and sizes of various objects
 VOY_RADIUS = 2e4 # From book
 T3_DIST = 2.5e11 # From book
-T3_RADIUS = 8.4e8 # Our Sun's radius times about 1.2
+T3_RADIUS = 8.4e8 # Our Sun's radius times about 1.2, which is from book
 TORUS_OUTSIDE_DIST = 1e9 # From book
 TORUS_INSIDE_DIST = 1e7 # Guessed
 TORUS_RADIUS = TORUS_OUTSIDE_DIST - TORUS_INSIDE_DIST # Assuming a circular torus, which probably isn't quite right
@@ -18,6 +18,8 @@ GOLD_RADIUS = 5e6 # Guessed; includes the storm around Gold
 SMOKE_RING_RADIUS = 1.4e7 # Calculated; book says that SR has volume of 1e14 cubic km, and assumed a circular torus...
 SMOKE_RING_INSIDE_DIST = GOLD_DIST - SMOKE_RING_RADIUS
 SMOKE_RING_OUTSIDE_DIST = GOLD_DIST + SMOKE_RING_RADIUS
+
+# FIXME - Consider using depth testing for sky objects, then clearing the depth buffer
 
 class SkyStuff(gameobj.GameObj):
 	"""The objects that are visible far out in the sky; Voy and T3, Gold, the Smoke Ring, far ponds and clouds and plants, etc.
@@ -82,8 +84,15 @@ class SkyStuff(gameobj.GameObj):
 			glPopMatrix()
 		
 		# FIXME - Sort from farthest to closest; depending on position and time of day, Gold or Voy may be closer
-		draw_billboard(t3_pos,          self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)
-		draw_billboard((0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)
-		draw_billboard((GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)
+		draw_billboard(t3_pos,          self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)    # T3
+		draw_billboard((0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
+		draw_billboard((GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
 		
 		glDisable(GL_TEXTURE_2D)
+		
+		# The Smoke Ring
+		glColor4f(1.0, 1.0, 1.0, 0.2)
+		glPushMatrix()
+		glRotatef(90, 1, 0, 0)
+		glutSolidTorus(SMOKE_RING_RADIUS, GOLD_DIST, 100, 20)
+		glPopMatrix()
