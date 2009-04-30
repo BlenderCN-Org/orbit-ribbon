@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import profile
+import profile, math
 
 import app, testobj, colors, avatar, target, mission, sky
 
@@ -69,7 +69,15 @@ app.mission_control = mission.MissionControl(
 	timer_start_func = mission.MinDistanceFunction(app.objects[0], app.objects[0].pos.__copy__(), 1.0)
 )
 
-app.sky_stuff = sky.SkyStuff(pos = Point(0,0,sky.GOLD_DIST), day_elapsed = 0.3)
+ang = 0.05
+c = math.cos(rev2rad(ang))
+s = math.sin(rev2rad(ang))
+app.sky_stuff = sky.SkyStuff(pos = Point(0,s*sky.GOLD_DIST,c*sky.GOLD_DIST), day_elapsed = 0.3)
+app.sky_stuff.rot = (
+	1, 0, 0,
+	0, c, -s,
+	0, s, c,
+)
 
 #profile.run('app.run()', 'profile')
 app.run()

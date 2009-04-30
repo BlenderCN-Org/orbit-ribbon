@@ -1,5 +1,6 @@
 import ode, math
 from OpenGL.GL import *
+from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
 import app, gameobj, colors, collision, resman
@@ -52,12 +53,12 @@ class SkyStuff(gameobj.GameObj):
 		glRotatef(90, 1, 0, 0)
 		# Smoke ring itself
 		glColor4f(1.0, 1.0, 1.0, 0.5)
-		glutSolidTorus(SMOKE_RING_RADIUS, GOLD_DIST, 20, 20)
+		glutSolidTorus(SMOKE_RING_RADIUS, GOLD_DIST, 10, 50)
 		# Outer "fuzz" from the smoke ring
 		for i in range(3, 20, 3):
 			glRotatef(2, 0, 0, 1)
 			glColor4f(1.0, 1.0, 1.0, 0.08)
-			glutSolidTorus(SMOKE_RING_RADIUS*i, GOLD_DIST, 20, 20)
+			glutSolidTorus(SMOKE_RING_RADIUS*i, GOLD_DIST, 10, 50)
 		# The gas torus
 		# FIXME - Rendering it effectively only tints background color. Should it do something else? Should I bother?
 		#glColor4f(1.0, 1.0, 1.0, 0.05)
@@ -103,9 +104,8 @@ class SkyStuff(gameobj.GameObj):
 			glEnd()
 			glPopMatrix()
 		
-		# FIXME - Sort from farthest to closest; depending on position and time of day, Gold or Voy may be closer
-		draw_billboard(t3_pos,          self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)    # T3
-		draw_billboard((0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
-		draw_billboard((GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
+		draw_billboard(t3_pos,               self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)    # T3
+		draw_billboard(Point(GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
+		draw_billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
 		
 		glDisable(GL_TEXTURE_2D)
