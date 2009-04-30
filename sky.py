@@ -119,7 +119,7 @@ class SkyStuff(gameobj.GameObj):
 		draw_billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
 		
 		# Draw jungles around the Smoke Ring in various positions
-		glRotatef(90, 0, 1, 0)
+		glRotatef(90, 0, 1, 0) # FIXME Stupid hack until billboards working properly
 		for p in self._jungle_positions:
 			draw_billboard(p, self._jungle_tex, 20000, 20000)
 		

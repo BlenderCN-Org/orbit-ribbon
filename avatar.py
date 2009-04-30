@@ -116,12 +116,12 @@ class Avatar(gameobj.GameObj):
 		glBindTexture(GL_TEXTURE_2D, self._tex.glname)
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-		gluCylinder(self._quad, 0.25, 0.15, 2.0, 30, 10)
+		gluCylinder(self._quad, 0.15, 0.15, 2.0, 30, 10)
 		glDisable(GL_TEXTURE_2D)
 		
 		# The feet
 		glColor3f(*colors.cyan)
-		glutSolidSphere(0.25, 15, 15)
+		glutSolidSphere(0.15, 15, 15)
 		
 		# The jetpack
 		glTranslatef(0, -0.1, 1)
