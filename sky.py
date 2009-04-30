@@ -1,4 +1,4 @@
-import ode, math
+import ode, math, random
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
@@ -44,9 +44,19 @@ class SkyStuff(gameobj.GameObj):
 		self._voy_tex = resman.Texture("voy.png")
 		self._t3_tex = resman.Texture("t3.png")
 		self._gold_tex = resman.Texture("gold.png")
+		self._jungle_tex = resman.Texture("jungle.png")
+		
+		# Create some random jungle positions
+		random.seed(2)
+		self._jungle_positions = []
+		for i in range(150):
+			ang = random.random()*2*math.pi
+			r_offset = random.random()*SMOKE_RING_RADIUS - SMOKE_RING_RADIUS/2
+			y_offset = random.random()*SMOKE_RING_RADIUS - SMOKE_RING_RADIUS/2
+			p = Point(math.cos(ang)*(GOLD_DIST + r_offset), y_offset, math.sin(ang)*(GOLD_DIST + r_offset))
+			self._jungle_positions.append(p)
 	
 	def indraw(self):
-		
 		# The Smoke Ring and the gas torus
 		glEnable(GL_CULL_FACE)
 		glPushMatrix()
@@ -107,5 +117,10 @@ class SkyStuff(gameobj.GameObj):
 		draw_billboard(t3_pos,               self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)    # T3
 		draw_billboard(Point(GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
 		draw_billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
+		
+		# Draw jungles around the Smoke Ring in various positions
+		glRotatef(90, 0, 1, 0)
+		for p in self._jungle_positions:
+			draw_billboard(p, self._jungle_tex, 20000, 20000)
 		
 		glDisable(GL_TEXTURE_2D)
