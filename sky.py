@@ -96,12 +96,18 @@ class SkyStuff(gameobj.GameObj):
 		
 		# Voy
 		# FIXME - Set up lighting for Voy
-		
+	
 		def draw_billboard(pos, tex, width, height):
+			# Vector from the billboard to the camera
+			camVec = app.camera - (self.pos + pos)
+			
 			glBindTexture(GL_TEXTURE_2D, tex.glname)
 			glPushMatrix()
 			glTranslatef(*pos)
-			# FIXME - Rotate to orient towards camera
+			
+			# Rotate the billboard so that it faces the camera
+			glRotatef(rev2deg(rad2rev(math.atan2(camVec[0], camVec[2]))), 0, 1, 0) # Rotate around y-axis...
+			glRotatef(rev2deg(rad2rev(math.atan2(camVec[1], math.sqrt(camVec[0]**2 + camVec[2]**2)))), 1, 0, 0) # Then tilt up/down on x-axis
 			glBegin(GL_QUADS)
 			glTexCoord2f(0.0, 0.0)
 			glVertex3f(-width/2, -height/2, 0)
@@ -119,7 +125,6 @@ class SkyStuff(gameobj.GameObj):
 		draw_billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
 		
 		# Draw jungles around the Smoke Ring in various positions
-		glRotatef(90, 0, 1, 0) # FIXME Stupid hack until billboards working properly
 		for p in self._jungle_positions:
 			draw_billboard(p, self._jungle_tex, 20000, 20000)
 		

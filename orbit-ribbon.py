@@ -69,7 +69,8 @@ app.mission_control = mission.MissionControl(
 	timer_start_func = mission.MinDistanceFunction(app.objects[0], app.objects[0].pos.__copy__(), 1.0)
 )
 
-ang = 0.05
+#ang = 0.05
+ang = 0.00
 c = math.cos(rev2rad(ang))
 s = math.sin(rev2rad(ang))
 app.sky_stuff = sky.SkyStuff(pos = Point(0,s*sky.GOLD_DIST,c*sky.GOLD_DIST), day_elapsed = 0.3)

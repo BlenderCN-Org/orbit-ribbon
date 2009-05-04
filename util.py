@@ -12,12 +12,20 @@ def rev2rad(ang):
 	"""
 	return -2.0 * ang * math.pi
 
+def rad2rev(ang):
+	"""Converts an angle in radians to revolutions."""
+	return ang/(math.pi*2.0)
+
 def rev2deg(ang):
 	"""Converts an angle in cw revolutions to cw degrees.
 
 	This is mostly used when handing angles to OpenGL.
 	"""
 	return 360 * ang
+
+def deg2rev(ang):
+	"""Converts an angle in degrees to revolutions."""
+	return ang/360
 
 def min_ang_diff(src, dest):
 	"""Returns the shortest angular distance between two angles (in revolutions).
