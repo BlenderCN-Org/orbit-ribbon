@@ -101,6 +101,11 @@ class SkyStuff(gameobj.GameObj):
 			# Vector from the billboard to the camera
 			camVec = app.camera - (self.pos + pos)
 			
+			# If it's too far away compared to its size, don't bother with it
+			n = width*height/camVec.mag()
+			if n < 15:
+				return
+			
 			glBindTexture(GL_TEXTURE_2D, tex.glname)
 			glPushMatrix()
 			glTranslatef(*pos)
