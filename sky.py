@@ -102,8 +102,7 @@ class SkyStuff(gameobj.GameObj):
 			camVec = app.camera - (self.pos + pos)
 			
 			# If it's too far away compared to its size, don't bother with it
-			n = width*height/camVec.mag()
-			if n < 15:
+			if width*height/camVec.mag() < 15:
 				return
 			
 			glBindTexture(GL_TEXTURE_2D, tex.glname)
