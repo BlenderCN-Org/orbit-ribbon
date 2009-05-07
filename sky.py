@@ -92,8 +92,6 @@ class SkyStuff:
 		# FIXME - Verify that this makes T3 spin in the correct direction as angle increases
 		t3_pos = Point(math.sin(rev2rad(self.t3_angle))*T3_DIST, 0, math.cos(rev2rad(self.t3_angle))*T3_DIST)
 		
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
-		
 		# Set up lighting parameters for the two stars of the Smoke Ring system
 		# Since lighting is disabled at this time, this does not affect the drawing of the sky objects themselves
 		
@@ -109,7 +107,8 @@ class SkyStuff:
 		# Voy
 		# FIXME - Set up lighting for Voy
 		
-		def draw_billboard(pos, tex, width, height):
+		billboard_queue = [] # List of (tex, x, y, z, w, h) tuples for ortho 2d drawing
+		def enqueue_billboard(pos, tex, width, height):
 			# Vector from the billboard to the camera
 			#camVec = app.camera - (self.pos + pos)
 			
@@ -117,63 +116,44 @@ class SkyStuff:
 			#if width*height/camVec.mag() < 15:
 			#	return
 			
-			glEnable(GL_TEXTURE_2D)
-			#glPushMatrix()
-			#glTranslatef(*pos)
-			glBindTexture(GL_TEXTURE_2D, tex.glname)
-			
-			# Rotate the billboard so that it faces the camera
-			#glRotatef(rev2deg(rad2rev(math.atan2(camVec[0], camVec[2]))), 0, 1, 0) # Rotate around y-axis...
-			#glRotatef(rev2deg(rad2rev(math.atan2(camVec[1], math.sqrt(camVec[0]**2 + camVec[2]**2)))), 1, 0, 0) # Then tilt up/down on x-axis
-			
-			#glBegin(GL_QUADS)
-			#glTexCoord2f(0.0, 0.0)
-			#glVertex3f(-width/2, -height/2, 0)
-			#glTexCoord2f(1.0, 0.0)
-			#glVertex3f( width/2, -height/2, 0)
-			#glTexCoord2f(1.0, 1.0)
-			#glVertex3f( width/2,  height/2, 0)
-			#glTexCoord2f(0.0, 1.0)
-			#glVertex3f(-width/2,  height/2, 0)
-			#glEnd()
-			
-			#glPopMatrix()
-			
 			winPos = gluProject(*pos)
 			if winPos[2] > 1.0:
 				return
-			glMatrixMode(GL_PROJECTION)
-			glPushMatrix()
-			glLoadIdentity()
-			gluOrtho2D(0, app.winsize[0], 0, app.winsize[1])
-			glMatrixMode(GL_MODELVIEW)
-			glPushMatrix()
-			glLoadIdentity()
-			glTranslatef(*winPos)
-			glBegin(GL_QUADS)
-			X, Y = 20, 20
-			glTexCoord2f(0.0, 0.0)
-			glVertex3f(-X, -Y, 0)
-			glTexCoord2f(1.0, 0.0)
-			glVertex3f( X, -Y, 0)
-			glTexCoord2f(1.0, 1.0)
-			glVertex3f( X,  Y, 0)
-			glTexCoord2f(0.0, 1.0)
-			glVertex3f(-X,  Y, 0)
-			glEnd()
-			glPopMatrix()
-			glMatrixMode(GL_PROJECTION)
-			glPopMatrix()
-			glMatrixMode(GL_MODELVIEW)
-			
-			glDisable(GL_TEXTURE_2D)
+			w, h = 20, 20
+			if winPos[0] + w < 0 or winPos[0] - w > app.winsize[0] or winPos[1] + h < 0 or winPos[1] - h > app.winsize[1]:
+				return
+			billboard_queue.append((tex, winPos[0], winPos[1], winPos[2], w, h))
 		
-		draw_billboard(t3_pos,               self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)    # T3
-		draw_billboard(Point(0,0,GOLD_DIST), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
-		draw_billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
+		# Add billboards for major objects
+		enqueue_billboard(t3_pos,               self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)    # T3
+		enqueue_billboard(Point(0,0,GOLD_DIST), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
+		enqueue_billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
 		
-		# Draw jungles around the Smoke Ring in various positions
+		# Add billboards for jungles around the Smoke Ring in various positions
 		for p in self._jungle_positions:
-			draw_billboard(p, self._jungle_tex, 20000, 20000)
-
+			enqueue_billboard(p, self._jungle_tex, 20000, 20000)
+		
+		# Draw everything in the billboard queue in back-to-front order
+		billboard_queue.sort(cmp = lambda x, y: cmp(y[3], x[3]))
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
+		glEnable(GL_TEXTURE_2D)	
+		glMatrixMode(GL_PROJECTION)
+		glLoadIdentity()
+		gluOrtho2D(0, app.winsize[0], 0, app.winsize[1])
+		glMatrixMode(GL_MODELVIEW)
+		glLoadIdentity()
+		for tex, x, y, z, w, h in billboard_queue:
+			glBindTexture(GL_TEXTURE_2D, tex.glname)
+			glBegin(GL_QUADS)
+			glTexCoord2f(0.0, 0.0)
+			glVertex3f(x - w, y - h, 0)
+			glTexCoord2f(1.0, 0.0)
+			glVertex3f(x + w, y - h, 0)
+			glTexCoord2f(1.0, 1.0)
+			glVertex3f(x + w, y + h, 0)
+			glTexCoord2f(0.0, 1.0)
+			glVertex3f(x - w, y + h, 0)
+			glEnd()
+		glDisable(GL_TEXTURE_2D)
+		
 		glPopMatrix()
