@@ -183,6 +183,11 @@ def _sim_step():
 	for o in objects:
 		o.step()
 		o.damp()
+	
+	# Update the watchers
+	for w in watchers:
+		if w.expr != None:
+			w.update()
 
 
 def _draw_frame():
@@ -232,7 +237,6 @@ def _draw_frame():
 	# Draw the watchers
 	for w in watchers:
 		if w.expr != None:
-			w.update()
 			w.draw()
 	
 	# Draw the console, if it's up
