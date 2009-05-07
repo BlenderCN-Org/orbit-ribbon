@@ -199,7 +199,7 @@ def _draw_frame():
 	# Position the camera
 	gluLookAt(camera[0], camera[1], camera[2], camera_tgt[0], camera_tgt[1], camera_tgt[2], camera_up[0], camera_up[1], camera_up[2])
 	
-	# 3D projection mode for far objects with no depth-testing or lighting
+	# 3D projection mode for Sky objects with no depth-testing or lighting
 	glDisable(GL_DEPTH_TEST)
 	glDisable(GL_LIGHTING)
 	glMatrixMode(GL_PROJECTION)
@@ -210,7 +210,7 @@ def _draw_frame():
 	# Draw the various sky objects
 	sky_stuff.draw()
 	
-	# 3D projection mode for near objects with depth-testing
+	# 3D projection mode for gameplay objects with depth-testing
 	glEnable(GL_DEPTH_TEST)
 	glEnable(GL_LIGHTING)
 	glMatrixMode(GL_PROJECTION)
@@ -225,9 +225,9 @@ def _draw_frame():
 	# 2D drawing mode
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
+	gluOrtho2D(0.0, winsize[0], winsize[1], 0.0)
 	glMatrixMode(GL_MODELVIEW)
 	glLoadIdentity()
-	gluOrtho2D(0.0, winsize[0], winsize[1], 0.0)
 	glDisable(GL_DEPTH_TEST)
 	glDisable(GL_LIGHTING)
 	

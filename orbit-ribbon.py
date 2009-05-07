@@ -69,15 +69,13 @@ app.mission_control = mission.MissionControl(
 	timer_start_func = mission.MinDistanceFunction(app.objects[0], app.objects[0].pos.__copy__(), 1.0)
 )
 
-#ang = 0.05
-ang = 0.00
-c = math.cos(rev2rad(ang))
-s = math.sin(rev2rad(ang))
-app.sky_stuff = sky.SkyStuff(pos = Point(0,s*sky.GOLD_DIST,c*sky.GOLD_DIST), day_elapsed = 0.3)
-app.sky_stuff.rot = (
-	1, 0, 0,
-	0, c, -s,
-	0, s, c,
+app.sky_stuff = sky.SkyStuff(
+	game_angle = 0.37,
+	game_y_offset = 1100,
+	game_d_offset = 800,
+	game_x_tilt = 0.15,
+	game_z_tilt = 0.35,
+	t3_angle = 0.8,
 )
 
 #profile.run('app.run()', 'profile')

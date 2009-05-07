@@ -3,7 +3,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import app, gameobj, colors, collision, resman
+import app, colors, collision, resman
 from geometry import *
 from util import *
 	
@@ -16,31 +16,37 @@ TORUS_INSIDE_DIST = 1e7 # Guessed
 TORUS_RADIUS = TORUS_OUTSIDE_DIST - TORUS_INSIDE_DIST # Assuming a circular torus, which probably isn't quite right
 GOLD_DIST = 2.6e7 # From book; also, assuming that Gold is in precise middle of Smoke Ring
 GOLD_RADIUS = 5e5 # Guessed; includes the storm around Gold
-SMOKE_RING_RADIUS = 8e4 # Calculations yielded 1.4e7, but that looked terrible, so this is made up 
+SMOKE_RING_RADIUS = 8e4 # Calculations yielded 1.4e7, but that looked terrible, so this is made up. FIXME This is far too narrow to hold jungles. 
 SMOKE_RING_INSIDE_DIST = GOLD_DIST - SMOKE_RING_RADIUS
 SMOKE_RING_OUTSIDE_DIST = GOLD_DIST + SMOKE_RING_RADIUS
 
 # FIXME - Consider using depth testing for sky objects, then clearing the depth buffer
 
-class SkyStuff(gameobj.GameObj):
-	"""The objects that are visible far out in the sky; Voy and T3, Gold, the Smoke Ring, far ponds and clouds and plants, etc.
-	
-	The origin of this object is the location of Voy. Gold is on the local x axis.
+class SkyStuff:
+	"""Handles and draws the objects that are visible far out in the sky; Voy and T3, Gold, the Smoke Ring, far ponds and clouds and plants, etc.
 	
 	It is important to draw this object each frame before anything else. Also, before drawing, you must
 	disable depth testing and lighting, and set the far clipping plane to at least 1e12 away.
 	
-	No dynamics or geometry are involved with this object, since everything is so far away that there's
-	no reason for the player to ever interact with it.
+	The 'angle' values below determine position around the Smoke Ring. Gold is at angle 0.5.
 	
 	Data attributes:
-	day_elapsed - A value in [0.0,1.0) that indicates how much of the day has passed.
-		At day_elapsed = 0.0, T3 is on the far side of Voy. Each day, T3 makes one apparent orbit around Voy.
+	game_angle - A value in [0.0,1.0) that indicates which part of the torus the origin of the gameplay coordinate system is.
+	game_y_offset - A value indicating how far north or south from the Smoke Ring's middle the game coord system is at.
+	game_d_offset - A value indicating how far in or out from the Smoke Ring's middle the game coord system is at.
+	game_x_tilt - A value in [0.0,1.0) indicating how tilted the Smoke Ring appears along the X axis from the player's perspective. Applied first.
+	game_z_tilt - A value in [0.0,1.0) indicating how tilted the Smoke Ring appears along the Z axis from the player's perspective. Applied second.
+	t3_angle - A value in [0.0,1.0) that indicates which part of the torus T3 is closest to.
 	"""
 	
-	def __init__(self, pos, day_elapsed = 0.0):
-		super(SkyStuff, self).__init__(pos = pos)
-		self.day_elapsed = day_elapsed
+	def __init__(self, game_angle = 0.0, game_y_offset = 0.0, game_d_offset = 0.0, game_x_tilt = 0.0, game_z_tilt = 0.0, t3_angle = 0.3):
+		self.game_angle = game_angle
+		self.game_y_offset = game_y_offset
+		self.game_d_offset = game_d_offset
+		self.game_x_tilt = game_x_tilt
+		self.game_z_tilt = game_z_tilt
+		self.t3_angle = t3_angle
+		
 		self._voy_tex = resman.Texture("voy.png")
 		self._t3_tex = resman.Texture("t3.png")
 		self._gold_tex = resman.Texture("gold.png")
@@ -56,8 +62,15 @@ class SkyStuff(gameobj.GameObj):
 			p = Point(math.cos(ang)*(GOLD_DIST + r_offset), y_offset, math.sin(ang)*(GOLD_DIST + r_offset))
 			self._jungle_positions.append(p)
 	
-	def indraw(self):
-		# The Smoke Ring and the gas torus
+	def draw(self):
+		# Position and rotate ourselves; our origin (at Voy) is not the gameplay coordinate system origin
+		glPushMatrix()
+		glRotatef(rev2deg(self.game_x_tilt), 1, 0, 0) # Apply X tilt
+		glRotatef(rev2deg(self.game_z_tilt), 0, 0, 1) # Apply Z tilt
+		glTranslatef(0.0, -self.game_y_offset, GOLD_DIST + self.game_d_offset) # Move out to Voy
+		glRotatef(rev2deg(self.game_angle), 0, 1, 0) # Rotate around the Ring until we get to our gameplay spot
+		
+		### The Smoke Ring and the gas torus
 		glEnable(GL_CULL_FACE)
 		glPushMatrix()
 		glRotatef(90, 1, 0, 0)
@@ -76,10 +89,9 @@ class SkyStuff(gameobj.GameObj):
 		glPopMatrix()
 		glDisable(GL_CULL_FACE)
 		
-		# FIXME - Verify that this makes T3 spin in the correct direction
-		t3_pos = Point(math.sin(rev2rad(self.day_elapsed))*T3_DIST, 0, math.cos(rev2rad(self.day_elapsed))*T3_DIST)
+		# FIXME - Verify that this makes T3 spin in the correct direction as angle increases
+		t3_pos = Point(math.sin(rev2rad(self.t3_angle))*T3_DIST, 0, math.cos(rev2rad(self.t3_angle))*T3_DIST)
 		
-		glEnable(GL_TEXTURE_2D)
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
 		
 		# Set up lighting parameters for the two stars of the Smoke Ring system
@@ -96,40 +108,72 @@ class SkyStuff(gameobj.GameObj):
 		
 		# Voy
 		# FIXME - Set up lighting for Voy
-	
+		
 		def draw_billboard(pos, tex, width, height):
 			# Vector from the billboard to the camera
-			camVec = app.camera - (self.pos + pos)
+			#camVec = app.camera - (self.pos + pos)
 			
 			# If it's too far away compared to its size, don't bother with it
-			if width*height/camVec.mag() < 15:
-				return
+			#if width*height/camVec.mag() < 15:
+			#	return
 			
+			glEnable(GL_TEXTURE_2D)
+			#glPushMatrix()
+			#glTranslatef(*pos)
 			glBindTexture(GL_TEXTURE_2D, tex.glname)
-			glPushMatrix()
-			glTranslatef(*pos)
 			
 			# Rotate the billboard so that it faces the camera
-			glRotatef(rev2deg(rad2rev(math.atan2(camVec[0], camVec[2]))), 0, 1, 0) # Rotate around y-axis...
-			glRotatef(rev2deg(rad2rev(math.atan2(camVec[1], math.sqrt(camVec[0]**2 + camVec[2]**2)))), 1, 0, 0) # Then tilt up/down on x-axis
+			#glRotatef(rev2deg(rad2rev(math.atan2(camVec[0], camVec[2]))), 0, 1, 0) # Rotate around y-axis...
+			#glRotatef(rev2deg(rad2rev(math.atan2(camVec[1], math.sqrt(camVec[0]**2 + camVec[2]**2)))), 1, 0, 0) # Then tilt up/down on x-axis
+			
+			#glBegin(GL_QUADS)
+			#glTexCoord2f(0.0, 0.0)
+			#glVertex3f(-width/2, -height/2, 0)
+			#glTexCoord2f(1.0, 0.0)
+			#glVertex3f( width/2, -height/2, 0)
+			#glTexCoord2f(1.0, 1.0)
+			#glVertex3f( width/2,  height/2, 0)
+			#glTexCoord2f(0.0, 1.0)
+			#glVertex3f(-width/2,  height/2, 0)
+			#glEnd()
+			
+			#glPopMatrix()
+			
+			winPos = gluProject(*pos)
+			if winPos[2] > 1.0:
+				return
+			glMatrixMode(GL_PROJECTION)
+			glPushMatrix()
+			glLoadIdentity()
+			gluOrtho2D(0, app.winsize[0], 0, app.winsize[1])
+			glMatrixMode(GL_MODELVIEW)
+			glPushMatrix()
+			glLoadIdentity()
+			glTranslatef(*winPos)
 			glBegin(GL_QUADS)
+			X, Y = 20, 20
 			glTexCoord2f(0.0, 0.0)
-			glVertex3f(-width/2, -height/2, 0)
+			glVertex3f(-X, -Y, 0)
 			glTexCoord2f(1.0, 0.0)
-			glVertex3f( width/2, -height/2, 0)
+			glVertex3f( X, -Y, 0)
 			glTexCoord2f(1.0, 1.0)
-			glVertex3f( width/2,  height/2, 0)
+			glVertex3f( X,  Y, 0)
 			glTexCoord2f(0.0, 1.0)
-			glVertex3f(-width/2,  height/2, 0)
+			glVertex3f(-X,  Y, 0)
 			glEnd()
 			glPopMatrix()
+			glMatrixMode(GL_PROJECTION)
+			glPopMatrix()
+			glMatrixMode(GL_MODELVIEW)
+			
+			glDisable(GL_TEXTURE_2D)
 		
 		draw_billboard(t3_pos,               self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)    # T3
-		draw_billboard(Point(GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
+		draw_billboard(Point(0,0,GOLD_DIST), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
 		draw_billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
 		
 		# Draw jungles around the Smoke Ring in various positions
 		for p in self._jungle_positions:
 			draw_billboard(p, self._jungle_tex, 20000, 20000)
-		
-		glDisable(GL_TEXTURE_2D)
+
+		glPopMatrix()
