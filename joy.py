@@ -98,12 +98,11 @@ def getAxes():
 		x = None
 		for key in ret:
 			v = ret[key]
-			if v != 0.0:
-				if x is None:
-					x = v
-				elif v != x:
-					_weirdState = False
-					break
+			if x is None and v < -0.99:
+				x = v
+			elif v != x:
+				_weirdState = False
+				break
 		if _weirdState:
 			for key in ret:
 				ret[key] = 0.0
