@@ -6,6 +6,8 @@ from OpenGL.GLUT import *
 import app, colors, collision, resman
 from geometry import *
 from util import *
+
+PROJ_DIST = 1e12
 	
 # Distances in meters from Voy to other sky objects, and sizes of various objects
 VOY_RADIUS = 2e4 # From book
@@ -25,8 +27,7 @@ SMOKE_RING_OUTSIDE_DIST = GOLD_DIST + SMOKE_RING_RADIUS
 class SkyStuff:
 	"""Handles and draws the objects that are visible far out in the sky; Voy and T3, Gold, the Smoke Ring, far ponds and clouds and plants, etc.
 	
-	It is important to draw this object each frame before anything else. Also, before drawing, you must
-	disable depth testing and lighting, and set the far clipping plane to at least 1e12 away.
+	It is important to draw this object each frame before anything else, and with depth testing and lighting disabled.
 	
 	The 'angle' values below determine position around the Smoke Ring. Gold is at angle 0.5.
 	
@@ -63,6 +64,12 @@ class SkyStuff:
 			self._jungle_positions.append(p)
 	
 	def draw(self):
+		glMatrixMode(GL_PROJECTION)
+		glPushMatrix()
+		glLoadIdentity()
+		gluPerspective(app.FOV, app.winsize[0]/app.winsize[1], 0.1, PROJ_DIST)
+		glMatrixMode(GL_MODELVIEW)
+		
 		# Position and rotate ourselves; our origin (at Voy) is not the gameplay coordinate system origin
 		glPushMatrix()
 		glRotatef(rev2deg(self.game_x_tilt), 1, 0, 0) # Apply X tilt
@@ -157,3 +164,8 @@ class SkyStuff:
 		glDisable(GL_TEXTURE_2D)
 		
 		glPopMatrix()
+		
+		# Restore original projection matrix
+		glMatrixMode(GL_PROJECTION)
+		glPopMatrix()
+		glMatrixMode(GL_MODELVIEW)
