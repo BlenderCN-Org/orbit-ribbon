@@ -5,6 +5,11 @@ from pygame.locals import *
 
 _js = None
 
+# The PS3 controller, when plugged in, acts kind of weird until you push the PS3 button
+# You can tell it's in this state because all axis readings return the same number or 0.0
+# We assume we're in weirdState and report no axis data until we get numbers that look okay
+_weirdState = True
+
 # Constants returned by procEvent
 AXIS, BUTTON = range(2)
 UP, DOWN = range(2)
@@ -41,7 +46,6 @@ AXIS_NUMS = {
 	RY : 3,
 }
 AXIS_NAMES = dict([ (AXIS_NUMS[n], n) for n in AXIS_NUMS.keys() ])
-
 
 def init():
 	"""Must be called before you can start receiving joystick events."""
@@ -87,6 +91,23 @@ def getAxes():
 			ret[name] = v
 		else:
 			ret[name] = 0.0
+	
+	# Check if we can leave weirdness state; if not, set all values to 0.0
+	global _weirdState
+	if _weirdState:
+		x = None
+		for key in ret:
+			v = ret[key]
+			if v != 0.0:
+				if x is None:
+					x = v
+				elif v != x:
+					_weirdState = False
+					break
+		if _weirdState:
+			for key in ret:
+				ret[key] = 0.0
+	
 	return ret
 
 def getButtons():
