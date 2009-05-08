@@ -97,9 +97,6 @@ def ui_init():
 	glColorMaterial(GL_FRONT, GL_DIFFUSE)
 	glEnable(GL_COLOR_MATERIAL)
 	
-	glPointSize(4)
-	glLineWidth(2)
-	
 	cons = console.Console()
 	watchers = []
 	sys.stderr = cons.pseudofile

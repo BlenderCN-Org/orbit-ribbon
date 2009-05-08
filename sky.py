@@ -96,10 +96,7 @@ class SkyStuff:
 		# Since lighting is disabled at this time, this does not affect the drawing of the sky objects themselves
 		
 		# T3
-		glPushMatrix()
-		glTranslatef(*t3_pos)
-		glLightfv(GL_LIGHT1, GL_POSITION, (0.0, 0.0, 0.0, 1.0))
-		glPopMatrix()
+		glLightfv(GL_LIGHT1, GL_POSITION, (t3_pos[0], t3_pos[1], t3_pos[2], 1.0))
 		glLightfv(GL_LIGHT1, GL_AMBIENT, (0.7, 0.7, 0.7, 1.0))
 		glLightfv(GL_LIGHT1, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))
 		glEnable(GL_LIGHT1)
@@ -107,53 +104,59 @@ class SkyStuff:
 		# Voy
 		# FIXME - Set up lighting for Voy
 		
-		billboard_queue = [] # List of (tex, x, y, z, w, h) tuples for ortho 2d drawing
-		def enqueue_billboard(pos, tex, width, height):
-			# Vector from the billboard to the camera
-			#camVec = app.camera - (self.pos + pos)
-			
-			# If it's too far away compared to its size, don't bother with it
-			#if width*height/camVec.mag() < 15:
-			#	return
-			
+		billboard_queue = [] # List of (tex/color, x, y, z, scale) tuples for ortho 2d drawing
+		def enqueue_billboard(pos, tex, color, scale):
 			winPos = gluProject(*pos)
 			if winPos[2] > 1.0:
 				return
-			w, h = 20, 20
-			if winPos[0] + w < 0 or winPos[0] - w > app.winsize[0] or winPos[1] + h < 0 or winPos[1] - h > app.winsize[1]:
+			s = scale*(1-winPos[2])*20000
+			if winPos[0] + s/2 < 0 or winPos[0] - s/2 > app.winsize[0] or winPos[1] + s/2 < 0 or winPos[1] - s/2 > app.winsize[1]:
 				return
-			billboard_queue.append((tex, winPos[0], winPos[1], winPos[2], w, h))
+			if s < 1.5:
+				# Add it as a colored point billboard
+				billboard_queue.append((color, winPos[0], winPos[1], winPos[2], s))
+			elif s > 0.3:
+				# Add it as a textured billboard
+				billboard_queue.append((tex, winPos[0], winPos[1], winPos[2], s))
 		
 		# Add billboards for major objects
-		enqueue_billboard(t3_pos,               self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)    # T3
-		enqueue_billboard(Point(0,0,GOLD_DIST), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
-		enqueue_billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
+		enqueue_billboard(t3_pos,               self._t3_tex,   colors.yellow, T3_RADIUS*2)    # T3
+		enqueue_billboard(Point(0,0,GOLD_DIST), self._gold_tex, colors.gray,   GOLD_RADIUS*2)  # Gold
+		enqueue_billboard(Point(0,0,0),         self._voy_tex,  colors.blue,   VOY_RADIUS*2)   # Voy
 		
 		# Add billboards for jungles around the Smoke Ring in various positions
 		for p in self._jungle_positions:
-			enqueue_billboard(p, self._jungle_tex, 20000, 20000)
+			enqueue_billboard(p, self._jungle_tex, (0.0, 0.5, 0.0), 20000)
 		
 		# Draw everything in the billboard queue in back-to-front order
 		billboard_queue.sort(cmp = lambda x, y: cmp(y[3], x[3]))
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
-		glEnable(GL_TEXTURE_2D)	
 		glMatrixMode(GL_PROJECTION)
 		glLoadIdentity()
 		gluOrtho2D(0, app.winsize[0], 0, app.winsize[1])
 		glMatrixMode(GL_MODELVIEW)
 		glLoadIdentity()
-		for tex, x, y, z, w, h in billboard_queue:
-			glBindTexture(GL_TEXTURE_2D, tex.glname)
-			glBegin(GL_QUADS)
-			glTexCoord2f(0.0, 0.0)
-			glVertex3f(x - w, y - h, 0)
-			glTexCoord2f(1.0, 0.0)
-			glVertex3f(x + w, y - h, 0)
-			glTexCoord2f(1.0, 1.0)
-			glVertex3f(x + w, y + h, 0)
-			glTexCoord2f(0.0, 1.0)
-			glVertex3f(x - w, y + h, 0)
-			glEnd()
-		glDisable(GL_TEXTURE_2D)
-		
+		for tex_or_color, x, y, z, s in billboard_queue:
+			if isinstance(tex_or_color, resman.Texture):
+				glEnable(GL_TEXTURE_2D)	
+				glBindTexture(GL_TEXTURE_2D, tex_or_color.glname)
+				glBegin(GL_QUADS)
+				glTexCoord2f(0.0, 0.0)
+				s2 = s/2
+				glVertex3f(x - s2, y - s2, 0)
+				glTexCoord2f(1.0, 0.0)
+				glVertex3f(x + s2, y - s2, 0)
+				glTexCoord2f(1.0, 1.0)
+				glVertex3f(x + s2, y + s2, 0)
+				glTexCoord2f(0.0, 1.0)
+				glVertex3f(x - s2, y + s2, 0)
+				glEnd()
+				glDisable(GL_TEXTURE_2D)
+			else:
+				glPointSize(s)
+				glColor3fv(tex_or_color)
+				glBegin(GL_POINTS)
+				glVertex3f(x, y, 0)
+				glEnd()
+				
 		glPopMatrix()
