@@ -9,6 +9,8 @@ from OpenGL.GLUT import *
 import collision, util, console, resman, app, joy
 from geometry import *
 
+SKY_CLIP_DIST = 1e12
+GAMEPLAY_CLIP_DIST = 5000
 FOV = 45
 
 #The ODE simulation
@@ -199,15 +201,15 @@ def _draw_frame():
 	# Position the camera
 	gluLookAt(camera[0], camera[1], camera[2], camera_tgt[0], camera_tgt[1], camera_tgt[2], camera_up[0], camera_up[1], camera_up[2])
 	
-	# 3D projection mode for Sky objects with no depth-testing or lighting
+	# 3D projection mode for sky objects without depth-testing
 	glDisable(GL_DEPTH_TEST)
 	glDisable(GL_LIGHTING)
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
-	gluPerspective(FOV, winsize[0]/winsize[1], 1.0, 1e12)
+	gluPerspective(FOV, winsize[0]/winsize[1], 0.1, SKY_CLIP_DIST)
 	glMatrixMode(GL_MODELVIEW)
 	
-	# Draw the various sky objects
+	# Draw the sky objects
 	sky_stuff.draw()
 	
 	# 3D projection mode for gameplay objects with depth-testing
@@ -215,7 +217,7 @@ def _draw_frame():
 	glEnable(GL_LIGHTING)
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
-	gluPerspective(FOV, winsize[0]/winsize[1], 0.1, 5000.0)
+	gluPerspective(FOV, winsize[0]/winsize[1], 0.1, GAMEPLAY_CLIP_DIST)
 	glMatrixMode(GL_MODELVIEW)
 	
 	# Draw all objects in the list

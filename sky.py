@@ -6,7 +6,7 @@ from OpenGL.GLUT import *
 import app, colors, collision, resman
 from geometry import *
 from util import *
-	
+
 # Distances in meters from Voy to other sky objects, and sizes of various objects
 VOY_RADIUS = 2e4 # From book
 T3_DIST = 2.5e11 # From book
@@ -26,7 +26,7 @@ class SkyStuff:
 	"""Handles and draws the objects that are visible far out in the sky; Voy and T3, Gold, the Smoke Ring, far ponds and clouds and plants, etc.
 	
 	It is important to draw this object each frame before anything else. Also, before drawing, you must
-	disable depth testing and lighting, and set the far clipping plane to at least 1e12 away.
+	disable depth testing and lighting, and set the far clipping plane to app.SKY_CLIP_DIST away.
 	
 	The 'angle' values below determine position around the Smoke Ring. Gold is at angle 0.5.
 	
