@@ -199,9 +199,15 @@ def _draw_frame():
 	# Position the camera
 	gluLookAt(camera[0], camera[1], camera[2], camera_tgt[0], camera_tgt[1], camera_tgt[2], camera_up[0], camera_up[1], camera_up[2])
 	
-	# Draw the various sky objects; SkyStuff is responsible for setting its own projection matrix
+	# 3D projection mode for Sky objects with no depth-testing or lighting
 	glDisable(GL_DEPTH_TEST)
 	glDisable(GL_LIGHTING)
+	glMatrixMode(GL_PROJECTION)
+	glLoadIdentity()
+	gluPerspective(FOV, winsize[0]/winsize[1], 1.0, 1e12)
+	glMatrixMode(GL_MODELVIEW)
+	
+	# Draw the various sky objects
 	sky_stuff.draw()
 	
 	# 3D projection mode for gameplay objects with depth-testing
