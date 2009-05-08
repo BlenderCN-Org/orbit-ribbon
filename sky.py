@@ -109,7 +109,8 @@ class SkyStuff:
 			winPos = gluProject(*pos)
 			if winPos[2] > 1.0:
 				return
-			s = scale*(1-winPos[2])*20000
+			s = scale*(1-winPos[2])*20000 # FIXME : Why do I need this huge fudge coefficient? I know from experiment that I don't need SKY_CLIP_DIST...
+			# FIXME One way to test above is to bring back quad drawing, and make billboards alpha to do testing...
 			if winPos[0] + s/2 < 0 or winPos[0] - s/2 > app.winsize[0] or winPos[1] + s/2 < 0 or winPos[1] - s/2 > app.winsize[1]:
 				return
 			if s < 1.5:
@@ -128,6 +129,13 @@ class SkyStuff:
 		for p in self._jungle_positions:
 			enqueue_billboard(p, self._jungle_tex, (0.0, 0.5, 0.0), 20000)
 		
+		## Angle to rotate billboards: the angle between the camera's up vector and the north-south axis
+		# Create our north_up vector by starting with positive y axis vector, then applying X and Z tilt
+		north_up = Point(0, 1, 0)
+		# FIXME Implement geometry.Point.rotate, then use it to rotate north_up
+		# Find the angle between in radians using dot product
+		billboard_ang = rev2deg(rad2rev(math.acos(app.camera_up.dot_prod(north_up)/app.camera_up.mag())))
+		
 		# Draw everything in the billboard queue in back-to-front order
 		billboard_queue.sort(cmp = lambda x, y: cmp(y[3], x[3]))
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
@@ -140,17 +148,21 @@ class SkyStuff:
 			if isinstance(tex_or_color, resman.Texture):
 				glEnable(GL_TEXTURE_2D)	
 				glBindTexture(GL_TEXTURE_2D, tex_or_color.glname)
+				s2 = s/2
+				glPushMatrix()
+				glTranslatef(x, y, 0)
+				glRotatef(billboard_ang, 0, 0, 1)
 				glBegin(GL_QUADS)
 				glTexCoord2f(0.0, 0.0)
-				s2 = s/2
-				glVertex3f(x - s2, y - s2, 0)
+				glVertex3f(-s2, -s2, 0)
 				glTexCoord2f(1.0, 0.0)
-				glVertex3f(x + s2, y - s2, 0)
+				glVertex3f(+s2, -s2, 0)
 				glTexCoord2f(1.0, 1.0)
-				glVertex3f(x + s2, y + s2, 0)
+				glVertex3f(+s2, +s2, 0)
 				glTexCoord2f(0.0, 1.0)
-				glVertex3f(x - s2, y + s2, 0)
+				glVertex3f(-s2, +s2, 0)
 				glEnd()
+				glPopMatrix()
 				glDisable(GL_TEXTURE_2D)
 			else:
 				glPointSize(s)

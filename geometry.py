@@ -164,6 +164,14 @@ class Point(_CoordLike, object):
 	def __deepcopy__(self, memo):
 		return self.__copy__()
 	
+	def dot_prod(self, other):
+		"""Returns the dot product between this point and another, both considered as vectors."""
+		return self[0]*other[0] + self[1]*other[1] + self[2]*other[2]
+	
+	def rotate(self, angle):
+		"""Rotates this point as a vector around the origin. Angle given is in revolutions."""
+		# FIXME Implement this
+	
 	def mag(self):
 		"""Returns the distance between the origin and this point."""
 		return math.sqrt(math.sqrt(self[0]**2.0 + self[1]**2.0)**2.0 + self[2]**2.0)
@@ -195,17 +203,6 @@ class Point(_CoordLike, object):
 			ret[1] *= len/oldlen
 			ret[2] *= len/oldlen
 		return ret
-	
-	def rot(self, cen, ang):
-		# FIXME : Needs to be 3D
-		"""Returns this point rotated around a center a given number of cw revolutions."""
-	
-		if abs(ang) < 0.000001:
-			return copy.copy(self)
-		a = util.rev2rad(ang) #Convert to ccw radians
-		h = cen.dist_to(self) #Radius of circle
-		b = util.rev2rad(cen.ang_to(self))
-		return Point(h*math.cos(a+b)+cen[0], -1*h*math.sin(a+b)+cen[1])
 	
 	def _get_x(self): return self[0]
 	def _set_x(self, x): self[0] = x
