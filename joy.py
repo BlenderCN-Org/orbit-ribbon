@@ -100,7 +100,7 @@ def getAxes():
 			v = ret[key]
 			if x is None and v < -0.99:
 				x = v
-			elif v != x:
+			elif v != x and v != 0.0:
 				_weirdState = False
 				break
 		if _weirdState:
