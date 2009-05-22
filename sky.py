@@ -104,71 +104,44 @@ class SkyStuff:
 		# Voy
 		# FIXME - Set up lighting for Voy
 		
-		billboard_queue = [] # List of (tex/color, x, y, z, scale) tuples for ortho 2d drawing
-		def enqueue_billboard(pos, tex, color, scale):
-			winPos = gluProject(*pos)
-			if winPos[2] > 1.0:
+		def draw_billboard(pos, tex, width, height):
+			# Vector from the billboard to the camera
+			#camVec = app.camera - (self.pos + pos)
+			camVec = Point(1, 0, 0)
+			
+			# If it's too far away compared to its size, don't bother with it
+			if width*height/camVec.mag() < 15:
 				return
-			s = scale*(1-winPos[2])*20000 # FIXME : Why do I need this huge fudge coefficient? I know from experiment that I don't need SKY_CLIP_DIST...
-			# FIXME One way to test above is to bring back quad drawing, and make billboards alpha to do testing...
-			if winPos[0] + s/2 < 0 or winPos[0] - s/2 > app.winsize[0] or winPos[1] + s/2 < 0 or winPos[1] - s/2 > app.winsize[1]:
-				return
-			if s < 1.5:
-				# Add it as a colored point billboard
-				billboard_queue.append((color, winPos[0], winPos[1], winPos[2], s))
-			elif s > 0.3:
-				# Add it as a textured billboard
-				billboard_queue.append((tex, winPos[0], winPos[1], winPos[2], s))
+			
+			glBindTexture(GL_TEXTURE_2D, tex.glname)
+			glPushMatrix()
+			glTranslatef(*pos)
+			
+			# Rotate the billboard so that it faces the camera
+			glRotatef(rev2deg(rad2rev(math.atan2(camVec[0], camVec[2]))), 0, 1, 0) # Rotate around y-axis...
+			glRotatef(rev2deg(rad2rev(math.atan2(camVec[1], math.sqrt(camVec[0]**2 + camVec[2]**2)))), 1, 0, 0) # Then tilt up/down on x-axis
+			glBegin(GL_QUADS)
+			glTexCoord2f(0.0, 0.0)
+			glVertex3f(-width/2, -height/2, 0)
+			glTexCoord2f(1.0, 0.0)
+			glVertex3f( width/2, -height/2, 0)
+			glTexCoord2f(1.0, 1.0)
+			glVertex3f( width/2,  height/2, 0)
+			glTexCoord2f(0.0, 1.0)
+			glVertex3f(-width/2,  height/2, 0)
+			glEnd()
+			glPopMatrix()
 		
-		# Add billboards for major objects
-		enqueue_billboard(t3_pos,               self._t3_tex,   colors.yellow, T3_RADIUS*2)    # T3
-		enqueue_billboard(Point(0,0,GOLD_DIST), self._gold_tex, colors.gray,   GOLD_RADIUS*2)  # Gold
-		enqueue_billboard(Point(0,0,0),         self._voy_tex,  colors.blue,   VOY_RADIUS*2)   # Voy
-		
-		# Add billboards for jungles around the Smoke Ring in various positions
-		for p in self._jungle_positions:
-			enqueue_billboard(p, self._jungle_tex, (0.0, 0.5, 0.0), 20000)
-		
-		## Angle to rotate billboards: the angle between the camera's up vector and the north-south axis
-		# Create our north_up vector by starting with positive y axis vector, then applying X and Z tilt
-		north_up = Point(0, 1, 0)
-		# FIXME Implement geometry.Point.rotate, then use it to rotate north_up
-		# Find the angle between in radians using dot product
-		billboard_ang = rev2deg(rad2rev(math.acos(app.camera_up.dot_prod(north_up)/app.camera_up.mag())))
-		
-		# Draw everything in the billboard queue in back-to-front order
-		billboard_queue.sort(cmp = lambda x, y: cmp(y[3], x[3]))
+		glEnable(GL_TEXTURE_2D)
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
-		glMatrixMode(GL_PROJECTION)
-		glLoadIdentity()
-		gluOrtho2D(0, app.winsize[0], 0, app.winsize[1])
-		glMatrixMode(GL_MODELVIEW)
-		glLoadIdentity()
-		for tex_or_color, x, y, z, s in billboard_queue:
-			if isinstance(tex_or_color, resman.Texture):
-				glEnable(GL_TEXTURE_2D)	
-				glBindTexture(GL_TEXTURE_2D, tex_or_color.glname)
-				s2 = s/2
-				glPushMatrix()
-				glTranslatef(x, y, 0)
-				glRotatef(billboard_ang, 0, 0, 1)
-				glBegin(GL_QUADS)
-				glTexCoord2f(0.0, 0.0)
-				glVertex3f(-s2, -s2, 0)
-				glTexCoord2f(1.0, 0.0)
-				glVertex3f(+s2, -s2, 0)
-				glTexCoord2f(1.0, 1.0)
-				glVertex3f(+s2, +s2, 0)
-				glTexCoord2f(0.0, 1.0)
-				glVertex3f(-s2, +s2, 0)
-				glEnd()
-				glPopMatrix()
-				glDisable(GL_TEXTURE_2D)
-			else:
-				glPointSize(s)
-				glColor3fv(tex_or_color)
-				glBegin(GL_POINTS)
-				glVertex3f(x, y, 0)
-				glEnd()
-				
+		
+		draw_billboard(t3_pos,               self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)    # T3
+		draw_billboard(Point(GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
+		draw_billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
+		
+		# Draw jungles around the Smoke Ring in various positions
+		for p in self._jungle_positions:
+			draw_billboard(p, self._jungle_tex, 20000, 20000)
+		
+		glDisable(GL_TEXTURE_2D)
 		glPopMatrix()
