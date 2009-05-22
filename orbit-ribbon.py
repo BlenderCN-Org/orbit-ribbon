@@ -73,8 +73,8 @@ app.sky_stuff = sky.SkyStuff(
 	game_angle = 0.37,
 	game_y_offset = 1100,
 	game_d_offset = 800,
-	game_x_tilt = 0.15,
-	game_z_tilt = 0.35,
+#	game_tilt = (67, 0.4, 0, 0.7),
+	game_tilt = (0,0,0,0),
 	t3_angle = 0.8,
 )
 

@@ -4,7 +4,13 @@ import pygame, os, ode, math
 
 import app, collision
 from geometry import *
-		
+
+def applyMatrix(point, matrix):
+	"""Given a Point and a matrix (supplied as an OpenGL-style 16-tuple), returns the Point as transformed by the matrix."""
+	pMatrix = (point[0], point[1], point[2], 1.0)
+	r = [sum([pMatrix[i]*matrix[i][j] for i in range(4)]) for j in range(4)]
+	return Point(r[0], r[1], r[2])
+	
 def rev2rad(ang):
 	"""Converts an angle in cw revolutions to ccw radians.
 	

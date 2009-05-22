@@ -34,17 +34,15 @@ class SkyStuff:
 	game_angle - A value in [0.0,1.0) that indicates which part of the torus the origin of the gameplay coordinate system is.
 	game_y_offset - A value indicating how far north or south from the Smoke Ring's middle the game coord system is at.
 	game_d_offset - A value indicating how far in or out from the Smoke Ring's middle the game coord system is at.
-	game_x_tilt - A value in [0.0,1.0) indicating how tilted the Smoke Ring appears along the X axis from the player's perspective. Applied first.
-	game_z_tilt - A value in [0.0,1.0) indicating how tilted the Smoke Ring appears along the Z axis from the player's perspective. Applied second.
+	game_tilt - A 4-tuple for glRotatef indicating how the Smoke Ring should be rotated relative to the game world. Y-axis-value must be zero.
 	t3_angle - A value in [0.0,1.0) that indicates which part of the torus T3 is closest to.
 	"""
 	
-	def __init__(self, game_angle = 0.0, game_y_offset = 0.0, game_d_offset = 0.0, game_x_tilt = 0.0, game_z_tilt = 0.0, t3_angle = 0.3):
+	def __init__(self, game_angle = 0.0, game_y_offset = 0.0, game_d_offset = 0.0, game_tilt = (0, 0, 0, 0), t3_angle = 0.3):
 		self.game_angle = game_angle
 		self.game_y_offset = game_y_offset
 		self.game_d_offset = game_d_offset
-		self.game_x_tilt = game_x_tilt
-		self.game_z_tilt = game_z_tilt
+		self.game_tilt = game_tilt
 		self.t3_angle = t3_angle
 		
 		self._voy_tex = resman.Texture("voy.png")
@@ -62,13 +60,24 @@ class SkyStuff:
 			p = Point(math.cos(ang)*(GOLD_DIST + r_offset), y_offset, math.sin(ang)*(GOLD_DIST + r_offset))
 			self._jungle_positions.append(p)
 	
+	def _applySkyMatrix(self):
+		# FIXME - Perhaps could be optimized by caching, since the matrix generated will not change as long as sky values don't change
+		glRotatef(*self.game_tilt) # Apply tilt
+		glTranslatef(0.0, -self.game_y_offset, GOLD_DIST + self.game_d_offset) # Move out to Voy
+		glRotatef(rev2deg(self.game_angle), 0, 1, 0) # Rotate the Ring around Voy
+	
+	def _getSkyMatrix(self):
+		glPushMatrix()
+		glLoadIdentity()
+		self._applySkyMatrix()
+		r = glGetFloat(GL_MODELVIEW_MATRIX)
+		glPopMatrix()
+		return r
+	
 	def draw(self):
 		# Position and rotate ourselves; our origin (at Voy) is not the gameplay coordinate system origin
 		glPushMatrix()
-		glRotatef(rev2deg(self.game_x_tilt), 1, 0, 0) # Apply X tilt
-		glRotatef(rev2deg(self.game_z_tilt), 0, 0, 1) # Apply Z tilt
-		glTranslatef(0.0, -self.game_y_offset, GOLD_DIST + self.game_d_offset) # Move out to Voy
-		glRotatef(rev2deg(self.game_angle), 0, 1, 0) # Rotate around the Ring until we get to our gameplay spot
+		self._applySkyMatrix()
 		
 		### The Smoke Ring and the gas torus
 		glEnable(GL_CULL_FACE)
@@ -104,10 +113,10 @@ class SkyStuff:
 		# Voy
 		# FIXME - Set up lighting for Voy
 		
+		skyMatrix = self._getSkyMatrix()
 		def draw_billboard(pos, tex, width, height):
 			# Vector from the billboard to the camera
-			#camVec = app.camera - (self.pos + pos)
-			camVec = Point(1, 0, 0)
+			camVec = -pos + applyMatrix(app.camera, skyMatrix)
 			
 			# If it's too far away compared to its size, don't bother with it
 			if width*height/camVec.mag() < 15:
