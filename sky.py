@@ -61,10 +61,10 @@ class SkyStuff:
 			self._jungle_positions.append(p)
 	
 	def _applySkyMatrix(self):
-		# FIXME - Perhaps could be optimized by caching, since the matrix generated will not change as long as sky values don't change
-		glRotatef(*self.game_tilt) # Apply tilt
+		# TODO - Perhaps could be optimized by caching, since the matrix generated will not change as long as sky values don't change
+		#glRotatef(*self.game_tilt) # Apply tilt
 		glTranslatef(0.0, -self.game_y_offset, GOLD_DIST + self.game_d_offset) # Move out to Voy
-		glRotatef(rev2deg(self.game_angle), 0, 1, 0) # Rotate the Ring around Voy
+		#glRotatef(rev2deg(self.game_angle), 0, 1, 0) # Rotate the Ring around Voy
 	
 	def _getSkyMatrix(self):
 		glPushMatrix()
@@ -114,9 +114,14 @@ class SkyStuff:
 		# FIXME - Set up lighting for Voy
 		
 		skyMatrix = self._getSkyMatrix()
+		localCamPos = -applyMatrix(app.camera, skyMatrix)
+		#print skyMatrix
+		#print "CAMPOS\n%s" % app.camera
+		#print "LOCALCAMPOS\n%s" % localCamPos
+		#print
 		def draw_billboard(pos, tex, width, height):
 			# Vector from the billboard to the camera
-			camVec = -pos + applyMatrix(app.camera, skyMatrix)
+			camVec = -pos + localCamPos
 			
 			# If it's too far away compared to its size, don't bother with it
 			if width*height/camVec.mag() < 15:
