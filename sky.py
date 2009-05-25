@@ -122,7 +122,7 @@ class SkyStuff:
 			
 			# Rotate the billboard so that it faces the camera
 			glRotatef(rev2deg(rad2rev(math.atan2(camVec[0], camVec[2]))), 0, 1, 0) # Rotate around y-axis...
-			glRotatef(rev2deg(rad2rev(math.atan2(camVec[1], math.sqrt(camVec[0]**2 + camVec[2]**2)))), 1, 0, 0) # Then tilt up/down on x-axis
+			glRotatef(-rev2deg(rad2rev(math.atan2(camVec[1], math.sqrt(camVec[0]**2 + camVec[2]**2)))), 1, 0, 0) # Then tilt up/down on x-axis
 			glBegin(GL_QUADS)
 			glTexCoord2f(0.0, 0.0)
 			glVertex3f(-width/2, -height/2, 0)
