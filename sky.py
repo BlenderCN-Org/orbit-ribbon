@@ -60,24 +60,12 @@ class SkyStuff:
 			p = Point(math.cos(ang)*(GOLD_DIST + r_offset), y_offset, math.sin(ang)*(GOLD_DIST + r_offset))
 			self._jungle_positions.append(p)
 	
-	def _applySkyMatrix(self):
-		# TODO - Perhaps could be optimized by caching, since the matrix generated will not change as long as sky values don't change
-		#glRotatef(*self.game_tilt) # Apply tilt
-		glTranslatef(0.0, -self.game_y_offset, GOLD_DIST + self.game_d_offset) # Move out to Voy
-		#glRotatef(rev2deg(self.game_angle), 0, 1, 0) # Rotate the Ring around Voy
-	
-	def _getSkyMatrix(self):
-		glPushMatrix()
-		glLoadIdentity()
-		self._applySkyMatrix()
-		r = glGetFloat(GL_MODELVIEW_MATRIX)
-		glPopMatrix()
-		return r
-	
 	def draw(self):
 		# Position and rotate ourselves; our origin (at Voy) is not the gameplay coordinate system origin
 		glPushMatrix()
-		self._applySkyMatrix()
+		glRotatef(*self.game_tilt) # Apply tilt
+		glTranslatef(0.0, -self.game_y_offset, GOLD_DIST + self.game_d_offset) # Move out to Voy
+		glRotatef(rev2deg(self.game_angle), 0, 1, 0) # Rotate the Ring around Voy
 		
 		### The Smoke Ring and the gas torus
 		glEnable(GL_CULL_FACE)
@@ -113,17 +101,18 @@ class SkyStuff:
 		# Voy
 		# FIXME - Set up lighting for Voy
 		
-		skyMatrix = self._getSkyMatrix()
-		localCamPos = -applyMatrix(app.camera, skyMatrix)
-		#print skyMatrix
-		#print "CAMPOS\n%s" % app.camera
-		#print "LOCALCAMPOS\n%s" % localCamPos
-		#print
+		# Position of the game origin in sky coordinates
+		# Ideally, we'd find the offset to the camera, not the game origin, but...
+		# The camera is so close to the game origin and sky objects so far from it, the result is the same
+		d = GOLD_DIST + self.game_d_offset
+		localGamePos = Point(d*math.cos(rev2rad(self.game_angle)), self.game_y_offset, d*math.sin(rev2rad(self.game_angle)))
+		
 		def draw_billboard(pos, tex, width, height):
-			# Vector from the billboard to the camera
-			camVec = -pos + localCamPos
+			# Vector from the billboard to the game origin
+			camVec = -pos + localGamePos
 			
 			# If it's too far away compared to its size, don't bother with it
+			# FIXME Come up with something meaningful here, not just this fudge value of 15
 			if width*height/camVec.mag() < 15:
 				return
 			
