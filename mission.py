@@ -9,6 +9,8 @@ WIN_MESSAGE = "Complete!"
 WIN_MESSAGE_TIME = 5.0
 WIN_MESSAGE_FADE = 1.5
 
+SBREATHS_PER_SECOND = 2.8 # Value is made-up; need to find textual reference for actual breath length
+
 class MissionControl:
 	"""Defines the parameters for this particular mission, such as what the win condition is.
 	
@@ -52,7 +54,7 @@ class MissionControl:
 				end = app.totalsteps if self.won_at is None else self.won_at
 				diff = end - self.timer_start_at
 			seconds = diff/app.maxfps
-			msg = "%.2fsec" % seconds
+			msg = "%.2fsb" % (seconds/SBREATHS_PER_SECOND)
 			glColor4f(0.0, 0.0, 0.0, 1.0)
 			glRasterPos2f(app.winsize[0] - 100, 25)
 			for c in msg:
