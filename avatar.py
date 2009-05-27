@@ -42,7 +42,8 @@ class Avatar(gameobj.GameObj):
 	
 	def step(self):	
 		# Set camera position
-		app.camera_tgt = Point(*self.body.getRelPointPos((0, CAMERA_OFFSET_Y, 0)))
+		#app.camera_tgt = Point(*self.body.getRelPointPos((0, CAMERA_OFFSET_Y, 0)))
+		app.camera_tgt = Point(*self.body.getRelPointPos((0, 0, 0)))
 		app.camera = Point(*self.body.getRelPointPos((0, CAMERA_OFFSET_Y, CAMERA_OFFSET_Z)))
 		app.camera_up = Point(*self.body.vectorToWorld((0, CAMERA_OFFSET_Y+1, CAMERA_OFFSET_Z)))
 		

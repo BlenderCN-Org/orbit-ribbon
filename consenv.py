@@ -25,6 +25,10 @@ import target
 import testobj
 from util import *
 
+def sc_camy():
+	wmod(2, "avatar.CAMERA_OFFSET_Y", 5000000)
+	wset(3, "app.sky_stuff._localCamOffset")
+
 def wset(num, expr):
 	"""Shortcut for 'app.watchers[num].expr = expr', and clears modVal."""
 	app.watchers[num].expr = expr

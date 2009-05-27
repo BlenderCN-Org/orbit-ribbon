@@ -8,7 +8,8 @@ from geometry import *
 from util import *
 
 # Distances in meters from Voy to other sky objects, and sizes of various objects
-VOY_RADIUS = 2e4 # From book
+#VOY_RADIUS = 2e4 # From book
+VOY_RADIUS = 5e5 # TEST VALUE
 T3_DIST = 2.5e11 # From book
 T3_RADIUS = 2.5e9 # Our Sun's radius times about 1.2 is 8.4e8, which is from book... but that looks too small
 TORUS_OUTSIDE_DIST = 1e9 # From book
@@ -60,12 +61,24 @@ class SkyStuff:
 			p = Point(math.cos(ang)*(GOLD_DIST + r_offset), y_offset, math.sin(ang)*(GOLD_DIST + r_offset))
 			self._jungle_positions.append(p)
 	
-	def draw(self):
-		# Position and rotate ourselves; our origin (at Voy) is not the gameplay coordinate system origin
-		glPushMatrix()
+	def _applySkyMatrix(self):
+		# TODO - Perhaps could be optimized by caching, since the matrix generated will not change as long as sky values don't change
 		glRotatef(*self.game_tilt) # Apply tilt
 		glTranslatef(0.0, -self.game_y_offset, GOLD_DIST + self.game_d_offset) # Move out to Voy
 		glRotatef(rev2deg(self.game_angle), 0, 1, 0) # Rotate the Ring around Voy
+	
+	def _getSkyMatrix(self):
+		glPushMatrix()
+		glLoadIdentity()
+		self._applySkyMatrix()
+		r = glGetFloat(GL_MODELVIEW_MATRIX)
+		glPopMatrix()
+		return r
+	
+	def draw(self):
+		# Position and rotate ourselves; our origin (at Voy) is not the gameplay coordinate system origin
+		glPushMatrix()
+		self._applySkyMatrix()
 		
 		### The Smoke Ring and the gas torus
 		glEnable(GL_CULL_FACE)
@@ -102,14 +115,16 @@ class SkyStuff:
 		# FIXME - Set up lighting for Voy
 		
 		# Position of the game origin in sky coordinates
-		# Ideally, we'd find the offset to the camera, not the game origin, but...
-		# The camera is so close to the game origin and sky objects so far from it, the result is the same
 		d = GOLD_DIST + self.game_d_offset
-		localGamePos = Point(d*math.cos(rev2rad(self.game_angle)), self.game_y_offset, d*math.sin(rev2rad(self.game_angle)))
+		self._localGamePos = Point(d*math.cos(rev2rad(self.game_angle)), self.game_y_offset, d*math.sin(rev2rad(self.game_angle)))
+		
+		# Offset from the game origin to the camera in sky coordinates
+		skyMatrix = self._getSkyMatrix()
+		self._localCamOffset = applyTransverseMatrix(app.camera, skyMatrix)
 		
 		def draw_billboard(pos, tex, width, height):
 			# Vector from the billboard to the game origin
-			camVec = -pos + localGamePos
+			camVec = -pos + self._localGamePos + self._localCamOffset
 			
 			# If it's too far away compared to its size, don't bother with it
 			# FIXME Come up with something meaningful here, not just this fudge value of 15
