@@ -9,7 +9,7 @@ from util import *
 
 # Distances in meters from Voy to other sky objects, and sizes of various objects
 #VOY_RADIUS = 2e4 # From book
-VOY_RADIUS = 5e5 # TEST VALUE
+VOY_RADIUS = 2e6 # TEST VALUE
 T3_DIST = 2.5e11 # From book
 T3_RADIUS = 2.5e9 # Our Sun's radius times about 1.2 is 8.4e8, which is from book... but that looks too small
 TORUS_OUTSIDE_DIST = 1e9 # From book
@@ -116,7 +116,7 @@ class SkyStuff:
 		
 		# Position of the game origin in sky coordinates
 		d = GOLD_DIST + self.game_d_offset
-		self._localGamePos = Point(d*math.cos(rev2rad(self.game_angle)), self.game_y_offset, d*math.sin(rev2rad(self.game_angle)))
+		self._localGamePos = -Point(d*math.sin(rev2rad(self.game_angle)), self.game_y_offset, d*math.cos(rev2rad(self.game_angle)))
 		
 		# Offset from the game origin to the camera in sky coordinates
 		skyMatrix = self._getSkyMatrix()

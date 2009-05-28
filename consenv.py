@@ -29,6 +29,10 @@ def sc_camy():
 	wmod(2, "avatar.CAMERA_OFFSET_Y", 5000000)
 	wset(3, "app.sky_stuff._localCamOffset")
 
+def sc_gang():
+	wmod(2, "app.sky_stuff.game_angle", 0.05)
+	wset(3, "app.sky_stuff._localGamePos")
+
 def wset(num, expr):
 	"""Shortcut for 'app.watchers[num].expr = expr', and clears modVal."""
 	app.watchers[num].expr = expr
