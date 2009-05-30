@@ -1,4 +1,5 @@
-#This is where the debugging console runs 
+#This is where the debugging console runs
+from __future__ import division
 
 import sys
 import math
@@ -26,8 +27,9 @@ import testobj
 from util import *
 
 def sc_camy():
-	wmod(2, "avatar.CAMERA_OFFSET_Y", 5000000)
-	wset(3, "app.sky_stuff._localCamOffset")
+	wmod(2, "avatar.CAMERA_OFFSET_Y", 1000000)
+	wset(3, "app.camera")
+	wset(1, "app.camera_up")
 
 def sc_gang():
 	wmod(2, "app.sky_stuff.game_angle", 0.05)

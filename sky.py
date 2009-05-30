@@ -1,3 +1,5 @@
+from __future__ import division
+
 import ode, math, random
 from OpenGL.GL import *
 from OpenGL.GLU import *
