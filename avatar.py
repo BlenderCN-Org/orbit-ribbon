@@ -19,10 +19,6 @@ MAX_ROLL = 800.0
 CTURN_COEF = 700
 CROLL_COEF = 700
 
-# Camera offset relative to avatar
-CAMERA_OFFSET_Y = 1.1
-CAMERA_OFFSET_Z = -6
-
 class Avatar(gameobj.GameObj):
 	"""The player character."""
 	
@@ -41,14 +37,8 @@ class Avatar(gameobj.GameObj):
 		gluDeleteQuadric(self._quad)
 	
 	def step(self):	
-		# Set camera position
-		app.camera_tgt = Point(*self.body.getRelPointPos((0, CAMERA_OFFSET_Y, 0)))
-		app.camera = Point(*self.body.getRelPointPos((0, CAMERA_OFFSET_Y, CAMERA_OFFSET_Z)))
-		app.camera_up = Point(*self.body.vectorToWorld((0, CAMERA_OFFSET_Y+1, CAMERA_OFFSET_Z)))
-		
 		# TODO: Consider adding linear and angular velocity caps
 		# TODO: Make joystick range circular (see example code on pygame help pages)
-		
 		tx, ty, tz = 0, 0, 0
 		
 		# X-strafing

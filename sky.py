@@ -122,7 +122,7 @@ class SkyStuff:
 		
 		# Offset from the game origin to the camera in sky coordinates
 		skyMatrix = self._getSkyMatrix()
-		self._localCamOffset = applyTransverseMatrix(app.camera, skyMatrix)
+		self._localCamOffset = applyTransverseMatrix(Point(*(app.player_camera.get_camvals()[0:3])), skyMatrix)
 		
 		def draw_billboard(pos, tex, width, height):
 			# Vector from the billboard to the game origin

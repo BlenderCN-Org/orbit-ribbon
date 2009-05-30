@@ -6,7 +6,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import collision, util, console, resman, app, joy
+import collision, util, console, resman, camera, joy, sky
 from geometry import *
 
 SKY_CLIP_DIST = 1e12
@@ -50,9 +50,7 @@ contactgroup = ode.JointGroup()
 winsize = (800, 600) #Size of the display window in pixels; TODO: should be a user setting
 maxfps = 60 #Max frames per second, and absolute sim-steps per second
 
-camera = Point() #A point in global coordinates for the camera position. Passed to gluLookAt
-camera_tgt = Point() #A point in global coordinates for the camera to look at. Passed to gluLookAt
-camera_up = Point() #A vector in global coordinates for the camera's up direction. Passed to gluLookAt
+player_camera = None #A Camera object describing our 3D viewpoint
 
 screen = None #The PyGame screen
 
@@ -127,17 +125,14 @@ def sim_init():
 	You must call this before calling run().
 	"""
 	
-	global odeworld, static_space, dyn_space, objects, totalsteps, camera, camera_tgt, camera_up
+	global odeworld, static_space, dyn_space, objects, totalsteps, player_camera
 	totalsteps = 0L
 	odeworld = ode.World()
 	odeworld.setQuickStepNumIterations(10)
 	static_space = ode.HashSpace()
 	dyn_space = ode.HashSpace()
 	objects = []
-	
-	camera = Point(0,0,0)
-	camera_tgt = Point(0,0,10)
-	camera_up = Point(0,1,0)
+	player_camera = camera.FixedCamera(position = Point(0, 500, 500), target = Point(0, 0, 0), up_vec = Point(0, 1, 0))
 
 
 def sim_deinit():
@@ -147,16 +142,13 @@ def sim_deinit():
 	Other than that, you don't need to call this.
 	"""
 
-	global odeworld, static_space, dyn_space, objects, camera, camera_tgt, camera_up
+	global odeworld, static_space, dyn_space, objects, player_camera
 	odeworld = None
 	static_space = None
 	dyn_space = None
 	objects = None
 	ode.CloseODE()
-	
-	camera = Point()
-	camera_tgt = Point()
-	camera_up = Point()
+	player_camera = None
 
 
 def _sim_step():
@@ -196,7 +188,7 @@ def _draw_frame():
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 	
 	# Position the camera
-	gluLookAt(camera[0], camera[1], camera[2], camera_tgt[0], camera_tgt[1], camera_tgt[2], camera_up[0], camera_up[1], camera_up[2])
+	gluLookAt(*player_camera.get_camvals())
 	
 	# 3D projection mode for sky objects without depth-testing
 	glDisable(GL_DEPTH_TEST)
