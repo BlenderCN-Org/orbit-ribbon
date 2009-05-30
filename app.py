@@ -6,8 +6,10 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import collision, util, console, resman, camera, joy, sky
+import collision, util, console, resman, camera, joy, sky, titlescreen
 from geometry import *
+
+MODE_GAMEPLAY, MODE_TITLE_SCREEN = range(2)
 
 SKY_CLIP_DIST = 1e12
 GAMEPLAY_CLIP_DIST = 5000
@@ -30,6 +32,9 @@ mission_control = None
 #An instance of sky.SkyStuff with defining the location of Voy and other distant objects
 #FIXME: Currently, must be set externally. Will eventually become responsibility of level loader.
 sky_stuff = None
+
+#The current game mode, which determines the virtual interface and the meanining of player input
+mode = None
 
 #Input events (from PyGame) which occurred this step
 events = []
@@ -59,6 +64,8 @@ totalsteps = 0L #Number of simulation steps we've ran
 
 cons = None #An instances of console.Console used for in-game debugging
 watchers = [] #A sequence of console.Watchers used for in-game debugging
+
+title_screen_manager = None #An instance of titlescreen.TitleScreenManager, which handles the behavior of pre-gameplay menus
 
 class QuitException:
 	"""Raised when something wants the main loop to end."""
@@ -119,20 +126,39 @@ def ui_deinit():
 	sys.stderr = sys.__stderr__
 	sys.stdout = sys.__stdout__
 
+
 def sim_init():
 	"""Initializes the camera and simulation, including ODE.
 	
 	You must call this before calling run().
 	"""
 	
-	global odeworld, static_space, dyn_space, objects, totalsteps, player_camera
+	global odeworld, static_space, dyn_space, objects, totalsteps, player_camera, title_screen_manager
 	totalsteps = 0L
 	odeworld = ode.World()
 	odeworld.setQuickStepNumIterations(10)
 	static_space = ode.HashSpace()
 	dyn_space = ode.HashSpace()
 	objects = []
-	player_camera = camera.FixedCamera(position = Point(0, 500, 500), target = Point(0, 0, 0), up_vec = Point(0, 1, 0))
+	title_screen_manager = titlescreen.TitleScreenManager()
+	_set_mode(MODE_TITLE_SCREEN)
+
+
+def _set_mode(new_mode):
+	global mode
+	mode = new_mode
+	
+	global player_camera
+	if mode == MODE_GAMEPLAY:
+		player_camera = camera.FollowCamera(
+			target_obj = objects[0]
+		)
+	elif mode == MODE_TITLE_SCREEN:
+		player_camera = camera.FixedCamera(
+			position = Point(0, sky.GOLD_DIST*1.8, -sky.GOLD_DIST*4.2),
+			target = Point(0, sky.GOLD_DIST*1.5, 0),
+			up_vec = Point(0, 1, 0)
+		)
 
 
 def sim_deinit():
@@ -141,14 +167,17 @@ def sim_deinit():
 	You can call this and then call sim_init() again to forcibly clear the game state.
 	Other than that, you don't need to call this.
 	"""
-
-	global odeworld, static_space, dyn_space, objects, player_camera
+	
+	global odeworld, static_space, dyn_space, objects, totalsteps, player_camera, mode, title_screen_manager
+	totalsteps = 0L
 	odeworld = None
 	static_space = None
 	dyn_space = None
 	objects = None
 	ode.CloseODE()
 	player_camera = None
+	mode = None
+	title_screen_manager = None
 
 
 def _sim_step():
@@ -174,11 +203,6 @@ def _sim_step():
 	for o in objects:
 		o.step()
 		o.damp()
-	
-	# Update the watchers
-	for w in watchers:
-		if w.expr != None:
-			w.update()
 
 
 def _draw_frame():
@@ -222,8 +246,11 @@ def _draw_frame():
 	glDisable(GL_DEPTH_TEST)
 	glDisable(GL_LIGHTING)
 	
-	# Draw the mission control HUD elements
-	mission_control.draw()
+	# Draw the virtual interface
+	if mode == MODE_GAMEPLAY:
+		mission_control.draw()
+	else:
+		title_screen_manager.draw()
 	
 	# Draw the watchers
 	for w in watchers:
@@ -251,6 +278,11 @@ def _proc_input():
 			if not cons.active:
 				events.append(event)
 	
+	# Update the watchers
+	for w in watchers:
+		if w.expr != None:
+			w.update()
+	
 	axes = joy.getAxes()
 	buttons = joy.getButtons()
 
@@ -267,21 +299,21 @@ def run():
 		while True:
 			elapsedms = clock.tick(maxfps)
 			
-			if not cons.active:
+			if cons.active:
+				_proc_input()
+			elif mode == MODE_GAMEPLAY:
 				totalms += elapsedms
-				
 				#Figure out how many simulation steps we're doing this frame.
 				#In theory, shouldn't be zero, since max frames per second is the same as steps per second
 				#However, it's alright to be occasionally zero, since clock.tick is sometimes slightly off
 				#FIXME: Do we really need totalms?
-				steps = int(math.floor((totalms*maxfps/1000)))-totalsteps
-				
+				steps = int(math.floor((totalms*maxfps/1000)))-totalsteps	
 				#Run the simulation the desired number of steps
 				for i in range(steps):
 					_proc_input()
 					_sim_step()
 					totalsteps += 1
-			else:
+			elif mode == MODE_TITLE_SCREEN:
 				_proc_input()
 			
 			#Draw everything

@@ -11,6 +11,7 @@ class Camera:
 		"""Returns a 9-tuple (triplets of camera position, camera target, and camera up vector), suitable for gluLookAt."""
 		raise NotImplementedError
 
+
 class FixedCamera(Camera):
 	"""A Camera that simply sits in a given position.
 	
@@ -28,6 +29,7 @@ class FixedCamera(Camera):
 	def get_camvals(self):
 		p, t, u = self.position, self.target, self.up_vec
 		return (p[0], p[1], p[2], t[0], t[1], t[2], u[0], u[1], u[2])
+
 
 class FollowCamera(Camera):
 	"""A Camera that follows a given GameObj.

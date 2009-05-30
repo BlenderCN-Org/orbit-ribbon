@@ -10,8 +10,7 @@ from geometry import *
 from util import *
 
 # Distances in meters from Voy to other sky objects, and sizes of various objects
-#VOY_RADIUS = 2e4 # From book
-VOY_RADIUS = 2e6 # TEST VALUE
+VOY_RADIUS = 2e4 # From book
 T3_DIST = 2.5e11 # From book
 T3_RADIUS = 2.5e9 # Our Sun's radius times about 1.2 is 8.4e8, which is from book... but that looks too small
 TORUS_OUTSIDE_DIST = 1e9 # From book
