@@ -19,7 +19,7 @@ class _TitleScreenCamera(camera.Camera):
 		
 		# Fixed camera positions, written assuming that SkyStuff is in default state (which it is, prior to choosing an area)
 		self.pre_main_cam = camera.FixedCamera(
-			position = Point(0, sky.GOLD_DIST*20, -sky.GOLD_DIST*2),
+			position = Point(0, sky.GOLD_DIST*20, 0),
 			target = Point(0, 0, 0),
 			up_vec = Point(0, 0, 1)
 		)
