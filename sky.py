@@ -63,16 +63,14 @@ class SkyStuff:
 			self._jungle_positions.append(p)
 
 		# Create some random star positions
-		random.seed(88)
-		self._star_descs = [] # Each entry is a 4-tuple: (angle in degrees, x-axis rot, y-axis rot, and brightness in [0.0, 1.0])
-		for i in range(5000):
-			
-			self._star_descs.append((
-				random.random()*360,
-				random.random()*2 - 1,
-				random.random()*2 - 1,
-				random.random(),
-			))
+		random.seed(86)
+		self._star_lists = [] # A list of lists of Points, each sub-list delimiting an increasingly bright star group
+		ranval = lambda: (random.random()*2 - 1)*100
+		for i in range(50):
+			sublist = []
+			for j in range(200):
+				sublist.append(Point(ranval(), ranval(), ranval()))
+			self._star_lists.append(sublist)
 	
 	def _applySkyMatrix(self):
 		# TODO - Perhaps could be optimized by caching, since the matrix generated will not change as long as sky values don't change
@@ -133,16 +131,14 @@ class SkyStuff:
 		if sky_ratio < 0.5:
 			# Draw stars
 			glEnable(GL_POINT_SMOOTH)
-			for ang, x, y, size in self._star_descs:
+			for n, sublist in enumerate(self._star_lists):
+				size = 0.5 + (n+1)/len(self._star_lists)
 				glColor3f(size/2 + 0.5, size/2 + 0.5, size/2 + 0.5)
-				glPushMatrix()
-				glRotatef(ang, x, y, 0)
-				glTranslatef(0, 0, 100)
 				glPointSize(size + 1.0)
 				glBegin(GL_POINTS)
-				glVertex3f(0,0,0)
+				for pt in sublist:
+					glVertex3f(*pt)
 				glEnd()
-				glPopMatrix()
 			glDisable(GL_POINT_SMOOTH)
 		glPopMatrix()
 		
