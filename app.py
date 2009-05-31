@@ -91,6 +91,7 @@ def ui_init():
 	
 	glDepthFunc(GL_LEQUAL)
 	
+	glClearColor(0, 0, 0, 0)
 	glClearDepth(1.0)
 	
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
@@ -201,21 +202,13 @@ def _sim_step():
 
 
 def _draw_frame():
-	# Figure out where the camera is and, from its position, the current sky color
-	camvals = player_camera.get_camvals()
-	campos = Point(*camvals[0:3])
-	sky_color = (0.6, 0.6, 1.0) # The color of the sky at the densest part of the smoke ring
-	ring_dist = sky_stuff.get_dist_from_ring(campos)
-	c = 1.0 - min(1.0, ring_dist/(sky.SMOKE_RING_RADIUS*10)) # At 1.0 or greater, we get black. At 0.0, we get the sky color.
-	glClearColor(sky_color[0]*c, sky_color[1]*c, sky_color[2]*c, 0.0)
-	
 	# Reset state
 	glMatrixMode(GL_MODELVIEW)
 	glLoadIdentity()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 	
 	# Position the camera
-	gluLookAt(*camvals)
+	gluLookAt(*player_camera.get_camvals())
 	
 	# 3D projection mode for sky objects without depth-testing
 	glDisable(GL_DEPTH_TEST)

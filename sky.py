@@ -61,6 +61,18 @@ class SkyStuff:
 			y_offset = random.random()*SMOKE_RING_RADIUS - SMOKE_RING_RADIUS/2
 			p = Point(math.cos(ang)*(GOLD_DIST + r_offset), y_offset, math.sin(ang)*(GOLD_DIST + r_offset))
 			self._jungle_positions.append(p)
+
+		# Create some random star positions
+		random.seed(88)
+		self._star_descs = [] # Each entry is a 4-tuple: (angle in degrees, x-axis rot, y-axis rot, and brightness in [0.0, 1.0])
+		for i in range(5000):
+			
+			self._star_descs.append((
+				random.random()*360,
+				random.random()*2 - 1,
+				random.random()*2 - 1,
+				random.random(),
+			))
 	
 	def _applySkyMatrix(self):
 		# TODO - Perhaps could be optimized by caching, since the matrix generated will not change as long as sky values don't change
@@ -82,19 +94,57 @@ class SkyStuff:
 		return Point(0, GOLD_DIST, 0)
 	
 	def get_starboard_vec(self):
-		"""Returns a Point() with the starboard direction (the way that the Blue Ghost points)."""
+		"""Returns a Point() with the starboard direction, the way that the Blue Ghost points, in gameplay coordinates."""
 		# FIXME: This will only work when game_tilt is zero, must fix
 		return Point(0, 1, 0)
 	
 	def get_dist_from_ring(self, pt):
-		"""Given a Point, returns its distance from the densest part of the Smoke Ring."""
+		"""Given a Point in gameplay coordinates, returns its distance from the densest part of the Smoke Ring."""
 		# TODO: Need to do more than just distance from Voy to get this accurate, though it may not be really necessary
 		return abs(pt.dist_to(self.get_voy_pos()) - GOLD_DIST)
 	
 	def draw(self):
+		### Figure out where the camera is and how to get there, and move to the sky coordinate system
+		cam = Point(*(app.player_camera.get_camvals()[0:3]))
+		
+		# Position of the game origin in sky coordinates
+		d = GOLD_DIST + self.game_d_offset
+		self._localGamePos = -Point(d*math.sin(rev2rad(self.game_angle)), self.game_y_offset, d*math.cos(rev2rad(self.game_angle)))
+		
+		# Offset from the game origin to the camera in sky coordinates
+		skyMatrix = self._getSkyMatrix()
+		self._localCamOffset = applyTransverseMatrix(cam, skyMatrix)
+		
 		# Position and rotate ourselves; our origin (at Voy) is not the gameplay coordinate system origin
 		glPushMatrix()
 		self._applySkyMatrix()
+		
+		### The sky and distant stars (if visible)
+		ring_dist = self.get_dist_from_ring(cam)
+		sky_ratio = 1.0 - min(1.0, ring_dist/(SMOKE_RING_RADIUS*10)) # At 1.0, full sky color. At 0.0, we're in pitch-black space.
+		glPushMatrix()
+		glTranslatef(*self._localGamePos)
+		glTranslatef(*self._localCamOffset)
+		if sky_ratio > 0.001:
+			# Draw a sphere for the sky
+			full_color = (0.6, 0.6, 1.0) # The color of the sky at the densest part of the smoke ring
+			glColor3f(full_color[0]*sky_ratio, full_color[1]*sky_ratio, full_color[2]*sky_ratio)
+			glutSolidSphere(100, 15, 15) # At camera-position and with depth-testing disabled, the radius actually doesn't matter much for this
+		if sky_ratio < 0.5:
+			# Draw stars
+			glEnable(GL_POINT_SMOOTH)
+			for ang, x, y, size in self._star_descs:
+				glColor3f(size/2 + 0.5, size/2 + 0.5, size/2 + 0.5)
+				glPushMatrix()
+				glRotatef(ang, x, y, 0)
+				glTranslatef(0, 0, 100)
+				glPointSize(size + 1.0)
+				glBegin(GL_POINTS)
+				glVertex3f(0,0,0)
+				glEnd()
+				glPopMatrix()
+			glDisable(GL_POINT_SMOOTH)
+		glPopMatrix()
 		
 		### The Smoke Ring and the gas torus
 		glEnable(GL_CULL_FACE)
@@ -129,14 +179,6 @@ class SkyStuff:
 		
 		# Voy
 		# FIXME - Set up lighting for Voy
-		
-		# Position of the game origin in sky coordinates
-		d = GOLD_DIST + self.game_d_offset
-		self._localGamePos = -Point(d*math.sin(rev2rad(self.game_angle)), self.game_y_offset, d*math.cos(rev2rad(self.game_angle)))
-		
-		# Offset from the game origin to the camera in sky coordinates
-		skyMatrix = self._getSkyMatrix()
-		self._localCamOffset = applyTransverseMatrix(Point(*(app.player_camera.get_camvals()[0:3])), skyMatrix)
 		
 		def draw_billboard(pos, tex, width, height):
 			# Vector from the billboard to the game origin
