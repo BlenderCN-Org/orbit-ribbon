@@ -154,11 +154,7 @@ def _set_mode(new_mode):
 			target_obj = objects[0]
 		)
 	elif mode == MODE_TITLE_SCREEN:
-		player_camera = camera.FixedCamera(
-			position = Point(0, sky.GOLD_DIST*1.8, -sky.GOLD_DIST*4.2),
-			target = Point(0, sky.GOLD_DIST*1.5, 0),
-			up_vec = Point(0, 1, 0)
-		)
+		player_camera = title_screen_manager.camera
 
 
 def sim_deinit():

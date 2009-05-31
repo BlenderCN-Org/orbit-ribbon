@@ -2,16 +2,41 @@ from __future__ import division
 
 from OpenGL.GL import *
 
-import app, resman
+import app, resman, camera, sky
+from geometry import *
 
 TSMODE_MAIN, TSMODE_AREA, TSMODE_MISSION = range(3)
 
+
+class _TitleScreenCamera(camera.Camera):
+	def __init__(self, manager):
+		self.manager = manager
+		self.main_cam = camera.FixedCamera(
+			position = Point(0, sky.GOLD_DIST*1.8, -sky.GOLD_DIST*4.2),
+			target = Point(0, sky.GOLD_DIST*1.5, 0),
+			up_vec = Point(0, 1, 0)
+		)
+	
+	def get_camvals(self):
+		if self.manager._tsmode == TSMODE_MAIN:
+			return self.main_cam.get_camvals()
+		elif self.manager._tsmode == TSMODE_AREA:
+			pass
+		elif self.manager._tsmode == TSMODE_MISSION:
+			pass
+
+
 class TitleScreenManager:
-	"""Manages the behavior of the pre-gameplay virtual interface."""
+	"""Manages the behavior of the pre-gameplay virtual interface.
+	
+	Data attributes:
+	camera - A camera.Camera object that should be used to control the 3D viewpoint while the title screen is active.
+	"""
 	
 	def __init__(self):
 		self._title_tex = resman.Texture("title.png")
 		self._tsmode = TSMODE_MAIN
+		self.camera = _TitleScreenCamera(self)
 	
 	def draw(self):
 		if self._tsmode == TSMODE_MAIN:

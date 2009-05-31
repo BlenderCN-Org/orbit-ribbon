@@ -35,6 +35,9 @@ def sc_gang():
 	wmod(2, "app.sky_stuff.game_angle", 0.05)
 	wset(3, "app.sky_stuff._localGamePos")
 
+def sc_t3():
+	wmod(2, "app.sky_stuff.t3_angle", 0.05)
+
 def wset(num, expr):
 	"""Shortcut for 'app.watchers[num].expr = expr', and clears modVal."""
 	app.watchers[num].expr = expr
