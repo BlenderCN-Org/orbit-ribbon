@@ -68,7 +68,7 @@ class SkyStuff:
 		ranval = lambda: (random.random()*2 - 1)*100
 		for i in range(50):
 			sublist = []
-			for j in range(200):
+			for j in range(100):
 				sublist.append(Point(ranval(), ranval(), ranval()))
 			self._star_lists.append(sublist)
 	
