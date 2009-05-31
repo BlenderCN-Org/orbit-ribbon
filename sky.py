@@ -65,7 +65,7 @@ class SkyStuff:
 		# Create some random star positions
 		random.seed(86)
 		self._star_lists = [] # A list of lists of Points, each sub-list delimiting an increasingly bright star group
-		ranval = lambda: (random.random()*2 - 1)*100
+		ranval = lambda: (random.random()*2 - 1)*1e15
 		for i in range(50):
 			sublist = []
 			for j in range(100):
@@ -121,13 +121,11 @@ class SkyStuff:
 		ring_dist = self.get_dist_from_ring(cam)
 		sky_ratio = 1.0 - min(1.0, ring_dist/(SMOKE_RING_RADIUS*10)) # At 1.0, full sky color. At 0.0, we're in pitch-black space.
 		glPushMatrix()
-		glTranslatef(*self._localGamePos)
-		glTranslatef(*self._localCamOffset)
 		if sky_ratio > 0.001:
 			# Draw a sphere for the sky
 			full_color = (0.6, 0.6, 1.0) # The color of the sky at the densest part of the smoke ring
 			glColor3f(full_color[0]*sky_ratio, full_color[1]*sky_ratio, full_color[2]*sky_ratio)
-			glutSolidSphere(100, 15, 15) # At camera-position and with depth-testing disabled, the radius actually doesn't matter much for this
+			glutSolidSphere(1e15, 15, 15)
 		if sky_ratio < 0.5:
 			# Draw stars
 			glEnable(GL_POINT_SMOOTH)
