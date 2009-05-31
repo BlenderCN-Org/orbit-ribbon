@@ -262,7 +262,7 @@ def _draw_frame():
 
 
 def _proc_input():
-	global events, axes, buttons
+	global events
 	events = []
 	for event in pygame.event.get():
 		cons.handle(event)
@@ -279,6 +279,7 @@ def _proc_input():
 		if w.expr != None:
 			w.update()
 	
+	global axes, buttons
 	axes = joy.getAxes()
 	buttons = joy.getButtons()
 

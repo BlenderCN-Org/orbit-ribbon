@@ -5,6 +5,30 @@ import pygame, os, ode, math
 import app, collision
 from geometry import *
 
+INTERP_MODE_LINEAR, INTERP_MODE_SMOOTHED = range(2)
+def interpolate(a, b, x, mode):
+	"""Given two equally-sized tuples, an x value in [0.0, 1.0], and an INTERP_MODE_* value, returns an interpolated tuple.
+
+	If x is 0.0 or less, returns a. If x is 1.0 or greater, returns b. Otherwise, returns a tuple containing middle values.
+	"""
+	if len(a) != len(b):
+		raise RuntimeError("Non-equal-length tuples given to interpolate")
+	if x <= 0.0:
+		return a
+	elif x >= 1.0:
+		return b
+	
+	interpolator = None
+	if mode == INTERP_MODE_LINEAR:
+		interpolator = lambda i, j: i + (j-i)*x
+	elif mode == INTERP_MODE_SMOOTHED:
+		raise NotImplementedError
+	
+	r = []
+	for n in range(len(a)):
+		r.append(interpolator(a[n], b[n]))
+	return tuple(r)
+
 def applyMatrix(point, matrix):
 	"""Given a Point and an OpenGL matrix, returns the Point as transformed by the matrix."""
 	pMatrix = (point[0], point[1], point[2], 1.0)
