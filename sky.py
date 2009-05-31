@@ -76,6 +76,21 @@ class SkyStuff:
 		glPopMatrix()
 		return r
 	
+	def get_voy_pos(self):
+		"""Returns a Point() with the current location of Voy in gameplay coordinates."""
+		# FIXME: This will only work when game_tilt is zero, must fix
+		return Point(0, GOLD_DIST, 0)
+	
+	def get_starboard_vec(self):
+		"""Returns a Point() with the starboard direction (the way that the Blue Ghost points)."""
+		# FIXME: This will only work when game_tilt is zero, must fix
+		return Point(0, 1, 0)
+	
+	def get_dist_from_ring(self, pt):
+		"""Given a Point, returns its distance from the densest part of the Smoke Ring."""
+		# TODO: Need to do more than just distance from Voy to get this accurate, though it may not be really necessary
+		return abs(pt.dist_to(self.get_voy_pos()) - GOLD_DIST)
+	
 	def draw(self):
 		# Position and rotate ourselves; our origin (at Voy) is not the gameplay coordinate system origin
 		glPushMatrix()

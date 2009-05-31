@@ -11,6 +11,7 @@ TSMODE_MAIN, TSMODE_AREA, TSMODE_MISSION = range(3)
 class _TitleScreenCamera(camera.Camera):
 	def __init__(self, manager):
 		self.manager = manager
+		# FIXME: Use SkyStuff's get_voy_pos() and get_starboard_vec() so that this will later work when game_tilt is non-zero
 		self.main_cam = camera.FixedCamera(
 			position = Point(0, sky.GOLD_DIST*1.8, -sky.GOLD_DIST*4.2),
 			target = Point(0, sky.GOLD_DIST*1.5, 0),
