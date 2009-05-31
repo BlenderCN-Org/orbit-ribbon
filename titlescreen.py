@@ -1,5 +1,6 @@
 from __future__ import division
 
+import pygame
 from OpenGL.GL import *
 
 import app, resman, camera, sky
@@ -42,7 +43,7 @@ class TitleScreenManager:
 	def draw(self):
 		if self._tsmode == TSMODE_MAIN:
 			### Draw the main title screen interface
-
+			
 			# Draw the title logo
 			top_margin = app.winsize[1]/60
 			left_margin = app.winsize[0]/40
@@ -63,6 +64,9 @@ class TitleScreenManager:
 			glEnd()
 			glDisable(GL_TEXTURE_2D)
 			
+			for e in app.events:
+				if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
+					app.set_game_mode(app.MODE_GAMEPLAY)
 		elif self._tsmode == TSMODE_AREA:
 			### Draw the area selection interface
 			pass

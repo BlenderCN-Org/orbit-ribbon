@@ -1,5 +1,8 @@
 from __future__ import division
 
+import app
+from geometry import *
+
 class Camera:
 	"""A superclass for classes which are responsible for controlling the 3D camera.
 	
@@ -51,6 +54,7 @@ class FollowCamera(Camera):
 	
 	def get_camvals(self):
 		b = self.target_obj.body
-		app.camera_tgt = Point(*b.getRelPointPos((0, self.offset[1], 0)))
-		app.camera = Point(*b.getRelPointPos(*self.offset))
-		app.camera_up = Point(*b.vectorToWorld((self.offset[0], self.offset[1]+1, self.offset[2])))
+		p = Point(*b.getRelPointPos(self.offset))
+		t = Point(*b.getRelPointPos((0, self.offset[1], 0)))
+		u = Point(*b.vectorToWorld((self.offset[0], self.offset[1]+1, self.offset[2])))
+		return (p[0], p[1], p[2], t[0], t[1], t[2], u[0], u[1], u[2])

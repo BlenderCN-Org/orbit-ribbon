@@ -140,10 +140,10 @@ def sim_init():
 	dyn_space = ode.HashSpace()
 	objects = []
 	title_screen_manager = titlescreen.TitleScreenManager()
-	_set_mode(MODE_TITLE_SCREEN)
+	set_game_mode(MODE_TITLE_SCREEN)
 
 
-def _set_mode(new_mode):
+def set_game_mode(new_mode):
 	global mode
 	mode = new_mode
 	
@@ -202,12 +202,11 @@ def _sim_step():
 
 def _draw_frame():
 	# Figure out where the camera is and, from its position, the current sky color
-	# TODO: May be necessary to do this better; as it is, sky color changes at proper distance even if not in the ring
 	camvals = player_camera.get_camvals()
 	campos = Point(*camvals[0:3])
-	ring_dist = sky_stuff.get_dist_from_ring(campos)
 	sky_color = (0.6, 0.6, 1.0) # The color of the sky at the densest part of the smoke ring
-	c = ring_dist/sky.TORUS_RADIUS # At 1.0 or greater, we get black. At 0.0, we get the sky color.
+	ring_dist = sky_stuff.get_dist_from_ring(campos)
+	c = 1.0 - min(1.0, ring_dist/(sky.SMOKE_RING_RADIUS*10)) # At 1.0 or greater, we get black. At 0.0, we get the sky color.
 	glClearColor(sky_color[0]*c, sky_color[1]*c, sky_color[2]*c, 0.0)
 	
 	# Reset state
