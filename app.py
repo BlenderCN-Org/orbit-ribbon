@@ -55,6 +55,8 @@ contactgroup = ode.JointGroup()
 winsize = (800, 600) #Size of the display window in pixels; TODO: should be a user setting
 maxfps = 60 #Max frames per second, and absolute sim-steps per second
 
+fade_color = None #If not None, this color is drawn as a rect covering the entire screen. Useful for fade effects.
+
 player_camera = None #A Camera object describing our 3D viewpoint
 
 screen = None #The PyGame screen
@@ -133,7 +135,7 @@ def sim_init():
 	You must call this before calling run().
 	"""
 	
-	global odeworld, static_space, dyn_space, objects, totalsteps, player_camera, title_screen_manager
+	global odeworld, static_space, dyn_space, objects, totalsteps, player_camera, title_screen_manager, fade_color
 	totalsteps = 0L
 	odeworld = ode.World()
 	odeworld.setQuickStepNumIterations(10)
@@ -142,6 +144,7 @@ def sim_init():
 	objects = []
 	title_screen_manager = titlescreen.TitleScreenManager()
 	set_game_mode(MODE_TITLE_SCREEN)
+	fade_color = None
 
 
 def set_game_mode(new_mode):
@@ -164,7 +167,7 @@ def sim_deinit():
 	Other than that, you don't need to call this.
 	"""
 	
-	global odeworld, static_space, dyn_space, objects, totalsteps, player_camera, mode, title_screen_manager
+	global odeworld, static_space, dyn_space, objects, totalsteps, player_camera, mode, title_screen_manager, fade_color
 	totalsteps = 0L
 	odeworld = None
 	static_space = None
@@ -174,6 +177,7 @@ def sim_deinit():
 	player_camera = None
 	mode = None
 	title_screen_manager = None
+	fade_color = None
 
 
 def _sim_step():
@@ -247,6 +251,16 @@ def _draw_frame():
 		mission_control.draw()
 	else:
 		title_screen_manager.draw()
+	
+	# If we have a fade color, apply it
+	if fade_color is not None:
+		glColor4f(*fade_color)
+		glBegin(GL_QUADS)
+		glVertex2f(0,          0)
+		glVertex2f(winsize[0], 0)
+		glVertex2f(winsize[0], winsize[1])
+		glVertex2f(0,          winsize[1])
+		glEnd()
 	
 	# Draw the watchers
 	for w in watchers:
