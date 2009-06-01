@@ -22,7 +22,12 @@ def interpolate(a, b, x, mode):
 	if mode == INTERP_MODE_LINEAR:
 		interpolator = lambda i, j: i + (j-i)*x
 	elif mode == INTERP_MODE_SMOOTHED:
-		raise NotImplementedError
+		def smooth_interp(i, j):
+			if x < 0.5:
+				return i + (j-i)*2*x*x
+			else:
+				return i + (j-i)*(1 - (2*(1-x)*(1-x)))
+		interpolator = smooth_interp
 	
 	r = []
 	for n in range(len(a)):

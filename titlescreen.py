@@ -8,8 +8,8 @@ from geometry import *
 from util import *
 
 TSMODE_PRE_PRE_MAIN, TSMODE_PRE_MAIN, TSMODE_MAIN, TSMODE_PRE_AREA, TSMODE_AREA, TSMODE_PRE_MISSION, TSMODE_MISSION, TSMODE_PRE_GAMEPLAY = range(8)
-PRE_PRE_MAIN_MILLISECS = 2000
-PRE_MAIN_MILLISECS = 2000
+PRE_PRE_MAIN_MILLISECS = 1000
+PRE_MAIN_MILLISECS = 3000
 PRE_AREA_MILLISECS = 500
 PRE_MISSION_MILLISECS = 500
 PRE_GAMEPLAY_MILLISECS = 2000
@@ -38,7 +38,7 @@ class _TitleScreenCamera(camera.Camera):
 				self.pre_main_cam.get_camvals(),
 				self.main_cam.get_camvals(),
 				(pygame.time.get_ticks() - self.manager._tstart)/PRE_MAIN_MILLISECS,
-				INTERP_MODE_LINEAR
+				INTERP_MODE_SMOOTHED
 			)
 			return x
 		elif self.manager._tsmode == TSMODE_MAIN:
@@ -98,7 +98,7 @@ class TitleScreenManager:
 	def draw(self):
 		if self._tsmode == TSMODE_PRE_PRE_MAIN:
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_PRE_MAIN_MILLISECS
-			app.fade_color = (0, 0, 0, 1 - min(1, doneness*2))
+			app.fade_color = (0, 0, 0, 1 - doneness)
 			if doneness >= 1.0:
 				self._set_mode(TSMODE_PRE_MAIN)
 		elif self._tsmode == TSMODE_PRE_MAIN:
