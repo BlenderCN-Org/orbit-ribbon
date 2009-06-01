@@ -77,8 +77,12 @@ class TitleScreenManager:
 		right_margin = app.winsize[0]/4
 		title_ul = (left_margin, top_margin)
 		title_lr = (app.winsize[0] - right_margin, top_margin + self._title_tex.size[1]*(app.winsize[0] - left_margin - right_margin)/self._title_tex.size[0])
+		glColor(1, 1, 1, alpha)
 		glEnable(GL_TEXTURE_2D)
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
 		glBindTexture(GL_TEXTURE_2D, self._title_tex.glname)
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
 		glBegin(GL_QUADS)
 		glTexCoord2f(0.0, 1.0)
 		glVertex2f(title_ul[0], title_ul[1])

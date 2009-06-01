@@ -99,7 +99,8 @@ def ui_init():
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
 	
 	glEnable(GL_BLEND)
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+	#glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE)
 	
 	glColorMaterial(GL_FRONT, GL_DIFFUSE)
 	glEnable(GL_COLOR_MATERIAL)
