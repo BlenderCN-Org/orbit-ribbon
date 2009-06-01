@@ -25,8 +25,8 @@ class _TitleScreenCamera(camera.Camera):
 			up_vec = Point(0, 0, 1)
 		)
 		self.main_cam = camera.FixedCamera(
-			position = Point(0, sky.GOLD_DIST*1.8, -sky.GOLD_DIST*4.2),
-			target = Point(0, sky.GOLD_DIST*1.5, 0),
+			position = Point(0, sky.GOLD_DIST*0.6, -sky.GOLD_DIST*1.5),
+			target = Point(0, sky.GOLD_DIST*0.4, sky.GOLD_DIST),
 			up_vec = Point(0, 1, 0)
 		)
 	
@@ -104,14 +104,14 @@ class TitleScreenManager:
 		elif self._tsmode == TSMODE_PRE_MAIN:
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_MAIN_MILLISECS
 			if doneness >= 0.5:
-				self._draw_title_logo((doneness - 0.5)*2)
+				self._draw_title_logo(doneness - 0.5)
 			if doneness >= 1.0:
 				self._set_mode(TSMODE_MAIN)
 		elif self._tsmode == TSMODE_MAIN:
 			### Draw the main title screen interface
 			
-			# Draw the title logo at full alpha
-			self._draw_title_logo(1.0)
+			# Draw the title logo at half alpha
+			self._draw_title_logo(0.5)
 			
 			# Handle input events to proceed into area selection
 			for e in app.events:
