@@ -72,7 +72,7 @@ class TitleScreenManager:
 		self._tstart = pygame.time.get_ticks()
 	
 	def _draw_title_logo(self, alpha):
-		top_margin = app.winsize[1]/60
+		top_margin = app.winsize[1]/100
 		left_margin = app.winsize[0]/5
 		right_margin = app.winsize[0]/4
 		title_ul = (left_margin, top_margin)
