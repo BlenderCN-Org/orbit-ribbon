@@ -306,7 +306,7 @@ def run():
 	global totalsteps
 	
 	try:
-		totalms = 0L #Total number of milliseconds passed
+		totalms = 0L #Total number of milliseconds passed in gameplay
 		while True:
 			elapsedms = clock.tick(maxfps)
 			
@@ -318,7 +318,7 @@ def run():
 				#In theory, shouldn't be zero, since max frames per second is the same as steps per second
 				#However, it's alright to be occasionally zero, since clock.tick is sometimes slightly off
 				#FIXME: Do we really need totalms?
-				steps = int(math.floor((totalms*maxfps/1000)))-totalsteps	
+				steps = int(math.floor((totalms*maxfps/1000)))-totalsteps
 				#Run the simulation the desired number of steps
 				for i in range(steps):
 					_proc_input()

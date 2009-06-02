@@ -98,7 +98,7 @@ class SkyStuff:
 	
 	def get_dist_from_ring(self, pt):
 		"""Given a Point in gameplay coordinates, returns its distance from the densest part of the Smoke Ring."""
-		# TODO: Need to do more than just distance from Voy to get this accurate, though it may not be really necessary
+		# TODO: Need to do more than just distance from Voy to get this accurate
 		return abs(pt.dist_to(self.get_voy_pos()) - GOLD_DIST)
 	
 	def draw(self):
@@ -130,7 +130,7 @@ class SkyStuff:
 			# Draw stars
 			glEnable(GL_POINT_SMOOTH)
 			for n, sublist in enumerate(self._star_lists):
-				size = 0.5 + (n+1)/len(self._star_lists)
+				size = 0.5 + (n+1)*1.5/len(self._star_lists)
 				glColor3f(size/2 + 0.5, size/2 + 0.5, size/2 + 0.5)
 				glPointSize(size + 1.0)
 				glBegin(GL_POINTS)

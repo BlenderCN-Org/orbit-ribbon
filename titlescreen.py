@@ -10,7 +10,7 @@ from util import *
 TSMODE_PRE_PRE_MAIN, TSMODE_PRE_MAIN, TSMODE_MAIN, TSMODE_PRE_AREA, TSMODE_AREA, TSMODE_PRE_MISSION, TSMODE_MISSION, TSMODE_PRE_GAMEPLAY = range(8)
 PRE_PRE_MAIN_MILLISECS = 1000
 PRE_MAIN_MILLISECS = 3000
-PRE_AREA_MILLISECS = 500
+PRE_AREA_MILLISECS = 2000
 PRE_MISSION_MILLISECS = 500
 PRE_GAMEPLAY_MILLISECS = 2000
 
@@ -20,7 +20,7 @@ class _TitleScreenCamera(camera.Camera):
 		
 		# Fixed camera positions, written assuming that SkyStuff is in default state (which it is, prior to choosing an area)
 		self.pre_main_cam = camera.FixedCamera(
-			position = Point(0, sky.GOLD_DIST*20, 0),
+			position = Point(0, sky.GOLD_DIST*20, sky.GOLD_DIST),
 			target = Point(0, 0, sky.GOLD_DIST),
 			up_vec = Point(0, 0, 1)
 		)
@@ -29,24 +29,34 @@ class _TitleScreenCamera(camera.Camera):
 			target = Point(0, sky.GOLD_DIST*0.4, sky.GOLD_DIST),
 			up_vec = Point(0, 1, 0)
 		)
+		self.area_cam = camera.FixedCamera(
+			position = Point(0, sky.GOLD_DIST*2.8, sky.GOLD_DIST),
+			target = Point(0, 0, sky.GOLD_DIST),
+			up_vec = Point(0, 0, 1)
+		)
 	
 	def get_camvals(self):
+		# TODO : To add some juiciness, allow player to spin around the ring with controller during most modes
 		if self.manager._tsmode == TSMODE_PRE_PRE_MAIN:
 			return self.pre_main_cam.get_camvals()
 		elif self.manager._tsmode == TSMODE_PRE_MAIN:
-			x = interpolate(
+			return interpolate(
 				self.pre_main_cam.get_camvals(),
 				self.main_cam.get_camvals(),
 				(pygame.time.get_ticks() - self.manager._tstart)/PRE_MAIN_MILLISECS,
 				INTERP_MODE_SMOOTHED
 			)
-			return x
 		elif self.manager._tsmode == TSMODE_MAIN:
 			return self.main_cam.get_camvals()
 		elif self.manager._tsmode == TSMODE_PRE_AREA:
-			pass
+			return interpolate(
+				self.main_cam.get_camvals(),
+				self.area_cam.get_camvals(),
+				(pygame.time.get_ticks() - self.manager._tstart)/PRE_AREA_MILLISECS,
+				INTERP_MODE_SMOOTHED
+			)
 		elif self.manager._tsmode == TSMODE_AREA:
-			pass
+			return self.area_cam.get_camvals()
 		elif self.manager._tsmode == TSMODE_PRE_MISSION:
 			pass
 		elif self.manager._tsmode == TSMODE_MISSION:
@@ -97,29 +107,37 @@ class TitleScreenManager:
 	
 	def draw(self):
 		if self._tsmode == TSMODE_PRE_PRE_MAIN:
+			### Transition from blank screen into distant view of Smoke Ring
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_PRE_MAIN_MILLISECS
 			app.fade_color = (0, 0, 0, 1 - doneness)
 			if doneness >= 1.0:
 				self._set_mode(TSMODE_PRE_MAIN)
 		elif self._tsmode == TSMODE_PRE_MAIN:
+			### Transition from pre-pre-main into the main screen showing the title logo
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_MAIN_MILLISECS
 			if doneness >= 0.5:
 				self._draw_title_logo(doneness - 0.5)
 			if doneness >= 1.0:
 				self._set_mode(TSMODE_MAIN)
 		elif self._tsmode == TSMODE_MAIN:
-			### Draw the main title screen interface
-			
-			# Draw the title logo at half alpha
+			### Draw/handle events for the main title screen interface
 			self._draw_title_logo(0.5)
-			
-			# Handle input events to proceed into area selection
 			for e in app.events:
 				if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
-					app.set_game_mode(app.MODE_GAMEPLAY)
+					# Handle input events to proceed into area selection
+					self._set_mode(TSMODE_PRE_AREA)
+		elif self._tsmode == TSMODE_PRE_AREA:
+			### Transition from main title screen to area selection screen
+			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_AREA_MILLISECS
+			if doneness >= 1.0:
+				self._set_mode(TSMODE_AREA)
 		elif self._tsmode == TSMODE_AREA:
 			### Draw the area selection interface
-			pass
+			for e in app.events:
+				if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
+					# Handle input events to proceed into mission selection
+					#self._set_mode(TSMODE_PRE_MISSION)
+					app.set_game_mode(app.MODE_GAMEPLAY)
 		elif self._tsmode == TSMODE_MISSION:
 			### Draw the mission selection interface
 			pass
