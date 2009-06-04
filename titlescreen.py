@@ -2,6 +2,7 @@ from __future__ import division
 
 import pygame
 from OpenGL.GL import *
+from OpenGL.GLU import *
 
 import app, resman, camera, sky
 from geometry import *
@@ -75,7 +76,8 @@ class TitleScreenManager:
 	def __init__(self):
 		self._title_tex = resman.Texture("title.png")
 		self.camera = _TitleScreenCamera(self)
-		self._set_mode(TSMODE_PRE_PRE_MAIN)
+		#self._set_mode(TSMODE_PRE_PRE_MAIN)
+		self._set_mode(TSMODE_PRE_AREA)
 	
 	def _set_mode(self, new_mode):
 		self._tsmode = new_mode
@@ -132,12 +134,26 @@ class TitleScreenManager:
 			if doneness >= 1.0:
 				self._set_mode(TSMODE_AREA)
 		elif self._tsmode == TSMODE_AREA:
-			### Draw the area selection interface
+			### Draw/handle events for the area selection interface
+			for area in app.areas:
+				# FIXME: This distance should be calculated from actual projection, not reckoned like this. Probably good enough for gov't work, though.
+				d = (app.winsize[1]/2)*0.855 * (1 + area.sky_stuff.game_d_offset/sky.GOLD_DIST)
+				ang = rev2rad(area.sky_stuff.game_angle)
+				pos = Point(app.winsize[0]/2, app.winsize[1]/2, 0) + Point(d*math.sin(ang), d*math.cos(ang), 0)
+				glPointSize(30)
+				glColor(1, 0, 0)
+				glBegin(GL_POINTS)
+				glVertex3f(*pos)
+				glEnd()
 			for e in app.events:
 				if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
 					# Handle input events to proceed into mission selection
 					#self._set_mode(TSMODE_PRE_MISSION)
+					app.objects = area.objects
+					app.sky_stuff = area.sky_stuff
 					app.set_game_mode(app.MODE_GAMEPLAY)
+		elif self._tsmode == TSMODE_PRE_MISSION:
+			pass
 		elif self._tsmode == TSMODE_MISSION:
 			### Draw the mission selection interface
 			pass

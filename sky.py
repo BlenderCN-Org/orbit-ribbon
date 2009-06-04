@@ -86,17 +86,17 @@ class SkyStuff:
 		glPopMatrix()
 		return r
 	
+	def get_game_origin(self):
+		"""Returns the position of the game origin in sky coordinates."""
+		d = GOLD_DIST + self.game_d_offset
+		return -Point(d*math.sin(rev2rad(self.game_angle)), self.game_y_offset, d*math.cos(rev2rad(self.game_angle)))
+	
 	def to_sky_coords(self, pt):
 		"""Given a point in game coordinates, returns that point in sky coordinates under the current settings."""
-		# Position of the game origin in sky coordinates
-		d = GOLD_DIST + self.game_d_offset
-		localGamePos = -Point(d*math.sin(rev2rad(self.game_angle)), self.game_y_offset, d*math.cos(rev2rad(self.game_angle)))
-		
 		# Offset from the game origin to the target in sky coordinates
 		skyMatrix = self._getSkyMatrix()
 		localOffset = applyTransverseMatrix(pt, skyMatrix)
-		
-		return localGamePos + localOffset
+		return self.get_game_origin() + localOffset
 	
 	def get_voy_pos(self):
 		"""Returns a Point() with the current location of Voy in gameplay coordinates."""
@@ -117,6 +117,7 @@ class SkyStuff:
 		return math.sqrt(xDist**2 + yDist**2)
 	
 	def draw(self):
+		"""Draws everything in the sky, and saves the gameplay origin's projected screen position to the projectedPos attribute."""
 		### Figure out where the camera is and how to get there, and move to the sky coordinate system
 		cam = Point(*(app.player_camera.get_camvals()[0:3]))
 		localCamPos = self.to_sky_coords(cam)

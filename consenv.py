@@ -12,6 +12,7 @@ import pydoc
 from pygame.locals import *
 
 import app
+import area
 import avatar
 import camera
 import collision

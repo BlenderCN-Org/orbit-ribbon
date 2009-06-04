@@ -22,7 +22,10 @@ odeworld = None
 static_space = None
 dyn_space = None
 
-#A list of all the various game objects
+#A list of all the AreaDesc objects describing the gameplay areas available
+areas = None
+
+#A list of all the various gameplay objects. Avatar must be the first one.
 objects = None
 
 #An instance of mission.MissionControl defining the mission parameters.
@@ -30,7 +33,6 @@ objects = None
 mission_control = None
 
 #An instance of sky.SkyStuff with defining the location of Voy and other distant objects
-#FIXME: Currently, must be set externally. Will eventually become responsibility of level loader.
 sky_stuff = None
 
 #The current game mode, which determines the virtual interface and the meanining of player input
@@ -114,37 +116,26 @@ def ui_init():
 	watchers.append(console.Watcher("j", "n", pygame.Rect(5*winsize[0]/6 - 20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
 
 
-def ui_deinit():
-	global screen, clock, cons, watchers
-	
-	resman.unload_all()
-	pygame.quit()
-	
-	screen = None
-	clock = None
-	cons = None
-	watchers = []
-	
-	sys.stderr = sys.__stderr__
-	sys.stdout = sys.__stdout__
-
-
 def sim_init():
 	"""Initializes the camera and simulation, including ODE.
 	
 	You must call this before calling run().
+
+	You may call this in order to reset the game.
 	"""
 	
-	global odeworld, static_space, dyn_space, objects, totalsteps, player_camera, title_screen_manager, fade_color
+	global odeworld, static_space, dyn_space, areas, objects, totalsteps, player_camera, title_screen_manager, fade_color, sky_stuff
 	totalsteps = 0L
 	odeworld = ode.World()
 	odeworld.setQuickStepNumIterations(10)
 	static_space = ode.HashSpace()
 	dyn_space = ode.HashSpace()
+	areas = []
 	objects = []
 	title_screen_manager = titlescreen.TitleScreenManager()
 	set_game_mode(MODE_TITLE_SCREEN)
 	fade_color = None
+	sky_stuff = sky.SkyStuff()
 
 
 def set_game_mode(new_mode):
@@ -158,26 +149,6 @@ def set_game_mode(new_mode):
 		)
 	elif mode == MODE_TITLE_SCREEN:
 		player_camera = title_screen_manager.camera
-
-
-def sim_deinit():
-	"""Deinitializes the camera and simulation, including ODE.
-	
-	You can call this and then call sim_init() again to forcibly clear the game state.
-	Other than that, you don't need to call this.
-	"""
-	
-	global odeworld, static_space, dyn_space, objects, totalsteps, player_camera, mode, title_screen_manager, fade_color
-	totalsteps = 0L
-	odeworld = None
-	static_space = None
-	dyn_space = None
-	objects = None
-	ode.CloseODE()
-	player_camera = None
-	mode = None
-	title_screen_manager = None
-	fade_color = None
 
 
 def _sim_step():
