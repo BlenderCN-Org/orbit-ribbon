@@ -86,6 +86,18 @@ class SkyStuff:
 		glPopMatrix()
 		return r
 	
+	def to_sky_coords(self, pt):
+		"""Given a point in game coordinates, returns that point in sky coordinates under the current settings."""
+		# Position of the game origin in sky coordinates
+		d = GOLD_DIST + self.game_d_offset
+		localGamePos = -Point(d*math.sin(rev2rad(self.game_angle)), self.game_y_offset, d*math.cos(rev2rad(self.game_angle)))
+		
+		# Offset from the game origin to the target in sky coordinates
+		skyMatrix = self._getSkyMatrix()
+		localOffset = applyTransverseMatrix(pt, skyMatrix)
+		
+		return localGamePos + localOffset
+	
 	def get_voy_pos(self):
 		"""Returns a Point() with the current location of Voy in gameplay coordinates."""
 		# FIXME: This will only work when game_tilt is zero, must fix
@@ -98,20 +110,16 @@ class SkyStuff:
 	
 	def get_dist_from_ring(self, pt):
 		"""Given a Point in gameplay coordinates, returns its distance from the densest part of the Smoke Ring."""
-		# TODO: Need to do more than just distance from Voy to get this accurate
-		return abs(pt.dist_to(self.get_voy_pos()) - GOLD_DIST)
+		# This isn't entirely correct for getting distance from a circle, but it's close enough
+		localPt = self.to_sky_coords(pt)
+		xDist = abs(localPt.dist_to(Point(0,0,0)) - GOLD_DIST)
+		yDist = localPt[1]
+		return math.sqrt(xDist**2 + yDist**2)
 	
 	def draw(self):
 		### Figure out where the camera is and how to get there, and move to the sky coordinate system
 		cam = Point(*(app.player_camera.get_camvals()[0:3]))
-		
-		# Position of the game origin in sky coordinates
-		d = GOLD_DIST + self.game_d_offset
-		self._localGamePos = -Point(d*math.sin(rev2rad(self.game_angle)), self.game_y_offset, d*math.cos(rev2rad(self.game_angle)))
-		
-		# Offset from the game origin to the camera in sky coordinates
-		skyMatrix = self._getSkyMatrix()
-		self._localCamOffset = applyTransverseMatrix(cam, skyMatrix)
+		localCamPos = self.to_sky_coords(cam)
 		
 		# Position and rotate ourselves; our origin (at Voy) is not the gameplay coordinate system origin
 		glPushMatrix()
@@ -176,7 +184,7 @@ class SkyStuff:
 		
 		def draw_billboard(pos, tex, width, height):
 			# Vector from the billboard to the game origin
-			camVec = -pos + self._localGamePos + self._localCamOffset
+			camVec = -pos + localCamPos
 			
 			# If it's too far away compared to its size, don't bother with it
 			# FIXME Come up with something meaningful here, not just this fudge value of 15
