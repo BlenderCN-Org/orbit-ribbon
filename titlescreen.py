@@ -12,6 +12,7 @@ TSMODE_PRE_PRE_MAIN, TSMODE_PRE_MAIN, TSMODE_MAIN, TSMODE_PRE_AREA, TSMODE_AREA,
 PRE_PRE_MAIN_MILLISECS = 1500
 PRE_MAIN_MILLISECS = 3000
 PRE_AREA_MILLISECS = 2000
+AREA_FADEIN_MILLISECS = 300
 PRE_MISSION_MILLISECS = 500
 PRE_GAMEPLAY_MILLISECS = 2000
 
@@ -75,9 +76,10 @@ class TitleScreenManager:
 	
 	def __init__(self):
 		self._title_tex = resman.Texture("title.png")
+		self._selsquare_active_tex = resman.Texture("selsquare_active.png")
+		self._selsquare_inactive_tex = resman.Texture("selsquare_inactive.png")
 		self.camera = _TitleScreenCamera(self)
-		#self._set_mode(TSMODE_PRE_PRE_MAIN)
-		self._set_mode(TSMODE_PRE_AREA)
+		self._set_mode(TSMODE_PRE_PRE_MAIN)
 	
 	def _set_mode(self, new_mode):
 		self._tsmode = new_mode
@@ -131,20 +133,35 @@ class TitleScreenManager:
 		elif self._tsmode == TSMODE_PRE_AREA:
 			### Transition from main title screen to area selection screen
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_AREA_MILLISECS
+			self._draw_title_logo(max(0.0, 0.5 - doneness))
 			if doneness >= 1.0:
 				self._set_mode(TSMODE_AREA)
 		elif self._tsmode == TSMODE_AREA:
 			### Draw/handle events for the area selection interface
+			selsize = app.winsize[1]/20
+			fadein_doneness = (pygame.time.get_ticks() - self._tstart)/AREA_FADEIN_MILLISECS
+			glColor(1, 1, 1, fadein_doneness)
 			for area in app.areas:
 				# FIXME: This distance should be calculated from actual projection, not reckoned like this. Probably good enough for gov't work, though.
 				d = (app.winsize[1]/2)*0.855 * (1 + area.sky_stuff.game_d_offset/sky.GOLD_DIST)
 				ang = rev2rad(area.sky_stuff.game_angle)
 				pos = Point(app.winsize[0]/2, app.winsize[1]/2, 0) + Point(d*math.sin(ang), d*math.cos(ang), 0)
-				glPointSize(30)
-				glColor(1, 0, 0)
-				glBegin(GL_POINTS)
-				glVertex3f(*pos)
+				glEnable(GL_TEXTURE_2D)
+				glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+				glBindTexture(GL_TEXTURE_2D, self._selsquare_inactive_tex.glname)
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+				glBegin(GL_QUADS)
+				glTexCoord2f(0.0, 1.0)
+				glVertex2f(pos[0] - selsize, pos[1] - selsize)
+				glTexCoord2f(1.0, 1.0)
+				glVertex2f(pos[0] + selsize, pos[1] - selsize)
+				glTexCoord2f(1.0, 0.0)
+				glVertex2f(pos[0] + selsize, pos[1] + selsize)
+				glTexCoord2f(0.0, 0.0)
+				glVertex2f(pos[0] - selsize, pos[1] + selsize)
 				glEnd()
+				glDisable(GL_TEXTURE_2D)
 			for e in app.events:
 				if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
 					# Handle input events to proceed into mission selection
