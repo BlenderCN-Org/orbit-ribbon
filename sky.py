@@ -42,10 +42,6 @@ for i in range(50):
 		sublist.append(Point(ranval(), ranval(), ranval()))
 	STAR_LISTS.append(sublist)
 		
-VOY_TEX = resman.Texture("voy.png")
-T3_TEX = resman.Texture("t3.png")
-GOLD_TEX = resman.Texture("gold.png")
-JUNGLE_TEX = resman.Texture("jungle.png")
 
 # FIXME - Consider using depth testing for sky objects, then clearing the depth buffer
 
@@ -71,6 +67,11 @@ class SkyStuff:
 		self.game_d_offset = game_d_offset
 		self.game_tilt = game_tilt
 		self.t3_angle = t3_angle		
+		
+		self._voy_tex = resman.Texture("voy.png")
+		self._t3_tex = resman.Texture("t3.png")
+		self._gold_tex = resman.Texture("gold.png")
+		self._jungle_tex = resman.Texture("jungle.png")
 	
 	def _applySkyMatrix(self):
 		# TODO - Perhaps could be optimized by caching, since the matrix generated will not change as long as sky values don't change
@@ -214,13 +215,13 @@ class SkyStuff:
 		glEnable(GL_TEXTURE_2D)
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
 		
-		draw_billboard(t3_pos,               T3_TEX,   T3_RADIUS*2,   T3_RADIUS*2)    # T3
-		draw_billboard(Point(GOLD_DIST,0,0), GOLD_TEX, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
-		draw_billboard(Point(0,0,0),         VOY_TEX,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
+		draw_billboard(t3_pos,               self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)    # T3
+		draw_billboard(Point(GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
+		draw_billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
 		
 		# Draw jungles around the Smoke Ring in various positions
 		for p in JUNGLE_POSITIONS:
-			draw_billboard(p, JUNGLE_TEX, 20000, 20000)
+			draw_billboard(p, self._jungle_tex, 20000, 20000)
 		
 		glDisable(GL_TEXTURE_2D)
 		glPopMatrix()
