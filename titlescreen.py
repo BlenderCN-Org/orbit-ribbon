@@ -86,7 +86,7 @@ class _TitleScreenCamera(camera.Camera):
 					self.main_cam.get_camvals(),
 					self.gameplay_cam.get_camvals(),
 					(t - 0.5)*2,
-					INTERP_MODE_SMOOTHED
+					INTERP_MODE_LOG_DOWN
 				)
 
 
@@ -227,12 +227,13 @@ class TitleScreenManager:
 		elif self._tsmode == TSMODE_PRE_GAMEPLAY:
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_GAMEPLAY_MILLISECS
 			area = self.cur_area
-			app.sky_stuff = interpolate(
-				sky.SkyStuff(),
-				area.sky_stuff,
-				doneness,
-				INTERP_MODE_SMOOTHED
-			)
+			if doneness < 0.5:
+				app.sky_stuff = interpolate(
+					sky.SkyStuff(),
+					area.sky_stuff,
+					doneness*2,
+					INTERP_MODE_SMOOTHED
+				)
 			if doneness >= 1.0:
 				# Begin gameplay mode
 				app.sky_stuff = area.sky_stuff
