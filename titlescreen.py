@@ -15,7 +15,7 @@ PRE_AREA_MILLISECS = 2000
 AREA_FADEIN_MILLISECS = 300
 AREA_FADEOUT_MILLISECS = 200
 PRE_MISSION_MILLISECS = 500
-PRE_GAMEPLAY_MILLISECS = 2000
+PRE_GAMEPLAY_MILLISECS = 5000
 
 class _TitleScreenCamera(camera.Camera):
 	def __init__(self, manager):
@@ -226,9 +226,15 @@ class TitleScreenManager:
 					self._set_mode(TSMODE_PRE_GAMEPLAY)
 		elif self._tsmode == TSMODE_PRE_GAMEPLAY:
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_GAMEPLAY_MILLISECS
+			area = self.cur_area
+			app.sky_stuff = interpolate(
+				sky.SkyStuff(),
+				area.sky_stuff,
+				doneness,
+				INTERP_MODE_SMOOTHED
+			)
 			if doneness >= 1.0:
 				# Begin gameplay mode
-				area = self.cur_area
 				app.sky_stuff = area.sky_stuff
 				app.player_camera = self.camera.gameplay_cam
 				app.mode = app.MODE_GAMEPLAY

@@ -21,6 +21,31 @@ GOLD_RADIUS = 5e5 # Guessed; includes the storm around Gold
 SMOKE_RING_RADIUS = 8e4 # Calculations yielded 1.4e7, but that looked terrible, so this is made up. FIXME This is far too narrow to hold jungles. 
 SMOKE_RING_INSIDE_DIST = GOLD_DIST - SMOKE_RING_RADIUS
 SMOKE_RING_OUTSIDE_DIST = GOLD_DIST + SMOKE_RING_RADIUS
+		
+# Create some random jungle positions
+random.seed(2)
+JUNGLE_POSITIONS = []
+for i in range(150):
+	ang = random.random()*2*math.pi
+	r_offset = random.random()*SMOKE_RING_RADIUS - SMOKE_RING_RADIUS/2
+	y_offset = random.random()*SMOKE_RING_RADIUS - SMOKE_RING_RADIUS/2
+	p = Point(math.cos(ang)*(GOLD_DIST + r_offset), y_offset, math.sin(ang)*(GOLD_DIST + r_offset))
+	JUNGLE_POSITIONS.append(p)
+
+# Create some random star positions
+random.seed(86)
+STAR_LISTS = [] # A list of lists of Points, each sub-list delimiting an increasingly bright star group
+ranval = lambda: (random.random()*2 - 1)*1e15
+for i in range(50):
+	sublist = []
+	for j in range(100):
+		sublist.append(Point(ranval(), ranval(), ranval()))
+	STAR_LISTS.append(sublist)
+		
+VOY_TEX = resman.Texture("voy.png")
+T3_TEX = resman.Texture("t3.png")
+GOLD_TEX = resman.Texture("gold.png")
+JUNGLE_TEX = resman.Texture("jungle.png")
 
 # FIXME - Consider using depth testing for sky objects, then clearing the depth buffer
 
@@ -45,32 +70,7 @@ class SkyStuff:
 		self.game_y_offset = game_y_offset
 		self.game_d_offset = game_d_offset
 		self.game_tilt = game_tilt
-		self.t3_angle = t3_angle
-		
-		self._voy_tex = resman.Texture("voy.png")
-		self._t3_tex = resman.Texture("t3.png")
-		self._gold_tex = resman.Texture("gold.png")
-		self._jungle_tex = resman.Texture("jungle.png")
-		
-		# Create some random jungle positions
-		random.seed(2)
-		self._jungle_positions = []
-		for i in range(150):
-			ang = random.random()*2*math.pi
-			r_offset = random.random()*SMOKE_RING_RADIUS - SMOKE_RING_RADIUS/2
-			y_offset = random.random()*SMOKE_RING_RADIUS - SMOKE_RING_RADIUS/2
-			p = Point(math.cos(ang)*(GOLD_DIST + r_offset), y_offset, math.sin(ang)*(GOLD_DIST + r_offset))
-			self._jungle_positions.append(p)
-
-		# Create some random star positions
-		random.seed(86)
-		self._star_lists = [] # A list of lists of Points, each sub-list delimiting an increasingly bright star group
-		ranval = lambda: (random.random()*2 - 1)*1e15
-		for i in range(50):
-			sublist = []
-			for j in range(100):
-				sublist.append(Point(ranval(), ranval(), ranval()))
-			self._star_lists.append(sublist)
+		self.t3_angle = t3_angle		
 	
 	def _applySkyMatrix(self):
 		# TODO - Perhaps could be optimized by caching, since the matrix generated will not change as long as sky values don't change
@@ -138,8 +138,8 @@ class SkyStuff:
 		if sky_ratio < 0.5:
 			# Draw stars
 			glEnable(GL_POINT_SMOOTH)
-			for n, sublist in enumerate(self._star_lists):
-				size = 0.5 + (n+1)*1.5/len(self._star_lists)
+			for n, sublist in enumerate(STAR_LISTS):
+				size = 0.5 + (n+1)*1.5/len(STAR_LISTS)
 				glColor3f(size/2 + 0.5, size/2 + 0.5, size/2 + 0.5)
 				glPointSize(size + 1.0)
 				glBegin(GL_POINTS)
@@ -214,13 +214,13 @@ class SkyStuff:
 		glEnable(GL_TEXTURE_2D)
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
 		
-		draw_billboard(t3_pos,               self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)    # T3
-		draw_billboard(Point(GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
-		draw_billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
+		draw_billboard(t3_pos,               T3_TEX,   T3_RADIUS*2,   T3_RADIUS*2)    # T3
+		draw_billboard(Point(GOLD_DIST,0,0), GOLD_TEX, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
+		draw_billboard(Point(0,0,0),         VOY_TEX,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
 		
 		# Draw jungles around the Smoke Ring in various positions
-		for p in self._jungle_positions:
-			draw_billboard(p, self._jungle_tex, 20000, 20000)
+		for p in JUNGLE_POSITIONS:
+			draw_billboard(p, JUNGLE_TEX, 20000, 20000)
 		
 		glDisable(GL_TEXTURE_2D)
 		glPopMatrix()

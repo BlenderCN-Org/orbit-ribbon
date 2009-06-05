@@ -7,12 +7,29 @@ from geometry import *
 
 INTERP_MODE_LINEAR, INTERP_MODE_SMOOTHED = range(2)
 def interpolate(a, b, x, mode):
-	"""Given two equally-sized tuples, an x value in [0.0, 1.0], and an INTERP_MODE_* value, returns an interpolated tuple.
-
-	If x is 0.0 or less, returns a. If x is 1.0 or greater, returns b. Otherwise, returns a tuple containing middle values.
+	"""Given two acceptable values of the same type, an x value in [0.0, 1.0], and an INTERP_MODE_* value, returns an interpolated value.
+	
+	Acceptable values include: numbers, tuples of numbers, and SkyStuff instances.
+	
+	If x is 0.0 or less, returns a. If x is 1.0 or greater, returns b. Otherwise, returns something in between.
 	"""
+	import sky
+	return_interpreter = lambda x: x
+	if isinstance(a, float) or isinstance(a, int):
+		if not (isinstance(b, float) or isinstance(b, int)):
+			raise RuntimeError("Tried to interpolate number with non-number!")
+		a = (a,)
+		b = (b,)
+		return_interpreter = lambda x: x[0]
+	elif isinstance(a, sky.SkyStuff):
+		if not isinstance(b, sky.SkyStuff):
+			raise RuntimeError("Tried to interpolate SkyStuff with non-SkyStuff!")
+		a = (a.game_angle, a.game_y_offset, a.game_d_offset, a.game_tilt[0], a.game_tilt[1], a.game_tilt[2], a.game_tilt[3], a.t3_angle)
+		b = (b.game_angle, b.game_y_offset, b.game_d_offset, b.game_tilt[0], b.game_tilt[1], b.game_tilt[2], b.game_tilt[3], b.t3_angle)
+		return_interpreter = lambda x: sky.SkyStuff(x[0], x[1], x[2], (x[3], x[4], x[5], x[6]), x[7])
+	
 	if len(a) != len(b):
-		raise RuntimeError("Non-equal-length tuples given to interpolate")
+		raise RuntimeError("Non-equal-type tuples given to interpolate")
 	if x <= 0.0:
 		return a
 	elif x >= 1.0:
@@ -32,7 +49,7 @@ def interpolate(a, b, x, mode):
 	r = []
 	for n in range(len(a)):
 		r.append(interpolator(a[n], b[n]))
-	return tuple(r)
+	return return_interpreter(tuple(r))
 
 def applyMatrix(point, matrix):
 	"""Given a Point and an OpenGL matrix, returns the Point as transformed by the matrix."""
