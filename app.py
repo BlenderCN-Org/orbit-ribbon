@@ -124,7 +124,7 @@ def sim_init():
 	You may call this in order to reset the game.
 	"""
 	
-	global odeworld, static_space, dyn_space, areas, objects, totalsteps, player_camera, title_screen_manager, fade_color, sky_stuff
+	global odeworld, static_space, dyn_space, areas, objects, totalsteps, player_camera, title_screen_manager, fade_color, sky_stuff, mode
 	totalsteps = 0L
 	odeworld = ode.World()
 	odeworld.setQuickStepNumIterations(10)
@@ -133,22 +133,10 @@ def sim_init():
 	areas = []
 	objects = []
 	title_screen_manager = titlescreen.TitleScreenManager()
-	set_game_mode(MODE_TITLE_SCREEN)
+	player_camera = title_screen_manager.camera
+	mode = MODE_TITLE_SCREEN
 	fade_color = None
 	sky_stuff = sky.SkyStuff()
-
-
-def set_game_mode(new_mode):
-	global mode
-	mode = new_mode
-	
-	global player_camera
-	if mode == MODE_GAMEPLAY:
-		player_camera = camera.FollowCamera(
-			target_obj = objects[0]
-		)
-	elif mode == MODE_TITLE_SCREEN:
-		player_camera = title_screen_manager.camera
 
 
 def _sim_step():

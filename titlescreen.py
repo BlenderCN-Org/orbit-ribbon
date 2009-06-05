@@ -21,6 +21,7 @@ class _TitleScreenCamera(camera.Camera):
 	def __init__(self, manager):
 		self.manager = manager
 		self.mission_cam = None # Set externally by TitleScreenManager
+		self.gameplay_cam = None # Set externally by TitleScreenManager
 		
 		# Fixed camera positions, written assuming that SkyStuff is in default state (which it is, prior to choosing an area)
 		self.pre_main_cam = camera.FixedCamera(
@@ -71,7 +72,22 @@ class _TitleScreenCamera(camera.Camera):
 		elif self.manager._tsmode == TSMODE_MISSION:
 			return self.mission_cam.get_camvals()
 		elif self.manager._tsmode == TSMODE_PRE_GAMEPLAY:
-			pass
+			# To transition to gameplay mode, travel from mission camera to the title camera, then from there to gameplay camera
+			t = (pygame.time.get_ticks() - self.manager._tstart)/PRE_GAMEPLAY_MILLISECS
+			if t < 0.5:
+				return interpolate(
+					self.mission_cam.get_camvals(),
+					self.main_cam.get_camvals(),
+					t*2,
+					INTERP_MODE_SMOOTHED
+				)
+			else:
+				return interpolate(
+					self.main_cam.get_camvals(),
+					self.gameplay_cam.get_camvals(),
+					(t - 0.5)*2,
+					INTERP_MODE_SMOOTHED
+				)
 
 
 class TitleScreenManager:
@@ -204,5 +220,15 @@ class TitleScreenManager:
 					# Transition to gameplay mode
 					area = self.cur_area
 					app.objects = area.objects
-					app.sky_stuff = area.sky_stuff
-					app.set_game_mode(app.MODE_GAMEPLAY)
+					self.camera.gameplay_cam = camera.FollowCamera(
+						target_obj = app.objects[0]
+					)
+					self._set_mode(TSMODE_PRE_GAMEPLAY)
+		elif self._tsmode == TSMODE_PRE_GAMEPLAY:
+			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_GAMEPLAY_MILLISECS
+			if doneness >= 1.0:
+				# Begin gameplay mode
+				area = self.cur_area
+				app.sky_stuff = area.sky_stuff
+				app.player_camera = self.camera.gameplay_cam
+				app.mode = app.MODE_GAMEPLAY
