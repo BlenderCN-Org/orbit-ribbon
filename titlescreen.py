@@ -13,12 +13,14 @@ PRE_PRE_MAIN_MILLISECS = 1500
 PRE_MAIN_MILLISECS = 3000
 PRE_AREA_MILLISECS = 2000
 AREA_FADEIN_MILLISECS = 300
+AREA_FADEOUT_MILLISECS = 200
 PRE_MISSION_MILLISECS = 500
 PRE_GAMEPLAY_MILLISECS = 2000
 
 class _TitleScreenCamera(camera.Camera):
 	def __init__(self, manager):
 		self.manager = manager
+		self.mission_cam = None # Set externally by TitleScreenManager
 		
 		# Fixed camera positions, written assuming that SkyStuff is in default state (which it is, prior to choosing an area)
 		self.pre_main_cam = camera.FixedCamera(
@@ -60,9 +62,14 @@ class _TitleScreenCamera(camera.Camera):
 		elif self.manager._tsmode == TSMODE_AREA:
 			return self.area_cam.get_camvals()
 		elif self.manager._tsmode == TSMODE_PRE_MISSION:
-			pass
+			return interpolate(
+				self.area_cam.get_camvals(),
+				self.mission_cam.get_camvals(),
+				(pygame.time.get_ticks() - self.manager._tstart)/PRE_AREA_MILLISECS,
+				INTERP_MODE_SMOOTHED
+			)
 		elif self.manager._tsmode == TSMODE_MISSION:
-			pass
+			return self.mission_cam.get_camvals()
 		elif self.manager._tsmode == TSMODE_PRE_GAMEPLAY:
 			pass
 
@@ -72,6 +79,7 @@ class TitleScreenManager:
 	
 	Data attributes:
 	camera - A camera.Camera object that should be used to control the 3D viewpoint while the title screen is active.
+	cur_area - The currently selected AreaDesc, or None if no area has been selected. Do not set externally.
 	"""
 	
 	def __init__(self):
@@ -79,7 +87,10 @@ class TitleScreenManager:
 		self._selsquare_active_tex = resman.Texture("selsquare_active.png")
 		self._selsquare_inactive_tex = resman.Texture("selsquare_inactive.png")
 		self.camera = _TitleScreenCamera(self)
-		self._set_mode(TSMODE_PRE_PRE_MAIN)
+		#self._set_mode(TSMODE_PRE_PRE_MAIN)
+		self._set_mode(TSMODE_AREA)
+		self.cur_area = None
+		self._cur_area_start = None # Tick time at which cur_area was set.
 	
 	def _set_mode(self, new_mode):
 		self._tsmode = new_mode
@@ -139,8 +150,11 @@ class TitleScreenManager:
 		elif self._tsmode == TSMODE_AREA:
 			### Draw/handle events for the area selection interface
 			selsize = app.winsize[1]/20
-			fadein_doneness = (pygame.time.get_ticks() - self._tstart)/AREA_FADEIN_MILLISECS
-			glColor(1, 1, 1, fadein_doneness)
+			if self.cur_area is None:
+				fade = (pygame.time.get_ticks() - self._tstart)/AREA_FADEIN_MILLISECS
+			else:
+				fade = max(0.0, 1.0 - (pygame.time.get_ticks() - self._cur_area_tstart)/AREA_FADEOUT_MILLISECS)
+			glColor(1, 1, 1, fade)
 			for area in app.areas:
 				# FIXME: This distance should be calculated from actual projection, not reckoned like this. Probably good enough for gov't work, though.
 				d = (app.winsize[1]/2)*0.855 * (1 + area.sky_stuff.game_d_offset/sky.GOLD_DIST)
@@ -162,15 +176,33 @@ class TitleScreenManager:
 				glVertex2f(pos[0] - selsize, pos[1] + selsize)
 				glEnd()
 				glDisable(GL_TEXTURE_2D)
+			if self.cur_area is None:
+				for e in app.events:
+					if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
+						self.cur_area = area
+						self._cur_area_tstart = pygame.time.get_ticks()
+						ang = rev2rad(area.sky_stuff.game_angle)
+						d = sky.GOLD_DIST + area.sky_stuff.game_d_offset
+						area_loc = Point(0, 0, sky.GOLD_DIST) - Point(d*math.sin(ang), 0, d*math.cos(ang))
+						self.camera.mission_cam = camera.FixedCamera(
+							position = area_loc + Point(0, sky.GOLD_DIST/10, 0),
+							target = area_loc,
+							up_vec = Point(0, 0, 1)
+						)
+			else:
+				if fade == 0.0:
+					# Once we've faded out the UI, transition to mission selection
+					self._set_mode(TSMODE_PRE_MISSION)
+		elif self._tsmode == TSMODE_PRE_MISSION:
+			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_AREA_MILLISECS
+			if doneness >= 1.0:
+				self._set_mode(TSMODE_MISSION)
+		elif self._tsmode == TSMODE_MISSION:
+			### Draw/handle events for the mission selection interface
 			for e in app.events:
 				if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
-					# Handle input events to proceed into mission selection
-					#self._set_mode(TSMODE_PRE_MISSION)
+					# Transition to gameplay mode
+					area = self.cur_area
 					app.objects = area.objects
 					app.sky_stuff = area.sky_stuff
 					app.set_game_mode(app.MODE_GAMEPLAY)
-		elif self._tsmode == TSMODE_PRE_MISSION:
-			pass
-		elif self._tsmode == TSMODE_MISSION:
-			### Draw the mission selection interface
-			pass
