@@ -12,7 +12,7 @@ from geometry import *
 MODE_GAMEPLAY, MODE_TITLE_SCREEN = range(2)
 
 SKY_CLIP_DIST = 1e12
-GAMEPLAY_CLIP_DIST = 5000
+GAMEPLAY_CLIP_DIST = 100000
 FOV = 45
 
 #The ODE simulation

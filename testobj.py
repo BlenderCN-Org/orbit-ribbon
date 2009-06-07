@@ -54,3 +54,17 @@ class Ground(gameobj.GameObj):
 		glVertex3f(scale/2, 0, -scale/2)
 		glEnd()
 		glDisable(GL_TEXTURE_2D)
+
+
+class GreenSphere(gameobj.GameObj):
+	"""A jungle-like sphere for testing."""
+	
+	def __init__(self, pos, radius = 10000):
+		geom = ode.GeomSphere(app.static_space, radius)
+		geom.coll_props = collision.Props()
+		super(GreenSphere, self).__init__(pos = pos, body = None, geom = geom)
+		self._radius = radius
+	
+	def indraw(self):
+		glColor3f(0.0, 0.7, 0.0)
+		glutSolidSphere(self._radius, 20, 20)

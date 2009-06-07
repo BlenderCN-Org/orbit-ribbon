@@ -66,6 +66,10 @@ objs.append(
 	target.Ring(Point(-4.0, -23.0, -20.0))
 )
 
+objs.append(
+	testobj.GreenSphere(Point(-15000, 5000, 15000))
+)
+
 sky_stuff = sky.SkyStuff(
 	game_angle = 0.17,
 	game_y_offset = 1100,
