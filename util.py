@@ -5,7 +5,7 @@ import pygame, os, ode, math
 import app, collision
 from geometry import *
 
-INTERP_MODE_LINEAR, INTERP_MODE_SMOOTHED, INTERP_MODE_LOG_DOWN = range(3)
+INTERP_MODE_LINEAR, INTERP_MODE_SMOOTHED = range(2)
 def interpolate(a, b, x, mode):
 	"""Given two acceptable values of the same type, an x value in [0.0, 1.0], and an INTERP_MODE_* value, returns an interpolated value.
 	
@@ -45,14 +45,6 @@ def interpolate(a, b, x, mode):
 			else:
 				return i + (j-i)*(1 - (2*(1-x)*(1-x)))
 		interpolator = smooth_interp
-	elif mode == INTERP_MODE_LOG_DOWN:
-		SCALING = 100
-		def log_down_interp(i, j):
-			if x == 0.0:
-				return 0.0
-			else:
-				return i + (j-i)*(max(0.0, (math.log(x)+SCALING)/SCALING))
-		interpolator = log_down_interp
 	
 	r = []
 	for n in range(len(a)):
