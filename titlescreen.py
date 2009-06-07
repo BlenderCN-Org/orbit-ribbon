@@ -74,12 +74,12 @@ class _TitleScreenCamera(camera.Camera):
 		elif self.manager._tsmode == TSMODE_PRE_GAMEPLAY:
 			# Describes the steps we will go through to approach gameplay camera
 			# Tuples are: start point inclusive, end point exclusive, cameras to transition between, and interpolation mode
-			midpoint_1 = interpolate(self.main_cam.get_camvals(), self.gameplay_cam.get_camvals(), 0.95, INTERP_MODE_LINEAR)
+			midpoint_1 = interpolate(self.main_cam.get_camvals(), self.gameplay_cam.get_camvals(), 0.92, INTERP_MODE_LINEAR)
 			midpoint_2 = interpolate(self.main_cam.get_camvals(), self.gameplay_cam.get_camvals(), 0.9999, INTERP_MODE_LINEAR)
 			stages = (
 				(0.0, self.mission_cam.get_camvals(), self.main_cam.get_camvals(), INTERP_MODE_SMOOTHED),
-				(0.3, self.main_cam.get_camvals(), midpoint_1, INTERP_MODE_SMOOTHED),
-				(0.5, midpoint_1, midpoint_2, INTERP_MODE_SMOOTHED),
+				(0.3, self.main_cam.get_camvals(), midpoint_1, INTERP_MODE_LINEAR),
+				(0.5, midpoint_1, midpoint_2, INTERP_MODE_LINEAR),
 				(0.7, midpoint_2, self.gameplay_cam.get_camvals(), INTERP_MODE_SMOOTHED),
 			)
 			t = (pygame.time.get_ticks() - self.manager._tstart)/PRE_GAMEPLAY_MILLISECS
