@@ -46,7 +46,7 @@ def interpolate(a, b, x, mode):
 				return i + (j-i)*(1 - (2*(1-x)*(1-x)))
 		interpolator = smooth_interp
 	elif mode == INTERP_MODE_LOG_DOWN:
-		SCALING = 1000
+		SCALING = 100
 		def log_down_interp(i, j):
 			if x == 0.0:
 				return 0.0

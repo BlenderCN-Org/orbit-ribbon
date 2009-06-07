@@ -129,7 +129,7 @@ class SkyStuff:
 		
 		### The sky and distant stars (if visible)
 		ring_dist = self.get_dist_from_ring(cam)
-		sky_ratio = 1.0 - min(1.0, ring_dist/(SMOKE_RING_RADIUS*10)) # At 1.0, full sky color. At 0.0, we're in pitch-black space.
+		sky_ratio = 1.0 - min(1.0, ring_dist/(SMOKE_RING_RADIUS*60)) # At 1.0, full sky color. At 0.0, we're in pitch-black space.
 		glPushMatrix()
 		if sky_ratio > 0.001:
 			# Draw a sphere for the sky
@@ -140,7 +140,7 @@ class SkyStuff:
 			# Draw stars
 			glEnable(GL_POINT_SMOOTH)
 			for n, sublist in enumerate(STAR_LISTS):
-				size = 0.5 + (n+1)*1.5/len(STAR_LISTS)
+				size = 0.5 + (n+1)*1.5/len(STAR_LISTS) - sky_ratio
 				glColor3f(size/2 + 0.5, size/2 + 0.5, size/2 + 0.5)
 				glPointSize(size + 1.0)
 				glBegin(GL_POINTS)

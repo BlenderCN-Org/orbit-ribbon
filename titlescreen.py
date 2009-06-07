@@ -15,7 +15,7 @@ PRE_AREA_MILLISECS = 2000
 AREA_FADEIN_MILLISECS = 300
 AREA_FADEOUT_MILLISECS = 200
 PRE_MISSION_MILLISECS = 500
-PRE_GAMEPLAY_MILLISECS = 5000
+PRE_GAMEPLAY_MILLISECS = 10000
 
 class _TitleScreenCamera(camera.Camera):
 	def __init__(self, manager):
@@ -72,22 +72,25 @@ class _TitleScreenCamera(camera.Camera):
 		elif self.manager._tsmode == TSMODE_MISSION:
 			return self.mission_cam.get_camvals()
 		elif self.manager._tsmode == TSMODE_PRE_GAMEPLAY:
-			# To transition to gameplay mode, travel from mission camera to the title camera, then from there to gameplay camera
+			# Describes the steps we will go through to approach gameplay camera
+			# Tuples are: start point inclusive, end point exclusive, cameras to transition between, and interpolation mode
+			midpoint_1 = interpolate(self.main_cam.get_camvals(), self.gameplay_cam.get_camvals(), 0.95, INTERP_MODE_LINEAR)
+			midpoint_2 = interpolate(self.main_cam.get_camvals(), self.gameplay_cam.get_camvals(), 0.9999, INTERP_MODE_LINEAR)
+			stages = (
+				(0.0, self.mission_cam.get_camvals(), self.main_cam.get_camvals(), INTERP_MODE_SMOOTHED),
+				(0.3, self.main_cam.get_camvals(), midpoint_1, INTERP_MODE_SMOOTHED),
+				(0.5, midpoint_1, midpoint_2, INTERP_MODE_SMOOTHED),
+				(0.7, midpoint_2, self.gameplay_cam.get_camvals(), INTERP_MODE_SMOOTHED),
+			)
 			t = (pygame.time.get_ticks() - self.manager._tstart)/PRE_GAMEPLAY_MILLISECS
-			if t < 0.5:
-				return interpolate(
-					self.mission_cam.get_camvals(),
-					self.main_cam.get_camvals(),
-					t*2,
-					INTERP_MODE_SMOOTHED
-				)
+			for n, (start_pt, start_camvals, end_camvals, interp_mode) in enumerate(stages):
+				end_pt = 1.0
+				if n+1 < len(stages):
+					end_pt = stages[n+1][0]
+				if n+1 == len(stages) or t < end_pt:
+					return interpolate(start_camvals, end_camvals, (t-start_pt)/(end_pt-start_pt), interp_mode)
 			else:
-				return interpolate(
-					self.main_cam.get_camvals(),
-					self.gameplay_cam.get_camvals(),
-					(t - 0.5)*2,
-					INTERP_MODE_LOG_DOWN
-				)
+				return stages[-1][2]
 
 
 class TitleScreenManager:
@@ -227,15 +230,16 @@ class TitleScreenManager:
 		elif self._tsmode == TSMODE_PRE_GAMEPLAY:
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_GAMEPLAY_MILLISECS
 			area = self.cur_area
-			if doneness < 0.5:
+			if doneness < 0.3:
 				app.sky_stuff = interpolate(
 					sky.SkyStuff(),
 					area.sky_stuff,
-					doneness*2,
+					doneness/0.3,
 					INTERP_MODE_SMOOTHED
 				)
+			else:
+				app.sky_stuff = area.sky_stuff
 			if doneness >= 1.0:
 				# Begin gameplay mode
-				app.sky_stuff = area.sky_stuff
 				app.player_camera = self.camera.gameplay_cam
 				app.mode = app.MODE_GAMEPLAY
