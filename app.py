@@ -12,7 +12,7 @@ from geometry import *
 MODE_GAMEPLAY, MODE_TITLE_SCREEN = range(2)
 
 SKY_CLIP_DIST = 1e12
-GAMEPLAY_CLIP_DIST = 100000
+GAMEPLAY_CLIP_DIST = 50000
 FOV = 45
 
 #The ODE simulation
@@ -40,6 +40,9 @@ mode = None
 
 #Input events (from PyGame) which occurred this step
 events = []
+
+#Billboard objects which should be drawn this frame
+billboards = []
 
 #The result of calls to joy.getAxes and joy.getButtons at the beginning of this simstep
 axes = {}
@@ -170,21 +173,41 @@ def _draw_frame():
 	glLoadIdentity()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 	
-	# Position the camera
-	gluLookAt(*player_camera.get_camvals())
+	# Locate the camera position, and orient to it
+	camvals = player_camera.get_camvals()
+	campos = player_camera.get_position()
+	gluLookAt(*camvals)
+
+	# Sort objects to be drawn into those which are far and need to be drawn as billboards, and those which are close and can be drawn as objects
+	near_objs, far_objs = [], [] # Lists of GameObjs
+	thresh = GAMEPLAY_CLIP_DIST * 0.9
+	for o in objects:
+		if o.pos.dist_to(campos) > thresh:
+			far_objs.append(o)
+		else:
+			near_objs.append(o)
 	
-	# 3D projection mode for sky objects without depth-testing
-	glDisable(GL_DEPTH_TEST)
+	# 3D projection mode for sky objects and billboards without depth-testing
 	glDisable(GL_LIGHTING)
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
 	gluPerspective(FOV, winsize[0]/winsize[1], 0.1, SKY_CLIP_DIST)
 	glMatrixMode(GL_MODELVIEW)
 	
-	# Draw the sky objects
-	sky_stuff.draw()
+	# Draw the atmosphere
+	glDisable(GL_DEPTH_TEST)
+	sky_stuff.draw_geometry()
+
+	# Draw the billboards for sky objects and distant gameplay objects
+	glEnable(GL_DEPTH_TEST)
+	glEnable(GL_TEXTURE_2D)
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
+	sky_stuff.draw_billboards()
+	for o in far_objs:
+		o.distdraw()
+	glDisable(GL_TEXTURE_2D)
 	
-	# 3D projection mode for gameplay objects with depth-testing
+	# 3D projection mode for nearby gameplay objects with depth-testing
 	glEnable(GL_DEPTH_TEST)
 	glEnable(GL_LIGHTING)
 	glMatrixMode(GL_PROJECTION)
@@ -193,7 +216,7 @@ def _draw_frame():
 	glMatrixMode(GL_MODELVIEW)
 	
 	# Draw all objects in the list
-	for o in objects:
+	for o in near_objs:
 		o.draw()
 	
 	# 2D drawing mode

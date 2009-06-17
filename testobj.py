@@ -2,7 +2,7 @@ import ode
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 
-import app, gameobj, colors, collision, resman
+import app, gameobj, colors, collision, resman, billboard
 from geometry import *
 from util import *
 
@@ -64,7 +64,11 @@ class GreenSphere(gameobj.GameObj):
 		geom.coll_props = collision.Props()
 		super(GreenSphere, self).__init__(pos = pos, body = None, geom = geom)
 		self._radius = radius
+		self._jungle_tex = resman.Texture("jungle.png")
 	
 	def indraw(self):
 		glColor3f(0.0, 0.7, 0.0)
 		glutSolidSphere(self._radius, 20, 20)
+	
+	def indistdraw(self):
+		billboard.draw_billboard(self.pos, self._jungle_tex, self._radius*2, -self.pos + app.player_camera.get_position())

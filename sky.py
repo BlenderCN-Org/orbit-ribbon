@@ -5,7 +5,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import app, colors, collision, resman
+import app, colors, collision, resman, billboard
 from geometry import *
 from util import *
 
@@ -47,9 +47,9 @@ for i in range(50):
 
 class SkyStuff:
 	"""Handles and draws the objects that are visible far out in the sky; Voy and T3, Gold, the Smoke Ring, far ponds and clouds and plants, etc.
-	
-	It is important to draw this object each frame before anything else. Also, before drawing, you must
-	disable depth testing and lighting, and set the far clipping plane to app.SKY_CLIP_DIST away.
+
+	You need to call both draw_geometry and draw_billboards once each frame, in that order, before drawing anything else.
+	Furthermore, you must set the far clipping plane to app.SKY_CLIP_DIST away before calling these methods.
 	
 	The 'angle' values below determine position around the Smoke Ring. Gold is at angle 0.5.
 	
@@ -117,17 +117,22 @@ class SkyStuff:
 		yDist = localPt[1]
 		return math.sqrt(xDist**2 + yDist**2)
 	
-	def draw(self):
-		"""Draws everything in the sky, and saves the gameplay origin's projected screen position to the projectedPos attribute."""
-		### Figure out where the camera is and how to get there, and move to the sky coordinate system
-		cam = Point(*(app.player_camera.get_camvals()[0:3]))
-		localCamPos = self.to_sky_coords(cam)
+	def _t3_pos(self):	
+		# FIXME - Verify that this makes T3 spin in the correct direction as angle increases
+		return Point(math.sin(rev2rad(self.t3_angle))*T3_DIST, 0, math.cos(rev2rad(self.t3_angle))*T3_DIST)
+	
+	def draw_geometry(self):
+		"""Draws the stars and the atmosphere, and sets up lighting for T3 and Voy.
+		
+		You must set the far clipping plane to app.SKY_CLIP_DIST away before calling, and disable depth testing.
+		"""
 		
 		# Position and rotate ourselves; our origin (at Voy) is not the gameplay coordinate system origin
 		glPushMatrix()
 		self._applySkyMatrix()
 		
 		### The sky and distant stars (if visible)
+		cam = app.player_camera.get_position()
 		ring_dist = self.get_dist_from_ring(cam)
 		sky_ratio = 1.0 - min(1.0, ring_dist/(SMOKE_RING_RADIUS*60)) # At 1.0, full sky color. At 0.0, we're in pitch-black space.
 		glPushMatrix()
@@ -169,13 +174,11 @@ class SkyStuff:
 		glPopMatrix()
 		glDisable(GL_CULL_FACE)
 		
-		# FIXME - Verify that this makes T3 spin in the correct direction as angle increases
-		t3_pos = Point(math.sin(rev2rad(self.t3_angle))*T3_DIST, 0, math.cos(rev2rad(self.t3_angle))*T3_DIST)
-		
 		# Set up lighting parameters for the two stars of the Smoke Ring system
 		# Since lighting is disabled at this time, this does not affect the drawing of the sky objects themselves
 		
 		# T3
+		t3_pos = self._t3_pos()
 		glLightfv(GL_LIGHT1, GL_POSITION, (t3_pos[0], t3_pos[1], t3_pos[2], 1.0))
 		glLightfv(GL_LIGHT1, GL_AMBIENT, (0.7, 0.7, 0.7, 1.0))
 		glLightfv(GL_LIGHT1, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))
@@ -183,45 +186,28 @@ class SkyStuff:
 		
 		# Voy
 		# FIXME - Set up lighting for Voy
+
+		glPopMatrix()
+	
+	def draw_billboards(self):
+		"""Draws the billboards which represent distant sky objects.
 		
-		def draw_billboard(pos, tex, width, height):
-			# Vector from the billboard to the game origin
-			camVec = -pos + localCamPos
-			
-			# If it's too far away compared to its size, don't bother with it
-			# FIXME Come up with something meaningful here, not just this fudge value of 15
-			if width*height/camVec.mag() < 15:
-				return
-			
-			glBindTexture(GL_TEXTURE_2D, tex.glname)
-			glPushMatrix()
-			glTranslatef(*pos)
-			
-			# Rotate the billboard so that it faces the camera
-			glRotatef(rev2deg(rad2rev(math.atan2(camVec[0], camVec[2]))), 0, 1, 0) # Rotate around y-axis...
-			glRotatef(-rev2deg(rad2rev(math.atan2(camVec[1], math.sqrt(camVec[0]**2 + camVec[2]**2)))), 1, 0, 0) # Then tilt up/down on x-axis
-			glBegin(GL_QUADS)
-			glTexCoord2f(0.0, 0.0)
-			glVertex3f(-width/2, -height/2, 0)
-			glTexCoord2f(1.0, 0.0)
-			glVertex3f( width/2, -height/2, 0)
-			glTexCoord2f(1.0, 1.0)
-			glVertex3f( width/2,  height/2, 0)
-			glTexCoord2f(0.0, 1.0)
-			glVertex3f(-width/2,  height/2, 0)
-			glEnd()
-			glPopMatrix()
+		You must set the far clipping plane to app.SKY_CLIP_DIST away before calling, and enable depth testing, and enable TEXTURE_2D in GL_REPLACE mode.
+		"""
+		### Figure out where the camera is and how to get there, and move to the sky coordinate system
+		cam = app.player_camera.get_position()
+		localCamPos = self.to_sky_coords(cam)
 		
-		glEnable(GL_TEXTURE_2D)
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
+		glPushMatrix()
+		self._applySkyMatrix()
 		
-		draw_billboard(t3_pos,               self._t3_tex,   T3_RADIUS*2,   T3_RADIUS*2)    # T3
-		draw_billboard(Point(GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, GOLD_RADIUS*2)  # Gold
-		draw_billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2,  VOY_RADIUS*2)   # Voy
+		t3_pos = self._t3_pos()
+		billboard.draw_billboard(t3_pos,               self._t3_tex,   T3_RADIUS*2,   -t3_pos + localCamPos)    # T3
+		billboard.draw_billboard(Point(GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, -Point(GOLD_DIST,0,0) + localCamPos)  # Gold
+		billboard.draw_billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2,  localCamPos)   # Voy
 		
 		# Draw jungles around the Smoke Ring in various positions
 		for p in JUNGLE_POSITIONS:
-			draw_billboard(p, self._jungle_tex, 20000, 20000)
+			billboard.draw_billboard(p, self._jungle_tex, 20000, -p + localCamPos)
 		
-		glDisable(GL_TEXTURE_2D)
 		glPopMatrix()

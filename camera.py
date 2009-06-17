@@ -13,6 +13,10 @@ class Camera:
 	def get_camvals(self):
 		"""Returns a 9-tuple (triplets of camera position, camera target, and camera up vector), suitable for gluLookAt."""
 		raise NotImplementedError
+	
+	def get_position(self):
+		"""Returns a Point with the camera's position, based on the return value of get_camvals()."""
+		return Point(*(self.get_camvals()[0:3]))
 
 
 class FixedCamera(Camera):

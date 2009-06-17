@@ -167,7 +167,7 @@ class GameObj(object):
 		pass
 	
 	def draw(self):
-		"""Draws the object; pushes correct GL matrix, calls indraw(), restores GL.
+		"""If in range, draws the object; pushes correct GL matrix, calls indraw(), restores GL.
 		
 		Subclasses should override indraw(), not this.
 		"""
@@ -185,8 +185,25 @@ class GameObj(object):
 		
 		glPopMatrix()
 	
+	def indistdraw(self):
+		"""Does whatever is required to draw the object when it is farther than GAMEPLAY_CLIP_DIST away.
+		
+		When this is called, GL matrix has not been changed from regular state.
+		"""
+		pass
+	
+	def distdraw(self):
+		"""If outside of drawable range, draws billboard of object; sets GL state, calls indistdraw, restores GL.
+
+		Subclasses should override indistdraw, not this.
+		"""
+		self.indistdraw()
+	
 	def freeze(self):
-		"""Kills the object's linear and angular velocity."""
+		"""Kills the object's linear and angular velocity.
+		
+		This can do weird things to the simulation, so only use it for debugging.
+		"""
 		if self.body == None:
 			return
 		self.body.setLinearVel((0, 0, 0))
