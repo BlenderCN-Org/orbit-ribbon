@@ -28,15 +28,17 @@ class Cube(gameobj.GameObj):
 class Ground(gameobj.GameObj):
 	"""A non-movable rectangular ground object for testing."""
 	
-	def __init__(self, pos, scale = 100.0):
-		geom = ode.GeomBox(app.static_space, (scale, 1.0, scale))
+	def __init__(self, pos, xscale = 100.0, zscale = 100.0):
+		geom = ode.GeomBox(app.static_space, (xscale, 1.0, zscale))
 		geom.coll_props = collision.Props()
 		super(Ground, self).__init__(pos = pos, body = None, geom = geom)
-		self._scale = scale
+		self._xscale = xscale
+		self._zscale = zscale
 		self._tex = resman.Texture("diffract.png")
 	
 	def indraw(self):
-		scale = self._scale
+		xscale = self._xscale
+		zscale = self._zscale
 		tscale = 0.25 # Scaling of the texture
 		glEnable(GL_TEXTURE_2D)
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
@@ -44,14 +46,14 @@ class Ground(gameobj.GameObj):
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
 		y = 0.5
-		tul = Point(-scale/2,  y, -scale/2)
-		tll = Point(-scale/2,  y,  scale/2)
-		tlr = Point( scale/2,  y,  scale/2)
-		tur = Point( scale/2,  y, -scale/2)
-		bul = Point(-scale/2, -y, -scale/2)
-		bll = Point(-scale/2, -y,  scale/2)
-		blr = Point( scale/2, -y,  scale/2)
-		bur = Point( scale/2, -y, -scale/2)
+		tul = Point(-xscale/2,  y, -zscale/2)
+		tll = Point(-xscale/2,  y,  zscale/2)
+		tlr = Point( xscale/2,  y,  zscale/2)
+		tur = Point( xscale/2,  y, -zscale/2)
+		bul = Point(-xscale/2, -y, -zscale/2)
+		bll = Point(-xscale/2, -y,  zscale/2)
+		blr = Point( xscale/2, -y,  zscale/2)
+		bur = Point( xscale/2, -y, -zscale/2)
 		glBegin(GL_QUADS)
 		for a, b, c, d in (
 			(tul, tll, tlr, tur),

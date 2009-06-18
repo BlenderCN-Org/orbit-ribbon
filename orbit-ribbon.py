@@ -47,7 +47,7 @@ objs.append(
 objs[-1].body.addForce((50.0, -7.0, 0.0))
 
 objs.append(
-	testobj.Ground(Point(0.0, -8.0, 0.0))
+	testobj.Ground(Point(0.0, -8.0, 0.0), 50, 100)
 )
 
 objs.append(
