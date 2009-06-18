@@ -140,15 +140,25 @@ class TitleScreenManager:
 		glDisable(GL_TEXTURE_2D)
 	
 	def draw(self):
+		skipping = False
+		for e in app.events:
+			if e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
+				skipping = True
+				break
+		
 		if self._tsmode == TSMODE_PRE_PRE_MAIN:
 			### Transition from blank screen into distant view of Smoke Ring
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_PRE_MAIN_MILLISECS
+			if skipping:
+				doneness = 1
 			app.fade_color = (0, 0, 0, 1 - doneness)
 			if doneness >= 1.0:
 				self._set_mode(TSMODE_PRE_MAIN)
 		elif self._tsmode == TSMODE_PRE_MAIN:
 			### Transition from pre-pre-main into the main screen showing the title logo
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_MAIN_MILLISECS
+			if skipping:
+				doneness = 1
 			if doneness >= 0.5:
 				self._draw_title_logo(doneness - 0.5)
 			if doneness >= 1.0:
@@ -163,6 +173,8 @@ class TitleScreenManager:
 		elif self._tsmode == TSMODE_PRE_AREA:
 			### Transition from main title screen to area selection screen
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_AREA_MILLISECS
+			if skipping:
+				doneness = 1
 			self._draw_title_logo(max(0.0, 0.5 - doneness))
 			if doneness >= 1.0:
 				self._set_mode(TSMODE_AREA)
@@ -214,6 +226,8 @@ class TitleScreenManager:
 					self._set_mode(TSMODE_PRE_MISSION)
 		elif self._tsmode == TSMODE_PRE_MISSION:
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_AREA_MILLISECS
+			if skipping:
+				doneness = 1
 			if doneness >= 1.0:
 				self._set_mode(TSMODE_MISSION)
 		elif self._tsmode == TSMODE_MISSION:
@@ -229,6 +243,8 @@ class TitleScreenManager:
 					self._set_mode(TSMODE_PRE_GAMEPLAY)
 		elif self._tsmode == TSMODE_PRE_GAMEPLAY:
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_GAMEPLAY_MILLISECS
+			if skipping:
+				doneness = 1
 			area = self.cur_area
 			if doneness < 0.3:
 				app.sky_stuff = interpolate(
