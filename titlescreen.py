@@ -142,7 +142,7 @@ class TitleScreenManager:
 	def draw(self):
 		skipping = False
 		for e in app.events:
-			if e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
+			if e.type == pygame.KEYDOWN and e.key in (pygame.K_ESCAPE, pygame.K_SPACE):
 				skipping = True
 				break
 		
