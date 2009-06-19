@@ -99,37 +99,60 @@ class Avatar(gameobj.GameObj):
 	
 	def indraw(self):
 		# The cylinder body
-		glTranslatef(0, 0, -1)
+		glTranslatef(0, 0, -0.75)
 		glRotatef(180, 0, 0, 1)
 		glEnable(GL_TEXTURE_2D)
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
 		glBindTexture(GL_TEXTURE_2D, self._tex.glname)
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-		gluCylinder(self._quad, 0.15, 0.15, 2.0, 30, 10)
+		gluCylinder(self._quad, 0.1, 0.1, 1.5, 30, 10)
 		glDisable(GL_TEXTURE_2D)
 		
-		# The feet
-		glColor3f(*colors.cyan)
-		glutSolidSphere(0.15, 15, 15)
+		# The legs and feet
+		glColor3f(*colors.red)
+		glutSolidSphere(0.08, 15, 15)
+		for sign in (-1, 1):
+			glPushMatrix()
+			glTranslatef(-sign*0.06, 0, 0)
+			glRotatef(sign*10, 0, 1, 0)
+			glTranslatef(0, 0, -0.8)
+			gluCylinder(self._quad, 0.06, 0.06, 0.8, 10, 10)
+			glutSolidSphere(0.08, 5, 5)
+			glPopMatrix()
 		
 		# The jetpack
-		glTranslatef(0, -0.1, 1)
+		glTranslatef(0, -0.03, 1)
 		glColor3f(*colors.gray)
-		glutSolidSphere(0.15, 15, 15)
+		glutSolidSphere(0.12, 15, 15)
 		
 		# Back up to the head
-		glTranslatef(0, 0.1, 1)
+		glTranslatef(0, 0.05, 1)
 		glColor3f(*colors.yellow)
-		glutSolidSphere(0.20, 15, 15)
+		glutSolidSphere(0.15, 15, 15)
+		
+		# The arms and hands
+		glPushMatrix()
+		glTranslatef(0, 0, -0.7)
+		glColor3f(*colors.red)
+		glutSolidSphere(0.08, 15, 15)
+		for sign in (-1, 1):
+			glPushMatrix()
+			glTranslatef(-sign*0.1, 0, 0)
+			glRotatef(sign*10, 0, 1, 0)
+			glTranslatef(0, 0, -0.6)
+			gluCylinder(self._quad, 0.05, 0.05, 0.6, 10, 10)
+			glutSolidSphere(0.08, 5, 5)
+			glPopMatrix()
+		glPopMatrix()
 		
 		# Back to the center for thrust indication cones
 		glTranslatef(0, 0, -1)
 		glColor3f(*colors.white)
 		for offset, rot, value in (
-			(0.25, (90, 0, 1, 0), self._relThrustVec[0]),
-			(0.25, (-90, 1, 0, 0), self._relThrustVec[1]),
-			(1.25, (180, 0, 1, 0), self._relThrustVec[2]),
+			(0.50, (90, 0, 1, 0), self._relThrustVec[0]),
+			(0.50, (-90, 1, 0, 0), self._relThrustVec[1]),
+			(2.75, (180, 0, 1, 0), self._relThrustVec[2]),
 		):
 			if abs(value) > 0.01:
 				glPushMatrix()
