@@ -2,7 +2,7 @@
 
 import profile, math
 
-import app, testobj, colors, avatar, target, mission, sky, area
+import app, testobj, colors, avatar, target, mission, sky, area, wfobj
 
 from geometry import *
 from util import *
@@ -64,6 +64,10 @@ objs.append(
 
 objs.append(
 	target.Ring(Point(-4.0, -23.0, -20.0))
+)
+
+objs.append(
+	wfobj.WFObj("blender/jungle.obj", Point(0.0, 0.0, 300))
 )
 
 objs.append(
