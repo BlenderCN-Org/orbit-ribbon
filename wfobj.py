@@ -30,9 +30,14 @@ class WFObj(gameobj.GameObj):
 					fvals.append(int(ni)-1)
 					fvals.append(int(vi)-1)
 				self._faces.append(tuple(fvals))
+
+		tdat = ode.TriMeshData()
+		tdat.build(self._verts, [(x[1], x[3], x[5]) for x in self._faces])
+		geom = ode.GeomTriMesh(tdat, app.static_space)
+		geom.coll_props = collision.Props()
 		
 		# FIXME Temporary testing value for geom
-		super(WFObj, self).__init__(pos = pos, rot = rot, body = body, geom = ode.GeomBox(app.static_space, (0.1, 0.1, 0.1)))
+		super(WFObj, self).__init__(pos = pos, rot = rot, body = body, geom = geom)
 		
 		# FIXME Should free list on destruction
 		self._glListNum = glGenLists(1)
