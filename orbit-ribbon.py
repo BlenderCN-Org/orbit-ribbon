@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import profile, math
+import profile, math, psyco
 
 import app, testobj, colors, avatar, target, mission, sky, area, wfobj
 
@@ -95,4 +95,5 @@ app.mission_control = mission.MissionControl(
 )
 
 #profile.run('app.run()', 'profile')
+psyco.full()
 app.run()
