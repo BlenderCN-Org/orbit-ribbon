@@ -14,7 +14,7 @@ def list_gameobj_blends():
 
 def do_export():
 	print "Exporting..."
-	Blender.Draw.PupMenu("Exported Just Fine%t|OK")
+	Blender.Draw.PupMenu("Exported just fine%t|OK, thanks a bunch")
 
 
 def do_add_gameobj(blend_fn):
@@ -28,10 +28,10 @@ def do_add_gameobj(blend_fn):
 		obj_name = "GO-%s%04u" % (short_name, n)
 		if obj_name not in obj_name_list:
 			break
-	obj = Blender.Object.New("Mesh") # Adding a new Mesh Object (as distinct from a new Mesh)
+	#obj = bpy.data.scenes.active.objects.new()
 	
 	Blender.Library.Open(os.path.join(WORKING_DIR, blend_fn))
-	mesh = Blender.Library.Load("GameObj", "Mesh")
+	Blender.Library.Load("GameObj", "Mesh")
 	Blender.Library.Close()
 
 
