@@ -1,81 +1,26 @@
-######################################################
-#
-# Demo Script for Blender 2.3 Guide
-#
-###################################################S68
-# This script generates polygons. It is quite useless
-# since you can do polygons with ADD->Mesh->Circle
-# but it is a nice complete script example, and the
-# polygons are 'filled'
-######################################################
-
-######################################################
-# Importing modules
-######################################################
-
 import Blender
 from Blender import NMesh
 from Blender.BGL import *
 from Blender.Draw import *
 
-import math
+import os
 from math import *
 
-# Polygon Parameters
-T_NumberOfSides = Create(3)
-T_Radius = Create(1.0)
+WORKING_DIR = os.path.dirname(Blender.Get("filename"))
 
 # Events
-EVENT_NOEVENT = 1
-EVENT_DRAW = 2
-EVENT_EXIT = 3
+EVENT_NOEVENT, EVENT_ADD_GO, EVENT_EXPORT, EVENT_QUIT = range(4)
 
-######################################################
-# GUI drawing
-######################################################
-def draw():
-	global T_NumberOfSides
-	global T_Radius
-	global EVENT_NOEVENT,EVENT_DRAW,EVENT_EXIT
-	
-	########## Titles
-	glClear(GL_COLOR_BUFFER_BIT)
-	glRasterPos2d(8, 103)
-	Text("Demo Polygon Script")
-	
-	######### Parameters GUI Buttons
-	glRasterPos2d(8, 83)
-	Text("Parameters:")
-	T_NumberOfSides = Number("No. of sides: ", EVENT_NOEVENT, 10, 55, 210, 18, T_NumberOfSides.val, 3, 20, "Number of sides of out polygon");
-	T_Radius = Slider("Radius: ", EVENT_NOEVENT, 10, 35, 210, 18, T_Radius.val, 0.001, 20.0, 1, "Radius of the polygon");
-	
-	######### Draw and Exit Buttons
-	Button("Draw",EVENT_DRAW , 10, 10, 80, 18)
-	Button("Exit",EVENT_EXIT , 140, 10, 80, 18)
+def list_gameobj_blends():
+	"""Returns a list of blend files which (appear to) contain game objects."""
+	ret = []
+	for fn in os.listdir(WORKING_DIR):
+		if fn.startswith("go-") and fn.endswith(".blend"):
+			ret.append(fn)
+	return ret
 
-def event(evt, val):	
-	if (evt == QKEY and not val): 
-		Exit()
 
-def bevent(evt):
-	global T_NumberOfSides
-	global T_Radius
-	global EVENT_NOEVENT,EVENT_DRAW,EVENT_EXIT
-	
-	######### Manages GUI events
-	if (evt == EVENT_EXIT): 
-		Exit()
-	elif (evt== EVENT_DRAW):
-		Polygon(T_NumberOfSides.val, T_Radius.val)
- 		Blender.Redraw()
-
-Register(draw, event, bevent)
-
-######################################################
-# Main Body
-######################################################
-def Polygon(NumberOfSides,Radius):
-
+def polygon(NumberOfSides,Radius):
 	######### Creates a new mesh
 	poly = NMesh.GetRaw()
 	
@@ -105,3 +50,46 @@ def Polygon(NumberOfSides,Radius):
 	polyObj = NMesh.PutRaw(poly)
 	
 	Blender.Redraw()
+
+
+def gui_draw():
+	X_MARGIN = 10
+	Y_STEP = 23
+	HEIGHT = 18
+	WIDTH = 150
+	
+	glClear(GL_COLOR_BUFFER_BIT)
+	
+	# Due to OpenGL conventions, we draw from the bottom to the top
+	y = Y_STEP - HEIGHT
+	Button("Export", EVENT_EXPORT, X_MARGIN, y, WIDTH, HEIGHT)
+	y += Y_STEP
+	Button("Add GameObject", EVENT_ADD_GO, X_MARGIN, y, WIDTH, HEIGHT)
+	y += Y_STEP
+	Label("Orbit Ribbon Level Editor", X_MARGIN, y, WIDTH, HEIGHT)
+
+
+def gui_event(evt, val):	
+	if evt == QKEY and not val: 
+		Exit()
+
+
+def gui_bevent(evt):
+	if evt == EVENT_EXPORT:
+		do_export()
+	elif evt == EVENT_ADD_GO:
+		gameobj_blends = list_gameobj_blends()
+		r = Blender.Draw.PupMenu("Select GameObject%t|" + "|".join(["%s%%x%u" % (name, num) for num, name in enumerate(gameobj_blends)]))
+		if r >= 0:
+			do_add_gameobj(gameobj_blends[r])
+	if evt != EVENT_NOEVENT:
+		Blender.Redraw()
+
+
+Register(gui_draw, gui_event, gui_bevent)
+
+def do_export():
+	print "Exporting..."
+
+def do_add_gameobj(blend_fn):
+	print "Adding Game Object from %s" % blend_fn
