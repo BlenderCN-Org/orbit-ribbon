@@ -36,12 +36,27 @@ def do_add_gameobject():
 		new_obj.sel = True
 
 def do_repop_missions():
+	# First, make sure all objects in base scenes are properly named
+	for scene in bpy.data.scenes:
+		name = scene.name
+		if name.startswith("A") and name.endswith("-Base"):
+			for obj in scene.objects:
+				if not obj.name.startswith("BASE"):
+					obj.name = "BASE" + obj.name
+	
+	# Now, go through and relink base scene objects into mission scenes
 	for scene in bpy.data.scenes:
 		name = scene.name
 		if name.startswith("A") and not name.endswith("-Base"):
-			# First unlink everything from the mission scene that's not a GameObject
-			# Then, link all objects from the base area scene into this scene as well
-			areaname = name[:-4] + "-Base" # Remove the "-M##" and add "-Base" to get base area scene name
+			# First unlink everything from the mission scene that's from a base scene
+			for obj in scene.objects:
+				if obj.name.startswith("BASE"):
+					scene.objects.unlink(obj)
+			# Then, link all objects from the base area scene into the scene
+			basename = name[:-4] + "-Base" # Remove the "-M##" and add "-Base" to get base area scene name
+			basescene = bpy.data.scenes[basename]
+			for obj in basescene.objects:
+				scene.objects.link(obj)
 
 def do_export():
 	print "Exporting..."
