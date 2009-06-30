@@ -49,14 +49,19 @@ def do_repop_missions():
 		name = scene.name
 		if name.startswith("A") and not name.endswith("-Base"):
 			# First unlink everything from the mission scene that's from a base scene
+			to_be_unlinked = []
 			for obj in scene.objects:
 				if obj.name.startswith("BASE"):
-					scene.objects.unlink(obj)
+					to_be_unlinked.append(obj)
+			for obj in to_be_unlinked:
+				scene.objects.unlink(obj)
 			# Then, link all objects from the base area scene into the scene
 			basename = name[:-4] + "-Base" # Remove the "-M##" and add "-Base" to get base area scene name
 			basescene = bpy.data.scenes[basename]
 			for obj in basescene.objects:
 				scene.objects.link(obj)
+	
+	Blender.Draw.PupMenu("Repop went OK%t|Yeah man, cool")
 
 def do_export():
 	print "Exporting..."
