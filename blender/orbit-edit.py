@@ -8,17 +8,17 @@ def pup_error(msg):
 	Blender.Redraw()
 	Blender.Exit()
 
-def do_add_gameobject():
+def do_add_libobject():
 	curscene = bpy.data.scenes.active
 	if not curscene.name.startswith("A") or curscene.name.endswith("-Base"):
-		pup_error("You must be in a Mission scene to add a GameObject Link")
+		pup_error("You must be in a Mission scene to add a Library Object")
 	
 	obj_choices = []
 	for scene in bpy.data.scenes:
 		name = scene.name
-		if name.startswith("GO"):
+		if name.startswith("LIB"):
 			obj_choices.append(name)
-	r = Blender.Draw.PupMenu("Select GameObject To Add%t|" + "|".join(["%s%%x%u" % (name, num) for num, name in enumerate(obj_choices)]))
+	r = Blender.Draw.PupMenu("Select Library Object To Add%t|" + "|".join(["%s%%x%u" % (name, num) for num, name in enumerate(obj_choices)]))
 	if r != -1:
 		choice = obj_choices[r]
 		src_obj = None
@@ -68,11 +68,11 @@ def do_export():
 	Blender.Draw.PupMenu("Exported just fine%t|OK, thanks a bunch")
 
 def menu():
-	menu = ("Add GameObject Link", "Repop Mission Scenes", "Export")
+	menu = ("Add Library Object", "Repop Mission Scenes", "Export")
 	r = Blender.Draw.PupMenu("Orbit Ribbon Level Editing%t|" + "|".join(["%s%%x%u" % (name, num) for num, name in enumerate(menu)]))
 	if r >= 0:
-		if menu[r] == "Add GameObject Link":
-			do_add_gameobject()
+		if menu[r] == "Add Library Object":
+			do_add_libobject()
 		elif menu[r] == "Repop Mission Scenes":
 			do_repop_missions()
 		elif menu[r] == "Export":
