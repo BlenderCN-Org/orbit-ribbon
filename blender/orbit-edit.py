@@ -35,31 +35,55 @@ def do_add_libobject():
 			obj.sel = False
 		new_obj.sel = True
 
-def do_repop_missions():
+def do_repop():
 	# First, make sure all objects in base scenes are properly named
 	for scene in bpy.data.scenes:
 		name = scene.name
-		if name.startswith("A") and name.endswith("-Base"):
+		if name.endswith("-Base"):
 			for obj in scene.objects:
 				if not obj.name.startswith("BASE"):
 					obj.name = "BASE" + obj.name
 	
-	# Now, go through and relink base scene objects into mission scenes
+	# Relink lights into all LIB scenes and all other base scenes
+	lightingbase = bpy.data.scenes["TestLighting-Base"]
 	for scene in bpy.data.scenes:
 		name = scene.name
-		if name.startswith("A") and not name.endswith("-Base"):
-			# First unlink everything from the mission scene that's from a base scene
+		if not (name.startswith("LIB") or name.endswith("Base")):
+			continue
+		if name == "TestLighting-Base":
+			continue
+		# Unlink all the lights from this scene
+		to_be_unlinked = []
+		for obj in scene.objects:
+			if obj.name.startswith("BASETestLamp"):
+				to_be_unlinked.append(obj)
+		for obj in to_be_unlinked:
+			scene.objects.unlink(obj)
+		for obj in lightingbase.objects:
+			scene.objects.link(obj)
+			
+	# Relink all base scene objects into mission scenes (this includes the lights linked into base scenes by the previous step)
+	for scene in bpy.data.scenes:
+		name = scene.name
+		if name.endswith("-Base"):
+			continue
+		elif name.startswith("A"):
+			# This is a mission scene, link all objects from the base area scene into the scene
+			basename = name[:-4] + "-Base" # Remove the "-M##" and add "-Base" to get base area scene name
+			basescene = bpy.data.scenes[basename]
+			# First unlink everything in the target scene that's from a base scene; some of these might've been deleted
 			to_be_unlinked = []
 			for obj in scene.objects:
 				if obj.name.startswith("BASE"):
 					to_be_unlinked.append(obj)
 			for obj in to_be_unlinked:
 				scene.objects.unlink(obj)
-			# Then, link all objects from the base area scene into the scene
-			basename = name[:-4] + "-Base" # Remove the "-M##" and add "-Base" to get base area scene name
-			basescene = bpy.data.scenes[basename]
+			# Now link all the base objects in
 			for obj in basescene.objects:
 				scene.objects.link(obj)
+		
+					
+
 	
 	Blender.Draw.PupMenu("Repop went OK%t|Yeah man, cool")
 
@@ -73,10 +97,11 @@ def menu():
 	if r >= 0:
 		if menu[r] == "Add Library Object":
 			do_add_libobject()
-		elif menu[r] == "Repop Mission Scenes":
-			do_repop_missions()
+		elif menu[r] == "Repop From Base Scenes":
+			do_repop()
 		elif menu[r] == "Export":
 			do_export()
 	Blender.Redraw()
 
+### Execution begins here
 menu()
