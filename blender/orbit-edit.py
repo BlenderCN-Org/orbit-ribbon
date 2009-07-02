@@ -1,7 +1,12 @@
-import Blender, bpy, os
+import Blender, bpy, os, cPickle, sys
 from math import *
 
 WORKING_DIR = os.path.dirname(Blender.Get("filename"))
+BLENDER_FILE = os.path.basename(Blender.Get("filename"))
+
+sys.path.append(os.path.join(WORKING_DIR, os.path.pardir))
+
+import editorexport
 
 def pup_error(msg):
 	r = Blender.Draw.PupMenu("Error: %s%%t|OK" % msg)
@@ -82,13 +87,17 @@ def do_repop():
 			for obj in basescene.objects:
 				scene.objects.link(obj)
 		
-					
-
-	
 	Blender.Draw.PupMenu("Repop went OK%t|Yeah man, cool")
 
 def do_export():
-	print "Exporting..."
+	meshes, materials, areas, missions = {}, {}, {}, {}
+	
+	pkg = editorexport.ExportPackage(meshes, materials, areas, missions)
+	target_fn = BLENDER_FILE[:-6] + ".ore" # Remove ".blend"
+	fh = file(os.path.join(WORKING_DIR, os.path.pardir, "exportdata", target_fn), "wb")
+	cPickle.dump(pkg, fh, 2)
+	fh.close()
+	
 	Blender.Draw.PupMenu("Exported just fine%t|OK, thanks a bunch")
 
 def menu():
