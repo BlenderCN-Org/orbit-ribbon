@@ -22,6 +22,7 @@ class Mesh:
 		self.faces = faces
 		self.material = material
 		self._trimesh_data = None
+		self._pkg_parent = None
 	
 	def trimesh_data(self):
 		"""Returns an ode.TriMeshData for this mesh. This is cached after the first calculation."""
@@ -32,6 +33,8 @@ class Mesh:
 	
 	def draw_gl(self):
 		"""Draws the object using OpenGL commands. This is suitable for calling within display list initialization."""
+		if self.material is not None:
+			self._pkg_parent.materials[self.material]._draw_gl()
 		glBegin(GL_TRIANGLES)
 		for verts, normals in self._faces:
 			for i in range(3):
@@ -50,7 +53,14 @@ class Material:
 		self.amb_col = amb_col
 		self.dif_col = dif_col
 		self.spe_col = spe_col
-
+		self._pkg_parent = None
+	
+	def _draw_gl(self):
+		# FIXME: If I'm going to use this, I need to not enable GL_COLOR_MATERIAL
+		glMaterialfv(GL_FRONT, GL_AMBIENT, self.amb_col)
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, self.dif_col)
+		glMaterialfv(GL_FRONT, GL_SPECULAR, self.spe_col)
+		
 
 class Area:
 	"""A description of an in-game location, exported from the 3D editor.
@@ -60,6 +70,7 @@ class Area:
 	"""
 	def __init__(self, objects):
 		self.objects = objects
+		self._pkg_parent = None
 
 
 class Mission:
@@ -72,6 +83,7 @@ class Mission:
 	def __init__(self, area_name, objects):
 		self.area_name = area_name
 		self.objects = objects
+		self._pkg_parent = None
 
 
 class ExportPackage:
@@ -90,3 +102,8 @@ class ExportPackage:
 		self.materials = materials
 		self.areas = areas
 		self.missions = missions
+		
+		# Make sure everything can get at anything else by name
+		for e in self.meshes, self.materials, self.areas, self.missions:
+			for x in e:
+				x._pkg_parent = self
