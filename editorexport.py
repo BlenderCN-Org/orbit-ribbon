@@ -44,7 +44,19 @@ class Area:
 	"""A description of an in-game location, exported from the 3D editor.
 	
 	Data attributes:
-	objects - A list of area objects as (meshname, position, rotation).
+	objects - A list of area objects as (objname, meshname, position, rotation).
 	"""
 	def __init__(self, objects):
+		self.objects = objects
+
+
+class Mission:
+	"""A description of an in-game mission, which takes place in an Area but may add more objects.
+	
+	Data attributes:
+	area_name - The Area that this mission takes place in.
+	objects - A list of mission-specific objects as (objname, meshname, position, rotation).
+	"""
+	def __init__(self, area_name, objects):
+		self.area_name = area_name
 		self.objects = objects
