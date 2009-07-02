@@ -92,7 +92,7 @@ def do_export():
 	Blender.Draw.PupMenu("Exported just fine%t|OK, thanks a bunch")
 
 def menu():
-	menu = ("Add Library Object", "Repop Mission Scenes", "Export")
+	menu = ("Add Library Object", "Repop From Base Scenes", "Export")
 	r = Blender.Draw.PupMenu("Orbit Ribbon Level Editing%t|" + "|".join(["%s%%x%u" % (name, num) for num, name in enumerate(menu)]))
 	if r >= 0:
 		if menu[r] == "Add Library Object":
