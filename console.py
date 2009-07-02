@@ -5,7 +5,6 @@ from OpenGL.GLUT import *
 
 import app
 import colors
-import consenv
 
 helphelp = """Interactive Python help is not available. You can use help(class) and help(module).
 
@@ -248,6 +247,7 @@ class Watcher(OutputBox):
 		self.bufferlen = self.dispsize()
 	
 	def update(self):
+		import consenv
 		self.clear()
 		try:
 			self.append(str(self.expr) + ":\n\n" + repr(eval(self.expr, consenv.__dict__)))
@@ -265,9 +265,6 @@ class Watcher(OutputBox):
 			self.append(str(self.expr) + "\nEXCEPTION: " + repr(e) + " : " + e.__str__())
 		except:
 			self.append(str(self.expr) + "\nUNKNOWN EXCEPTION")
-
-#This has to be done here to avoid circularity issues
-import consenv
 
 class Console:
 	"""An in-game debugging console.
@@ -288,6 +285,7 @@ class Console:
 	
 	def __init__(self):
 		"""Creates a Console. By default, the active flag is False."""
+		import consenv
 		self.active = False
 		self.hist = []
 		self.histpos = 0

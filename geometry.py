@@ -1,6 +1,5 @@
 from __future__ import division
 import math, copy
-import util
 
 def _coordlike_copy(obj):
 	"""Given an object, if it's not already a derivative of _CoordLike,
