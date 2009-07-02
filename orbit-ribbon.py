@@ -67,7 +67,7 @@ objs.append(
 )
 
 objs.append(
-	wfobj.WFObj("meshdata/jungle.obj", Point(0.0, 0.0, 300))
+	wfobj.WFObj("exportdata/jungle.obj", Point(0.0, 0.0, 300))
 )
 
 objs.append(

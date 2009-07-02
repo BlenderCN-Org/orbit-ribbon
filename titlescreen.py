@@ -106,8 +106,7 @@ class TitleScreenManager:
 		self._selsquare_active_tex = resman.Texture("selsquare_active.png")
 		self._selsquare_inactive_tex = resman.Texture("selsquare_inactive.png")
 		self.camera = _TitleScreenCamera(self)
-		#self._set_mode(TSMODE_PRE_PRE_MAIN)
-		self._set_mode(TSMODE_AREA)
+		self._set_mode(TSMODE_PRE_PRE_MAIN)
 		self.cur_area = None
 		self._cur_area_start = None # Tick time at which cur_area was set.
 	
