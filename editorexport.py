@@ -67,10 +67,12 @@ class Area:
 	
 	Data attributes:
 	objects - A list of area objects as (objname, meshname, position, rotation).
+	missions - A list of named missions in the ExportPackage with this Area as their base.
 	"""
 	def __init__(self, objects):
 		self.objects = objects
 		self._pkg_parent = None
+		self.missions = [] # To be filled out by ExportPackage
 
 
 class Mission:
@@ -102,8 +104,13 @@ class ExportPackage:
 		self.materials = materials
 		self.areas = areas
 		self.missions = missions
-		
+
 		# Make sure everything can get at anything else by name
-		for e in self.meshes, self.materials, self.areas, self.missions:
-			for x in e:
+		for e in (self.meshes, self.materials, self.areas, self.missions):
+			for x in e.itervalues():
 				x._pkg_parent = self
+		
+		# Associate missions with areas
+		for mname, m in missions.iteritems():
+			area_name = mname[:-4] + "-Base" # Remove the "-M##" and add "-Base" to get base area scene name
+			self.areas[area_name].missions.append(mname)

@@ -92,6 +92,45 @@ def do_repop():
 def do_export():
 	meshes, materials, areas, missions = {}, {}, {}, {}
 	
+	# FIXME: Need to also consider auxillary objects within LIB scenes
+	# Though must keep in mind that objects in LIB scenes only have position/rotation relative to each other
+	# Probably should turn Mission and Area into one class, Scene
+	
+	for scene in bpy.data.scenes:
+		name = scene.name
+		if name.startswith("A"):
+			# Either an Area base or a Mission; we need a list of (objname, meshname, position, rotation) tuples
+			exp_obj_tuples = []
+			filt = None
+			
+			if name.endswith("-Base"):
+				# Area base scene: log all non-TestLamp BASE objects
+				filt = lambda n: True if (n.startswith("BASE") and not ("TestLamp") in n) else False
+			else:
+				# Mission scene: log all non-BASE objects (whether LIB or not)
+				filt = lambda n: True if not n.startswith("BASE") else False
+			
+			for obj in scene.objects:
+				if not filt(obj.name):
+					continue
+				try:
+					exp_obj_tuples.append((
+						obj.name,
+						obj.getData().name,
+						(obj.loc[0], obj.loc[1], obj.loc[2]),
+						(obj.rot[0], obj.rot[1], obj.rot[2]),
+					))
+				except Exception, e:
+					pup_error("Problem exporting object %s: %s" % (obj.name, str(e)))
+			
+			if len(exp_obj_tuples) == 0:
+				continue
+			if name.endswith("-Base"):
+				areas[name] = editorexport.Area(exp_obj_tuples)
+			else:
+				area_name = name[:-4] + "-Base" # Remove the "-M##" and add "-Base" to get base area scene name
+				missions[name] = editorexport.Mission(area_name, exp_obj_tuples)
+	
 	pkg = editorexport.ExportPackage(meshes, materials, areas, missions)
 	target_fn = BLENDER_FILE[:-6] + ".ore" # Remove ".blend"
 	fh = file(os.path.join(WORKING_DIR, os.path.pardir, "exportdata", target_fn), "wb")
@@ -101,12 +140,12 @@ def do_export():
 	Blender.Draw.PupMenu("Exported just fine%t|OK, thanks a bunch")
 
 def menu():
-	menu = ("Add Library Object", "Repop From Base Scenes", "Export")
+	menu = ("Add Library Object", "Repop Scenes", "Export")
 	r = Blender.Draw.PupMenu("Orbit Ribbon Level Editing%t|" + "|".join(["%s%%x%u" % (name, num) for num, name in enumerate(menu)]))
 	if r >= 0:
 		if menu[r] == "Add Library Object":
 			do_add_libobject()
-		elif menu[r] == "Repop From Base Scenes":
+		elif menu[r] == "Repop Scenes":
 			do_repop()
 		elif menu[r] == "Export":
 			do_export()
