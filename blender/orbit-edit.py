@@ -126,13 +126,32 @@ def do_export():
 			if len(exp_obj_tuples) == 0:
 				continue
 			if name.endswith("-Base"):
-				areas[name] = editorexport.Area(exp_obj_tuples)
+				areas[name] = editorexport.Area(tuple(exp_obj_tuples))
 			else:
 				area_name = name[:-4] + "-Base" # Remove the "-M##" and add "-Base" to get base area scene name
-				missions[name] = editorexport.Mission(area_name, exp_obj_tuples)
+				missions[name] = editorexport.Mission(area_name, tuple(exp_obj_tuples))
+	
+	for mesh in bpy.data.meshes:
+		name = mesh.name
+		matName = None
+		if len(mesh.materials) > 0:
+			matName = mesh.materials[0].name
+		
+		meshes[name] = editorexport.Mesh(
+			vertices = tuple([(tuple(v.co), tuple(v.no)) for v in mesh.verts]),
+			faces = tuple([tuple([v.index for v in f.verts]) for f in mesh.faces]),
+			material = matName
+		)
+		
+		if matName is not None and matName not in materials:
+			mat = bpy.data.materials[matName]
+			materials[matName] = editorexport.Material(
+				dif_col = tuple(mat.rgbCol),
+				spe_col = tuple(mat.specCol),
+			)
 	
 	pkg = editorexport.ExportPackage(meshes, materials, areas, missions)
-	target_fn = BLENDER_FILE[:-6] + ".ore" # Remove ".blend"
+	target_fn = BLENDER_FILE[:-6] + ".ore" # Replace ".blend" with ".ore" for output filename (ore = Orbit Ribbon Export)
 	fh = file(os.path.join(WORKING_DIR, os.path.pardir, "exportdata", target_fn), "wb")
 	cPickle.dump(pkg, fh, 2)
 	fh.close()
