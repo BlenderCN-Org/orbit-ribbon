@@ -21,6 +21,10 @@ GOLD_RADIUS = 5e5 # Guessed; includes the storm around Gold
 SMOKE_RING_RADIUS = 8e4 # Calculations yielded 1.4e7, but that looked terrible, so this is made up. FIXME This is far too narrow to hold jungles. 
 SMOKE_RING_INSIDE_DIST = GOLD_DIST - SMOKE_RING_RADIUS
 SMOKE_RING_OUTSIDE_DIST = GOLD_DIST + SMOKE_RING_RADIUS
+
+# Ambient light settings
+AMB_LIGHT_DIST = 1e10 # Distance to the ambient light (not too important, as there's no attenuation)
+AMB_LIGHT_DIFFUSE = (0.15, 0.15, 0.15, 1.0) # Diffuse color of the ambient light
 		
 # Create some random jungle positions
 random.seed(2)
@@ -180,13 +184,24 @@ class SkyStuff:
 		# T3
 		t3_pos = self._t3_pos()
 		glLightfv(GL_LIGHT1, GL_POSITION, (t3_pos[0], t3_pos[1], t3_pos[2], 1.0))
-		glLightfv(GL_LIGHT1, GL_AMBIENT, (0.7, 0.7, 0.7, 1.0))
 		glLightfv(GL_LIGHT1, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))
 		glEnable(GL_LIGHT1)
 		
 		# Voy
 		# FIXME - Set up lighting for Voy
-
+		
+		# Ambient lighting (so that areas not lit by T3 or Voy aren't completely dark)
+		part_ald = math.sqrt(2)*AMB_LIGHT_DIST
+		for lightcons, pos in (
+			(GL_LIGHT3, (0, AMB_LIGHT_DIST, 0)),
+			(GL_LIGHT4, (part_ald, -part_ald, 0)),
+			(GL_LIGHT5, (-0.5*part_ald, -part_ald, 0.866*part_ald)),
+			(GL_LIGHT6, (-0.5*part_ald, -part_ald, -0.866*part_ald)),
+		):
+			glLightfv(lightcons, GL_POSITION, (pos[0], pos[1], pos[2], 1.0))
+			glLightfv(lightcons, GL_DIFFUSE, AMB_LIGHT_DIFFUSE)
+			glEnable(lightcons)
+		
 		glPopMatrix()
 	
 	def draw_billboards(self):
