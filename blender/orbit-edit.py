@@ -40,7 +40,7 @@ def do_add_libobject():
 			obj.sel = False
 		new_obj.sel = True
 
-def do_repop():
+def do_resanify():
 	# First, make sure all objects in base scenes are properly named
 	for scene in bpy.data.scenes:
 		name = scene.name
@@ -86,8 +86,43 @@ def do_repop():
 			# Now link all the base objects in
 			for obj in basescene.objects:
 				scene.objects.link(obj)
-		
-	Blender.Draw.PupMenu("Repop went OK%t|Yeah man, cool")
+	
+	def unscale_obj_mesh(o):
+		mesh = bpy.data.meshes[o.getData().name]
+		for vertex in mesh.verts:
+			print "--"
+			print "BEFORE: %s" % str(vertex.co)
+			vertex.co[:] = [vertex.co[i]*o.size[i] for i in range(3)]
+			print "AFTER: %s" % str(vertex.co)
+	
+	# In all scenes, remove all scale from objects
+	# This way we don't have to worry about ODE being unable to rescale geoms, among other complications
+	for obj in bpy.data.objects:
+		if obj.type != "Mesh":
+			# Don't care about this object, since it cannot be rescaled
+			continue
+		if obj.size == (1.0, 1.0, 1.0):
+			# This object already has no scale
+			continue
+		if obj.name.startswith("LIB"):
+			# If it's an original LIB object, unscale its mesh and unscale the object
+			# If it's a linked LIB object in a mission scene, then just remove scale from the object
+			if obj.name[-4] == "." and obj.name[-3:].isdigit(): # If it ends in ".###":
+				unscale_obj_mesh(obj)
+			obj.size = (1.0, 1.0, 1.0)
+		else:
+			# Here we have a choice; resize the mesh or not
+			# Ask the user what to do
+			r = Blender.Draw.PupMenu(
+				"Need to unscale OB:%s with ME:%s. Do what?%%t|Unscale object and adjust mesh%%x0|Unscale object only%%x1|Ignore the problem%%x2" % 
+				(obj.name, obj.getData().name)
+			)
+			if r == 1:
+				unscale_obj_mesh(obj)
+			if r == 0 or r == 1:
+				obj.size = (1.0, 1.0, 1.0)
+	
+	Blender.Draw.PupMenu("Resanification went OK%t|Yeah man, cool")
 
 def do_export():
 	meshes, materials, areas, missions = {}, {}, {}, {}
@@ -159,13 +194,13 @@ def do_export():
 	Blender.Draw.PupMenu("Exported just fine%t|OK, thanks a bunch")
 
 def menu():
-	menu = ("Add Library Object", "Repop Scenes", "Export")
+	menu = ("Add Library Object", "Resanify All Scenes", "Export")
 	r = Blender.Draw.PupMenu("Orbit Ribbon Level Editing%t|" + "|".join(["%s%%x%u" % (name, num) for num, name in enumerate(menu)]))
 	if r >= 0:
 		if menu[r] == "Add Library Object":
 			do_add_libobject()
-		elif menu[r] == "Repop Scenes":
-			do_repop()
+		elif menu[r] == "Resanify All Scenes":
+			do_resanify()
 		elif menu[r] == "Export":
 			do_export()
 	Blender.Redraw()
