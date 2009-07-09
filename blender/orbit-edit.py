@@ -66,7 +66,7 @@ def do_resanify():
 			scene.objects.unlink(obj)
 		for obj in lightingbase.objects:
 			scene.objects.link(obj)
-			
+	
 	# Relink all base scene objects into mission scenes (this includes the lights linked into base scenes by the previous step)
 	for scene in bpy.data.scenes:
 		name = scene.name
@@ -90,10 +90,7 @@ def do_resanify():
 	def unscale_obj_mesh(o):
 		mesh = bpy.data.meshes[o.getData().name]
 		for vertex in mesh.verts:
-			print "--"
-			print "BEFORE: %s" % str(vertex.co)
 			vertex.co[:] = [vertex.co[i]*o.size[i] for i in range(3)]
-			print "AFTER: %s" % str(vertex.co)
 	
 	# In all scenes, remove all scale from objects
 	# This way we don't have to worry about ODE being unable to rescale geoms, among other complications
@@ -107,7 +104,7 @@ def do_resanify():
 		if obj.name.startswith("LIB"):
 			# If it's an original LIB object, unscale its mesh and unscale the object
 			# If it's a linked LIB object in a mission scene, then just remove scale from the object
-			if obj.name[-4] == "." and obj.name[-3:].isdigit(): # If it ends in ".###":
+			if not (obj.name[-4] == "." and obj.name[-3:].isdigit()): # If it doesn't end in ".###":
 				unscale_obj_mesh(obj)
 			obj.size = (1.0, 1.0, 1.0)
 		else:
@@ -117,9 +114,9 @@ def do_resanify():
 				"Need to unscale OB:%s with ME:%s. Do what?%%t|Unscale object and adjust mesh%%x0|Unscale object only%%x1|Ignore the problem%%x2" % 
 				(obj.name, obj.getData().name)
 			)
-			if r == 1:
-				unscale_obj_mesh(obj)
 			if r == 0 or r == 1:
+				if r == 0:
+					unscale_obj_mesh(obj)
 				obj.size = (1.0, 1.0, 1.0)
 	
 	Blender.Draw.PupMenu("Resanification went OK%t|Yeah man, cool")
