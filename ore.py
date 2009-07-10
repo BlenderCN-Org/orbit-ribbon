@@ -80,8 +80,8 @@ class OREMesh:
 			self._gl_list_num = glGenLists(1) # FIXME Should free list on destruction
 			glNewList(self._gl_list_num, GL_COMPILE)
 			if self._eemat is not None:
-				glMaterialfv(GL_FRONT, GL_DIFFUSE, self._eemat.dif_col)
-				glMaterialfv(GL_FRONT, GL_SPECULAR, self._eemat.spe_col)
+				glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, self._eemat.dif_col + (1.0,))
+				glMaterialfv(GL_FRONT, GL_SPECULAR, self._eemat.spe_col + (1.0,))
 			glBegin(GL_TRIANGLES)
 			for vindexes in self._eemesh.faces:
 				for vi in vindexes:
@@ -124,7 +124,10 @@ class OREManager:
 			
 			# FIXME Need a better way of registering special GameObjs associated with LIB objects
 			if objname.startswith("LIBAvatar."):
-				return avatar.Avatar(ppos)
+				r = avatar.Avatar(ppos)
+				# FIXME Test values
+				r.rot = (0.74987399578094482, -0.65985339879989624, 0.047775015234947205, -0.18929661810398102, -0.14480534195899963, 0.97118395566940308, -0.63392096757888794, -0.73730921745300293, -0.23349379003047943)
+				return r
 			elif objname.startswith("LIBTargetRing."):
 				return target.Ring(ppos)
 			else:

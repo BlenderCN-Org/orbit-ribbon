@@ -26,7 +26,6 @@ import ore
 import resman
 import sky
 import target
-import testobj
 from util import *
 
 def sc_camy():
