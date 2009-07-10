@@ -41,8 +41,6 @@ def do_add_libobject():
 		new_obj.sel = True
 
 def do_resanify():
-	# FIXME Should find some way to automatically convert quads to triangles, either here or as part of export operation
-
 	# First, make sure all objects in base scenes are properly named
 	for scene in bpy.data.scenes:
 		name = scene.name
@@ -171,9 +169,18 @@ def do_export():
 		if len(mesh.materials) > 0:
 			matName = mesh.materials[0].name
 		
+		vertices = [(tuple(v.co), tuple(v.no)) for v in mesh.verts]
+		faces = []
+		for f in mesh.faces:
+			if len(f.verts) == 3:
+				faces.append(tuple([v.index for v in f.verts]))
+			else:
+				# Convert quads to triangles
+				faces.append((f.verts[0].index, f.verts[1].index, f.verts[2].index))
+				faces.append((f.verts[0].index, f.verts[2].index, f.verts[3].index))
 		meshes[name] = editorexport.Mesh(
-			vertices = tuple([(tuple(v.co), tuple(v.no)) for v in mesh.verts]),
-			faces = tuple([tuple([v.index for v in f.verts]) for f in mesh.faces]),
+			vertices = tuple(vertices),
+			faces = tuple(faces),
 			material = matName
 		)
 		
