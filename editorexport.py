@@ -1,11 +1,7 @@
 from __future__ import division
 
-import ode
-from OpenGL.GL import *
-
-from geometry import *
-
 ### This is the common library connecting orbit-edit.py (which depends on the Blender API) and the rest of Orbit Ribbon
+### This deliberately has no dependencies on Orbit Ribbon code; it's the OREManager's job to turn this data into useful objects for the game
 
 class Mesh:
 	"""A mesh (collection of vertices and faces w/ normals) exported from the 3D editor.
@@ -19,27 +15,8 @@ class Mesh:
 		self.vertices = vertices
 		self.faces = faces
 		self.material = material
-		self._trimesh_data = None
 		self._pkg_parent = None
 	
-	def trimesh_data(self):
-		"""Returns an ode.TriMeshData for this mesh. This is cached after the first calculation."""
-		if self._trimesh_data is None:
-			self._trimesh_data = ode.TriMeshData()
-			self._trimesh_data.build([v for v, n in self.vertices], self.faces)
-		return self._trimesh_data
-	
-	def draw_gl(self):
-		"""Draws the object using OpenGL commands. This is suitable for calling within display list initialization."""
-		if self.material is not None:
-			self._pkg_parent.materials[self.material]._draw_gl()
-		glBegin(GL_TRIANGLES)
-		for vindexes in self._faces:
-			for vi in vindexes:
-				glNormal3fv(self.vertices[i][1])
-				glVertex3fv(self.vertices[i][0])
-		glEnd()
-
 
 class Material:
 	"""A material (texture and appearance) exported from the 3D editor.
@@ -51,12 +28,7 @@ class Material:
 		self.dif_col = dif_col
 		self.spe_col = spe_col
 		self._pkg_parent = None
-	
-	def _draw_gl(self):
-		# FIXME: If I'm going to use this, I need to not enable GL_COLOR_MATERIAL
-		glMaterialfv(GL_FRONT, GL_DIFFUSE, self.dif_col)
-		glMaterialfv(GL_FRONT, GL_SPECULAR, self.spe_col)
-		
+
 
 class Area:
 	"""A description of an in-game location, exported from the 3D editor.

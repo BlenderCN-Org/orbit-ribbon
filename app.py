@@ -1,12 +1,12 @@
 from __future__ import division
 
-import ode, sys, math, pygame
+import ode, sys, math, pygame, pickle
 from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import collision, util, console, resman, camera, joy, sky, titlescreen
+import collision, util, console, resman, camera, joy, sky, titlescreen, ore
 from geometry import *
 
 MODE_GAMEPLAY, MODE_TITLE_SCREEN = range(2)
@@ -22,14 +22,13 @@ odeworld = None
 static_space = None
 dyn_space = None
 
-#A list of all the AreaDesc objects describing the gameplay areas available
-areas = None
+#The OREManager for currently active ORE file (Orbit Ribbon Export data, from the 3d editor)
+ore_man = None
 
-#A list of all the various gameplay objects. Avatar must be the first one.
+#When an area or mission selected, a list of all the various gameplay objects.
 objects = None
 
-#An instance of mission.MissionControl defining the mission parameters.
-#FIXME: Currently, must be set externally. Will eventually become responsibility of level loader.
+#When in gameplay, an instance of mission.MissionControl defining the mission parameters.
 mission_control = None
 
 #An instance of sky.SkyStuff with defining the location of Voy and other distant objects
@@ -106,9 +105,6 @@ def ui_init():
 	glEnable(GL_BLEND)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 	
-	glColorMaterial(GL_FRONT, GL_DIFFUSE)
-	glEnable(GL_COLOR_MATERIAL)
-	
 	cons = console.Console()
 	watchers = []
 	sys.stderr = cons.pseudofile
@@ -123,24 +119,29 @@ def sim_init():
 	"""Initializes the camera and simulation, including ODE.
 	
 	You must call this before calling run().
-
+	
 	You may call this in order to reset the game.
 	"""
 	
-	global odeworld, static_space, dyn_space, areas, objects, totalsteps, player_camera, title_screen_manager, fade_color, sky_stuff, mode
+	global ore_man, odeworld, static_space, dyn_space, objects, totalsteps, player_camera, title_screen_manager, fade_color, sky_stuff, mode
+	
+	fh = file(os.path.join('exportdata', 'main.ore'))
+	export_data = pickle.load(fh)
+	fh.close()
+
 	totalsteps = 0L
 	odeworld = ode.World()
 	odeworld.setQuickStepNumIterations(10)
 	static_space = ode.HashSpace()
 	dyn_space = ode.HashSpace()
-	areas = []
 	objects = []
 	title_screen_manager = titlescreen.TitleScreenManager()
 	player_camera = title_screen_manager.camera
 	mode = MODE_TITLE_SCREEN
 	fade_color = None
 	sky_stuff = sky.SkyStuff()
-
+	
+		
 
 def _sim_step():
 	"""Runs one step of the simulation. This is (1/maxfps)th of a simulated second."""
