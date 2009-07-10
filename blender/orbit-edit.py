@@ -41,6 +41,8 @@ def do_add_libobject():
 		new_obj.sel = True
 
 def do_resanify():
+	# FIXME Should find some way to automatically convert quads to triangles, either here or as part of export operation
+
 	# First, make sure all objects in base scenes are properly named
 	for scene in bpy.data.scenes:
 		name = scene.name

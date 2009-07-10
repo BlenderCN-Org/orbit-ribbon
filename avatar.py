@@ -26,15 +26,9 @@ class Avatar(gameobj.GameObj):
 		geom = ode.GeomCapsule(app.dyn_space, 0.25, 2.0) # 2.5 total length: a 2.0-long cylinder, and two 0.25-radius caps
 		geom.coll_props = collision.Props()
 		super(Avatar, self).__init__(pos = pos, body = sphere_body(80, 0.5), geom = geom)
-		self._quad = gluNewQuadric()
-		gluQuadricTexture(self._quad, GLU_TRUE)
-		self._tex = resman.Texture("lava.png")
 		self._relThrustVec = Point() # Indicates to the drawing routine how much the player is thrusting in each direction
 		self._relTorqueVec = Point() # Indicates to the drawing routine how much the player is torquing along each axis
 		self._relCTorqueVec = Point() # Indicates to the drawing routine how much automatic counter-torque is being applied along each axis
-	
-	def __del__(self):
-		gluDeleteQuadric(self._quad)
 	
 	def step(self):	
 		# TODO: Consider adding linear and angular velocity caps
@@ -93,62 +87,17 @@ class Avatar(gameobj.GameObj):
 		else:
 			csz = avel[2]*-CROLL_COEF/app.maxfps
 			self.body.addRelTorque((0.0, 0.0, csz))
-
+		
 		self._reqlTorqueVec = Point(sx, sy, sz)
 		self._reqlCTorqueVec = Point(csz, csy, csz)
 	
 	def indraw(self):
-		# The cylinder body
-		glTranslatef(0, 0, -0.75)
-		glRotatef(180, 0, 0, 1)
-		glEnable(GL_TEXTURE_2D)
-		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
-		glBindTexture(GL_TEXTURE_2D, self._tex.glname)
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-		gluCylinder(self._quad, 0.1, 0.1, 1.5, 30, 10)
-		glDisable(GL_TEXTURE_2D)
+		# The body model 
+		app.ore_man.meshes["LIBAvatar"].draw_gl()
 		
-		# The legs and feet
-		glColor3f(*colors.red)
-		glutSolidSphere(0.08, 15, 15)
-		for sign in (-1, 1):
-			glPushMatrix()
-			glTranslatef(-sign*0.06, 0, 0)
-			glRotatef(sign*10, 0, 1, 0)
-			glTranslatef(0, 0, -0.8)
-			gluCylinder(self._quad, 0.06, 0.06, 0.8, 10, 10)
-			glutSolidSphere(0.08, 5, 5)
-			glPopMatrix()
-		
-		# The jetpack
-		glTranslatef(0, -0.03, 1)
-		glColor3f(*colors.gray)
-		glutSolidSphere(0.12, 15, 15)
-		
-		# Back up to the head
-		glTranslatef(0, 0.05, 1)
-		glColor3f(*colors.yellow)
-		glutSolidSphere(0.15, 15, 15)
-		
-		# The arms and hands
-		glPushMatrix()
-		glTranslatef(0, 0, -0.7)
-		glColor3f(*colors.red)
-		glutSolidSphere(0.08, 15, 15)
-		for sign in (-1, 1):
-			glPushMatrix()
-			glTranslatef(-sign*0.1, 0, 0)
-			glRotatef(sign*10, 0, 1, 0)
-			glTranslatef(0, 0, -0.6)
-			gluCylinder(self._quad, 0.05, 0.05, 0.6, 10, 10)
-			glutSolidSphere(0.08, 5, 5)
-			glPopMatrix()
-		glPopMatrix()
-		
-		# Back to the center for thrust indication cones
-		glTranslatef(0, 0, -1)
-		glColor3f(*colors.white)
+		# Thrust indication cones
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, (0.8, 0.8, 0.8, 1.0))
+		glMaterialfv(GL_FRONT, GL_SPECULAR, (1.0, 1.0, 1.0, 1.0))
 		for offset, rot, value in (
 			(0.50, (90, 0, 1, 0), self._relThrustVec[0]),
 			(0.50, (-90, 1, 0, 0), self._relThrustVec[1]),

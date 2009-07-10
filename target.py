@@ -1,8 +1,5 @@
 from __future__ import division
 import ode, math
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
 
 import app, gameobj, colors, collision, joy, resman, avatar
 from geometry import *
@@ -51,8 +48,4 @@ class Ring(gameobj.GameObj):
 					self._thruSound.snd.play()
 	
 	def indraw(self):
-		if self.passedThru:
-			glColor3f(*colors.blue)
-		else:
-			glColor3f(*colors.red)
-		glutSolidTorus(self.INNER_RAD, self.OUTER_RAD, 20, self.STEPS)
+		app.ore_man.meshes["LIBTargetRing"].draw_gl()

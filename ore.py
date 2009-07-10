@@ -80,7 +80,7 @@ class OREMesh:
 			self._gl_list_num = glGenLists(1) # FIXME Should free list on destruction
 			glNewList(self._gl_list_num, GL_COMPILE)
 			if self._eemat is not None:
-				glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, self._eemat.dif_col + (1.0,))
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, self._eemat.dif_col + (1.0,))
 				glMaterialfv(GL_FRONT, GL_SPECULAR, self._eemat.spe_col + (1.0,))
 			glBegin(GL_TRIANGLES)
 			for vindexes in self._eemesh.faces:
