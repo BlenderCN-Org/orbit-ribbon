@@ -22,10 +22,12 @@ CROLL_COEF = 700
 class Avatar(gameobj.GameObj):
 	"""The player character."""
 	
-	def __init__(self, pos):
+	def __init__(self, oremesh, pos, rot):
+		self._oremesh = oremesh
+		
 		geom = ode.GeomCapsule(app.dyn_space, 0.25, 2.0) # 2.5 total length: a 2.0-long cylinder, and two 0.25-radius caps
 		geom.coll_props = collision.Props()
-		super(Avatar, self).__init__(pos = pos, body = sphere_body(80, 0.5), geom = geom)
+		super(Avatar, self).__init__(pos = pos, rot = rot, body = sphere_body(80, 0.5), geom = geom)
 		self._relThrustVec = Point() # Indicates to the drawing routine how much the player is thrusting in each direction
 		self._relTorqueVec = Point() # Indicates to the drawing routine how much the player is torquing along each axis
 		self._relCTorqueVec = Point() # Indicates to the drawing routine how much automatic counter-torque is being applied along each axis
@@ -93,14 +95,14 @@ class Avatar(gameobj.GameObj):
 	
 	def indraw(self):
 		# The body model 
-		app.ore_man.meshes["LIBAvatar"].draw_gl()
+		self._oremesh.draw_gl()
 		
 		# Thrust indication cones
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, (0.8, 0.8, 0.8, 1.0))
 		glMaterialfv(GL_FRONT, GL_SPECULAR, (1.0, 1.0, 1.0, 1.0))
 		for offset, rot, value in (
-			(0.50, (90, 0, 1, 0), self._relThrustVec[0]),
-			(0.50, (-90, 1, 0, 0), self._relThrustVec[1]),
+			(0.50, (-90, 0, 1, 0), self._relThrustVec[0]),
+			(0.50, (90, 1, 0, 0), self._relThrustVec[1]),
 			(2.75, (180, 0, 1, 0), self._relThrustVec[2]),
 		):
 			if abs(value) > 0.01:

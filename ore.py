@@ -124,12 +124,9 @@ class OREManager:
 			
 			# FIXME Need a better way of registering special GameObjs associated with LIB objects
 			if objname.startswith("LIBAvatar."):
-				r = avatar.Avatar(ppos)
-				# FIXME Test values
-				r.rot = (0.74987399578094482, -0.65985339879989624, 0.047775015234947205, -0.18929661810398102, -0.14480534195899963, 0.97118395566940308, -0.63392096757888794, -0.73730921745300293, -0.23349379003047943)
-				return r
+				return avatar.Avatar(self.meshes["LIBAvatar"], ppos, rotmatrix)
 			elif objname.startswith("LIBTargetRing."):
-				return target.Ring(ppos)
+				return target.Ring(self.meshes["LIBTargetRing"], ppos, rotmatrix)
 			else:
 				return SimpleOREGameObj(objname, ppos, rotmatrix, self.meshes[meshname])
 		

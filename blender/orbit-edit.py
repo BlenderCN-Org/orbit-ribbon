@@ -8,6 +8,9 @@ sys.path.append(os.path.join(WORKING_DIR, os.path.pardir))
 
 import editorexport
 
+def fixcoords(t): # Given a 3-tuple, returns it so that it's rotated to fit OpenGL standards (i.e. y is up, z is out)
+	return (t[0], t[2], t[1])		
+
 def pup_error(msg):
 	r = Blender.Draw.PupMenu("Error: %s%%t|OK" % msg)
 	Blender.Redraw()
@@ -149,8 +152,8 @@ def do_export():
 					exp_obj_tuples.append((
 						obj.name,
 						obj.getData().name,
-						(obj.loc[0], obj.loc[1], obj.loc[2]),
-						(obj.rot[0], obj.rot[1], obj.rot[2]),
+						fixcoords(obj.loc),
+						fixcoords(obj.rot),
 					))
 				except Exception, e:
 					pup_error("Problem exporting object %s: %s" % (obj.name, str(e)))
@@ -169,7 +172,7 @@ def do_export():
 		if len(mesh.materials) > 0:
 			matName = mesh.materials[0].name
 		
-		vertices = [(tuple(v.co), tuple(v.no)) for v in mesh.verts]
+		vertices = [(fixcoords(v.co), fixcoords(v.no)) for v in mesh.verts]
 		faces = []
 		for f in mesh.faces:
 			if len(f.verts) == 3:
