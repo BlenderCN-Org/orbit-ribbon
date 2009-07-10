@@ -3,7 +3,7 @@ from __future__ import division
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 
-import app, resman, target
+import app, avatar, resman, target
 
 WIN_MESSAGE = "Complete!"
 WIN_MESSAGE_TIME = 5.0
@@ -73,14 +73,20 @@ class MissionControl:
 
 
 class MinDistanceFunction:
-	"""A function-like class that returns True when the given GameObj is more than some minimum distance from a given position."""
-	def __init__(self, gameobj, pos, delta):
-		self.gameobj = gameobj
-		self.pos = pos
-		self.delta = delta
+	"""A function-like class that returns True when the Avatar is more than some minimum distance from its start position."""
+	def __init__(self, delta = 1.0):
+		self._delta = delta
+		self._avatar = None
+		self._orig_pos = None
 	
 	def __call__(self):
-		if self.gameobj.pos.dist_to(self.pos) > self.delta:
+		if self._avatar is None:
+			for obj in app.objects:
+				if isinstance(obj, avatar.Avatar):
+					self._avatar = obj
+					self._orig_pos = obj.pos.__copy__()
+					break
+		if self._avatar.pos.dist_to(self._orig_pos) > self._delta:
 			return True
 
 

@@ -1,20 +1,14 @@
 from __future__ import division
 
-import ode, gameobj
+import ode
 from OpenGL.GL import *
 
-import area, app, editorexport, collision, sky
+import app, editorexport, collision, sky, missioncon, gameobj, avatar, target
+from geometry import *
 from util import *
 
-def ore_rot_to_rotmatrix(tup):
-	"""Converts a 3-tuple containing ORE rotation information (X, Y, Z floats in degrees) into a rotational matrix suitable for GameObj."""
-	return (
-		# FIXME FIXME FIXME This is where I left off working
-	)
-
-
 class SimpleOREGameObj(gameobj.GameObj):
-	"""A GameObj which acts as a fixed piece of landscape (skyscape?) loaded from a given OREMesh.
+	"""A GameObj which acts as a fixed piece of landscape (skyscape?), with display and collision geometry loaded from a given OREMesh.
 	
 	Data attributes:
 	objname - The object name (i.e. "Circle.001") used in the piece of exported data this object came from. This is purely for debugging purposes.
@@ -23,13 +17,46 @@ class SimpleOREGameObj(gameobj.GameObj):
 		"""Creates a SimpleOREGameObj with the given object name, position, rotation (in exportdata format), and OREMesh."""
 		self.objname = objname
 		self._oremesh = oremesh
-		rotmatrix = ode_rot_to_rotmatrix(rot)
 		geom = ode.GeomTriMesh(oremesh.trimesh_data(), app.static_space)
 		geom.coll_props = collision.Props()
-		super(SimpleOREGameObj, self).__init__(pos = pos, rot = rotmatrix, body = None, geom = geom)
+		super(SimpleOREGameObj, self).__init__(pos = pos, rot = rot, body = None, geom = geom)
 	
 	def indraw(self):
 		self._oremesh.draw_gl()
+
+
+class OREMission:
+	"""Describes a mission that the player can attempt, loaded from an ORE data file. Each mission takes place in a particular area.
+	
+	Data attributes:
+	name - A string with the internal name of the mission (i.e. "A01-M02")
+	player_name - A string with the player-visible name of the mission (i.e. "Following Sis")
+	mission_control - An instance of missioncon.MissionControl describing mission parameters.
+	objects - A sequence of mission-specific GameObjs to be appended to the GameObjs in the Area.
+	"""
+	def __init__(self, name, player_name, mission_control, objects):
+		self.name = name
+		self.player_name = player_name
+		self.mission_control = mission_control
+		self.objects = objects
+
+
+class OREArea:
+	"""Describes an area (a level) that the player can go to, loaded from an ORE data file. Each area has one or more missions.
+	
+	Data attributes:
+	name - A string with the internal name of the area (i.e. "A01-Base")
+	player_name - A string with the player-visible name of the area (i.e. "Quaternion Jungle")
+	sky_stuff - The sky.SkyStuff object for this area, which is used to position it in the Smoke Ring.
+	objects - A sequence of GameObjs that apply to all missions in this area; the basic geometry of the level.
+	missions - A dictionary (keyed by internal name) of OREMission objects.
+	"""
+	def __init__(self, name, player_name, sky_stuff, objects, missions):
+		self.name = name
+		self.player_name = player_name
+		self.sky_stuff = sky_stuff
+		self.objects = objects
+		self.missions = missions
 
 
 class OREMesh:
@@ -38,25 +65,32 @@ class OREMesh:
 		self._eemesh = eemesh # An editorexport.Mesh object
 		self._eemat = eemat # An editorexport.Material object, or None if there is no material
 		self._trimesh_data = None
+		self._gl_list_num = None
 	
 	def trimesh_data(self):
 		"""Returns an ode.TriMeshData for this mesh. This is cached after the first calculation."""
 		if self._trimesh_data is None:
 			self._trimesh_data = ode.TriMeshData()
-			self._trimesh_data.build([v for v, n in self.vertices], self.faces)
+			self._trimesh_data.build([v for v, n in self._eemesh.vertices], self._eemesh.faces)
 		return self._trimesh_data
 	
 	def draw_gl(self):
-		"""Draws the object using OpenGL commands. This is suitable for calling within display list initialization."""
-		if self._eemat is not None:
-			glMaterialfv(GL_FRONT, GL_DIFFUSE, self._eemat.dif_col)
-			glMaterialfv(GL_FRONT, GL_SPECULAR, self._eemat.spe_col)
-		glBegin(GL_TRIANGLES)
-		for vindexes in self._eemesh._faces:
-			for vi in vindexes:
-				glNormal3fv(self._eemesh.vertices[i][1])
-				glVertex3fv(self._eemesh.vertices[i][0])
-		glEnd()
+		"""Draws the object using OpenGL commands. This creates a display list when it is first ran."""
+		if self._gl_list_num is None:
+			self._gl_list_num = glGenLists(1) # FIXME Should free list on destruction
+			glNewList(self._gl_list_num, GL_COMPILE)
+			if self._eemat is not None:
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, self._eemat.dif_col)
+				glMaterialfv(GL_FRONT, GL_SPECULAR, self._eemat.spe_col)
+			glBegin(GL_TRIANGLES)
+			for vindexes in self._eemesh.faces:
+				for vi in vindexes:
+					glNormal3fv(self._eemesh.vertices[vi][1])
+					glVertex3fv(self._eemesh.vertices[vi][0])
+			glEnd()
+			glEndList()
+		
+		glCallList(self._gl_list_num)
 
 
 class OREManager:
@@ -68,7 +102,7 @@ class OREManager:
 	"""
 	def __init__(self, expkg):
 		self._expkg = expkg
-
+		
 		self.meshes = {}
 		for meshname in self._expkg.meshes:
 			mesh = self._expkg.meshes[meshname]
@@ -78,13 +112,40 @@ class OREManager:
 				mat = self._expkg.materials[matname]
 			self.meshes[meshname] = OREMesh(mesh, mat)
 		
-		# FIXME Areas need to contain missions, which implies I should probably add a MissionDesc class
-		# That in turn means I probably need to rename the 'area' module to something more general
-		# Maybe I should just merge it with the ore module
+		def gobj_from_eeobj(objname, meshname, pos, rot):
+			# Convert the 3-tuple of ORE rotation info (X, Y, Z floats in degrees) into a rotational matrix suitable for GameObj
+			# FIXME Must implement this
+			rotmatrix = (
+				1, 0, 0,
+				0, 1, 0,
+				0, 0, 1,
+			)
+			ppos = Point(*pos)
+			
+			# FIXME Need a better way of registering special GameObjs associated with LIB objects
+			if objname.startswith("LIBAvatar."):
+				return avatar.Avatar(ppos)
+			elif objname.startswith("LIBTargetRing."):
+				return target.Ring(ppos)
+			else:
+				return SimpleOREGameObj(objname, ppos, rotmatrix, self.meshes[meshname])
 		
-		self.areas = []
+		self.areas = {}
 		for areaname in self._expkg.areas:
-			areadesc = area.AreaDesc(
+			missions = {}
+			for missionname in self._expkg.areas[areaname].missions:
+				ore_mission = OREMission(
+					name = missionname,
+					player_name = "Passing Thru The Jungle", # FIXME Test
+					mission_control = missioncon.MissionControl( # FIXME Also test
+						win_cond_func = missioncon.AllRingsPassedFunction(),
+						timer_start_func = missioncon.MinDistanceFunction()
+					),
+					objects = [gobj_from_eeobj(*x) for x in self._expkg.missions[missionname].objects]
+				)
+				missions[missionname] = ore_mission
+			
+			ore_area = OREArea(
 				name = areaname,
 				player_name = "Quaternion Jungle", # FIXME Test
 				sky_stuff = sky.SkyStuff( # FIXME Also test
@@ -94,7 +155,7 @@ class OREManager:
 					game_tilt = (67, 0.4, 0, 0.7),
 					t3_angle = 0.8,
 				),
-				# Don't need to worry about special LIB objects in Area scenes, as of the current spec anyways
-				objects = [ SimpleOREGameObj(objname, pos, rot, self.meshes[meshname]) for objname, meshname, pos, rot in self._expkg.areas[areaname].objects ]
+				objects = [gobj_from_eeobj(*x) for x in self._expkg.areas[areaname].objects],
+				missions = missions
 			)
-			self.areas[areaname] = areadesc
+			self.areas[areaname] = ore_area

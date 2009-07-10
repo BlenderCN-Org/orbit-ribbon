@@ -125,10 +125,6 @@ def sim_init():
 	
 	global ore_man, odeworld, static_space, dyn_space, objects, totalsteps, player_camera, title_screen_manager, fade_color, sky_stuff, mode
 	
-	fh = file(os.path.join('exportdata', 'main.ore'))
-	export_data = pickle.load(fh)
-	fh.close()
-
 	totalsteps = 0L
 	odeworld = ode.World()
 	odeworld.setQuickStepNumIterations(10)
@@ -141,6 +137,10 @@ def sim_init():
 	fade_color = None
 	sky_stuff = sky.SkyStuff()
 	
+	fh = file(os.path.join('exportdata', 'main.ore'))
+	export_data = pickle.load(fh)
+	fh.close()
+	ore_man = ore.OREManager(export_data)
 		
 
 def _sim_step():

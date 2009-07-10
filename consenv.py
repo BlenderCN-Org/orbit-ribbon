@@ -12,16 +12,17 @@ import pydoc
 from pygame.locals import *
 
 import app
-import area
 import avatar
 import camera
 import collision
 import colors
 import console
+import editorexport
 import gameobj
 from geometry import *
 import joy
-import mission
+import missioncon
+import ore
 import resman
 import sky
 import target

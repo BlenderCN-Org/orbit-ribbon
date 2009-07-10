@@ -4,7 +4,7 @@ import pygame
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-import app, resman, camera, sky
+import app, resman, camera, sky, avatar
 from geometry import *
 from util import *
 
@@ -185,7 +185,7 @@ class TitleScreenManager:
 			else:
 				fade = max(0.0, 1.0 - (pygame.time.get_ticks() - self._cur_area_tstart)/AREA_FADEOUT_MILLISECS)
 			glColor(1, 1, 1, fade)
-			for area in app.areas:
+			for area in app.ore_man.areas.itervalues():
 				# FIXME: This distance should be calculated from actual projection, not reckoned like this. Probably good enough for gov't work, though.
 				d = (app.winsize[1]/2)*0.855 * (1 + area.sky_stuff.game_d_offset/sky.GOLD_DIST)
 				ang = rev2rad(area.sky_stuff.game_angle)
@@ -211,6 +211,7 @@ class TitleScreenManager:
 					if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
 						self.cur_area = area
 						self._cur_area_tstart = pygame.time.get_ticks()
+						app.objects = self.cur_area.objects
 						ang = rev2rad(area.sky_stuff.game_angle)
 						d = sky.GOLD_DIST + area.sky_stuff.game_d_offset
 						area_loc = Point(0, 0, sky.GOLD_DIST) - Point(d*math.sin(ang), 0, d*math.cos(ang))
@@ -233,27 +234,33 @@ class TitleScreenManager:
 			### Draw/handle events for the mission selection interface
 			for e in app.events:
 				if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
-					# Transition to gameplay mode
-					area = self.cur_area
-					app.objects = area.objects
+					# Transition to pre-gameplay mode
+					app.objects = self.cur_area.objects + self.cur_area.missions["A01-M01"].objects # FIXME Testing
+					app.mission_control = self.cur_area.missions["A01-M01"].mission_control # FIXME More testing
+					target_obj = None
+					for obj in app.objects:
+						if isinstance(obj, avatar.Avatar):
+							target_obj = obj
+							break
+					if target_obj is None:
+						raise RuntimeError("Unable to find Avatar to target camera towards for entering gameplay mode!")
 					self.camera.gameplay_cam = camera.FollowCamera(
-						target_obj = app.objects[0]
+						target_obj = target_obj
 					)
 					self._set_mode(TSMODE_PRE_GAMEPLAY)
 		elif self._tsmode == TSMODE_PRE_GAMEPLAY:
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_GAMEPLAY_MILLISECS
 			if skipping:
 				doneness = 1
-			area = self.cur_area
 			if doneness < 0.3:
 				app.sky_stuff = interpolate(
 					sky.SkyStuff(),
-					area.sky_stuff,
+					self.cur_area.sky_stuff,
 					doneness/0.3,
 					INTERP_MODE_SMOOTHED
 				)
 			else:
-				app.sky_stuff = area.sky_stuff
+				app.sky_stuff = self.cur_area.sky_stuff
 			if doneness >= 1.0:
 				# Begin gameplay mode
 				app.player_camera = self.camera.gameplay_cam
