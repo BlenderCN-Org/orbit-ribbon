@@ -13,7 +13,7 @@ class SimpleOREGameObj(gameobj.GameObj):
 	Data attributes:
 	objname - The object name (i.e. "Circle.001") used in the piece of exported data this object came from. This is purely for debugging purposes.
 	"""
-	def __init__(self, objname, pos, rot, oremesh):
+	def __init__(self, oremesh, objname, pos, rot):
 		"""Creates a SimpleOREGameObj with the given object name, position, rotation (in exportdata format), and OREMesh."""
 		self.objname = objname
 		self._oremesh = oremesh
@@ -113,22 +113,15 @@ class OREManager:
 			self.meshes[meshname] = OREMesh(mesh, mat)
 		
 		def gobj_from_eeobj(objname, meshname, pos, rot):
-			# Convert the 3-tuple of ORE rotation info (X, Y, Z floats in degrees) into a rotational matrix suitable for GameObj
-			# FIXME Must implement this
-			rotmatrix = (
-				1, 0, 0,
-				0, 1, 0,
-				0, 0, 1,
-			)
 			ppos = Point(*pos)
 			
 			# FIXME Need a better way of registering special GameObjs associated with LIB objects
 			if objname.startswith("LIBAvatar."):
-				return avatar.Avatar(self.meshes["LIBAvatar"], ppos, rotmatrix)
+				return avatar.Avatar(self.meshes["LIBAvatar"], ppos, rot)
 			elif objname.startswith("LIBTargetRing."):
-				return target.Ring(self.meshes["LIBTargetRing"], ppos, rotmatrix)
+				return target.Ring(self.meshes["LIBTargetRing"], ppos, rot)
 			else:
-				return SimpleOREGameObj(objname, ppos, rotmatrix, self.meshes[meshname])
+				return SimpleOREGameObj(self.meshes[meshname], objname, ppos, rot)
 		
 		self.areas = {}
 		for areaname in self._expkg.areas:

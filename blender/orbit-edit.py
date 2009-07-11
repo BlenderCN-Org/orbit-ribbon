@@ -8,8 +8,15 @@ sys.path.append(os.path.join(WORKING_DIR, os.path.pardir))
 
 import editorexport
 
-def fixcoords(t): # Given a 3-tuple, returns it so that it's rotated to fit OpenGL standards (i.e. y is up, z is out)
-	return (t[0], t[2], t[1])		
+def fixcoords(t): # Given a 3-tuple, returns it so that axes changed to fit OpenGL standards (i.e. y is up, z is out)
+	return (t[0], t[2], t[1])
+
+def fixrotmatrix(m): # Given a 4x4 row-major transform matrix, returns a 9-tuple for a column-major 3x3 rotation matrix with axes corrected ala fixcoords
+	return (
+		m[0][0], m[0][2], m[0][1],
+		m[2][0], m[2][2], m[2][1],
+		m[1][0], m[1][2], m[1][1],
+	)
 
 def pup_error(msg):
 	r = Blender.Draw.PupMenu("Error: %s%%t|OK" % msg)
@@ -134,7 +141,7 @@ def do_export():
 	for scene in bpy.data.scenes:
 		name = scene.name
 		if name.startswith("A"):
-			# Either an Area base or a Mission; we need a list of (objname, meshname, position, rotation) tuples
+			# Either an Area base or a Mission; we need a list of (objname, meshname, position, rotmatrix) tuples
 			exp_obj_tuples = []
 			filt = None
 			
@@ -153,7 +160,7 @@ def do_export():
 						obj.name,
 						obj.getData().name,
 						fixcoords(obj.loc),
-						fixcoords(obj.rot),
+						fixrotmatrix(obj.getMatrix()), # We can expect this matrix to only be rotation since all scales have been set to 1.0 by sanifier
 					))
 				except Exception, e:
 					pup_error("Problem exporting object %s: %s" % (obj.name, str(e)))
