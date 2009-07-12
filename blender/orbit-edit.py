@@ -8,13 +8,15 @@ sys.path.append(os.path.join(WORKING_DIR, os.path.pardir))
 
 import editorexport
 
+MATRIX_BLEN2ORE = Blender.Mathutils.RotationMatrix(-90, 4, 'x')
+
 def fixcoords(t): # Given a 3-sequence, returns it so that axes changed to fit OpenGL standards (y is up, z is forward)
-	return (t[0], t[2], -t[1])
+	t = Blender.Mathutils.Vector(t) * MATRIX_BLEN2ORE
+	return (t[0], t[1], t[2])
 
 def rad2deg(v):
 	return v*(180.0/pi)
 
-MATRIX_BLEN2ORE = Blender.Mathutils.RotationMatrix(-90, 4, 'x')
 def genrotmatrix(x, y, z): # Returns a 9-tuple for a column-major 3x3 rotation matrix with axes corrected ala fixcoords
 	m = (
 		Blender.Mathutils.RotationMatrix(rad2deg(x), 4, 'x') *
