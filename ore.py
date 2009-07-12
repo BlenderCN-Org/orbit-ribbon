@@ -141,13 +141,14 @@ class OREManager:
 			ore_area = OREArea(
 				name = areaname,
 				player_name = "Quaternion Jungle", # FIXME Test
-				sky_stuff = sky.SkyStuff( # FIXME Also test
-					game_angle = 0.17,
-					game_y_offset = 1100,
-					game_d_offset = 800,
-					game_tilt = (67, 0.4, 0, 0.7),
-					t3_angle = 0.8,
-				),
+				#sky_stuff = sky.SkyStuff( # FIXME Also test
+				#	game_angle = 0.17,
+				#	game_y_offset = 1100,
+				#	game_d_offset = 800,
+				#	game_tilt = (67, 0.4, 0, 0.7),
+				#	t3_angle = 0.8,
+				#),
+				sky_stuff = sky.SkyStuff(),
 				objects = [gobj_from_eeobj(*x) for x in self._expkg.areas[areaname].objects],
 				missions = missions
 			)
