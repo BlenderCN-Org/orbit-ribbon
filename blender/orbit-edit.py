@@ -9,7 +9,7 @@ sys.path.append(os.path.join(WORKING_DIR, os.path.pardir))
 import editorexport
 
 def fixcoords(t): # Given a 3-sequence, returns it so that axes changed to fit OpenGL standards (i.e. y is up, z is out and reversed)
-	return (t[0], t[2], -t[1])
+	return (t[0], t[1], t[2])
 
 def rad2deg(v):
 	return v*(180.0/pi)
@@ -17,8 +17,8 @@ def rad2deg(v):
 def genrotmatrix(x, y, z): # Returns a 9-tuple for a column-major 3x3 rotation matrix with axes corrected ala fixcoords
 	m = (
 		Blender.Mathutils.RotationMatrix(rad2deg(x), 4, 'x') *
-		Blender.Mathutils.RotationMatrix(rad2deg(z), 4, 'y') *
-		Blender.Mathutils.RotationMatrix(-rad2deg(y), 4, 'z')
+		Blender.Mathutils.RotationMatrix(rad2deg(y), 4, 'y') *
+		Blender.Mathutils.RotationMatrix(rad2deg(z), 4, 'z')
 	)
 	return ( # Transpose and elide final column and row
 		m[0][0], m[1][0], m[2][0],
