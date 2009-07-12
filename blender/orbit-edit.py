@@ -14,17 +14,18 @@ def fixcoords(t): # Given a 3-sequence, returns it so that axes changed to fit O
 def rad2deg(v):
 	return v*(180.0/pi)
 
+MATRIX_BLEN2ORE = Blender.Mathutils.RotationMatrix(-90, 4, 'x')
 def genrotmatrix(x, y, z): # Returns a 9-tuple for a column-major 3x3 rotation matrix with axes corrected ala fixcoords
-	return (1, 0, 0, 0, 1, 0, 0, 0, 1)
 	m = (
 		Blender.Mathutils.RotationMatrix(rad2deg(x), 4, 'x') *
 		Blender.Mathutils.RotationMatrix(rad2deg(y), 4, 'y') *
-		Blender.Mathutils.RotationMatrix(rad2deg(z), 4, 'z')
+		Blender.Mathutils.RotationMatrix(rad2deg(z), 4, 'z') *
+		MATRIX_BLEN2ORE
 	)
-	return ( # Transpose and elide final column and row
-		m[0][0], m[1][0], m[2][0],
-		m[0][1], m[1][1], m[2][1],
-		m[0][2], m[1][2], m[2][2],
+	return ( # Elide final column and row
+		m[0][0], m[0][1], m[0][2],
+		m[1][0], m[1][1], m[1][2],
+		m[2][0], m[2][1], m[2][2],
 	)
 
 def pup_error(msg):
@@ -188,7 +189,7 @@ def do_export():
 		if len(mesh.materials) > 0:
 			matName = mesh.materials[0].name
 		
-		vertices = [(fixcoords(v.co), fixcoords(v.no)) for v in mesh.verts]
+		vertices = [(tuple(v.co), tuple(v.no)) for v in mesh.verts]
 		faces = []
 		for f in mesh.faces:
 			if len(f.verts) == 3:
