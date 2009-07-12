@@ -43,22 +43,30 @@ class FollowCamera(Camera):
 	
 	Data attributes:
 	target_obj - The GameObj to be tracked, which must have an ODE body.
-	offset - A Point containing a vector indicating the offset from target_obj.
-		The y-part of this vector is used to offset the camera target, so that we look
-		past the target object rather than straight at it.
+	cam_offset - A Point containing a vector indicating the camera position's offset from target_obj in target object's coord system.
+	target_offset - A Point containing a vector indicating the camera's look target's offset from target_obj in target object's coord system.
+	up_vec - A Point containing a vector indicating the camera's up direction in target object's local coord system.
 	"""
 	
-	def __init__(self, target_obj, offset = None):
+	def __init__(self, target_obj, cam_offset = None, target_offset = None, up_vec = None):
 		"""Creates a FollowCamera. If offset not supplied, a reasonable one is used by default."""
 		self.target_obj = target_obj
 		
-		if offset is None:
-			offset = Point(0, 1.1, -6)
-		self.offset = offset
+		if cam_offset is None:
+			cam_offset = Point(0, 1.1, -6)
+		self.cam_offset = cam_offset
+		
+		if target_offset is None:
+			target_offset = Point(0, 1.1, 0)
+		self.target_offset = target_offset
+
+		if up_vec is None:
+			up_vec = Point(0, 1, 0)
+		self.up_vec = up_vec
 	
 	def get_camvals(self):
 		b = self.target_obj.body
-		p = Point(*b.getRelPointPos(self.offset))
-		t = Point(*b.getRelPointPos((0, self.offset[1], 0)))
-		u = Point(*b.vectorToWorld((self.offset[0], self.offset[1]+1, self.offset[2])))
+		p = Point(*b.getRelPointPos(self.cam_offset))
+		t = Point(*b.getRelPointPos(self.target_offset))
+		u = Point(*b.vectorToWorld(self.up_vec))
 		return (p[0], p[1], p[2], t[0], t[1], t[2], u[0], u[1], u[2])

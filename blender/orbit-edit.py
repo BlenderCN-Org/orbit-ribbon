@@ -8,7 +8,7 @@ sys.path.append(os.path.join(WORKING_DIR, os.path.pardir))
 
 import editorexport
 
-def fixcoords(t): # Given a 3-sequence, returns it so that axes changed to fit OpenGL standards (i.e. y is up, z is out and reversed)
+def fixcoords(t): # Given a 3-sequence, returns it so that axes changed to fit OpenGL standards (y is up, z is forward)
 	return (t[0], t[2], -t[1])
 
 def rad2deg(v):
