@@ -18,6 +18,7 @@ def rad2deg(v):
 	return v*(180.0/pi)
 
 def genrotmatrix(x, y, z): # Returns a 9-tuple for a column-major 3x3 rotation matrix with axes corrected ala fixcoords
+	return (1, 0, 0, 0, 1, 0, 0, 0, 1)
 	m = (
 		Blender.Mathutils.RotationMatrix(rad2deg(x), 4, 'x') *
 		Blender.Mathutils.RotationMatrix(rad2deg(y), 4, 'y') *
@@ -191,7 +192,7 @@ def do_export():
 		if len(mesh.materials) > 0:
 			matName = mesh.materials[0].name
 		
-		vertices = [(tuple(v.co), tuple(v.no)) for v in mesh.verts]
+		vertices = [(fixcoords(v.co), fixcoords(v.no)) for v in mesh.verts]
 		faces = []
 		for f in mesh.faces:
 			if len(f.verts) == 3:
