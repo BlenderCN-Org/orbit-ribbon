@@ -4,7 +4,7 @@ import pygame
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-import app, resman, camera, sky, avatar
+import app, resman, camera, sky, avatar, console
 from geometry import *
 from util import *
 
@@ -14,8 +14,14 @@ PRE_MAIN_MILLISECS = 3000
 PRE_AREA_MILLISECS = 2000
 AREA_FADEIN_MILLISECS = 300
 AREA_FADEOUT_MILLISECS = 200
+MISSION_FADEIN_MILLISECS = 300
+MISSION_FADEOUT_MILLISECS = 200
 PRE_MISSION_MILLISECS = 500
 PRE_GAMEPLAY_MILLISECS = 10000
+
+# FIXME This entire damn thing needs to be refactored into some general purpose UI kit with transitions that can go forwards or back, and overlap
+# Probably should do that around the time I decide to implement the options dialogue or the pause screen menu
+# While I'm at it, should probably also take the opportunity to improve the mess of globals lying around in app's namespace
 
 class _TitleScreenCamera(camera.Camera):
 	def __init__(self, manager):
@@ -98,7 +104,9 @@ class TitleScreenManager:
 	
 	Data attributes:
 	camera - A camera.Camera object that should be used to control the 3D viewpoint while the title screen is active.
-	cur_area - The currently selected AreaDesc, or None if no area has been selected. Do not set externally.
+	cur_area - The currently selected OREArea, or None if no area has been selected. Do not set externally.
+	cur_mission - The currently selected OREMission, or None if no mission has been selected. Do not set externally.
+	cur_sel - An index (from 0) indicating which area, mission, etc. the cursor is selecting, in relevant title screen modes
 	"""
 	
 	def __init__(self):
@@ -108,11 +116,15 @@ class TitleScreenManager:
 		self.camera = _TitleScreenCamera(self)
 		self._set_mode(TSMODE_PRE_PRE_MAIN)
 		self.cur_area = None
-		self._cur_area_start = None # Tick time at which cur_area was set.
+		self._cur_area_tstart = None # Tick time at which cur_area was set.
+		self.cur_mission = None
+		self._cur_mission_tstart = None # Tick time at which cur_mission was set.
+		self.cur_sel = None
 	
 	def _set_mode(self, new_mode):
 		self._tsmode = new_mode
 		self._tstart = pygame.time.get_ticks()
+		self.cur_sel = None
 	
 	def _draw_title_logo(self, alpha):
 		top_margin = app.winsize[1]/100
@@ -179,6 +191,7 @@ class TitleScreenManager:
 				self._set_mode(TSMODE_AREA)
 		elif self._tsmode == TSMODE_AREA:
 			### Draw/handle events for the area selection interface
+			# FIXME: Display information about the area under consideration, at least the visible name
 			selsize = app.winsize[1]/20
 			if self.cur_area is None:
 				fade = (pygame.time.get_ticks() - self._tstart)/AREA_FADEIN_MILLISECS
@@ -208,6 +221,7 @@ class TitleScreenManager:
 				glDisable(GL_TEXTURE_2D)
 			if self.cur_area is None:
 				for e in app.events:
+					# FIXME: Actually allow the user to select which area they want to go to
 					if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
 						self.cur_area = area
 						self._cur_area_tstart = pygame.time.get_ticks()
@@ -230,23 +244,59 @@ class TitleScreenManager:
 				doneness = 1
 			if doneness >= 1.0:
 				self._set_mode(TSMODE_MISSION)
+				self.cur_sel = 0
 		elif self._tsmode == TSMODE_MISSION:
 			### Draw/handle events for the mission selection interface
-			for e in app.events:
-				if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
-					# Transition to pre-gameplay mode
-					app.objects = self.cur_area.objects + self.cur_area.missions["A01-M02"].objects # FIXME Testing
-					app.mission_control = self.cur_area.missions["A01-M02"].mission_control # FIXME More testing
-					target_obj = None
-					for obj in app.objects:
-						if isinstance(obj, avatar.Avatar):
-							target_obj = obj
-							break
-					if target_obj is None:
-						raise RuntimeError("Unable to find Avatar to target camera towards for entering gameplay mode!")
-					self.camera.gameplay_cam = camera.FollowCamera(
-						target_obj = target_obj
-					)
+			if self.cur_mission is None:
+				fade = (pygame.time.get_ticks() - self._tstart)/MISSION_FADEIN_MILLISECS
+			else:
+				fade = max(0.0, 1.0 - (pygame.time.get_ticks() - self._cur_mission_tstart)/MISSION_FADEOUT_MILLISECS)
+			mission_names = sorted(self.cur_area.missions.keys())
+			y = 200
+			for i, name in enumerate(mission_names):
+				rect = pygame.Rect(200, y, 400, 35)
+				obox = console.OutputBox(rect)
+				obox.append("%u: %s" % (i+1, self.cur_area.missions[name].visible_name))
+				obox.draw()
+				if self.cur_sel == i:
+					glColor(1, 1, 1, fade) # FIXME This is actually 99% useless since OutputBox sets its own colors. So I put it here to fade cursor box.
+					glBegin(GL_LINES)
+					glVertex2fv(rect.topleft)
+					glVertex2fv(rect.topright)
+					glVertex2fv(rect.bottomright)
+					glVertex2fv(rect.bottomleft)
+					glEnd()
+				y += 50
+			if self.cur_mission is None:
+				for e in app.events:
+					if e.type == pygame.KEYDOWN:
+						if e.key == pygame.K_UP or e.key == pygame.K_DOWN:
+							if e.key == pygame.K_UP and self.cur_sel > 0:
+								self.cur_sel -= 1
+							elif e.key == pygame.K_DOWN and self.cur_sel < (len(mission_names)-1):
+								self.cur_sel += 1
+							# Move the cursor up or down
+						elif e.key == pygame.K_SPACE:
+							# Transition to pre-gameplay mode on the currently selected mission
+							mname = mission_names[self.cur_sel]
+							mission = self.cur_area.missions[mname]
+							self.cur_mission = mission
+							self._cur_mission_tstart = pygame.time.get_ticks()
+							app.objects = self.cur_area.objects + mission.objects
+							app.mission_control = mission.mission_control
+							target_obj = None
+							for obj in app.objects:
+								if isinstance(obj, avatar.Avatar):
+									target_obj = obj
+									break
+							if target_obj is None:
+								raise RuntimeError("Unable to find Avatar in mission %s to target camera towards for entering gameplay mode!" % mname)
+							self.camera.gameplay_cam = camera.FollowCamera(
+								target_obj = target_obj
+							)
+			else:
+				if fade == 0.0:
+					# Once we've faded out the UI, transition to pre-gameplay
 					self._set_mode(TSMODE_PRE_GAMEPLAY)
 		elif self._tsmode == TSMODE_PRE_GAMEPLAY:
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_GAMEPLAY_MILLISECS
