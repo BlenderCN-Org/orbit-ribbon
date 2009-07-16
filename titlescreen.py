@@ -235,8 +235,8 @@ class TitleScreenManager:
 			for e in app.events:
 				if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
 					# Transition to pre-gameplay mode
-					app.objects = self.cur_area.objects + self.cur_area.missions["A01-M01"].objects # FIXME Testing
-					app.mission_control = self.cur_area.missions["A01-M01"].mission_control # FIXME More testing
+					app.objects = self.cur_area.objects + self.cur_area.missions["A01-M02"].objects # FIXME Testing
+					app.mission_control = self.cur_area.missions["A01-M02"].mission_control # FIXME More testing
 					target_obj = None
 					for obj in app.objects:
 						if isinstance(obj, avatar.Avatar):
