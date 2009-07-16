@@ -30,13 +30,13 @@ class OREMission:
 	
 	Data attributes:
 	name - A string with the internal name of the mission (i.e. "A01-M02")
-	player_name - A string with the player-visible name of the mission (i.e. "Following Sis")
+	visible_name - A string with the player-visible name of the mission (i.e. "Following Sis")
 	mission_control - An instance of missioncon.MissionControl describing mission parameters.
 	objects - A sequence of mission-specific GameObjs to be appended to the GameObjs in the Area.
 	"""
-	def __init__(self, name, player_name, mission_control, objects):
+	def __init__(self, name, visible_name, mission_control, objects):
 		self.name = name
-		self.player_name = player_name
+		self.visible_name = visible_name
 		self.mission_control = mission_control
 		self.objects = objects
 
@@ -46,14 +46,14 @@ class OREArea:
 	
 	Data attributes:
 	name - A string with the internal name of the area (i.e. "A01-Base")
-	player_name - A string with the player-visible name of the area (i.e. "Quaternion Jungle")
+	visible_name - A string with the player-visible name of the area (i.e. "Quaternion Jungle")
 	sky_stuff - The sky.SkyStuff object for this area, which is used to position it in the Smoke Ring.
 	objects - A sequence of GameObjs that apply to all missions in this area; the basic geometry of the level.
 	missions - A dictionary (keyed by internal name) of OREMission objects.
 	"""
-	def __init__(self, name, player_name, sky_stuff, objects, missions):
+	def __init__(self, name, visible_name, sky_stuff, objects, missions):
 		self.name = name
-		self.player_name = player_name
+		self.visible_name = visible_name
 		self.sky_stuff = sky_stuff
 		self.objects = objects
 		self.missions = missions
@@ -129,7 +129,7 @@ class OREManager:
 			for missionname in self._expkg.areas[areaname].missions:
 				ore_mission = OREMission(
 					name = missionname,
-					player_name = "Passing Thru The Jungle", # FIXME Test
+					visible_name = "Passing Thru The Jungle", # FIXME Test
 					mission_control = missioncon.MissionControl( # FIXME Also test
 						win_cond_func = missioncon.AllRingsPassedFunction(),
 						timer_start_func = missioncon.MinDistanceFunction()
@@ -140,7 +140,7 @@ class OREManager:
 			
 			ore_area = OREArea(
 				name = areaname,
-				player_name = "Quaternion Jungle", # FIXME Test
+				visible_name = "Quaternion Jungle", # FIXME Test
 				#sky_stuff = sky.SkyStuff( # FIXME Also test
 				#	game_angle = 0.17,
 				#	game_y_offset = 1100,
