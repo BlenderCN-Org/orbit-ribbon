@@ -66,12 +66,14 @@ class ExportPackage:
 	materials - A dictionary of named Material objects.
 	areas - A dictionary of named Area objects.
 	missions - A dictionary of named Mission objects.
+	conf - A string with various configuration data in python ConfigParser format.
 	"""
-	def __init__(self, meshes, materials, areas, missions):
+	def __init__(self, meshes, materials, areas, missions, conf):
 		self.meshes = meshes
 		self.materials = materials
 		self.areas = areas
 		self.missions = missions
+		self.conf = conf
 
 		# Make sure everything can get at anything else by name
 		for e in (self.meshes, self.materials, self.areas, self.missions):

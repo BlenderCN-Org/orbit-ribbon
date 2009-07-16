@@ -1,4 +1,4 @@
-import Blender, bpy, os, cPickle, sys
+import Blender, bpy, os, cPickle, sys, ConfigParser, StringIO
 from math import *
 
 WORKING_DIR = os.path.dirname(Blender.Get("filename"))
@@ -216,10 +216,28 @@ def do_export():
 				spe_col = tuple(mat.specCol),
 			)
 	
-	pkg = editorexport.ExportPackage(meshes, materials, areas, missions)
+	conf = None
+	try:
+		conf = "\n".join(bpy.data.texts["oreconf"].asLines())
+	except exceptions.KeyError:
+		pup_error("Unable to find the 'oreconf' text!")
+	confparser = ConfigParser.ConfigParser()
+	try:
+		confparser.readfp(StringIO.StringIO(conf))
+	except Exception, e:
+		pup_error("Unable to parse the oreconf text: %s" % str(e))
+	pkgname = None
+	try:
+		pkgname = confparser.get("Package", "visible_name")
+	except Exception, e:
+		pup_error("Unable to extract 'visible_name' from '[Package]' section!'")
+	
+	pkg = editorexport.ExportPackage(meshes, materials, areas, missions, conf)
 	target_fn = BLENDER_FILE[:-6] + ".ore" # Replace ".blend" with ".ore" for output filename (ore = Orbit Ribbon Export)
-	fh = file(os.path.join(WORKING_DIR, os.path.pardir, "exportdata", target_fn), "wb")
-	cPickle.dump(pkg, fh, 2)
+	fh = file(os.path.join(WORKING_DIR, os.path.pardir, "orefiles", target_fn), "wb")
+	cPickle.dump(pkgname, fh, 2) # First object in the pickle is the player-visible name of the package, so that packages can be quickly scanned
+	cPickle.dump(1, fh, 2) # Second object is the number 1, which is the version of the ORE file format in use
+	cPickle.dump(pkg, fh, 2) # Third object in the pickle is the ExportPackage itself
 	fh.close()
 	
 	Blender.Draw.PupMenu("Exported just fine%t|OK, thanks a bunch")

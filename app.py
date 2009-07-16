@@ -137,10 +137,9 @@ def sim_init():
 	fade_color = None
 	sky_stuff = sky.SkyStuff()
 	
-	fh = file(os.path.join('exportdata', 'main.ore'))
-	export_data = pickle.load(fh)
+	fh = file(os.path.join('orefiles', 'main.ore'))
+	ore_man = ore.OREManager(fh)
 	fh.close()
-	ore_man = ore.OREManager(export_data)
 		
 
 def _sim_step():

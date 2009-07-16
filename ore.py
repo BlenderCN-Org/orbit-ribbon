@@ -1,6 +1,6 @@
 from __future__ import division
 
-import ode
+import ode, ConfigParser, StringIO, pickle
 from OpenGL.GL import *
 
 import app, editorexport, collision, sky, missioncon, gameobj, avatar, target
@@ -94,22 +94,43 @@ class OREMesh:
 
 
 class OREManager:
-	"""Manages data in the Orbit Ribbon Export format, which is just a pickle with an editorexport.ExportPackage object in it.
+	"""Loads and interprets data in the Orbit Ribbon Export format.
+	
+	This format consists of a pickle with these objects in order:
+		- A title string
+		- A format version number (for right now, this is always 1)
+		- An editorexport.ExportPackage object
+	The first string is the visible name (name intended for the player to look at) of the entire ORE file.
 	
 	Data attributes (read only):
+	visible_name - The player-appropriate name of the ORE file.
 	meshes - A dictionary of OREMesh instances, one for each mesh in the ORE data.
 	areas - A dictionary of area.AreaDesc instances, one for each area in the ORE data.
 	"""
-	def __init__(self, expkg):
-		self._expkg = expkg
+	def __init__(self, fh):
+		"""Creates an OREManager based on the data in the given filehandle."""
+		# Throw away the title string
+		pickle.load(fh)
+
+		# Make sure we got an ORE with a version number we understand
+		vnum = pickle.load(fh)
+		if vnum != 1:
+			raise RuntimeError("Unknown ORE file version '%s'. Perhaps you need to get the newest version of the game." % str(vnum))
+		
+		# Load the ExportPackage
+		expkg = pickle.load(fh)
+
+		# Load the config from the ExportPackage
+		cparser = ConfigParser.ConfigParser()
+		cparser.readfp(StringIO.StringIO(expkg.conf))
 		
 		self.meshes = {}
-		for meshname in self._expkg.meshes:
-			mesh = self._expkg.meshes[meshname]
+		for meshname in expkg.meshes:
+			mesh = expkg.meshes[meshname]
 			matname = mesh.material
 			mat = None
 			if matname is not None:
-				mat = self._expkg.materials[matname]
+				mat = expkg.materials[matname]
 			self.meshes[meshname] = OREMesh(mesh, mat)
 		
 		def gobj_from_eeobj(objname, meshname, pos, rot):
@@ -124,32 +145,36 @@ class OREManager:
 				return SimpleOREGameObj(self.meshes[meshname], objname, ppos, rot)
 		
 		self.areas = {}
-		for areaname in self._expkg.areas:
+		for areaname in expkg.areas:
 			missions = {}
-			for missionname in self._expkg.areas[areaname].missions:
+			for missionname in expkg.areas[areaname].missions:
 				ore_mission = OREMission(
 					name = missionname,
-					visible_name = "Passing Thru The Jungle", # FIXME Test
-					mission_control = missioncon.MissionControl( # FIXME Also test
-						win_cond_func = missioncon.AllRingsPassedFunction(),
-						timer_start_func = missioncon.MinDistanceFunction()
+					visible_name = cparser.get(missionname, "visible_name"),
+					mission_control = missioncon.MissionControl(
+						win_cond_func = missioncon.__dict__[cparser.get(missionname, "win_cond_func")](),
+						timer_start_func = missioncon.__dict__[cparser.get(missionname, "timer_start_func")](),
 					),
-					objects = [gobj_from_eeobj(*x) for x in self._expkg.missions[missionname].objects]
+					objects = [gobj_from_eeobj(*x) for x in expkg.missions[missionname].objects]
 				)
 				missions[missionname] = ore_mission
 			
 			ore_area = OREArea(
 				name = areaname,
-				visible_name = "Quaternion Jungle", # FIXME Test
-				#sky_stuff = sky.SkyStuff( # FIXME Also test
-				#	game_angle = 0.17,
-				#	game_y_offset = 1100,
-				#	game_d_offset = 800,
-				#	game_tilt = (67, 0.4, 0, 0.7),
-				#	t3_angle = 0.8,
-				#),
-				sky_stuff = sky.SkyStuff(),
-				objects = [gobj_from_eeobj(*x) for x in self._expkg.areas[areaname].objects],
+				visible_name = cparser.get(areaname, "visible_name"),
+				sky_stuff = sky.SkyStuff(
+					game_angle = cparser.getfloat(areaname, "sky_game_angle"),
+					game_y_offset = cparser.getfloat(areaname, "sky_game_y_offset"),
+					game_d_offset = cparser.getfloat(areaname, "sky_game_d_offset"),
+					game_tilt = (
+						cparser.getfloat(areaname, "sky_game_tilt_deg"),
+						cparser.getfloat(areaname, "sky_game_tilt_x"),
+						0,
+						cparser.getfloat(areaname, "sky_game_tilt_z"),
+					),
+					t3_angle = 0.8,
+				),
+				objects = [gobj_from_eeobj(*x) for x in expkg.areas[areaname].objects],
 				missions = missions
 			)
 			self.areas[areaname] = ore_area
