@@ -15,6 +15,8 @@ SKY_CLIP_DIST = 1e12
 GAMEPLAY_CLIP_DIST = 50000
 FOV = 45
 
+VERSION = "prealpha"
+
 #The ODE simulation
 #Objects in static_space do not collide with one another.
 #Objects in dyn_space collide with those in static_space, as well as with each other.
@@ -131,7 +133,7 @@ def sim_init():
 	You may call this in order to reset the game.
 	"""
 	
-	global ore_man, odeworld, static_space, dyn_space, objects, totalsteps, player_camera, title_screen_manager, fade_color, sky_stuff, mode
+	global ore_man, odeworld, static_space, dyn_space, objects, totalsteps, player_camera, title_screen_manager, fade_color, sky_stuff
 	global cur_area, cur_area_tstart, cur_mission, cur_mission_tstart
 	
 	totalsteps = 0L
@@ -142,7 +144,6 @@ def sim_init():
 	objects = []
 	title_screen_manager = titlescreen.TitleScreenManager()
 	player_camera = title_screen_manager.camera
-	mode = MODE_TITLE_SCREEN
 	fade_color = None
 	sky_stuff = sky.SkyStuff()
 	
@@ -328,8 +329,16 @@ def run():
 	"""Runs the game.
 	
 	You have to call ui_init() and sim_init() before running this.
+	
+	Optionally, you may call init_area() and init_mission() to jump straight to a mission. If not, the
+	game will start at the title screen.
 	"""
-	global totalsteps
+	global totalsteps, mode
+	
+	if cur_area is not None and cur_mission is not None:
+		mode = MODE_GAMEPLAY
+	else:
+		mode = MODE_TITLE_SCREEN
 	
 	try:
 		totalms = 0L #Total number of milliseconds passed in gameplay
