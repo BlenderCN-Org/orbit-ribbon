@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import profile, psyco
+import profile, psyco, getopt
 
 import app
 
@@ -12,5 +12,5 @@ app.sim_init()
 if PROFILING:
 	profile.run('app.run()', 'profile')
 else:
-	psyco.full()
+	psyco.full() # TODO: Make sure this actually improves framerate
 	app.run()

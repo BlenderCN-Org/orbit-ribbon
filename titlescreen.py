@@ -4,7 +4,7 @@ import pygame
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-import app, resman, camera, sky, avatar, console
+import app, resman, camera, sky, console
 from geometry import *
 from util import *
 
@@ -104,8 +104,6 @@ class TitleScreenManager:
 	
 	Data attributes:
 	camera - A camera.Camera object that should be used to control the 3D viewpoint while the title screen is active.
-	cur_area - The currently selected OREArea, or None if no area has been selected. Do not set externally.
-	cur_mission - The currently selected OREMission, or None if no mission has been selected. Do not set externally.
 	cur_sel - An index (from 0) indicating which area, mission, etc. the cursor is selecting, in relevant title screen modes
 	"""
 	
@@ -115,10 +113,6 @@ class TitleScreenManager:
 		self._selsquare_inactive_tex = resman.Texture("selsquare_inactive.png")
 		self.camera = _TitleScreenCamera(self)
 		self._set_mode(TSMODE_PRE_PRE_MAIN)
-		self.cur_area = None
-		self._cur_area_tstart = None # Tick time at which cur_area was set.
-		self.cur_mission = None
-		self._cur_mission_tstart = None # Tick time at which cur_mission was set.
 		self.cur_sel = None
 	
 	def _set_mode(self, new_mode):
@@ -193,10 +187,10 @@ class TitleScreenManager:
 			### Draw/handle events for the area selection interface
 			# FIXME: Display information about the area under consideration, at least the visible name
 			selsize = app.winsize[1]/20
-			if self.cur_area is None:
+			if app.cur_area is None:
 				fade = (pygame.time.get_ticks() - self._tstart)/AREA_FADEIN_MILLISECS
 			else:
-				fade = max(0.0, 1.0 - (pygame.time.get_ticks() - self._cur_area_tstart)/AREA_FADEOUT_MILLISECS)
+				fade = max(0.0, 1.0 - (pygame.time.get_ticks() - app.cur_area_tstart)/AREA_FADEOUT_MILLISECS)
 			glColor(1, 1, 1, fade)
 			for area in app.ore_man.areas.itervalues():
 				# FIXME: This distance should be calculated from actual projection, not reckoned like this. Probably good enough for gov't work, though.
@@ -219,13 +213,11 @@ class TitleScreenManager:
 				glVertex2f(pos[0] - selsize, pos[1] + selsize)
 				glEnd()
 				glDisable(GL_TEXTURE_2D)
-			if self.cur_area is None:
+			if app.cur_area is None:
 				for e in app.events:
-					# FIXME: Actually allow the user to select which area they want to go to
 					if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
-						self.cur_area = area
-						self._cur_area_tstart = pygame.time.get_ticks()
-						app.objects = self.cur_area.objects
+						app.init_area("A01-Base") # FIXME: Allow the user to select which area they want to go to
+						app.sky_stuff = sky.SkyStuff() # Override the sky choice made by the area loader
 						ang = rev2rad(area.sky_stuff.game_angle)
 						d = sky.GOLD_DIST + area.sky_stuff.game_d_offset
 						area_loc = Point(0, 0, sky.GOLD_DIST) - Point(d*math.sin(ang), 0, d*math.cos(ang))
@@ -247,16 +239,16 @@ class TitleScreenManager:
 				self.cur_sel = 0
 		elif self._tsmode == TSMODE_MISSION:
 			### Draw/handle events for the mission selection interface
-			if self.cur_mission is None:
+			if app.cur_mission is None:
 				fade = (pygame.time.get_ticks() - self._tstart)/MISSION_FADEIN_MILLISECS
 			else:
-				fade = max(0.0, 1.0 - (pygame.time.get_ticks() - self._cur_mission_tstart)/MISSION_FADEOUT_MILLISECS)
-			mission_names = sorted(self.cur_area.missions.keys())
+				fade = max(0.0, 1.0 - (pygame.time.get_ticks() - app.cur_mission_tstart)/MISSION_FADEOUT_MILLISECS)
+			mission_names = sorted(app.cur_area.missions.keys())
 			y = 200
 			for i, name in enumerate(mission_names):
 				rect = pygame.Rect(200, y, 400, 35)
 				obox = console.OutputBox(rect)
-				obox.append("%u: %s" % (i+1, self.cur_area.missions[name].visible_name))
+				obox.append("%u: %s" % (i+1, app.cur_area.missions[name].visible_name))
 				obox.draw()
 				if self.cur_sel == i:
 					glColor(1, 1, 1, fade) # FIXME This is actually 99% useless since OutputBox sets its own colors. So I put it here to fade cursor box.
@@ -267,7 +259,7 @@ class TitleScreenManager:
 					glVertex2fv(rect.bottomleft)
 					glEnd()
 				y += 50
-			if self.cur_mission is None:
+			if app.cur_mission is None:
 				for e in app.events:
 					if e.type == pygame.KEYDOWN:
 						if e.key == pygame.K_UP or e.key == pygame.K_DOWN:
@@ -279,21 +271,10 @@ class TitleScreenManager:
 						elif e.key == pygame.K_SPACE:
 							# Transition to pre-gameplay mode on the currently selected mission
 							mname = mission_names[self.cur_sel]
-							mission = self.cur_area.missions[mname]
-							self.cur_mission = mission
-							self._cur_mission_tstart = pygame.time.get_ticks()
-							app.objects = self.cur_area.objects + mission.objects
-							app.mission_control = mission.mission_control
-							target_obj = None
-							for obj in app.objects:
-								if isinstance(obj, avatar.Avatar):
-									target_obj = obj
-									break
-							if target_obj is None:
-								raise RuntimeError("Unable to find Avatar in mission %s to target camera towards for entering gameplay mode!" % mname)
-							self.camera.gameplay_cam = camera.FollowCamera(
-								target_obj = target_obj
-							)
+							app.init_mission(mname)
+							# Override the camera set by init_mission, but keep it for later when we transition to actual gameplay mode
+							self.camera.gameplay_cam = app.player_camera
+							app.player_camera = self.camera
 			else:
 				if fade == 0.0:
 					# Once we've faded out the UI, transition to pre-gameplay
@@ -305,12 +286,12 @@ class TitleScreenManager:
 			if doneness < 0.3:
 				app.sky_stuff = interpolate(
 					sky.SkyStuff(),
-					self.cur_area.sky_stuff,
+					app.cur_area.sky_stuff,
 					doneness/0.3,
 					INTERP_MODE_SMOOTHED
 				)
 			else:
-				app.sky_stuff = self.cur_area.sky_stuff
+				app.sky_stuff = app.cur_area.sky_stuff
 			if doneness >= 1.0:
 				# Begin gameplay mode
 				app.player_camera = self.camera.gameplay_cam

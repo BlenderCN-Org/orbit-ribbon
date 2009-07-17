@@ -6,7 +6,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import collision, util, console, resman, camera, joy, sky, titlescreen, ore
+import collision, util, console, resman, camera, joy, sky, titlescreen, ore, avatar
 from geometry import *
 
 MODE_GAMEPLAY, MODE_TITLE_SCREEN = range(2)
@@ -24,6 +24,14 @@ dyn_space = None
 
 #The OREManager for currently active ORE file (Orbit Ribbon Export data, from the 3d editor)
 ore_man = None
+
+#The currently active OREArea, or None. The tstart variable is the tick time at which cur_area was set by init_area.
+cur_area = None
+cur_area_tstart = None
+
+#The currently active OREMission, or None. The tstart variable is the tick time at which cur_mission was set by init_mission.
+cur_mission = None
+cur_mission_tstart = None
 
 #When an area or mission selected, a list of all the various gameplay objects.
 objects = None
@@ -124,6 +132,7 @@ def sim_init():
 	"""
 	
 	global ore_man, odeworld, static_space, dyn_space, objects, totalsteps, player_camera, title_screen_manager, fade_color, sky_stuff, mode
+	global cur_area, cur_area_tstart, cur_mission, cur_mission_tstart
 	
 	totalsteps = 0L
 	odeworld = ode.World()
@@ -140,7 +149,42 @@ def sim_init():
 	fh = file(os.path.join('orefiles', 'main.ore'))
 	ore_man = ore.OREManager(fh)
 	fh.close()
-		
+
+	cur_area = None
+	cur_area_tstart = None
+	cur_mission = None
+	cur_mission_tstart = None
+
+
+def init_area(areaname):
+	"""Loads the given area, by internal name, into the game state. This includes objects, sky, etc."""
+	global objects, sky_stuff, cur_area, cur_area_tstart
+	cur_area = ore_man.areas[areaname]
+	cur_area_tstart = pygame.time.get_ticks()
+	objects = cur_area.objects[:] # FIXME Need to copy the contents of the objects themselves, so that the level can be restarted
+	sky_stuff = cur_area.sky_stuff # FIXME Should probably also copy the SkyStuff for the sake of completeness
+
+
+def init_mission(missionname):
+	"""Loads the given mission, by internal name, into the game state. This includes mission objects, objectives, camera, etc.
+	
+	You must first init the mission's area before calling this."""
+	global objects, mission_control, player_camera, cur_mission, cur_mission_tstart
+	cur_mission = cur_area.missions[missionname]
+	cur_mission_tstart = pygame.time.get_ticks()
+	objects.extend(cur_mission.objects[:]) # FIXME Need to copy the contents of the objects themselves, so that the level can be restarted
+	mission_control = cur_mission.mission_control # FIXME Should probably also copy the MissionControl for the sake of completeness
+	
+	# Find the Avatar object, then set the camera to follow it
+	avatar_obj = None
+	for obj in objects:
+		if isinstance(obj, avatar.Avatar):
+			avatar_obj = obj
+			break
+	if avatar_obj is None:
+		raise RuntimeError("Unable to find Avatar in mission %s!" % missionname)
+	player_camera = camera.FollowCamera(target_obj = avatar_obj)
+
 
 def _sim_step():
 	"""Runs one step of the simulation. This is (1/maxfps)th of a simulated second."""
