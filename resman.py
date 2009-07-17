@@ -25,7 +25,7 @@ class SoundClip(object):
 			obj = object.__new__(cls)
 			obj.filename = filename
 			SoundClip._cache[filename] = obj
-			#fullpath = os.path.join('sounds', filename) #FIXME: Turn this on when we eventually have some actual Orbit Ribbon sounds
+			#fullpath = os.path.join(app.APP_DIR, 'sounds', filename) #FIXME: Turn this on when we eventually have some actual Orbit Ribbon sounds
 			fullpath = filename
 			obj.snd = pygame.mixer.Sound(fullpath)
 			return obj
@@ -53,7 +53,7 @@ class Texture(object):
 			obj.filename = filename
 			Texture._cache[filename] = obj
 			obj.glname = glGenTextures(1)
-			fullpath = os.path.join('images', filename)
+			fullpath = os.path.join(app.APP_DIR, 'images', filename)
 			surf = pygame.image.load(fullpath)
 			obj.surf = surf
 			obj.size = (surf.get_width(), surf.get_height())

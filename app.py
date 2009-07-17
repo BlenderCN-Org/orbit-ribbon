@@ -9,6 +9,13 @@ from OpenGL.GLUT import *
 import collision, util, console, resman, camera, joy, sky, titlescreen, ore, avatar
 from geometry import *
 
+# The directory where the application is installed
+# Py2Exe screws with this by putting the path inside a zip file, so go up if that is the case
+APP_DIR = os.path.realpath(sys.path[0])
+cutoffPoint = APP_DIR.rfind(os.path.sep + "library.zip")
+if cutoffPoint != -1:
+   APP_DIR = APP_DIR[:cutoffPoint]
+
 MODE_GAMEPLAY, MODE_TITLE_SCREEN = range(2)
 
 SKY_CLIP_DIST = 1e12
@@ -93,7 +100,7 @@ def ui_init():
 
 	pygame.display.init()
 	pygame.display.set_caption('Orbit Ribbon')
-	pygame.display.set_icon(pygame.image.load(os.path.join('images', 'logo.png')))
+	pygame.display.set_icon(pygame.image.load(os.path.join(APP_DIR, 'images', 'logo.png')))
 	pygame.mouse.set_visible(0)
 	screen = pygame.display.set_mode(winsize, DOUBLEBUF | OPENGL)
 
@@ -147,7 +154,7 @@ def sim_init():
 	fade_color = None
 	sky_stuff = sky.SkyStuff()
 	
-	fh = file(os.path.join('orefiles', 'main.ore'))
+	fh = file(os.path.join(APP_DIR, 'orefiles', 'main.ore'))
 	ore_man = ore.OREManager(fh)
 	fh.close()
 

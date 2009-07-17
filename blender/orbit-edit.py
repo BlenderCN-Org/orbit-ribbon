@@ -15,8 +15,10 @@ def fixcoords(t): # Given a 3-sequence, returns it so that axes changed to fit O
 	t = Blender.Mathutils.Vector(t) * MATRIX_BLEN2ORE
 	return (t[0], t[1], t[2])
 
+
 def rad2deg(v):
 	return v*(180.0/pi)
+
 
 def genrotmatrix(x, y, z): # Returns a 9-tuple for a column-major 3x3 rotation matrix with axes corrected ala fixcoords
 	#return (1, 0, 0, 0, 1, 0, 0, 0, 1) # For testing purposes
@@ -33,10 +35,12 @@ def genrotmatrix(x, y, z): # Returns a 9-tuple for a column-major 3x3 rotation m
 		m[2][0], m[2][1], m[2][2],
 	)
 
+
 def pup_error(msg):
 	r = Blender.Draw.PupMenu("Error: %s%%t|OK" % msg)
 	Blender.Redraw()
 	Blender.Exit()
+
 
 def do_add_libobject():
 	curscene = bpy.data.scenes.active
@@ -64,6 +68,7 @@ def do_add_libobject():
 		for obj in curscene.objects:
 			obj.sel = False
 		new_obj.sel = True
+
 
 def do_resanify():
 	# First, make sure all objects in base scenes are properly named
@@ -145,6 +150,7 @@ def do_resanify():
 				obj.size = (1.0, 1.0, 1.0)
 	
 	Blender.Draw.PupMenu("Resanification went OK%t|Yeah man, cool")
+
 
 def do_export():
 	meshes, materials, areas, missions = {}, {}, {}, {}
@@ -242,8 +248,23 @@ def do_export():
 	
 	Blender.Draw.PupMenu("Exported just fine%t|OK, thanks a bunch")
 
+
+def do_run_game():
+	curscene = bpy.data.scenes.active.name
+	args = []
+	if curscene.startswith("A") and not curscene.endswith("-Base"):
+		# We're on a mission scene, so we can have the game jump right to it
+		r = Blender.Draw.PupMenu("Start the game where?%%t|At mission %s%%x0|At the title screen%%x1" % curscene)
+		if r < 0:
+			return
+		elif r == 0:
+			args.append("-m")
+			args.append(curscene)
+	os.system(" ".join((os.path.join(WORKING_DIR, os.pardir, "orbit-ribbon.py"),) + tuple(args)))
+
+
 def menu():
-	menu = ("Add Library Object", "Resanify All Scenes", "Export")
+	menu = ("Add Library Object", "Resanify All Scenes", "Export", "Run Game")
 	r = Blender.Draw.PupMenu("Orbit Ribbon Level Editing%t|" + "|".join(["%s%%x%u" % (name, num) for num, name in enumerate(menu)]))
 	if r >= 0:
 		if menu[r] == "Add Library Object":
@@ -252,6 +273,8 @@ def menu():
 			do_resanify()
 		elif menu[r] == "Export":
 			do_export()
+		elif menu[r] == "Run Game":
+			do_run_game()
 	Blender.Redraw()
 
 ### Execution begins here
