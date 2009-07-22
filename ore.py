@@ -3,7 +3,7 @@ from __future__ import division
 import ode, ConfigParser, StringIO, pickle
 from OpenGL.GL import *
 
-import app, editorexport, collision, sky, missioncon, gameobj, avatar, target
+import app, oreshared, collision, sky, missioncon, gameobj, avatar, target
 from geometry import *
 from util import *
 
@@ -11,7 +11,7 @@ class SimpleOREGameObj(gameobj.GameObj):
 	"""A GameObj which acts as a fixed piece of landscape (skyscape?), with display and collision geometry loaded from a given OREMesh.
 	
 	Data attributes:
-	objname - The object name (i.e. "Circle.001") used in the piece of exported data this object came from. This is purely for debugging purposes.
+	objname - The object name (i.e. "Circle.001") used in the piece of exported data this object came from. This is kept purely for debugging purposes.
 	"""
 	def __init__(self, oremesh, objname, pos, rot):
 		"""Creates a SimpleOREGameObj with the given object name, position, rotation (in exportdata format), and OREMesh."""
@@ -62,8 +62,8 @@ class OREArea:
 class OREMesh:
 	"""A mesh, with associated material, from an ORE data file. You can draw it or build an ODE TriMesh geom from it."""
 	def __init__(self, eemesh, eemat):
-		self._eemesh = eemesh # An editorexport.Mesh object
-		self._eemat = eemat # An editorexport.Material object, or None if there is no material
+		self._eemesh = eemesh # An oreshared.Mesh object
+		self._eemat = eemat # An oreshared.Material object, or None if there is no material
 		self._trimesh_data = None
 		self._gl_list_num = None
 	
@@ -99,7 +99,7 @@ class OREManager:
 	This format consists of a pickle with these objects in order:
 		- A title string
 		- A format version number (for right now, this is always 1)
-		- An editorexport.ExportPackage object
+		- An oreshared.ExportPackage object
 	The first string is the visible name (name intended for the player to look at) of the entire ORE file.
 	
 	Data attributes (read only):

@@ -1,12 +1,11 @@
-import Blender, bpy, os, cPickle, sys, ConfigParser, StringIO
+import Blender, bpy, os, cPickle, sys, ConfigParser, StringIO, zipfile
 from math import *
 
 WORKING_DIR = os.path.dirname(Blender.Get("filename"))
-BLENDER_FILE = os.path.basename(Blender.Get("filename"))
+BLENDER_FILENAME = os.path.basename(Blender.Get("filename"))
 
 sys.path.append(os.path.join(WORKING_DIR, os.path.pardir))
-
-import editorexport
+import oreshared # This is found in the directory we just located above
 
 MATRIX_BLEN2ORE = Blender.Mathutils.RotationMatrix(-90, 4, 'x')
 MATRIX_INV_BLEN2ORE = MATRIX_BLEN2ORE.copy().invert()
@@ -153,11 +152,35 @@ def do_resanify():
 
 
 def do_export():
-	meshes, materials, areas, missions = {}, {}, {}, {}
-	
 	# FIXME: Need to also consider auxillary objects within LIB scenes
 	# Though must keep in mind that objects in LIB scenes only have position/rotation relative to each other
 	# Probably should turn Mission and Area into one class, Scene
+	
+	target_fn = BLENDER_FILENAME[:-6] + ".ore" # Replace ".blend" with ".ore" for output filename (ore = Orbit Ribbon Export)
+	zfh = zipfile.ZipFile(
+		file = os.path.join(WORKING_DIR, os.path.pardir, "orefiles", target_fn),
+		mode = "w",
+		compression = zipfile.ZIP_DEFLATED
+	)
+	zfh.writestr("ore-version", "1") # Version of the ORE file format in use (this will be 1 until I make a backwards-incompatible change post release)
+	
+	conf = None
+	try:
+		conf = "\n".join(bpy.data.texts["oreconf"].asLines())
+	except exceptions.KeyError:
+		pup_error("Unable to find the 'oreconf' text!")
+	confparser = ConfigParser.ConfigParser()
+	try:
+		confparser.readfp(StringIO.StringIO(conf))
+	except Exception, e:
+		pup_error("Unable to parse the oreconf text: %s" % str(e))
+	pkgname = None
+	try:
+		pkgname = confparser.get("Package", "visible_name")
+	except Exception, e:
+		pup_error("Unable to extract 'visible_name' from '[Package]' section!'")
+	zfh.writestr("ore-name", pkgname) # The player-visible name of the ORE package
+	zfh.writestr("ore-conf", conf)
 	
 	for scene in bpy.data.scenes:
 		name = scene.name
@@ -189,11 +212,12 @@ def do_export():
 			if len(exp_obj_tuples) == 0:
 				continue
 			if name.endswith("-Base"):
-				areas[name] = editorexport.Area(tuple(exp_obj_tuples))
+				zfh.writestr("area-%s" % name[:-5], cPickle.dumps(oreshared.Area(tuple(exp_obj_tuples)), 2))
 			else:
 				area_name = name[:-4] + "-Base" # Remove the "-M##" and add "-Base" to get base area scene name
-				missions[name] = editorexport.Mission(area_name, tuple(exp_obj_tuples))
+				zfh.writestr("mission-%s" % name, cPickle.dumps(oreshared.Mission(area_name, tuple(exp_obj_tuples)), 2))
 	
+	doneMats = set()
 	for mesh in bpy.data.meshes:
 		name = mesh.name
 		matName = None
@@ -209,43 +233,23 @@ def do_export():
 				# Convert quads to triangles
 				faces.append((f.verts[0].index, f.verts[1].index, f.verts[2].index))
 				faces.append((f.verts[0].index, f.verts[2].index, f.verts[3].index))
-		meshes[name] = editorexport.Mesh(
+		omesh = oreshared.Mesh(
 			vertices = tuple(vertices),
 			faces = tuple(faces),
 			material = matName
 		)
+		zfh.writestr("mesh-%s" % name, cPickle.dumps(omesh, 2))
 		
-		if matName is not None and matName not in materials:
+		if matName is not None and matName not in doneMats:
+			doneMats.add(matName)
 			mat = bpy.data.materials[matName]
-			materials[matName] = editorexport.Material(
+			omat = oreshared.Material(
 				dif_col = tuple(mat.rgbCol),
 				spe_col = tuple(mat.specCol),
 			)
+			zfh.writestr("material-%s" % matName, cPickle.dumps(omat, 2))
 	
-	conf = None
-	try:
-		conf = "\n".join(bpy.data.texts["oreconf"].asLines())
-	except exceptions.KeyError:
-		pup_error("Unable to find the 'oreconf' text!")
-	confparser = ConfigParser.ConfigParser()
-	try:
-		confparser.readfp(StringIO.StringIO(conf))
-	except Exception, e:
-		pup_error("Unable to parse the oreconf text: %s" % str(e))
-	pkgname = None
-	try:
-		pkgname = confparser.get("Package", "visible_name")
-	except Exception, e:
-		pup_error("Unable to extract 'visible_name' from '[Package]' section!'")
-	
-	pkg = editorexport.ExportPackage(meshes, materials, areas, missions, conf)
-	target_fn = BLENDER_FILE[:-6] + ".ore" # Replace ".blend" with ".ore" for output filename (ore = Orbit Ribbon Export)
-	fh = file(os.path.join(WORKING_DIR, os.path.pardir, "orefiles", target_fn), "wb")
-	cPickle.dump(pkgname, fh, 2) # First object in the pickle is the player-visible name of the package, so that packages can be quickly scanned
-	cPickle.dump(1, fh, 2) # Second object is the number 1, which is the version of the ORE file format in use
-	cPickle.dump(pkg, fh, 2) # Third object in the pickle is the ExportPackage itself
-	fh.close()
-	
+	zfh.close()
 	Blender.Draw.PupMenu("Exported just fine%t|OK, thanks a bunch")
 
 
