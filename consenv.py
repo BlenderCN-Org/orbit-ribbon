@@ -17,12 +17,12 @@ import camera
 import collision
 import colors
 import console
-import editorexport
 import gameobj
 from geometry import *
 import joy
 import missioncon
 import ore
+import oreshared
 import resman
 import sky
 import target

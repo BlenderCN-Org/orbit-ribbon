@@ -32,7 +32,7 @@ def opt_mission(arg):
 		areapart = parts[0]
 		missionpart = parts[1]
 		if len(areapart) == 3 and areapart[0] == "A" and areapart[1:].isdigit():
-			jump_area_name = areapart + "-Base"
+			jump_area_name = areapart
 		if len(missionpart) == 3 and missionpart[0] == "M" and missionpart[1:].isdigit():
 			jump_mission_name = arg
 	

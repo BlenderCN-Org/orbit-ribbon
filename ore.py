@@ -1,6 +1,6 @@
 from __future__ import division
 
-import ode, ConfigParser, StringIO, pickle
+import ode, ConfigParser, StringIO, pickle, zipfile, cPickle
 from OpenGL.GL import *
 
 import app, oreshared, collision, sky, missioncon, gameobj, avatar, target
@@ -45,7 +45,7 @@ class OREArea:
 	"""Describes an area (a level) that the player can go to, loaded from an ORE data file. Each area has one or more missions.
 	
 	Data attributes:
-	name - A string with the internal name of the area (i.e. "A01-Base")
+	name - A string with the internal name of the area (i.e. "A01")
 	visible_name - A string with the player-visible name of the area (i.e. "Quaternion Jungle")
 	sky_stuff - The sky.SkyStuff object for this area, which is used to position it in the Smoke Ring.
 	objects - A sequence of GameObjs that apply to all missions in this area; the basic geometry of the level.
@@ -96,11 +96,7 @@ class OREMesh:
 class OREManager:
 	"""Loads and interprets data in the Orbit Ribbon Export format.
 	
-	This format consists of a pickle with these objects in order:
-		- A title string
-		- A format version number (for right now, this is always 1)
-		- An oreshared.ExportPackage object
-	The first string is the visible name (name intended for the player to look at) of the entire ORE file.
+	This format consists of a zipfile with various files describing areas, missions, object meshes, materials, textures, etc.
 	
 	Data attributes (read only):
 	visible_name - The player-appropriate name of the ORE file.
@@ -109,31 +105,35 @@ class OREManager:
 	"""
 	def __init__(self, fh):
 		"""Creates an OREManager based on the data in the given filehandle."""
-		# Throw away the title string
-		pickle.load(fh)
-
-		# Make sure we got an ORE with a version number we understand
-		vnum = pickle.load(fh)
-		if vnum != 1:
-			raise RuntimeError("Unknown ORE file version '%s'. Perhaps you need to get the newest version of the game." % str(vnum))
+		zfh = zipfile.ZipFile(fh)
+		fnames = {} # Lists of names ordered by section, so that i.e. fnames["mesh"]["donut"] exists for a file named "mesh-donut"
+		for zfn in zfh.namelist():
+			dashidx = zfn.find("-")
+			if dashidx == -1:
+				raise RuntimeError()
+			secname, subname = zfn[:dashidx], zfn[(dashidx+1):]
+			if secname not in fnames:
+				fnames[secname] = []
+			fnames[secname].append(subname)
 		
-		# Load the ExportPackage
-		expkg = pickle.load(fh)
-
+		# Make sure we got an ORE with a version number we understand
+		vnum = int(zfh.read("ore-version"))
+		if vnum != 1:
+			raise RuntimeError("Unknown ORE file version '%u'. Install a newer version of the game to use this file." % vnum)
+		
 		# Load the config from the ExportPackage
 		cparser = ConfigParser.ConfigParser()
-		cparser.readfp(StringIO.StringIO(expkg.conf))
+		cparser.readfp(StringIO.StringIO(zfh.read("ore-conf")))
 		
 		self.meshes = {}
-		for meshname in expkg.meshes:
-			mesh = expkg.meshes[meshname]
-			matname = mesh.material
+		for meshname in fnames["mesh"]:
+			mesh = cPickle.loads(zfh.read("mesh-%s" % meshname))
 			mat = None
-			if matname is not None:
-				mat = expkg.materials[matname]
+			if mesh.material is not None:
+				mat = cPickle.loads(zfh.read("material-%s" % mesh.material))
 			self.meshes[meshname] = OREMesh(mesh, mat)
 		
-		def gobj_from_eeobj(objname, meshname, pos, rot):
+		def gobj_from_oreobj(objname, meshname, pos, rot):
 			ppos = Point(*pos)
 			
 			# FIXME Need a better way of registering special GameObjs associated with LIB objects
@@ -145,9 +145,14 @@ class OREManager:
 				return SimpleOREGameObj(self.meshes[meshname], objname, ppos, rot)
 		
 		self.areas = {}
-		for areaname in expkg.areas:
+		for areaname in fnames["area"]:
+			area = cPickle.loads(zfh.read("area-%s" % areaname))
+			
 			missions = {}
-			for missionname in expkg.areas[areaname].missions:
+			for missionname in fnames["mission"]:
+				if not missionname.startswith("%s-" % areaname):
+					continue
+				mission = cPickle.loads(zfh.read("mission-%s" % missionname))
 				ore_mission = OREMission(
 					name = missionname,
 					visible_name = cparser.get(missionname, "visible_name"),
@@ -155,7 +160,7 @@ class OREManager:
 						win_cond_func = missioncon.__dict__[cparser.get(missionname, "win_cond_func")](),
 						timer_start_func = missioncon.__dict__[cparser.get(missionname, "timer_start_func")](),
 					),
-					objects = [gobj_from_eeobj(*x) for x in expkg.missions[missionname].objects]
+					objects = [gobj_from_oreobj(*x) for x in mission.objects]
 				)
 				missions[missionname] = ore_mission
 			
@@ -174,7 +179,7 @@ class OREManager:
 					),
 					t3_angle = 0.8,
 				),
-				objects = [gobj_from_eeobj(*x) for x in expkg.areas[areaname].objects],
+				objects = [gobj_from_oreobj(*x) for x in area.objects],
 				missions = missions
 			)
 			self.areas[areaname] = ore_area

@@ -216,7 +216,7 @@ class TitleScreenManager:
 			if app.cur_area is None:
 				for e in app.events:
 					if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
-						app.init_area("A01-Base") # FIXME: Allow the user to select which area they want to go to
+						app.init_area("A01") # FIXME: Allow the user to select which area they want to go to
 						app.sky_stuff = sky.SkyStuff() # Override the sky choice made by the area loader
 						ang = rev2rad(area.sky_stuff.game_angle)
 						d = sky.GOLD_DIST + area.sky_stuff.game_d_offset
