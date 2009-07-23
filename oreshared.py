@@ -15,19 +15,31 @@ class Mesh:
 		self.vertices = vertices
 		self.faces = faces
 		self.material = material
-		self._pkg_parent = None
 	
 
 class Material:
-	"""A material (texture and appearance) exported from the 3D editor.
+	"""A material (surface appearance) exported from the 3D editor.
 	
 	Data attributes:
 	dif_col, spe_col - The diffuse and specular colors, each as a 3-tuple.
+	textures - A sequence of names of Texture objects associated with this Material.
 	"""
-	def __init__(self, dif_col, spe_col):
+	def __init__(self, dif_col, spe_col, textures):
 		self.dif_col = dif_col
 		self.spe_col = spe_col
-		self._pkg_parent = None
+		self.textures = textures
+
+
+class Texture:
+	"""A texture exported from the 3D editor.
+	
+	This is not the image itself, but a description of how that image is to be used.
+	
+	Data attributes:
+	image - The name of the image to be used.
+	"""
+	def __init__(self, image):
+		self.image = image
 
 
 class Area:
@@ -35,12 +47,9 @@ class Area:
 	
 	Data attributes:
 	objects - A sequence of area objects as (objname, meshname, position, rotmatrix).
-	missions - A sequence of named missions in the ExportPackage with this Area as their base.
 	"""
 	def __init__(self, objects):
 		self.objects = objects
-		self._pkg_parent = None
-		self.missions = [] # To be filled out by ExportPackage
 
 
 class Mission:
@@ -53,4 +62,3 @@ class Mission:
 	def __init__(self, area_name, objects):
 		self.area_name = area_name
 		self.objects = objects
-		self._pkg_parent = None

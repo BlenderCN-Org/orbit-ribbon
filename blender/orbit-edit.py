@@ -218,6 +218,8 @@ def do_export():
 				zfh.writestr("mission-%s" % name, cPickle.dumps(oreshared.Mission(area_name, tuple(exp_obj_tuples)), 2))
 	
 	doneMats = set()
+	doneTextures = set()
+	doneImages = set()
 	for mesh in bpy.data.meshes:
 		name = mesh.name
 		matName = None
@@ -243,9 +245,28 @@ def do_export():
 		if matName is not None and matName not in doneMats:
 			doneMats.add(matName)
 			mat = bpy.data.materials[matName]
+			textures = [] # The textures for this material
+			for tex in mat.getTextures():
+				if tex is None:
+					continue
+				texName = tex.tex.name
+				textures.append(texName)
+				
+				if texName in doneTextures:
+					continue
+				doneTextures.add(texName)
+				otex = oreshared.Texture(texName)
+				zfh.writestr("texture-%s" % texName, cPickle.dumps(otex, 2))
+				
+				if tex.tex.image is not None and tex.tex.image.name not in doneImages:
+					doneImages.add(tex.tex.image.name)
+					# ZIP_STORED disables compression, image already compressed
+					zfh.write(tex.tex.image.filename, "image-%s" % tex.tex.image.name, zipfile.ZIP_STORED)
+			
 			omat = oreshared.Material(
 				dif_col = tuple(mat.rgbCol),
 				spe_col = tuple(mat.specCol),
+				textures = tuple(textures)
 			)
 			zfh.writestr("material-%s" % matName, cPickle.dumps(omat, 2))
 	
