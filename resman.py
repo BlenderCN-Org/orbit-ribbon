@@ -1,5 +1,4 @@
-import pygame
-import os
+import pygame, os, StringIO
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
@@ -10,7 +9,7 @@ class SoundClip(object):
 	"""A sound clip.
 
 	Data attributes:
-	filename -- The filename that the sound was loaded from, or an empty string.
+	filename -- The filename that the sound was loaded from.
 	snd -- The pygame.mixer.Sound object.
 	"""
 	
@@ -35,7 +34,7 @@ class Texture(object):
 	"""An OpenGL 2D texture.
 	
 	Data attributes:
-	filename -- The filename that the texture was loaded from, or an empty string
+	filename -- The filename that the texture was loaded from.
 	glname -- The OpenGL texture name.
 	size -- The dimensions of the texture.
 	surf -- The PyGame surface.
@@ -43,8 +42,11 @@ class Texture(object):
 	
 	_cache = {} #Key: filename, value: Texture instance
 	
-	def __new__(cls, filename):
-		"""Creates a Texture from an image file, using pre-cached version if it exists."""
+	def __new__(cls, filename, datafunc = None):
+		"""Creates a Texture from an image file, using pre-cached version if it exists.
+		
+		If datafunc is specified, calls that to get the contents of the file instead of trying to open filename directly.
+		"""
 		
 		if Texture._cache.has_key(filename):
 			return Texture._cache[filename]
@@ -53,8 +55,12 @@ class Texture(object):
 			obj.filename = filename
 			Texture._cache[filename] = obj
 			obj.glname = glGenTextures(1)
-			fullpath = os.path.join(app.APP_DIR, 'images', filename)
-			surf = pygame.image.load(fullpath)
+			if not datafunc:
+				fh = file(os.path.join(app.APP_DIR, 'images', filename))
+			else:
+				fh = StringIO.StringIO(datafunc())
+			surf = pygame.image.load(fh)
+			fh.close()
 			obj.surf = surf
 			obj.size = (surf.get_width(), surf.get_height())
 			texData = pygame.image.tostring(surf, "RGBA", 1)

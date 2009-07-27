@@ -156,7 +156,7 @@ def sim_init():
 	
 	fh = file(os.path.join(APP_DIR, 'orefiles', 'main.ore'))
 	ore_man = ore.OREManager(fh)
-	fh.close()
+	#fh.close() # TODO If we have the ability to change ORE files mid-game, it must be possible to actually close this on demand. Maybe resman's job.
 
 	cur_area = None
 	cur_area_tstart = None

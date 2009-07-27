@@ -3,7 +3,7 @@ from __future__ import division
 import ode, ConfigParser, StringIO, pickle, zipfile, cPickle
 from OpenGL.GL import *
 
-import app, oreshared, collision, sky, missioncon, gameobj, avatar, target
+import app, oreshared, collision, sky, missioncon, gameobj, avatar, target, resman
 from geometry import *
 from util import *
 
@@ -61,33 +61,60 @@ class OREArea:
 
 class OREMesh:
 	"""A mesh, with associated material, from an ORE data file. You can draw it or build an ODE TriMesh geom from it."""
-	def __init__(self, eemesh, eemat):
+	def __init__(self, eemesh, zfh):
 		self._eemesh = eemesh # An oreshared.Mesh object
-		self._eemat = eemat # An oreshared.Material object, or None if there is no material
+		self._zfh = zfh # A zipfile handle from which we can load images
 		self._trimesh_data = None
 		self._gl_list_num = None
+		self._texdict = {}
 	
 	def trimesh_data(self):
 		"""Returns an ode.TriMeshData for this mesh. This is cached after the first calculation."""
 		if self._trimesh_data is None:
 			self._trimesh_data = ode.TriMeshData()
-			self._trimesh_data.build([v for v, n in self._eemesh.vertices], self._eemesh.faces)
+			self._trimesh_data.build([v for v, n in self._eemesh.vertices], [f for f, i, u in self._eemesh.faces])
 		return self._trimesh_data
 	
 	def draw_gl(self):
 		"""Draws the object using OpenGL commands. This creates a display list when it is first ran."""
 		if self._gl_list_num is None:
-			self._gl_list_num = glGenLists(1) # FIXME Should free list on destruction
+			self._gl_list_num = glGenLists(1) # TODO Should free list on destruction
 			glNewList(self._gl_list_num, GL_COMPILE)
-			if self._eemat is not None:
-				glMaterialfv(GL_FRONT, GL_DIFFUSE, self._eemat.dif_col + (1.0,))
-				glMaterialfv(GL_FRONT, GL_SPECULAR, self._eemat.spe_col + (1.0,))
+			# TODO Consider re-adding this sort of material data to the ORE format. Maybe per-vertex?
+			#if self._eemat is not None:
+			#	glMaterialfv(GL_FRONT, GL_DIFFUSE, self._eemat.dif_col + (1.0,))
+			#	glMaterialfv(GL_FRONT, GL_SPECULAR, self._eemat.spe_col + (1.0,))
+			# FIXME Just testing
+			curImg = None
+			# Pick a noticeable red color for untextured meshes
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 0.0, 1.0,))
+			glMaterialfv(GL_FRONT, GL_SPECULAR, (0.1, 0.0, 0.1, 1.0,))
 			glBegin(GL_TRIANGLES)
-			for vindexes in self._eemesh.faces:
-				for vi in vindexes:
+			for vertIdxs, imgIdx, uvIdxs in self._eemesh.faces:
+				if curImg != imgIdx:
+					# Got to change textures, leave vertex specification mode for a moment
+					glEnd()
+					if imgIdx is None:
+						# No image assigned to this face? Pick a noticeable purple color instead
+						glDisable(GL_TEXTURE_2D)
+						glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))
+						glMaterialfv(GL_FRONT, GL_SPECULAR, (0.1, 0.0, 0.1, 1.0,))
+					else:
+						if curImg is None:
+							# If textures aren't already enabled, enable them
+							glEnable(GL_TEXTURE_2D)
+						imgName = self._eemesh.images[imgIdx]
+						# TODO This is very messy. Would be better to refactor resman together with ore
+						glBindTexture(GL_TEXTURE_2D, resman.Texture("ORE-%s" % imgName, lambda: self._zfh.read("image-%s" % imgName)).glname)
+					curImg = imgIdx
+					glBegin(GL_TRIANGLES) # Okay, back to specifying vertices
+				for vi, ui in zip(vertIdxs, uvIdxs):
+					if ui is not None:
+						glTexCoord2fv(self._eemesh.uvpoints[ui])
 					glNormal3fv(self._eemesh.vertices[vi][1])
 					glVertex3fv(self._eemesh.vertices[vi][0])
 			glEnd()
+			glDisable(GL_TEXTURE_2D)
 			glEndList()
 		
 		glCallList(self._gl_list_num)
@@ -96,12 +123,12 @@ class OREMesh:
 class OREManager:
 	"""Loads and interprets data in the Orbit Ribbon Export format.
 	
-	This format consists of a zipfile with various files describing areas, missions, object meshes, materials, textures, etc.
+	This format is actually just a zipfile containing various files describing areas, missions, object meshes, texture images, etc.
 	
 	Data attributes (read only):
 	visible_name - The player-appropriate name of the ORE file.
 	meshes - A dictionary of OREMesh instances, one for each mesh in the ORE data.
-	areas - A dictionary of area.AreaDesc instances, one for each area in the ORE data.
+	areas - A dictionary of OREArea instances, one for each area in the ORE data.
 	"""
 	def __init__(self, fh):
 		"""Creates an OREManager based on the data in the given filehandle."""
@@ -128,10 +155,7 @@ class OREManager:
 		self.meshes = {}
 		for meshname in fnames["mesh"]:
 			mesh = cPickle.loads(zfh.read("mesh-%s" % meshname))
-			mat = None
-			if mesh.material is not None:
-				mat = cPickle.loads(zfh.read("material-%s" % mesh.material))
-			self.meshes[meshname] = OREMesh(mesh, mat)
+			self.meshes[meshname] = OREMesh(mesh, zfh)
 		
 		def gobj_from_oreobj(objname, meshname, pos, rot):
 			ppos = Point(*pos)
