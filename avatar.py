@@ -31,6 +31,8 @@ class Avatar(gameobj.GameObj):
 		self._relThrustVec = Point() # Indicates to the drawing routine how much the player is thrusting in each direction
 		self._relTorqueVec = Point() # Indicates to the drawing routine how much the player is torquing along each axis
 		self._relCTorqueVec = Point() # Indicates to the drawing routine how much automatic counter-torque is being applied along each axis
+		
+		self.running = False
 	
 	def step(self):	
 		# TODO: Consider adding linear and angular velocity caps
@@ -79,23 +81,35 @@ class Avatar(gameobj.GameObj):
 			csx = avel[0]*-CTURN_COEF/app.maxfps
 			self.body.addRelTorque((csx, 0.0, 0.0))
 		
-		# Roll and counterroll
-		if app.buttons[joy.L1] == joy.DOWN:
+		# Pre-run, roll and counterroll
+		if app.buttons[joy.L1] == joy.DOWN and app.buttons[joy.R1] == joy.DOWN:
+			self.running = True
+		elif app.buttons[joy.L1] == joy.UP and app.buttons[joy.R1] == joy.UP:
+			self.running = False
+		elif app.buttons[joy.L1] == joy.DOWN:
+			self.running = False
 			sz = -MAX_ROLL/app.maxfps
 			self.body.addRelTorque((0.0, 0.0, sz))
 		elif app.buttons[joy.R1] == joy.DOWN:
+			self.running = False
 			sz = MAX_ROLL/app.maxfps
 			self.body.addRelTorque((0.0, 0.0, sz))
-		else:
+		
+		if app.buttons[joy.L1] == app.buttons[joy.R1]: # If both L1 and R1 are up or both are down
 			csz = avel[2]*-CROLL_COEF/app.maxfps
 			self.body.addRelTorque((0.0, 0.0, csz))
-		
+
 		self._reqlTorqueVec = Point(sx, sy, sz)
 		self._reqlCTorqueVec = Point(csz, csy, csz)
 	
 	def indraw(self):
-		# The body model 
+		# The body model
+		# FIXME Testing, need to do this with an actual animation later
+		glPushMatrix()
+		if self.running:
+			glRotatef(-90, 1, 0, 0)
 		self._oremesh.draw_gl()
+		glPopMatrix()
 		
 		# Thrust indication cones
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, (0.8, 0.8, 0.8, 1.0))
