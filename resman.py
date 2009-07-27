@@ -69,6 +69,28 @@ class Texture(object):
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 			return obj
+	
+	def draw_2d(self, left, top, width, height):
+		"""Draws the texture as a 2D image at the given position and size.
+		
+		OpenGL must be in a proper state for drawing 2D images before you call this.
+		"""
+		glEnable(GL_TEXTURE_2D)
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+		glBindTexture(GL_TEXTURE_2D, self.glname)
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+		glBegin(GL_QUADS)
+		glTexCoord2f(0.0, 1.0)
+		glVertex2f(left, top)
+		glTexCoord2f(1.0, 1.0)
+		glVertex2f(left + width, top)
+		glTexCoord2f(1.0, 0.0)
+		glVertex2f(left + width, top + height)
+		glTexCoord2f(0.0, 0.0)
+		glVertex2f(left, top + height)
+		glEnd()
+		glDisable(GL_TEXTURE_2D)
 
 def unload_all():
 	"""Unloads all resources.
