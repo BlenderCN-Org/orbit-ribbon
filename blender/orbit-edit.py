@@ -217,59 +217,56 @@ def do_export():
 				area_name = name[:-4] + "-Base" # Remove the "-M##" and add "-Base" to get base area scene name
 				zfh.writestr("mission-%s" % name, cPickle.dumps(oreshared.Mission(area_name, tuple(exp_obj_tuples)), 2))
 	
-	doneMats = set()
-	doneTextures = set()
-	doneImages = set()
+	copiedImages = set() # Set of image names that have already been copied into the zipfile
 	for mesh in bpy.data.meshes:
 		name = mesh.name
-		matName = None
-		if len(mesh.materials) > 0:
-			matName = mesh.materials[0].name
 		
 		vertices = [(fixcoords(v.co), fixcoords(v.no)) for v in mesh.verts]
+		images = {}; nextImgIdx = 0 # The images dictionary maps image names to integers, with the first image found being 0, second 1, etc.
+		uvPoints = {}; nextUvIdx = 0 # Just like the images dictionary, but for 2-tuples defining UV coordinates
 		faces = []
 		for f in mesh.faces:
-			if len(f.verts) == 3:
-				faces.append(tuple([v.index for v in f.verts]))
-			else:
+			imgIdx, imgName = None, None
+			try:
+				imgName = f.image.name
+			except ValueError:
+				pass
+			if imgName is not None:
+				if imgName not in images:
+					images[imgName] = nextImgIdx
+					nextImgIdx += 1
+					if imgName not in copiedImages:
+						copiedImages.add(imgName)
+						# ZIP_STORED disables compression, image already compressed
+						zfh.write(f.image.filename, "image-%s" % imgName, zipfile.ZIP_STORED)
+				imgIdx = images[imgName]
+			
+			offsets = [(0,1,2)]
+			if len(f.verts) != 3:
 				# Convert quads to triangles
-				faces.append((f.verts[0].index, f.verts[1].index, f.verts[2].index))
-				faces.append((f.verts[0].index, f.verts[2].index, f.verts[3].index))
+				offsets.append((0,2,3))
+			for a, b, c in offsets:
+				vIdxs = (f.verts[a].index, f.verts[b].index, f.verts[c].index)
+				uIdxs = (None, None, None)
+				if imgIdx is not None:
+					uIdxs = []
+					for i in a, b, c:
+						uvPt = tuple(f.uv[i])
+						if uvPt not in uvPoints:
+							uvPoints[uvPt] = nextUvIdx
+							nextUvIdx += 1
+						uIdxs.append(uvPoints[uvPt])
+					uIdxs = tuple(uIdxs)
+				faces.append((vIdxs, imgIdx, uIdxs))
+		
 		omesh = oreshared.Mesh(
 			vertices = tuple(vertices),
+			uvpoints = tuple([i[0] for i in sorted(uvPoints.items(), cmp = lambda a, b: cmp(a[1],b[1]))]),
+			images = tuple([i[0] for i in sorted(images.items(), cmp = lambda a, b: cmp(a[1],b[1]))]),
 			faces = tuple(faces),
-			material = matName
 		)
 		zfh.writestr("mesh-%s" % name, cPickle.dumps(omesh, 2))
 		
-		if matName is not None and matName not in doneMats:
-			doneMats.add(matName)
-			mat = bpy.data.materials[matName]
-			textures = [] # The textures for this material
-			for tex in mat.getTextures():
-				if tex is None:
-					continue
-				texName = tex.tex.name
-				textures.append(texName)
-				
-				if texName in doneTextures:
-					continue
-				doneTextures.add(texName)
-				otex = oreshared.Texture(texName)
-				zfh.writestr("texture-%s" % texName, cPickle.dumps(otex, 2))
-				
-				if tex.tex.image is not None and tex.tex.image.name not in doneImages:
-					doneImages.add(tex.tex.image.name)
-					# ZIP_STORED disables compression, image already compressed
-					zfh.write(tex.tex.image.filename, "image-%s" % tex.tex.image.name, zipfile.ZIP_STORED)
-			
-			omat = oreshared.Material(
-				dif_col = tuple(mat.rgbCol),
-				spe_col = tuple(mat.specCol),
-				textures = tuple(textures)
-			)
-			zfh.writestr("material-%s" % matName, cPickle.dumps(omat, 2))
-	
 	zfh.close()
 	Blender.Draw.PupMenu("Exported just fine%t|OK, thanks a bunch")
 
@@ -289,17 +286,15 @@ def do_run_game():
 
 
 def menu():
-	menu = ("Add Library Object", "Resanify All Scenes", "Export", "Run Game")
-	r = Blender.Draw.PupMenu("Orbit Ribbon Level Editing%t|" + "|".join(["%s%%x%u" % (name, num) for num, name in enumerate(menu)]))
+	menu_items = (
+		("Add Library Object", do_add_libobject),
+		("Resanify All Scenes", do_resanify),
+		("Export", do_export),
+		("Run Game", do_run_game),
+	)
+	r = Blender.Draw.PupMenu("Orbit Ribbon Level Editing%t|" + "|".join(["%s%%x%u" % (name, num) for num, (name, func) in enumerate(menu_items)]))
 	if r >= 0:
-		if menu[r] == "Add Library Object":
-			do_add_libobject()
-		elif menu[r] == "Resanify All Scenes":
-			do_resanify()
-		elif menu[r] == "Export":
-			do_export()
-		elif menu[r] == "Run Game":
-			do_run_game()
+		menu_items[r][1]()
 	Blender.Redraw()
 
 ### Execution begins here

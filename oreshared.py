@@ -1,45 +1,25 @@
 from __future__ import division
 
-### This is the common library connecting orbit-edit.py (which depends on the Blender API) and the rest of Orbit Ribbon via ore.py
-### This deliberately has no dependencies on Orbit Ribbon code; it's the ore.OREManager's job to turn this data into useful objects for the game
+### This is the common library connecting orbit-edit.py (which depends on the Blender API) and the rest of Orbit Ribbon via ore.py.
+### It deliberately has no dependencies on Orbit Ribbon code; it's ore.OREManager's job to turn this data into useful objects for the game.
 
 class Mesh:
-	"""A mesh (collection of vertices and faces w/ normals) exported from the 3D editor.
+	# FIXME Need to put material properties like specularity here. First off, need to figure out materials/lighting model.
+	"""A mesh (collection of vertices and faces w/ normals and texture data) exported from the 3D editor.
 	
 	Data attributes:
-	vertices - A sequence of (vertex tuple, normal vector tuple).
-	faces - A sequence of (vi, vi, vi) tuples describing faces, where vi is an index into vertices.
-	material - A string describing the name of the Material for this Mesh, or None if there is no Material.
+	vertices - A sequence of (vertex tuple, normal vector tuple) tuples describing vertices.
+	uvpoints - A sequence of 2-tuples describing UV texture coordinate positions.
+	images - A sequence of strings, each a name of an Image used for this Mesh's texture.
+	faces - A sequence of ((vi, vi, vi), ii, (ui, ui, ui)) tuples describing faces.
+		In the above, vi is an index into vertices, ii an index into images, and ui an index into uvpoints.
+		If the face has no image, ii and ui values will all be None.
 	"""
-	def __init__(self, vertices, faces, material):
+	def __init__(self, vertices, uvpoints, images, faces):
 		self.vertices = vertices
+		self.uvpoints = uvpoints
+		self.images = images
 		self.faces = faces
-		self.material = material
-	
-
-class Material:
-	"""A material (surface appearance) exported from the 3D editor.
-	
-	Data attributes:
-	dif_col, spe_col - The diffuse and specular colors, each as a 3-tuple.
-	textures - A sequence of names of Texture objects associated with this Material.
-	"""
-	def __init__(self, dif_col, spe_col, textures):
-		self.dif_col = dif_col
-		self.spe_col = spe_col
-		self.textures = textures
-
-
-class Texture:
-	"""A texture exported from the 3D editor.
-	
-	This is not the image itself, but a description of how that image is to be used.
-	
-	Data attributes:
-	image - The name of the image to be used.
-	"""
-	def __init__(self, image):
-		self.image = image
 
 
 class Area:
