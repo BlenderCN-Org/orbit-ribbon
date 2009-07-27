@@ -1,6 +1,6 @@
 from __future__ import division
 
-import pygame
+import pygame, os
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
@@ -97,6 +97,42 @@ class _TitleScreenCamera(camera.Camera):
 					return interpolate(start_camvals, end_camvals, (t-start_pt)/(end_pt-start_pt), interp_mode)
 			else:
 				return stages[-1][2]
+
+
+class Animation:
+	"""Displays a 2D animation.
+	
+	The animation will not skip frames.
+	
+	Data attributes:
+	textures - A sequence of resman.Textures to draw
+	delay - How many milliseconds should pass between frames
+	"""
+	def __init__(self, dirname, delay):
+		"""Creates a new Animation using the sequentially numbered PNGs found in the given directory."""
+		self.textures = []
+		for fn in sorted(os.listdir(os.path.join(app.APP_DIR, 'images', dirname))):
+			if fn.endswith(".png"):
+				self.textures.append(resman.Texture(os.path.join(dirname, fn)))
+
+		self.delay = delay
+		self._cur_frame = 0 # Index of the current frame
+		self._last_frame_time = None # Tick time at which the previous frame was displayed, None if no frame displayed yet
+	
+	def draw(self, left, top, width, height):
+		"""Draws the current at the given position and size.
+		
+		OpenGL must be in a 2D drawing mode before this is called.
+		"""
+		now = pygame.time.get_ticks()
+		if self._last_frame_time is None:
+			self._last_frame_time = now
+		elif now - self._last_frame_time > self.delay:
+			self._cur_frame += 1
+			if self._cur_frame > (len(self.textures)-1):
+				self._cur_frame = 0
+			self._last_frame_time = now
+		self.textures[self._cur_frame].draw_2d(left, top, width, height)
 
 
 class TitleScreenManager:

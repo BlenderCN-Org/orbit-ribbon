@@ -86,8 +86,8 @@ class OREMesh:
 			#	glMaterialfv(GL_FRONT, GL_SPECULAR, self._eemat.spe_col + (1.0,))
 			# FIXME Just testing
 			curImg = None
-			# Pick a noticeable red color for untextured meshes
-			glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 0.0, 1.0,))
+			# Pick a noticeable purple color for untextured meshes
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))
 			glMaterialfv(GL_FRONT, GL_SPECULAR, (0.1, 0.0, 0.1, 1.0,))
 			glBegin(GL_TRIANGLES)
 			for vertIdxs, imgIdx, uvIdxs in self._eemesh.faces:
