@@ -71,4 +71,10 @@ class AnimManager:
 		This is useful for calling from indraw() on GameObjs which advance the frame on step(). That way, you can
 		use the animation for game logic and also for drawing.
 		"""
-		return self.ore_anim.frames[self.cur_frame_idx]
+		if self.lock:
+			if self.reverse:
+				return self.ore_anim.frames[len(self.ore_anim.frames)-1]
+			else:
+				return self.ore_anim.frames[0]
+		else:
+			return self.ore_anim.frames[self.cur_frame_idx]
