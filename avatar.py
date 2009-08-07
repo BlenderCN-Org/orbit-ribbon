@@ -85,7 +85,10 @@ class Avatar(gameobj.GameObj):
 			self.body.addRelTorque((csx, 0.0, 0.0))
 		
 		# Moving between fly mode and prerun mode
-		if app.buttons[joy.L1] == joy.DOWN and app.buttons[joy.R1] == joy.DOWN:
+		if (
+			(app.buttons[joy.L1] == joy.DOWN and app.buttons[joy.R1] == joy.DOWN)
+			or ((self._mode == MODE_FLY_TO_PRERUN or self._mode == MODE_PRERUN) and (app.buttons[joy.L1] == joy.DOWN or app.buttons[joy.R1] == joy.DOWN))
+		):
 			if self._mode == MODE_FLY:
 				self._anim = anim.AnimManager(ore_anim = self._oreman.animations["LIBAvatar-FlyToPrerun"])
 				self._mode = MODE_FLY_TO_PRERUN
