@@ -156,6 +156,8 @@ def do_export():
 	# Though must keep in mind that objects in LIB scenes only have position/rotation relative to each other
 	# Probably should turn Mission and Area into one class, Scene
 
+	Blender.Window.DrawProgressBar(0.0, "Initializing export")
+	
 	# Record the frame the editor was in before we started mucking about
 	orig_frame = Blender.Get("curframe")
 	
@@ -184,6 +186,8 @@ def do_export():
 		pup_error("Unable to extract 'visible_name' from '[Package]' section!'")
 	zfh.writestr("ore-name", pkgname) # The player-visible name of the ORE package
 	zfh.writestr("ore-conf", conf)
+
+	Blender.Window.DrawProgressBar(0.1, "Exporting Mission and Area data")
 	
 	for scene in bpy.data.scenes:
 		name = scene.name
@@ -269,13 +273,20 @@ def do_export():
 		)
 		zfh.writestr("mesh-%s" % tgtName, cPickle.dumps(omesh, 2))
 	
+	progress = 0.2
+	progressInc = (1.0 - progress)/(len(bpy.data.objects) + len(bpy.data.actions))
+	
 	for obj in bpy.data.objects:
+		Blender.Window.DrawProgressBar(progress, "Exporting object meshes and images")
+		progress += progressInc
 		# We're only interested in non-LIB mesh objects in missions, and also we want one copy of each LIB mesh object
 		# Precondition: The LIB object in its own scene is the one that doesn't end in .###
 		if obj.type == 'Mesh' and not (obj.name.startswith("LIB") and obj.name[-4] == "." and obj.name[-3:].isdigit()):
 			writeMesh(obj, obj.name)
 	
 	for action in bpy.data.actions:
+		Blender.Window.DrawProgressBar(progress, "Exporting animation meshes")
+		progress += progressInc
 		if not action.name.startswith("LIB"):
 			continue
 		
@@ -296,6 +307,7 @@ def do_export():
 		oanim = oreshared.Animation(anim_meshes)
 		zfh.writestr("animation-%s" % action.name, cPickle.dumps(oanim, 2))
 	
+	Blender.Window.DrawProgressBar(1.0, "Closing ORE file")
 	zfh.close()
 	Blender.Set("curframe", orig_frame) # Restore saved frame
 	Blender.Draw.PupMenu("Exported just fine%t|OK, thanks a bunch")
