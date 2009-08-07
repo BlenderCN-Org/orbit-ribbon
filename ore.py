@@ -61,63 +61,78 @@ class OREArea:
 
 class OREMesh:
 	"""A mesh, with associated material, from an ORE data file. You can draw it or build an ODE TriMesh geom from it."""
-	def __init__(self, eemesh, zfh):
-		self._eemesh = eemesh # An oreshared.Mesh object
+	def __init__(self, oreshr_mesh, zfh):
+		self._oreshr_mesh = oreshr_mesh # An oreshared.Mesh object
 		self._zfh = zfh # A zipfile handle from which we can load images
 		self._trimesh_data = None
-		self._gl_list_num = None
 		self._texdict = {}
+		
+		self._gl_list_num = glGenLists(1) # TODO Should free list on destruction
+		glNewList(self._gl_list_num, GL_COMPILE)
+		self._draw_gl_impl()
+		glEndList()
 	
 	def trimesh_data(self):
 		"""Returns an ode.TriMeshData for this mesh. This is cached after the first calculation."""
 		if self._trimesh_data is None:
 			self._trimesh_data = ode.TriMeshData()
-			self._trimesh_data.build([v for v, n in self._eemesh.vertices], [f for f, i, u in self._eemesh.faces])
+			self._trimesh_data.build([v for v, n in self._oreshr_mesh.vertices], [f for f, i, u in self._oreshr_mesh.faces])
 		return self._trimesh_data
 	
 	def draw_gl(self):
-		"""Draws the object using OpenGL commands. This creates a display list when it is first ran."""
-		if self._gl_list_num is None:
-			self._gl_list_num = glGenLists(1) # TODO Should free list on destruction
-			glNewList(self._gl_list_num, GL_COMPILE)
-			# TODO Consider re-adding this sort of material data to the ORE format. Maybe per-vertex?
-			#if self._eemat is not None:
-			#	glMaterialfv(GL_FRONT, GL_DIFFUSE, self._eemat.dif_col + (1.0,))
-			#	glMaterialfv(GL_FRONT, GL_SPECULAR, self._eemat.spe_col + (1.0,))
-			# FIXME Just testing
-			curImg = None
-			# Pick a noticeable purple color for untextured meshes
-			glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))
-			glMaterialfv(GL_FRONT, GL_SPECULAR, (0.1, 0.0, 0.1, 1.0,))
-			glBegin(GL_TRIANGLES)
-			for vertIdxs, imgIdx, uvIdxs in self._eemesh.faces:
-				if curImg != imgIdx:
-					# Got to change textures, leave vertex specification mode for a moment
-					glEnd()
-					if imgIdx is None:
-						# No image assigned to this face? Pick a noticeable purple color instead
-						glDisable(GL_TEXTURE_2D)
-						glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))
-						glMaterialfv(GL_FRONT, GL_SPECULAR, (0.1, 0.0, 0.1, 1.0,))
-					else:
-						if curImg is None:
-							# If textures aren't already enabled, enable them
-							glEnable(GL_TEXTURE_2D)
-						imgName = self._eemesh.images[imgIdx]
-						# TODO This is very messy. Would be better to refactor resman together with ore
-						glBindTexture(GL_TEXTURE_2D, resman.Texture("ORE-%s" % imgName, lambda: self._zfh.read("image-%s" % imgName)).glname)
-					curImg = imgIdx
-					glBegin(GL_TRIANGLES) # Okay, back to specifying vertices
-				for vi, ui in zip(vertIdxs, uvIdxs):
-					if ui is not None:
-						glTexCoord2fv(self._eemesh.uvpoints[ui])
-					glNormal3fv(self._eemesh.vertices[vi][1])
-					glVertex3fv(self._eemesh.vertices[vi][0])
-			glEnd()
-			glDisable(GL_TEXTURE_2D)
-			glEndList()
-		
+		"""Draws the object using OpenGL commands."""
 		glCallList(self._gl_list_num)
+	
+	def _draw_gl_impl(self):
+		# TODO Consider re-adding this sort of material data to the ORE format. Maybe per-vertex?
+		#if self._oreshr_mat is not None:
+		#	glMaterialfv(GL_FRONT, GL_DIFFUSE, self._oreshr_mat.dif_col + (1.0,))
+		#	glMaterialfv(GL_FRONT, GL_SPECULAR, self._oreshr_mat.spe_col + (1.0,))
+		curImg = None
+		# Pick a noticeable purple color for untextured meshes
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))
+		glMaterialfv(GL_FRONT, GL_SPECULAR, (0.1, 0.0, 0.1, 1.0,))
+		glBegin(GL_TRIANGLES)
+		for vertIdxs, imgIdx, uvIdxs in self._oreshr_mesh.faces:
+			if curImg != imgIdx:
+				# Got to change textures, leave vertex specification mode for a moment
+				glEnd()
+				if imgIdx is None:
+					# No image assigned to this face? Pick a noticeable purple color instead
+					glDisable(GL_TEXTURE_2D)
+					glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))
+					glMaterialfv(GL_FRONT, GL_SPECULAR, (0.1, 0.0, 0.1, 1.0,))
+				else:
+					if curImg is None:
+						# If textures aren't already enabled, enable them
+						glEnable(GL_TEXTURE_2D)
+					imgName = self._oreshr_mesh.images[imgIdx]
+					# TODO This is very messy. Would be better to refactor resman together with ore
+					glBindTexture(GL_TEXTURE_2D, resman.Texture("ORE-%s" % imgName, lambda: self._zfh.read("image-%s" % imgName)).glname)
+				curImg = imgIdx
+				glBegin(GL_TRIANGLES) # Okay, back to specifying vertices
+			for vi, ui in zip(vertIdxs, uvIdxs):
+				if ui is not None:
+					glTexCoord2fv(self._oreshr_mesh.uvpoints[ui])
+				glNormal3fv(self._oreshr_mesh.vertices[vi][1])
+				glVertex3fv(self._oreshr_mesh.vertices[vi][0])
+		glEnd()
+		glDisable(GL_TEXTURE_2D)
+
+
+class OREAnimation:
+	"""An animation loaded from the ORE file, consisting of the OREMeshes that make up its frames.
+	
+	Data attributes:
+	frames - A sequence of OREMesh instances, one for each frame of the animation.
+	"""
+	def __init__(self, oreshr_anim, zfh):
+		self._oreshr_anim = oreshr_anim # An oreshared.Animation object
+		self._zfh = zfh # A zipfile handle from which we can load meshes
+		self.frames = []
+		for frame_name in self._oreshr_anim.frames:
+			mesh = cPickle.loads(zfh.read("animmesh-%s" % frame_name))
+			self.frames.append(OREMesh(mesh, zfh))
 
 
 class OREManager:
@@ -128,6 +143,7 @@ class OREManager:
 	Data attributes (read only):
 	visible_name - The player-appropriate name of the ORE file.
 	meshes - A dictionary of OREMesh instances, one for each mesh in the ORE data.
+	animations - A dictionary of OREAnimation instances, one for each animation in the ORE data.
 	areas - A dictionary of OREArea instances, one for each area in the ORE data.
 	"""
 	def __init__(self, fh):
@@ -151,20 +167,31 @@ class OREManager:
 		# Load the config from the ExportPackage
 		cparser = ConfigParser.ConfigParser()
 		cparser.readfp(StringIO.StringIO(zfh.read("ore-conf")))
-		
+
 		self.meshes = {}
 		for meshname in fnames["mesh"]:
+			# FIXME Temporary speedup
+			if "JungleA.001" in meshname:
+				continue
 			mesh = cPickle.loads(zfh.read("mesh-%s" % meshname))
 			self.meshes[meshname] = OREMesh(mesh, zfh)
+		
+		self.animations = {}
+		for animname in fnames["animation"]:
+			# FIXME Temporary speedup
+			if ("-Run") in animname or "-PrerunToRun" in animname:
+				continue
+			anim = cPickle.loads(zfh.read("animation-%s" % animname))
+			self.animations[animname] = OREAnimation(anim, zfh)
 		
 		def gobj_from_oreobj(objname, meshname, pos, rot):
 			ppos = Point(*pos)
 			
 			# FIXME Need a better way of registering special GameObjs associated with LIB objects
 			if objname.startswith("LIBAvatar."):
-				return avatar.Avatar(self.meshes["LIBAvatar"], ppos, rot)
+				return avatar.Avatar(self, ppos, rot)
 			elif objname.startswith("LIBTargetRing."):
-				return target.Ring(self.meshes["LIBTargetRing"], ppos, rot)
+				return target.Ring(self, ppos, rot)
 			else:
 				return SimpleOREGameObj(self.meshes[meshname], objname, ppos, rot)
 		

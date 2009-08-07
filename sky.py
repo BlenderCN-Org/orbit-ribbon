@@ -5,7 +5,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import app, colors, collision, resman, billboard
+import app, collision, resman, billboard
 from geometry import *
 from util import *
 

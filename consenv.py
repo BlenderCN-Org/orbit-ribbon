@@ -12,10 +12,10 @@ import pydoc
 from pygame.locals import *
 
 import app
+import anim
 import avatar
 import camera
 import collision
-import colors
 import console
 import gameobj
 from geometry import *

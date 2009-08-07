@@ -4,7 +4,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-import app, gameobj, colors, collision, joy, resman
+import app, gameobj, collision, joy, resman, anim
 from geometry import *
 from util import *
 
@@ -19,11 +19,13 @@ MAX_ROLL = 800.0
 CTURN_COEF = 700
 CROLL_COEF = 700
 
+MODE_FLY, MODE_FLY_TO_PRERUN, MODE_PRERUN, MODE_PRERUN_TO_FLY = range(4)
+
 class Avatar(gameobj.GameObj):
 	"""The player character."""
 	
-	def __init__(self, oremesh, pos, rot):
-		self._oremesh = oremesh
+	def __init__(self, oreman, pos, rot):
+		self._oreman = oreman
 		
 		geom = ode.GeomCapsule(app.dyn_space, 0.25, 2.0) # 2.5 total length: a 2.0-long cylinder, and two 0.25-radius caps
 		geom.coll_props = collision.Props()
@@ -32,9 +34,10 @@ class Avatar(gameobj.GameObj):
 		self._relTorqueVec = Point() # Indicates to the drawing routine how much the player is torquing along each axis
 		self._relCTorqueVec = Point() # Indicates to the drawing routine how much automatic counter-torque is being applied along each axis
 		
-		self.running = False
+		self._anim = anim.AnimManager(ore_anim = self._oreman.animations["LIBAvatar-FlyToPrerun"], lock = True)
+		self._mode = MODE_FLY
 	
-	def step(self):	
+	def step(self):
 		# TODO: Consider adding linear and angular velocity caps
 		# TODO: Make joystick range circular (see example code on pygame help pages)
 		tx, ty, tz = 0, 0, 0
@@ -81,35 +84,51 @@ class Avatar(gameobj.GameObj):
 			csx = avel[0]*-CTURN_COEF/app.maxfps
 			self.body.addRelTorque((csx, 0.0, 0.0))
 		
-		# Pre-run, roll and counterroll
+		# Moving between fly mode and prerun mode
 		if app.buttons[joy.L1] == joy.DOWN and app.buttons[joy.R1] == joy.DOWN:
-			self.running = True
-		elif app.buttons[joy.L1] == joy.UP and app.buttons[joy.R1] == joy.UP:
-			self.running = False
-		elif app.buttons[joy.L1] == joy.DOWN:
+			if self._mode == MODE_FLY:
+				self._anim = anim.AnimManager(ore_anim = self._oreman.animations["LIBAvatar-FlyToPrerun"])
+				self._mode = MODE_FLY_TO_PRERUN
+			elif self._mode == MODE_PRERUN_TO_FLY:
+				self._anim.reverse = False
+				self._mode = MODE_FLY_TO_PRERUN
+			elif self._mode == MODE_FLY_TO_PRERUN and self._anim.on_last_frame():
+				self._anim = anim.AnimManager(ore_anim = self._oreman.animations["LIBAvatar-FlyToPrerun"], lock = True, reverse = True)
+				self._mode = MODE_PRERUN
+		else:
+			if self._mode == MODE_PRERUN:
+				self._anim = anim.AnimManager(ore_anim = self._oreman.animations["LIBAvatar-FlyToPrerun"], reverse = True)
+				self._mode = MODE_PRERUN_TO_FLY
+			elif self._mode == MODE_FLY_TO_PRERUN:
+				self._anim.reverse = True
+				self._mode = MODE_PRERUN_TO_FLY
+			elif self._mode == MODE_PRERUN_TO_FLY and self._anim.on_last_frame():
+				self._anim = anim.AnimManager(ore_anim = self._oreman.animations["LIBAvatar-FlyToPrerun"], lock = True)
+				self._mode = MODE_FLY
+		
+		# Roll
+		if app.buttons[joy.L1] == joy.DOWN and app.buttons[joy.R1] == joy.UP:
 			self.running = False
 			sz = -MAX_ROLL/app.maxfps
 			self.body.addRelTorque((0.0, 0.0, sz))
-		elif app.buttons[joy.R1] == joy.DOWN:
+		elif app.buttons[joy.R1] == joy.DOWN and app.buttons[joy.L1] == joy.UP:
 			self.running = False
 			sz = MAX_ROLL/app.maxfps
 			self.body.addRelTorque((0.0, 0.0, sz))
 		
+		# Counter-roll
 		if app.buttons[joy.L1] == app.buttons[joy.R1]: # If both L1 and R1 are up or both are down
 			csz = avel[2]*-CROLL_COEF/app.maxfps
 			self.body.addRelTorque((0.0, 0.0, csz))
-
+		
 		self._reqlTorqueVec = Point(sx, sy, sz)
 		self._reqlCTorqueVec = Point(csz, csy, csz)
+		
+		self._anim.cur_frame()
 	
 	def indraw(self):
 		# The body model
-		# FIXME Testing, need to do this with an actual animation later
-		glPushMatrix()
-		if self.running:
-			glRotatef(-90, 1, 0, 0)
-		self._oremesh.draw_gl()
-		glPopMatrix()
+		self._anim.cur_frame_static().draw_gl()
 		
 		# Thrust indication cones
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, (0.8, 0.8, 0.8, 1.0))

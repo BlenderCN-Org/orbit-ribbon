@@ -4,7 +4,6 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 
 import app
-import colors
 
 helphelp = """Interactive Python help is not available. You can use help(class) and help(module).
 

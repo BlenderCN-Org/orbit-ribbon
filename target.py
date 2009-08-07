@@ -1,7 +1,7 @@
 from __future__ import division
 import ode, math
 
-import app, gameobj, colors, collision, joy, resman, avatar
+import app, gameobj, collision, resman, avatar
 from geometry import *
 from util import *
 
@@ -15,8 +15,9 @@ class Ring(gameobj.GameObj):
 	INNER_RAD = 1.0
 	STEPS = 35
 	
-	def __init__(self, oremesh, pos, rot):
-		self._oremesh = oremesh
+	def __init__(self, oreman, pos, rot):
+		self._oreman = oreman
+		self._oremesh = oreman.meshes["LIBTargetRing"]
 
 		subspace = ode.SimpleSpace(app.static_space)
 		
@@ -26,7 +27,7 @@ class Ring(gameobj.GameObj):
 		self._logicGeom.coll_props = collision.Props(intersec_push = False)
 		
 		# Collision geom for the substance of the ring
-		coll_geom = ode.GeomTriMesh(oremesh.trimesh_data(), subspace)
+		coll_geom = ode.GeomTriMesh(self._oremesh.trimesh_data(), subspace)
 		coll_geom.coll_props = collision.Props()
 		
 		super(Ring, self).__init__(pos = pos, rot = rot, body = None, geom = subspace)

@@ -270,7 +270,7 @@ def do_export():
 			images = tuple([i[0] for i in sorted(images.items(), cmp = lambda a, b: cmp(a[1],b[1]))]),
 			faces = tuple(faces),
 		)
-		zfh.writestr("mesh-%s" % tgtName, cPickle.dumps(omesh, 2))
+		zfh.writestr(tgtName, cPickle.dumps(omesh, 2))
 	
 	progress = 0.2
 	progressInc = (1.0 - progress)/(len(bpy.data.objects) + len(bpy.data.actions))
@@ -278,7 +278,7 @@ def do_export():
 	for mesh in bpy.data.meshes:
 		Blender.Window.DrawProgressBar(progress, "Exporting object meshes and images")
 		progress += progressInc
-		writeMesh(mesh, mesh.name)
+		writeMesh(mesh, "mesh-%s" % mesh.name)
 	
 	for action in bpy.data.actions:
 		if not action.name.startswith("LIB"):
@@ -298,7 +298,7 @@ def do_export():
 			anim_meshes.append(frame_mesh_name)
 			Blender.Set("curframe", frameNum)
 			mesh = BPyMesh.getMeshFromObject(bpy.data.objects[obj_name], None, True, False, None)
-			writeMesh(mesh, frame_mesh_name)
+			writeMesh(mesh, "animmesh-%s" % frame_mesh_name)
 		
 		orig_action.setActive(bpy.data.objects[arm_name]) # Restore the saved action
 		
