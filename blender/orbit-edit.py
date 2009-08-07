@@ -1,4 +1,4 @@
-import Blender, bpy, os, cPickle, sys, ConfigParser, StringIO, zipfile
+import Blender, BPyMesh, bpy, os, cPickle, sys, ConfigParser, StringIO, zipfile
 from math import *
 
 WORKING_DIR = os.path.dirname(Blender.Get("filename"))
@@ -155,6 +155,9 @@ def do_export():
 	# FIXME: Need to also consider auxillary objects within LIB scenes
 	# Though must keep in mind that objects in LIB scenes only have position/rotation relative to each other
 	# Probably should turn Mission and Area into one class, Scene
+
+	# Record the frame the editor was in before we started mucking about
+	orig_frame = Blender.Get("curframe")
 	
 	target_fn = BLENDER_FILENAME[:-6] + ".ore" # Replace ".blend" with ".ore" for output filename (ore = Orbit Ribbon Export)
 	zfh = zipfile.ZipFile(
@@ -218,9 +221,8 @@ def do_export():
 				zfh.writestr("mission-%s" % name, cPickle.dumps(oreshared.Mission(area_name, tuple(exp_obj_tuples)), 2))
 	
 	copiedImages = set() # Set of image names that have already been copied into the zipfile
-	for mesh in bpy.data.meshes:
-		name = mesh.name
-		
+	def writeMesh(obj, tgtName):
+		mesh = BPyMesh.getMeshFromObject(obj, None, True, False, None)
 		vertices = [(fixcoords(v.co), fixcoords(v.no)) for v in mesh.verts]
 		images = {}; nextImgIdx = 0 # The images dictionary maps image names to integers, with the first image found being 0, second 1, etc.
 		uvPoints = {}; nextUvIdx = 0 # Just like the images dictionary, but for 2-tuples defining UV coordinates
@@ -237,7 +239,7 @@ def do_export():
 					nextImgIdx += 1
 					if imgName not in copiedImages:
 						copiedImages.add(imgName)
-						# ZIP_STORED disables compression, image already compressed
+						# ZIP_STORED disables compression, done here because the image already compressed
 						zfh.write(f.image.filename, "image-%s" % imgName, zipfile.ZIP_STORED)
 				imgIdx = images[imgName]
 			
@@ -265,9 +267,37 @@ def do_export():
 			images = tuple([i[0] for i in sorted(images.items(), cmp = lambda a, b: cmp(a[1],b[1]))]),
 			faces = tuple(faces),
 		)
-		zfh.writestr("mesh-%s" % name, cPickle.dumps(omesh, 2))
+		zfh.writestr("mesh-%s" % tgtName, cPickle.dumps(omesh, 2))
+	
+	for obj in bpy.data.objects:
+		# We're only interested in non-LIB mesh objects in missions, and also we want one copy of each LIB mesh object
+		# Precondition: The LIB object in its own scene is the one that doesn't end in .###
+		if obj.type == 'Mesh' and not (obj.name.startswith("LIB") and obj.name[-4] == "." and obj.name[-3:].isdigit()):
+			writeMesh(obj, obj.name)
+	
+	for action in bpy.data.actions:
+		if not action.name.startswith("LIB"):
+			continue
 		
+		obj_name = action.name.split("-")[0]
+		arm_name = obj_name + "-Armature"
+		orig_action = bpy.data.objects[arm_name].getAction() # Save the selected action for the armature
+		
+		anim_meshes = []
+		for frameNum in range(1, action.getFrameNumbers()[-1]+1):
+			frame_mesh_name = "%s-%s-%04u" % (obj_name, action.name.split("-")[1], frameNum)
+			anim_meshes.append(frame_mesh_name)
+			Blender.Set("curframe", frameNum)
+			# Precondition: LIB objects and their meshes have the same name
+			writeMesh(bpy.data.objects[obj_name], frame_mesh_name)
+		
+		orig_action.setActive(bpy.data.objects[arm_name]) # Restore the saved action
+		
+		oanim = oreshared.Animation(anim_meshes)
+		zfh.writestr("animation-%s" % action.name, cPickle.dumps(oanim, 2))
+	
 	zfh.close()
+	Blender.Set("curframe", orig_frame) # Restore saved frame
 	Blender.Draw.PupMenu("Exported just fine%t|OK, thanks a bunch")
 
 

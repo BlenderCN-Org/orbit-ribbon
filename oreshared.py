@@ -3,6 +3,19 @@ from __future__ import division
 ### This is the common library connecting orbit-edit.py (which depends on the Blender API) and the rest of Orbit Ribbon via ore.py.
 ### It deliberately has no dependencies on Orbit Ribbon code; it's ore.OREManager's job to turn this data into useful objects for the game.
 
+
+class Animation:
+	"""A set of meshes forming an animation. Each mesh is 1/60th of a second advanced from the prior.
+	
+	Meshes that are part of animations are typically named MESHNAME-ANIMNAME-####, i.e. LIBAvatar-Run-0003
+	
+	Data attributes:
+	frames - A sequence of meshname strings.
+	"""
+	def __init__(self, frames):
+		self.frames = frames
+
+
 class Mesh:
 	# FIXME Need to put material properties like specularity here. First off, need to figure out materials/lighting model.
 	"""A mesh (collection of vertices and faces w/ normals and texture data) exported from the 3D editor.
