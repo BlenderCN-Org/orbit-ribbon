@@ -225,10 +225,9 @@ def do_export():
 				zfh.writestr("mission-%s" % name, cPickle.dumps(oreshared.Mission(area_name, tuple(exp_obj_tuples)), 2))
 	
 	copiedImages = set() # Set of image names that have already been copied into the zipfile
-	def writeMesh(obj, tgtName):
-		mesh = BPyMesh.getMeshFromObject(obj, None, True, False, None)
+	def writeMesh(mesh, tgtName):
 		vertices = [(fixcoords(v.co), fixcoords(v.no)) for v in mesh.verts]
-		images = {}; nextImgIdx = 0 # The images dictionary maps image names to integers, with the first image found being 0, second 1, etc.
+		images = {}; nextImgIdx = 0 # The images dictionary maps image names as keys to integers, with the first image found being 0, second 1, etc.
 		uvPoints = {}; nextUvIdx = 0 # Just like the images dictionary, but for 2-tuples defining UV coordinates
 		faces = []
 		for f in mesh.faces:
@@ -276,17 +275,12 @@ def do_export():
 	progress = 0.2
 	progressInc = (1.0 - progress)/(len(bpy.data.objects) + len(bpy.data.actions))
 	
-	for obj in bpy.data.objects:
+	for mesh in bpy.data.meshes:
 		Blender.Window.DrawProgressBar(progress, "Exporting object meshes and images")
 		progress += progressInc
-		# We're only interested in non-LIB mesh objects in missions, and also we want one copy of each LIB mesh object
-		# Precondition: The LIB object in its own scene is the one that doesn't end in .###
-		if obj.type == 'Mesh' and not (obj.name.startswith("LIB") and obj.name[-4] == "." and obj.name[-3:].isdigit()):
-			writeMesh(obj, obj.name)
+		writeMesh(mesh, mesh.name)
 	
 	for action in bpy.data.actions:
-		Blender.Window.DrawProgressBar(progress, "Exporting animation meshes")
-		progress += progressInc
 		if not action.name.startswith("LIB"):
 			continue
 		
@@ -295,12 +289,16 @@ def do_export():
 		orig_action = bpy.data.objects[arm_name].getAction() # Save the selected action for the armature
 		
 		anim_meshes = []
-		for frameNum in range(1, action.getFrameNumbers()[-1]+1):
+		lastFrame = action.getFrameNumbers()[-1]
+		subProgressInc = progressInc/lastFrame
+		for frameNum in xrange(1, lastFrame+1):
+			Blender.Window.DrawProgressBar(progress, "Exporting animation meshes")
+			progress += subProgressInc
 			frame_mesh_name = "%s-%s-%04u" % (obj_name, action.name.split("-")[1], frameNum)
 			anim_meshes.append(frame_mesh_name)
 			Blender.Set("curframe", frameNum)
-			# Precondition: LIB objects and their meshes have the same name
-			writeMesh(bpy.data.objects[obj_name], frame_mesh_name)
+			mesh = BPyMesh.getMeshFromObject(bpy.data.objects[obj_name], None, True, False, None)
+			writeMesh(mesh, frame_mesh_name)
 		
 		orig_action.setActive(bpy.data.objects[arm_name]) # Restore the saved action
 		
