@@ -1,4 +1,4 @@
-import Blender, BPyMesh, bpy, os, cPickle, sys, ConfigParser, StringIO, zipfile
+import Blender, BPyMesh, bpy, os, cPickle, sys, ConfigParser, StringIO, zipfile, datetime
 from math import *
 
 WORKING_DIR = os.path.dirname(Blender.Get("filename"))
@@ -167,7 +167,8 @@ def do_export():
 		mode = "w",
 		compression = zipfile.ZIP_DEFLATED
 	)
-	zfh.writestr("ore-version", "1") # Version of the ORE file format in use (this will be 1 until I make a backwards-incompatible change post release)
+	zfh.writestr("ore-version", "1") # Version of the ORE file format in use (this will be 1 until the first backwards-incompatible change after release)i
+	zfh.writestr("ore-created", str(datetime.datetime.now())) # When the ORE file was created
 	
 	conf = None
 	try:
@@ -226,50 +227,34 @@ def do_export():
 	
 	copiedImages = set() # Set of image names that have already been copied into the zipfile
 	def writeMesh(mesh, tgtName):
-		vertices = [(fixcoords(v.co), fixcoords(v.no)) for v in mesh.verts]
-		images = {}; nextImgIdx = 0 # The images dictionary maps image names as keys to integers, with the first image found being 0, second 1, etc.
-		uvPoints = {}; nextUvIdx = 0 # Just like the images dictionary, but for 2-tuples defining UV coordinates
-		faces = []
+		facelists = {}
 		for f in mesh.faces:
-			imgIdx, imgName = None, None
+			imgName = None
 			try:
 				imgName = f.image.name
 			except ValueError:
-				pass
-			if imgName is not None:
-				if imgName not in images:
-					images[imgName] = nextImgIdx
-					nextImgIdx += 1
-					if imgName not in copiedImages:
-						copiedImages.add(imgName)
-						# ZIP_STORED disables compression, done here because the image already compressed
-						zfh.write(f.image.filename, "image-%s" % imgName, zipfile.ZIP_STORED)
-				imgIdx = images[imgName]
+				pass # No image mapped to this face
+			if imgName not in facelists:
+				facelists[imgName] = []
+				if imgName is not None and imgName not in copiedImages:
+					copiedImages.add(imgName)
+					# ZIP_STORED disables compression, it is used here because PNG images are already compressed
+					zfh.write(f.image.filename, "image-%s" % imgName, zipfile.ZIP_STORED)
 			
 			offsets = [(0,1,2)]
 			if len(f.verts) != 3:
 				# Convert quads to triangles
 				offsets.append((0,2,3))
 			for a, b, c in offsets:
-				vIdxs = (f.verts[a].index, f.verts[b].index, f.verts[c].index)
-				uIdxs = (None, None, None)
-				if imgIdx is not None:
-					uIdxs = []
-					for i in a, b, c:
-						uvPt = tuple(f.uv[i])
-						if uvPt not in uvPoints:
-							uvPoints[uvPt] = nextUvIdx
-							nextUvIdx += 1
-						uIdxs.append(uvPoints[uvPt])
-					uIdxs = tuple(uIdxs)
-				faces.append((vIdxs, imgIdx, uIdxs))
-		
-		omesh = oreshared.Mesh(
-			vertices = tuple(vertices),
-			uvpoints = tuple([i[0] for i in sorted(uvPoints.items(), cmp = lambda a, b: cmp(a[1],b[1]))]),
-			images = tuple([i[0] for i in sorted(images.items(), cmp = lambda a, b: cmp(a[1],b[1]))]),
-			faces = tuple(faces),
-		)
+				vertices = tuple([fixcoords(f.verts[x].co) for x in (a,b,c)])
+				normals = tuple([fixcoords(f.verts[x].no) for x in (a,b,c)])
+				if imgName is not None:
+					uvpts = tuple([tuple(f.uv[x]) for x in (a,b,c)])
+				else:
+					uvpts = (None, None, None)
+				facelists[imgName].append((vertices, normals, uvpts))
+
+		omesh = oreshared.Mesh(facelists)
 		zfh.writestr(tgtName, cPickle.dumps(omesh, 2))
 	
 	progress = 0.2
@@ -334,7 +319,12 @@ def menu():
 	)
 	r = Blender.Draw.PupMenu("Orbit Ribbon Level Editing%t|" + "|".join(["%s%%x%u" % (name, num) for num, (name, func) in enumerate(menu_items)]))
 	if r >= 0:
-		menu_items[r][1]()
+		try:
+			menu_items[r][1]()
+		except:
+			Blender.Window.DrawProgressBar(1.0, "Aborting")
+			Blender.Draw.PupMenu("DANGER WILL ROBINSON! OPERATION FAILED!%t|Gee, I'd better check the console for error output")
+			raise
 	Blender.Redraw()
 
 ### Execution begins here

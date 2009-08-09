@@ -6,7 +6,7 @@ OpenGL.ERROR_CHECKING = False
 OpenGL.ERROR_LOGGING = False
 from OpenGL.GL import *
 
-import app, oreshared, collision, sky, missioncon, gameobj, avatar, target, resman
+import app, oreshared, collision, sky, missioncon, gameobj, avatar, target, resman, pyvbo
 from geometry import *
 from util import *
 
@@ -68,12 +68,10 @@ class OREMesh:
 		self._oreshr_mesh = oreshr_mesh # An oreshared.Mesh object
 		self._zfh = zfh # A zipfile handle from which we can load images
 		self._trimesh_data = None
-		self._texdict = {}
 		
-		self._gl_list_num = glGenLists(1) # TODO Should free list on destruction
-		glNewList(self._gl_list_num, GL_COMPILE)
-		self._draw_gl_impl()
-		glEndList()
+		# Load the vertex, normal, and UV data
+		self._vbuf = pyvbo.VertexBuffer()
+		self._texsteps = [] # A sequence of (resman.Texture object, count), where count is how many VBO entries to draw using that texture
 	
 	def trimesh_data(self):
 		"""Returns an ode.TriMeshData for this mesh. This is cached after the first calculation."""
@@ -83,10 +81,14 @@ class OREMesh:
 		return self._trimesh_data
 	
 	def draw_gl(self):
-		"""Draws the object using OpenGL commands."""
-		glCallList(self._gl_list_num)
-	
-	def _draw_gl_impl(self):
+		glPushAttrib(GL_CURRENT_BIT)
+		glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
+		
+		
+		
+		glPopClientAttrib()
+		glPopAttrib(GL_ALL_ATTRIB_BITS)
+		
 		curImg = None
 		# Pick a noticeable purple color for untextured meshes
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))

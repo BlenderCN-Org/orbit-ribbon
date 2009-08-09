@@ -21,18 +21,12 @@ class Mesh:
 	"""A mesh (collection of vertices and faces w/ normals and texture data) exported from the 3D editor.
 	
 	Data attributes:
-	vertices - A sequence of (vertex tuple, normal vector tuple) tuples describing vertices.
-	uvpoints - A sequence of 2-tuples describing UV texture coordinate positions.
-	images - A sequence of strings, each a name of an Image used for this Mesh's texture.
-	faces - A sequence of ((vi, vi, vi), ii, (ui, ui, ui)) tuples describing faces.
-		In the above, vi is an index into vertices, ii an index into images, and ui an index into uvpoints.
-		If the face has no image, ii and ui values will all be None.
+	facelists - A dictionary mapping image names to sequences of ((v, v, v), (n, n, n), (u, u, u)) tuples.
+		Each facelist is textured by the Image namd, or not textured if the key is None.
+		In the facelist, each v is a vertex point (3-tuple), n a normal vector (3-tuple), and u a texture coordinate (2-tuple) or None if no texture.
 	"""
-	def __init__(self, vertices, uvpoints, images, faces):
-		self.vertices = vertices
-		self.uvpoints = uvpoints
-		self.images = images
-		self.faces = faces
+	def __init__(self, facelists):
+		self.facelists = facelists
 
 
 class Area:
