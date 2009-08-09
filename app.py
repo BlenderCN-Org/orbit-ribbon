@@ -2,6 +2,9 @@ from __future__ import division
 
 import ode, sys, math, pygame, pickle
 from pygame.locals import *
+import OpenGL
+OpenGL.ERROR_CHECKING = False
+OpenGL.ERROR_LOGGING = False
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
@@ -96,6 +99,10 @@ class QuitException:
 
 
 def ui_init():
+	"""Initializes the user interface (window, input devices, etc.)
+
+	Must be called before sim_init().
+	"""
 	global screen, clock, cons, watchers
 
 	pygame.display.init()
@@ -156,8 +163,7 @@ def sim_init():
 	
 	fh = file(os.path.join(APP_DIR, 'orefiles', 'main.ore'))
 	ore_man = ore.OREManager(fh)
-	#fh.close() # TODO If we have the ability to change ORE files mid-game, it must be possible to actually close this on demand. Maybe resman's job.
-
+	
 	cur_area = None
 	cur_area_tstart = None
 	cur_mission = None

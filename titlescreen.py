@@ -1,6 +1,9 @@
 from __future__ import division
 
 import pygame, os
+import OpenGL
+OpenGL.ERROR_CHECKING = False
+OpenGL.ERROR_LOGGING = False
 from OpenGL.GL import *
 from OpenGL.GLU import *
 

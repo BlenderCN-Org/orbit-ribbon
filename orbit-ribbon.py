@@ -1,10 +1,8 @@
 #!/usr/bin/python
 
-import profile, psyco, getopt, sys
+import profile, psyco, getopt, sys, time
 
 import app
-
-PROFILING = False
 
 def opt_help(arg):
 	# TODO Should probably print copyright/license info here
@@ -40,10 +38,25 @@ def opt_mission(arg):
 		raise RuntimeError("Please supply a valid area-mission code. For example, A01-M02 for area 1, mission 2.")
 
 
+profiling = False
+def opt_profile(arg):
+	global profiling
+	profiling = True
+
+
+timing_init = False
+def opt_timeini(arg):
+	global timing_init
+	timing_init = True
+
+
+
 # Command line options, each as a tuple of (callback function, short arg name, long arg name, help description)
 options = (
 	(opt_help,    "h",  "help",     "Displays a brief summary of command line options."),
 	(opt_mission, "m:", "mission=", "Jumps straight to a mission. For example, run with \"-m A01-M02\" for area 1, mission 2."),
+	(opt_profile, "p",  "profile",  "Generates python profiler output to the file 'profile' for this run."),
+	(opt_timeini, "t",  "timeini",  "Times the initialization/loading process."),
 )
 
 opt_results, other_args = getopt.gnu_getopt(
@@ -63,15 +76,20 @@ for opt, val in opt_results:
 
 # Magic begins here
 
+
+if timing_init:
+	start_time = time.time()
 app.ui_init()
 app.sim_init()
 if jump_area_name is not None:
 	app.init_area(jump_area_name)
 if jump_mission_name is not None:
 	app.init_mission(jump_mission_name)
+if timing_init:
+	print "Init time: %.2f seconds" % (time.time() - start_time)
 
-if PROFILING:
+if profiling:
 	profile.run('app.run()', 'profile')
 else:
-	psyco.full() # TODO: Make sure this actually improves framerate
+	psyco.full() # TODO: Make sure this actually improves performance
 	app.run()

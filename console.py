@@ -1,5 +1,8 @@
 import code, pygame, sys, copy, re
 from pygame.locals import *
+import OpenGL
+OpenGL.ERROR_CHECKING = False
+OpenGL.ERROR_LOGGING = False
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 

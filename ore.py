@@ -1,6 +1,9 @@
 from __future__ import division
 
 import ode, ConfigParser, StringIO, pickle, zipfile, cPickle
+import OpenGL
+OpenGL.ERROR_CHECKING = False
+OpenGL.ERROR_LOGGING = False
 from OpenGL.GL import *
 
 import app, oreshared, collision, sky, missioncon, gameobj, avatar, target, resman
@@ -84,10 +87,6 @@ class OREMesh:
 		glCallList(self._gl_list_num)
 	
 	def _draw_gl_impl(self):
-		# TODO Consider re-adding this sort of material data to the ORE format. Maybe per-vertex?
-		#if self._oreshr_mat is not None:
-		#	glMaterialfv(GL_FRONT, GL_DIFFUSE, self._oreshr_mat.dif_col + (1.0,))
-		#	glMaterialfv(GL_FRONT, GL_SPECULAR, self._oreshr_mat.spe_col + (1.0,))
 		curImg = None
 		# Pick a noticeable purple color for untextured meshes
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))
@@ -135,6 +134,7 @@ class OREAnimation:
 			self.frames.append(OREMesh(mesh, zfh))
 
 
+# TODO Should have the ability to close ORE files on demand, so that we can switch to another ORE file without closing the game
 class OREManager:
 	"""Loads and interprets data in the Orbit Ribbon Export format.
 	
