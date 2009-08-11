@@ -27,7 +27,7 @@ class Ring(gameobj.GameObj):
 		self._logicGeom.coll_props = collision.Props(intersec_push = False)
 		
 		# Collision geom for the substance of the ring
-		coll_geom = ode.GeomTriMesh(self._oremesh.trimesh_data(), subspace)
+		coll_geom = ode.GeomTriMesh(self._oremesh.trimesh_data, subspace)
 		coll_geom.coll_props = collision.Props()
 		
 		super(Ring, self).__init__(pos = pos, rot = rot, body = None, geom = subspace)

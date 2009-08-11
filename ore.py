@@ -1,6 +1,6 @@
 from __future__ import division
 
-import ode, ConfigParser, StringIO, pickle, zipfile, cPickle
+import ode, ConfigParser, StringIO, pickle, zipfile, cPickle, numpy
 import OpenGL
 OpenGL.ERROR_CHECKING = False
 OpenGL.ERROR_LOGGING = False
@@ -20,7 +20,7 @@ class SimpleOREGameObj(gameobj.GameObj):
 		"""Creates a SimpleOREGameObj with the given object name, position, rotation (in exportdata format), and OREMesh."""
 		self.objname = objname
 		self._oremesh = oremesh
-		geom = ode.GeomTriMesh(oremesh.trimesh_data(), app.static_space)
+		geom = ode.GeomTriMesh(oremesh.trimesh_data, app.static_space)
 		geom.coll_props = collision.Props()
 		super(SimpleOREGameObj, self).__init__(pos = pos, rot = rot, body = None, geom = geom)
 	
@@ -63,63 +63,96 @@ class OREArea:
 
 
 class OREMesh:
-	"""A mesh, with associated material, from an ORE data file. You can draw it or build an ODE TriMesh geom from it."""
+	"""A mesh, with associated material, from an ORE data file. You can draw it or build an ODE TriMesh geom from it.
+	
+	Data attributes:
+	trimesh_data - An ode.TriMeshData for this mesh.
+	"""
 	def __init__(self, oreshr_mesh, zfh):
 		self._oreshr_mesh = oreshr_mesh # An oreshared.Mesh object
 		self._zfh = zfh # A zipfile handle from which we can load images
-		self._trimesh_data = None
 		
-		# Load the vertex, normal, and UV data
-		self._vbuf = pyvbo.VertexBuffer()
-		self._texsteps = [] # A sequence of (resman.Texture object, count), where count is how many VBO entries to draw using that texture
-	
-	def trimesh_data(self):
-		"""Returns an ode.TriMeshData for this mesh. This is cached after the first calculation."""
-		if self._trimesh_data is None:
-			self._trimesh_data = ode.TriMeshData()
-			self._trimesh_data.build([v for v, n in self._oreshr_mesh.vertices], [f for f, i, u in self._oreshr_mesh.faces])
-		return self._trimesh_data
-	
+		# Build a TriMeshData from the face data we have, merging vertexes shared between multiple faces
+		self.trimesh_data = ode.TriMeshData()
+		vertex_dict = {}
+		vertex_list = []
+		next_vertex_i = 0
+		face_idxs = []
+		for imgName, facelist in oreshr_mesh.facelists.iteritems():
+			for face in facelist:
+				for vertex in face[0]:
+					if vertex not in vertex_dict:
+						vertex_dict[vertex] = next_vertex_i
+						next_vertex_i += 1
+						vertex_list.append(vertex)
+				face_idxs.append((vertex_dict[face[0][0]], vertex_dict[face[0][1]], vertex_dict[face[0][2]]))
+		self.trimesh_data.build(vertex_list, face_idxs)
+		
+		# Calculate data to put into VBOs for drawing this mesh quickly
+		vertex_flat_list = []
+		normal_flat_list = []
+		uv_flat_list = []
+		self._texsteps = [] # A sequence of (resman.Texture or None, count), where count is how many faces to draw using that texture
+		for imgName, facelist in oreshr_mesh.facelists.iteritems():
+			tex = None
+			if imgName is not None:
+				# TODO This is very messy. Would be better to refactor resman together with ore
+				tex = resman.Texture("ORE-%s" % imgName, lambda: self._zfh.read("image-%s" % imgName))
+			self._texsteps.append((tex, len(facelist)))
+			for face in facelist:
+				for i in xrange(3):
+					vertex_flat_list.extend(face[0][i])
+					normal_flat_list.extend(face[1][i])
+					if face[2][i] is not None:
+						uv_flat_list.extend(face[2][i])
+					else:
+						uv_flat_list.extend((0,0))
+		
+		# Build VBOs out of our calculated data
+		self._vertex_vbo = pyvbo.VertexBuffer(numpy.array(vertex_flat_list, dtype=numpy.float32), GL_STATIC_DRAW)
+		self._normal_vbo = pyvbo.VertexBuffer(numpy.array(normal_flat_list, dtype=numpy.float32), GL_STATIC_DRAW)
+		self._uv_vbo = pyvbo.VertexBuffer(numpy.array(uv_flat_list, dtype=numpy.float32), GL_STATIC_DRAW)
+		#self._vertex_vbo = pyvbo.VertexBuffer(vertex_flat_list, GL_STATIC_DRAW)
+		#self._normal_vbo = pyvbo.VertexBuffer(normal_flat_list, GL_STATIC_DRAW)
+		#self._uv_vbo = pyvbo.VertexBuffer(uv_flat_list, GL_STATIC_DRAW)
+		
 	def draw_gl(self):
 		glPushAttrib(GL_CURRENT_BIT)
 		glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
 		
+		glEnableClientState(GL_VERTEX_ARRAY)
+		glEnableClientState(GL_NORMAL_ARRAY)
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 		
-		
-		glPopClientAttrib()
-		glPopAttrib(GL_ALL_ATTRIB_BITS)
-		
-		curImg = None
 		# Pick a noticeable purple color for untextured meshes
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))
 		glMaterialfv(GL_FRONT, GL_SPECULAR, (0.1, 0.0, 0.1, 1.0,))
-		glBegin(GL_TRIANGLES)
-		for vertIdxs, imgIdx, uvIdxs in self._oreshr_mesh.faces:
-			if curImg != imgIdx:
-				# Got to change textures, leave vertex specification mode for a moment
-				glEnd()
-				if imgIdx is None:
-					# No image assigned to this face? Pick a noticeable purple color instead
+		
+		self._vertex_vbo.bind_vertexes(3, GL_FLOAT)
+		self._normal_vbo.bind_normals(GL_FLOAT)
+		self._uv_vbo.bind_texcoords(2, GL_FLOAT)
+		
+		textureFlag = None # True means textures enabled, False means textures disabled, None means unknown state
+		
+		i = 0
+		for (tex, count) in self._texsteps:
+			if tex is None:
+				if textureFlag is not False:
 					glDisable(GL_TEXTURE_2D)
-					glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))
-					glMaterialfv(GL_FRONT, GL_SPECULAR, (0.1, 0.0, 0.1, 1.0,))
-				else:
-					if curImg is None:
-						# If textures aren't already enabled, enable them
-						glEnable(GL_TEXTURE_2D)
-					imgName = self._oreshr_mesh.images[imgIdx]
-					# TODO This is very messy. Would be better to refactor resman together with ore
-					glBindTexture(GL_TEXTURE_2D, resman.Texture("ORE-%s" % imgName, lambda: self._zfh.read("image-%s" % imgName)).glname)
-				curImg = imgIdx
-				glBegin(GL_TRIANGLES) # Okay, back to specifying vertices
-			for vi, ui in zip(vertIdxs, uvIdxs):
-				if ui is not None:
-					glTexCoord2fv(self._oreshr_mesh.uvpoints[ui])
-				glNormal3fv(self._oreshr_mesh.vertices[vi][1])
-				glVertex3fv(self._oreshr_mesh.vertices[vi][0])
-		glEnd()
-		glDisable(GL_TEXTURE_2D)
-
+					textureFlag = False
+			else:
+				if textureFlag is not True:
+					glEnable(GL_TEXTURE_2D)
+					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+					textureFlag = True
+				glBindTexture(GL_TEXTURE_2D, tex.glname)
+			glDrawArrays(GL_TRIANGLES, i*3, count*3)
+			i += count
+		
+		glPopClientAttrib()
+		glPopAttrib()
+		
 
 class OREAnimation:
 	"""An animation loaded from the ORE file, consisting of the OREMeshes that make up its frames.
