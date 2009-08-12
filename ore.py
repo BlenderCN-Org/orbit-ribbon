@@ -112,16 +112,9 @@ class OREMesh:
 		self._vertex_vbo = pyvbo.VertexBuffer(numpy.array(vertex_flat_list, dtype=numpy.float32), GL_STATIC_DRAW)
 		self._normal_vbo = pyvbo.VertexBuffer(numpy.array(normal_flat_list, dtype=numpy.float32), GL_STATIC_DRAW)
 		self._uv_vbo = pyvbo.VertexBuffer(numpy.array(uv_flat_list, dtype=numpy.float32), GL_STATIC_DRAW)
-		#self._vertex_vbo = pyvbo.VertexBuffer(vertex_flat_list, GL_STATIC_DRAW)
-		#self._normal_vbo = pyvbo.VertexBuffer(normal_flat_list, GL_STATIC_DRAW)
-		#self._uv_vbo = pyvbo.VertexBuffer(uv_flat_list, GL_STATIC_DRAW)
 		
 	def draw_gl(self):
 		glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT)
-		
-		# Pick a noticeable purple color for untextured meshes
-		glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))
-		glMaterialfv(GL_FRONT, GL_SPECULAR, (0.1, 0.0, 0.1, 1.0,))
 		
 		self._vertex_vbo.bind_vertexes(3, GL_FLOAT)
 		self._normal_vbo.bind_normals(GL_FLOAT)
@@ -134,6 +127,9 @@ class OREMesh:
 			if tex is None:
 				if textureFlag is not False:
 					glDisable(GL_TEXTURE_2D)
+					# Pick a noticeable purple color for untextured meshes
+					glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))
+					glMaterialfv(GL_FRONT, GL_SPECULAR, (0.1, 0.0, 0.1, 1.0,))
 					textureFlag = False
 			else:
 				if textureFlag is not True:
