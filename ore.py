@@ -114,8 +114,6 @@ class OREMesh:
 		self._uv_vbo = pyvbo.VertexBuffer(numpy.array(uv_flat_list, dtype=numpy.float32), GL_STATIC_DRAW)
 		
 	def draw_gl(self):
-		glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT)
-		
 		self._vertex_vbo.bind_vertexes(3, GL_FLOAT)
 		self._normal_vbo.bind_normals(GL_FLOAT)
 		self._uv_vbo.bind_texcoords(2, GL_FLOAT)
@@ -134,14 +132,12 @@ class OREMesh:
 			else:
 				if textureFlag is not True:
 					glEnable(GL_TEXTURE_2D)
-					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
 					textureFlag = True
 				glBindTexture(GL_TEXTURE_2D, tex.glname)
 			glDrawArrays(GL_TRIANGLES, i*3, count*3)
 			i += count
 		
-		glPopAttrib()
+		glDisable(GL_TEXTURE_2D)
 		
 
 class OREAnimation:
