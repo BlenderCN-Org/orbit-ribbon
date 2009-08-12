@@ -118,11 +118,6 @@ class OREMesh:
 		
 	def draw_gl(self):
 		glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT)
-		glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
-		
-		glEnableClientState(GL_VERTEX_ARRAY)
-		glEnableClientState(GL_NORMAL_ARRAY)
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 		
 		# Pick a noticeable purple color for untextured meshes
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))
@@ -150,7 +145,6 @@ class OREMesh:
 			glDrawArrays(GL_TRIANGLES, i*3, count*3)
 			i += count
 		
-		glPopClientAttrib()
 		glPopAttrib()
 		
 
