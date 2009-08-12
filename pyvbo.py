@@ -1,3 +1,6 @@
+# Written by Nathan Ostgard
+# Retrieved from http://www.siafoo.net/snippet/185 on 2009 Aug 08
+
 from OpenGL.GL import *
 from OpenGL.raw import GL
 from OpenGL.arrays import ArrayDatatype as ADT
