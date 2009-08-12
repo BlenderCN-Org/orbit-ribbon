@@ -1,6 +1,6 @@
 from __future__ import division
 
-import ode, sys, math, pygame, pickle
+import ode, sys, math, pygame, pickle, time
 from pygame.locals import *
 import OpenGL
 OpenGL.ERROR_CHECKING = False
@@ -93,6 +93,20 @@ watchers = [] #A sequence of console.Watchers used for in-game debugging
 
 title_screen_manager = None #An instance of titlescreen.TitleScreenManager, which handles the behavior of pre-gameplay menus
 
+timings = None # A list of lists, each sublist containing timestamps recorded at various points during a frame, or None if this feature is disabled
+timing_names = None # A list names assigned to each column in timings, or None if timing isn't enabled
+
+def _rectime_newframe():
+	if timings is not None:
+		timings.append([])
+		_rectime("newframe")
+
+def _rectime(colname):
+	if timings is not None:
+		if len(timings) == 1:
+			timing_names.append(colname)
+		timings[-1].append(time.time())
+
 class QuitException:
 	"""Raised when something wants the main loop to end."""
 	pass
@@ -139,7 +153,7 @@ def ui_init():
 	watchers.append(console.Watcher("j", "n", pygame.Rect(5*winsize[0]/6 - 20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
 
 
-def sim_init():
+def sim_init(timing = False):
 	"""Initializes the camera and simulation, including ODE.
 	
 	You must call this before calling run().
@@ -149,6 +163,11 @@ def sim_init():
 	
 	global ore_man, odeworld, static_space, dyn_space, objects, totalsteps, player_camera, title_screen_manager, fade_color, sky_stuff
 	global cur_area, cur_area_tstart, cur_mission, cur_mission_tstart
+	global timings, timing_names
+
+	if timing:
+		timings = []
+		timing_names = []
 	
 	totalsteps = 0L
 	odeworld = ode.World()
@@ -230,12 +249,13 @@ def _draw_frame():
 	glMatrixMode(GL_MODELVIEW)
 	glLoadIdentity()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+	_rectime("DF-Reset")
 	
 	# Locate the camera position, and orient to it
 	camvals = player_camera.get_camvals()
 	campos = player_camera.get_position()
 	gluLookAt(*camvals)
-
+	
 	# Sort objects to be drawn into those which are far and need to be drawn as billboards, and those which are close and can be drawn as objects
 	near_objs, far_objs = [], [] # Lists of GameObjs
 	thresh = GAMEPLAY_CLIP_DIST * 0.9
@@ -244,6 +264,7 @@ def _draw_frame():
 			far_objs.append(o)
 		else:
 			near_objs.append(o)
+	_rectime("DF-Sort")
 	
 	# 3D projection mode for sky objects and billboards without depth-testing
 	glDisable(GL_LIGHTING)
@@ -255,7 +276,8 @@ def _draw_frame():
 	# Draw the atmosphere
 	glDisable(GL_DEPTH_TEST)
 	sky_stuff.draw_geometry()
-
+	_rectime("DF-Atmo")
+	
 	# Draw the billboards for sky objects and distant gameplay objects
 	glEnable(GL_DEPTH_TEST)
 	glEnable(GL_TEXTURE_2D)
@@ -264,6 +286,7 @@ def _draw_frame():
 	for o in far_objs:
 		o.distdraw()
 	glDisable(GL_TEXTURE_2D)
+	_rectime("DF-Bb")
 	
 	# 3D projection mode for nearby gameplay objects with depth-testing
 	glEnable(GL_DEPTH_TEST)
@@ -273,9 +296,10 @@ def _draw_frame():
 	gluPerspective(FOV, winsize[0]/winsize[1], 0.1, GAMEPLAY_CLIP_DIST)
 	glMatrixMode(GL_MODELVIEW)
 	
-	# Draw all objects in the list
+	# Draw all objects close enough to not be billboards
 	for o in near_objs:
 		o.draw()
+	_rectime("DF-Objs")
 	
 	# 2D drawing mode
 	glMatrixMode(GL_PROJECTION)
@@ -309,10 +333,14 @@ def _draw_frame():
 	
 	# Draw the console, if it's up
 	cons.draw()
+
+	_rectime("DF-Iface")
 	
 	# Output and flip buffers
 	glFlush()
 	pygame.display.flip()
+	
+	_rectime("DF-Flip")
 
 
 def _proc_input():
@@ -355,8 +383,10 @@ def run():
 	
 	try:
 		totalms = 0L #Total number of milliseconds passed in gameplay
-		while True:
+		while True:	
+			_rectime_newframe()
 			elapsedms = clock.tick(maxfps)
+			_rectime("Tick")
 			
 			if cons.active:
 				_proc_input()
@@ -374,6 +404,7 @@ def run():
 					totalsteps += 1
 			elif mode == MODE_TITLE_SCREEN:
 				_proc_input()
+			_rectime("Sim")
 			
 			#Draw everything
 			_draw_frame()

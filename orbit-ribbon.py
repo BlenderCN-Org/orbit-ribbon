@@ -50,13 +50,19 @@ def opt_timeini(arg):
 	timing_init = True
 
 
+timing_run = False
+def opt_timerun(arg):
+	global timing_run
+	timing_run = True
+
 
 # Command line options, each as a tuple of (callback function, short arg name, long arg name, help description)
 options = (
 	(opt_help,    "h",  "help",     "Displays a brief summary of command line options."),
 	(opt_mission, "m:", "mission=", "Jumps straight to a mission. For example, run with \"-m A01-M02\" for area 1, mission 2."),
 	(opt_profile, "p",  "profile",  "Generates python profiler output to the file 'profile' for this run."),
-	(opt_timeini, "t",  "timeini",  "Times the initialization/loading process."),
+	(opt_timeini, "i",  "timeini",  "Times the initialization/loading process."),
+	(opt_timerun, "t",  "timerun",  "Times the main frame loop. A breakdown will be printed after the game closes."),
 )
 
 opt_results, other_args = getopt.gnu_getopt(
@@ -80,7 +86,7 @@ for opt, val in opt_results:
 if timing_init:
 	start_time = time.time()
 app.ui_init()
-app.sim_init()
+app.sim_init(timing = timing_run)
 if jump_area_name is not None:
 	app.init_area(jump_area_name)
 if jump_mission_name is not None:
@@ -93,3 +99,31 @@ if profiling:
 else:
 	psyco.full() # TODO: Make sure this actually improves performance
 	app.run()
+
+if timing_run:
+	totals = [0] * len(app.timing_names)
+	for n, row in enumerate(app.timings):
+		if (n%20) == 0:
+			for i in xrange(1, len(row)):
+				print ("%8s" % app.timing_names[i]),
+			print ("%8s" % "FPS"),
+			print
+		if len(row) == len(app.timing_names):
+			for i in xrange(1, len(row)):
+				section_ms = (row[i] - row[i-1])*1000
+				totals[i-1] += section_ms
+				print ("% 6.2fms" % section_ms),
+			fps = 1/(row[-1] - row[0])
+			totals[len(row)-1] += fps
+			print ("% 8.4f" % fps),
+			print
+	
+	print
+	print "AVERAGES"
+	for n, total in enumerate(totals):
+		val = total/len(app.timings)
+		if n == len(totals)-1:
+			print ("% 8.4f" % val),
+		else:
+			print ("% 6.2fms" % val),
+	print
