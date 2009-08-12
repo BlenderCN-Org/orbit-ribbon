@@ -117,7 +117,7 @@ class OREMesh:
 		#self._uv_vbo = pyvbo.VertexBuffer(uv_flat_list, GL_STATIC_DRAW)
 		
 	def draw_gl(self):
-		glPushAttrib(GL_CURRENT_BIT)
+		glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT)
 		glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT)
 		
 		glEnableClientState(GL_VERTEX_ARRAY)
