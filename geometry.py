@@ -1,6 +1,8 @@
 from __future__ import division
 import math, copy
 
+from util import *
+
 def _coordlike_copy(obj):
 	"""Given an object, if it's not already a derivative of _CoordLike,
 	then it returns a new _CoordLike with that object in both fields. Otherwise,
@@ -167,10 +169,6 @@ class Point(_CoordLike, object):
 		"""Returns the dot product between this point and another, both considered as vectors."""
 		return self[0]*other[0] + self[1]*other[1] + self[2]*other[2]
 	
-	def rotate(self, angle):
-		"""Rotates this point as a vector around the origin. Angle given is in revolutions."""
-		# FIXME Implement this
-	
 	def mag(self):
 		"""Returns the distance between the origin and this point."""
 		return math.sqrt(math.sqrt(self[0]**2.0 + self[1]**2.0)**2.0 + self[2]**2.0)
@@ -179,17 +177,9 @@ class Point(_CoordLike, object):
 		"""Returns the distance between this point and another."""
 		return math.sqrt(math.sqrt((self[0]-other[0])**2.0 + (self[1]-other[1])**2.0)**2.0 + (self[2]-other[2])**2.0)
 	
-	def ang(self):
-		# FIXME : Needs to be 3D
-		"""Returns the angle from the origin to this point."""
-		return Point().ang_to(self)
-	
 	def ang_to(self, other):
-		# FIXME : Needs to be 3D
-		"""Returns the angle from this point to another in clockwise revolutions.
-		
-		If other is directly to the right of this point, then the angle is zero."""
-		return math.atan2(other[1]-self[1], other[0]-self[0])/(2*math.pi)
+		"""Returns the angle in revolutions from this point to another, considering both points as vectors from the origin."""
+		return rad2rev(math.acos((self.dot_prod(other))/(self.mag()*other.mag())))
 	
 	def to_length(self, len = 1.0):
 		"""Returns a coord of a given length, but in the same direction from the origin."""

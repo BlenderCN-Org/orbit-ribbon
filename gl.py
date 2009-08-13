@@ -6,7 +6,7 @@ OpenGL.ERROR_LOGGING = False
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
-from OpenGL.raw import GL
+from OpenGL.raw import GL as RawGL
 from OpenGL.arrays import ArrayDatatype as ADT
 
 
@@ -39,14 +39,14 @@ class GLVertexBuffer:
 	draw time, call the relevant bind method before calling glDrawArrays or a similar function.
 	"""
 	def __init__(self, data, usage):
-		self._buffer = GL.GLuint(0)
+		self._buffer = RawGL.GLuint(0)
 		glGenBuffers(1, self._buffer)
 		self._buffer = self._buffer.value
 		self.bind()
 		glBufferData(GL_ARRAY_BUFFER_ARB, ADT.arrayByteCount(data), ADT.voidDataPointer(data), usage)
 	
 	def __del__(self):
-		glDeleteBuffers(1, GL.GLuint(self._buffer))
+		glDeleteBuffers(1, RawGL.GLuint(self._buffer))
 	
 	def bind(self):
 		glBindBuffer(GL_ARRAY_BUFFER_ARB, self._buffer)

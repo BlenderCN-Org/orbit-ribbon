@@ -287,7 +287,7 @@ def _draw_frame():
 	for o in far_objs:
 		o.distdraw()
 	glDisable(GL_TEXTURE_2D)
-	_rectime("DF-Bb")
+	_rectime("DF-Dist")
 	
 	# 3D projection mode for nearby gameplay objects with depth-testing
 	glEnable(GL_DEPTH_TEST)

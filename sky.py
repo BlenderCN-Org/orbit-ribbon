@@ -74,6 +74,15 @@ class SkyStuff:
 		self._t3_tex = resman.Texture("t3.png")
 		self._gold_tex = resman.Texture("gold.png")
 		self._jungle_tex = resman.Texture("jungle.png")
+		
+		self._billboardList = billboard.BillboardList()
+		t3_pos = self._t3_pos()
+		self._billboardList.append(billboard.Billboard(t3_pos,               self._t3_tex,   T3_RADIUS*2))
+		self._billboardList.append(billboard.Billboard(Point(GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2))
+		self._billboardList.append(billboard.Billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2))
+		for p in JUNGLE_POSITIONS:
+			# Draw jungles around the Smoke Ring in various randomly generated positions
+			self._billboardList.append(billboard.Billboard(p, self._jungle_tex, 20000))
 	
 	def _applySkyMatrix(self):
 		# TODO - Perhaps could be optimized by caching, since the matrix generated will not change as long as sky values don't change
@@ -210,17 +219,7 @@ class SkyStuff:
 		### Figure out where the camera is and how to get there, and move to the sky coordinate system
 		cam = app.player_camera.get_position()
 		localCamPos = self.to_sky_coords(cam)
-		
 		glPushMatrix()
 		self._applySkyMatrix()
-		
-		t3_pos = self._t3_pos()
-		billboard.draw_billboard(t3_pos,               self._t3_tex,   T3_RADIUS*2,   -t3_pos + localCamPos)    # T3
-		billboard.draw_billboard(Point(GOLD_DIST,0,0), self._gold_tex, GOLD_RADIUS*2, -Point(GOLD_DIST,0,0) + localCamPos)  # Gold
-		billboard.draw_billboard(Point(0,0,0),         self._voy_tex,  VOY_RADIUS*2,  localCamPos)   # Voy
-		
-		# Draw jungles around the Smoke Ring in various positions
-		for p in JUNGLE_POSITIONS:
-			billboard.draw_billboard(p, self._jungle_tex, 20000, -p + localCamPos)
-		
+		self._billboardList.draw(localCamPos)
 		glPopMatrix()
