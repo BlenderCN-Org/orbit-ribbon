@@ -2,15 +2,10 @@ from __future__ import division
 
 import ode, sys, math, pygame, pickle, time
 from pygame.locals import *
-import OpenGL
-OpenGL.ERROR_CHECKING = False
-OpenGL.ERROR_LOGGING = False
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
 
 import collision, util, console, resman, camera, joy, sky, titlescreen, ore, avatar
 from geometry import *
+from gl import *
 
 # The directory where the application is installed
 # Py2Exe screws with this by putting the path inside a zip file, so go up if that is the case

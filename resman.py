@@ -1,12 +1,8 @@
 import pygame, os, StringIO
-import OpenGL
-OpenGL.ERROR_CHECKING = False
-OpenGL.ERROR_LOGGING = False
-from OpenGL.GL import *
-from OpenGL.GLU import *
 
 import app
 from geometry import *
+from gl import *
 
 class SoundClip(object):
 	"""A sound clip.

@@ -1,12 +1,7 @@
 from __future__ import division
 
-import OpenGL
-OpenGL.ERROR_CHECKING = False
-OpenGL.ERROR_LOGGING = False
-from OpenGL.GL import *
-from OpenGL.GLUT import *
-
 import app, avatar, resman, target
+from gl import *
 
 WIN_MESSAGE = "Complete!"
 WIN_MESSAGE_TIME = 5.0

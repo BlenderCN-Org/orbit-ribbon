@@ -1,16 +1,11 @@
 from __future__ import division
 
 import ode, math, random
-import OpenGL
-OpenGL.ERROR_CHECKING = False
-OpenGL.ERROR_LOGGING = False
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
 
 import app, collision, resman, billboard
 from geometry import *
 from util import *
+from gl import *
 
 # Distances in meters from Voy to other sky objects, and sizes of various objects
 VOY_RADIUS = 2e4 # From book

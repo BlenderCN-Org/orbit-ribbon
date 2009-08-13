@@ -1,14 +1,11 @@
 from __future__ import division
 
 import ode, ConfigParser, StringIO, pickle, zipfile, cPickle, numpy
-import OpenGL
-OpenGL.ERROR_CHECKING = False
-OpenGL.ERROR_LOGGING = False
-from OpenGL.GL import *
 
-import app, oreshared, collision, sky, missioncon, gameobj, avatar, target, resman, pyvbo
+import app, oreshared, collision, sky, missioncon, gameobj, avatar, target, resman
 from geometry import *
 from util import *
+from gl import *
 
 class SimpleOREGameObj(gameobj.GameObj):
 	"""A GameObj which acts as a fixed piece of landscape (skyscape?), with display and collision geometry loaded from a given OREMesh.
@@ -107,7 +104,7 @@ class OREMesh:
 					vbo_flat_list.extend(face[0][i]) # Append vertex data 
 		
 		# Build a VBO out of our flattened list
-		self._vbo = pyvbo.VertexBuffer(numpy.array(vbo_flat_list, dtype=numpy.float32), GL_STATIC_DRAW)
+		self._vbo = GLVertexBuffer(numpy.array(vbo_flat_list, dtype=numpy.float32), GL_STATIC_DRAW)
 		
 	def draw_gl(self):
 		self._vbo.bind_interleaved(GL_T2F_N3F_V3F)

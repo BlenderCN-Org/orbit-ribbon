@@ -1,15 +1,11 @@
 from __future__ import division
 
 import pygame, os
-import OpenGL
-OpenGL.ERROR_CHECKING = False
-OpenGL.ERROR_LOGGING = False
-from OpenGL.GL import *
-from OpenGL.GLU import *
 
 import app, resman, camera, sky, console
 from geometry import *
 from util import *
+from gl import *
 
 TSMODE_PRE_PRE_MAIN, TSMODE_PRE_MAIN, TSMODE_MAIN, TSMODE_PRE_AREA, TSMODE_AREA, TSMODE_PRE_MISSION, TSMODE_MISSION, TSMODE_PRE_GAMEPLAY = range(8)
 PRE_PRE_MAIN_MILLISECS = 1500

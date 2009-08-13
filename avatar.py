@@ -1,15 +1,10 @@
 from __future__ import division
 import ode
-import OpenGL
-OpenGL.ERROR_CHECKING = False
-OpenGL.ERROR_LOGGING = False
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
 
 import app, gameobj, collision, joy, resman, anim
 from geometry import *
 from util import *
+from gl import *
 
 # Maximum amount of force per second applied by various maneuvers
 MAX_STRAFE = 5000.0
