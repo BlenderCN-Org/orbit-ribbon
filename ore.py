@@ -89,9 +89,7 @@ class OREMesh:
 		self.trimesh_data.build(vertex_list, face_idxs)
 		
 		# Calculate data to put into VBOs for drawing this mesh quickly
-		vertex_flat_list = []
-		normal_flat_list = []
-		uv_flat_list = []
+		vbo_flat_list = [] # Format is GL_T2F_N3F_V3F (2 floats for uv coords, 3 floats for normal vector, then 3 floats for vertex)
 		self._texsteps = [] # A sequence of (resman.Texture or None, count), where count is how many faces to draw using that texture
 		for imgName, facelist in oreshr_mesh.facelists.iteritems():
 			tex = None
@@ -100,23 +98,19 @@ class OREMesh:
 				tex = resman.Texture("ORE-%s" % imgName, lambda: self._zfh.read("image-%s" % imgName))
 			self._texsteps.append((tex, len(facelist)))
 			for face in facelist:
-				for i in xrange(3):
-					vertex_flat_list.extend(face[0][i])
-					normal_flat_list.extend(face[1][i])
+				for i in xrange(3): # For each vertex in this tri-face...
 					if face[2][i] is not None:
-						uv_flat_list.extend(face[2][i])
+						vbo_flat_list.extend(face[2][i]) # Append UV coordinate data
 					else:
-						uv_flat_list.extend((0,0))
+						vbo_flat_list.extend((0,0)) # Append fake UV coords (won't be used anyways, since textures will be disabled for this vertex)
+					vbo_flat_list.extend(face[1][i]) # Append normal vector data
+					vbo_flat_list.extend(face[0][i]) # Append vertex data 
 		
-		# Build VBOs out of our calculated data
-		self._vertex_vbo = pyvbo.VertexBuffer(numpy.array(vertex_flat_list, dtype=numpy.float32), GL_STATIC_DRAW)
-		self._normal_vbo = pyvbo.VertexBuffer(numpy.array(normal_flat_list, dtype=numpy.float32), GL_STATIC_DRAW)
-		self._uv_vbo = pyvbo.VertexBuffer(numpy.array(uv_flat_list, dtype=numpy.float32), GL_STATIC_DRAW)
+		# Build a VBO out of our flattened list
+		self._vbo = pyvbo.VertexBuffer(numpy.array(vbo_flat_list, dtype=numpy.float32), GL_STATIC_DRAW)
 		
 	def draw_gl(self):
-		self._vertex_vbo.bind_vertexes(3, GL_FLOAT)
-		self._normal_vbo.bind_normals(GL_FLOAT)
-		self._uv_vbo.bind_texcoords(2, GL_FLOAT)
+		self._vbo.bind_interleaved(GL_T2F_N3F_V3F)
 		
 		textureFlag = None # True means textures enabled, False means textures disabled, None means unknown state
 		
