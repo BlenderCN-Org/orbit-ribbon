@@ -183,7 +183,7 @@ class SkyStuff:
 		#glColor4f(1.0, 1.0, 1.0, 0.05)
 		#glutSolidTorus(TORUS_RADIUS, (TORUS_INSIDE_DIST+TORUS_OUTSIDE_DIST)/2, 20, 20)
 		glPopMatrix()
-		glDisable(GL_CULL_FACE)
+		glDisable(GL_CULL_FACE) # FIXME - Should have back face culling always enabled to hide camera mishaps and maybe boost performance a little
 		
 		# Set up lighting parameters for the two stars of the Smoke Ring system
 		# Since lighting is disabled at this time, this does not affect the drawing of the sky objects themselves
