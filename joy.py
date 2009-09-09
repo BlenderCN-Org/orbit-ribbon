@@ -15,35 +15,35 @@ AXIS, BUTTON = range(2)
 UP, DOWN = range(2)
 SELECT, START, LX, LY, L1, L2, L3, RX, RY, R1, R2, R3, UP, LEFT, RIGHT, DOWN, S, X, O, T = range(20)
 
-# Assocation of PS3 button names to button numbers on the PS3 controller.
+# Assocation of PS3 button names to button numbers on the PS3 controller and keyboard keys
 BUTTON_NUMS = {
-	SELECT : 0,
-	START : 3,
-	L1 : 10,
+	SELECT : (0, K_RSHIFT),
+	START : (3, K_RETURN),
+	L1 : (10, K_u),
 #	L2 : 8,
-	L3 : 1,
-	R1 : 11,
+	L3 : (1, K_z),
+	R1 : (11, K_o),
 #	R2 : 9,
-	R3 : 2,
-	UP : 4,
-	LEFT : 7,
-	RIGHT : 5,
-	DOWN : 6,
-	S : 15,
-	X : 14,
-	O : 13,
-	T : 12,
+	R3 : (2, K_SLASH),
+	UP : (4, K_UP),
+	LEFT : (7, K_LEFT),
+	RIGHT : (5, K_RIGHT),
+	DOWN : (6, K_DOWN),
+	S : (15, K_r),
+	X : (14, K_f),
+	O : (13, K_h),
+	T : (12, K_y),
 }
 BUTTON_NAMES = dict([ (BUTTON_NUMS[n], n) for n in BUTTON_NUMS.keys() ])
 
-# Assocation of PS3 axis names to axis numbers on the PS3 controller. I consider L2 and R2 to be axes.
+# Assocation of PS3 axis names to axis numbers on the PS3 controller and keyboard keys. I consider L2 and R2 to be axes, because they allow analog control.
 AXIS_NUMS = {
-	L2 : 12,
-	LX : 0,
-	LY : 1,
-	R2 : 13,
-	RX : 2,
-	RY : 3,
+	L2 : (12, K_q, None),
+	LX : (0, K_d, K_a),
+	LY : (1, K_w, K_s),
+	R2 : (13, K_e, None),
+	RX : (2, K_l, K_j),
+	RY : (3, K_i, K_k),
 }
 AXIS_NAMES = dict([ (AXIS_NUMS[n], n) for n in AXIS_NUMS.keys() ])
 
@@ -51,8 +51,12 @@ def init():
 	"""Must be called before you can start receiving joystick events."""
 	global _js
 	pygame.joystick.init()
-	_js = pygame.joystick.Joystick(0)
-	_js.init()
+	
+	try:
+		_js = pygame.joystick.Joystick(0)
+		_js.init()
+	except pygame.error:
+		pass # No joystick plugged in, but we can still use keyboard and mouse input
 
 
 def _normalizeShoulderAxis(a, v):
@@ -84,28 +88,31 @@ def procEvent(e):
 def getAxes():
 	"""Returns a dictionary mapping axis name to float, describing the current state of all the axes on the joystick."""
 	ret = {}
-	delta = 0.01 # Dead zone threshold
-	for name, num in AXIS_NUMS.iteritems():
-		v = _normalizeShoulderAxis(name, _js.get_axis(num))
-		if abs(v) >= delta:
-			ret[name] = v
-		else:
-			ret[name] = 0.0
 	
-	# Check if we can leave weirdness state; if not, set all values to 0.0
-	global _weirdState
-	if _weirdState:
-		x = None
-		for key in ret:
-			v = ret[key]
-			if x is None and v < -0.99:
-				x = v
-			elif v != x and v != 0.0:
-				_weirdState = False
-				break
+	if _js is not None:
+		delta = 0.01 # Dead zone threshold
+		for name, num in AXIS_NUMS.iteritems():
+			v = _normalizeShoulderAxis(name, _js.get_axis(num))
+			if abs(v) >= delta:
+				ret[name] = v
+			else:
+				ret[name] = 0.0
+		# Check if we can leave weirdness state; if not, set all values to 0.0
+		global _weirdState
 		if _weirdState:
+			x = None
 			for key in ret:
-				ret[key] = 0.0
+				v = ret[key]
+				if x is None and v < -0.99:
+					x = v
+				elif v != x and v != 0.0:
+					_weirdState = False
+					break
+			if _weirdState:
+				for key in ret:
+					ret[key] = 0.0
+	else:
+		for 
 	
 	return ret
 
