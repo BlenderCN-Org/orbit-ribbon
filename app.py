@@ -3,7 +3,7 @@ from __future__ import division
 import ode, sys, math, pygame, pickle, time
 from pygame.locals import *
 
-import collision, util, console, resman, camera, joy, sky, titlescreen, ore, avatar
+import collision, console, camera, joy, sky, titlescreen, ore, avatar
 from geometry import *
 from gl import *
 

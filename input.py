@@ -60,16 +60,24 @@ class Keyboard(ChannelSource):
 	"""An object representing the keyboard, from which you can get KeyChannels.
 	
 	Before using the KeyChannels from a Keyboard at a particular time, call the Keyboard's update() method.
-
+	
 	Data attributes:
 	key_channels: A dictionary mapping pygame key constants to the same KeyChannels returned by channels().
 	"""
+
+	# Will not track keystrokes from keys with these names, since they've been known to cause problems
+	IGNORE_KEYS = (
+		'[-]',       # This key, whatever it is, seems to get locked on when I push PrintScreen on my laptop
+		'numlock',   # This key always indicates pressed on my laptop
+	)
 	
 	def __init__(self):
 		self.update()
 		self._channels = []
 		self.key_channels = {}
 		for keyconst, value in enumerate(self._pressed_dict):
+			if pygame.key.name(keyconst) in self.IGNORE_KEYS:
+				continue
 			channel = KeyChannel(self, keyconst)
 			self.key_channels[keyconst] = channel
 			self._channels.append(channel)
