@@ -69,7 +69,7 @@ class Keyboard(ChannelSource):
 		self.update()
 		self._channels = []
 		self.key_channels = {}
-		for keyconst in self._pressed_dict.iterkeys():
+		for keyconst, value in enumerate(self._pressed_dict):
 			channel = KeyChannel(self, keyconst)
 			self.key_channels[keyconst] = channel
 			self._channels.append(channel)
@@ -93,7 +93,7 @@ class KeyChannel(Channel):
 		self._keyconst = _keyconst
 	
 	def is_on(self):
-		return self._kbd.pressed_dict[self._keyconst]
+		return self._kbd._pressed_dict[self._keyconst]
 	
 	def value(self):
 		if self._kbd._pressed_dict[self._keyconst]:
@@ -152,11 +152,12 @@ class Gamepad(ChannelSource):
 		}
 	}
 	
-	def __init__(self, js):
-		"""Creates a Gamepad from the given pygame joystick object."""
-		self._js = js
-		self._numaxes = js.get_numaxes()
-		self._numbtns = js.get_numbuttons()
+	def __init__(self, js_num):
+		"""Creates a Gamepad from the given numbered pygame joystick."""
+		self._js = pygame.joystick.Joystick(js_num)
+		self._js.init()
+		self._numaxes = self._js.get_numaxes()
+		self._numbtns = self._js.get_numbuttons()
 		
 		# TODO: Implement weird state detection, and come up with a better name for it
 		# The PS3 controller, when first plugged in, acts kind of weird until you push the PS3 button
@@ -166,12 +167,12 @@ class Gamepad(ChannelSource):
 		self._weirdState = True
 		
 		self._btn_names, self._axis_names = None, None
-		jsname = js.get_name()
-		for namepat, namedict in self._KNOWN_BUTTON_NAMES:
+		jsname = self._js.get_name()
+		for namepat, namedict in self._KNOWN_BTN_NAMES.iteritems():
 			if namepat.search(jsname):
 				self._btn_names = namedict
 				break
-		for namepat, namedict in self._KNOWN_AXIS_NAMES:
+		for namepat, namedict in self._KNOWN_AXIS_NAMES.iteritems():
 			if namepat.search(jsname):
 				self._axis_names = namedict
 				break
@@ -184,7 +185,7 @@ class Gamepad(ChannelSource):
 			channel = GamepadAxisChannel(self, idx)
 			self.axis_channels[idx] = channel
 			self._channels.append(channel)
-		for idx in self._buttons.iterkeys():
+		for idx in self._btns.iterkeys():
 			channel = GamepadButtonChannel(self, idx)
 			self.button_channels[idx] = channel
 			self._channels.append(channel)
@@ -276,7 +277,7 @@ class GamepadAxisChannel(Channel):
 		return "JoyAxis:%s" % axis_name
 
 
-class DoubleChannel(Channel):
+class DigitalAxisChannel(Channel):
 	"""A Channel that takes two existing Channel objects and uses their is_on() methods as either side of an axis.
 	
 	The positive side is always checked first; if it's on, the value() is 1. If positive is off but negative is on,
@@ -362,37 +363,46 @@ class InputManager:
 		
 		# TODO : Implement Gamepad and gamepad channels that work even when no gamepad attached, so that we can:
 		# - Plug in or unplug gamepad while game is running, or even change gamepads (does pygame support this?)
-		# - Not have to mess with the input config file parser to have it deal with whether or not configured gamepad is actually plugged in at parse time
-		self._gamepad = Gamepad(pygame.joystick.Joystick(0))
+		# - Not have to mess with InputManager or conf file parser to have it deal with whether or not configured gamepad is plugged in
+		self._gamepad = Gamepad(0)
 		
-		for channel_src in [self._keyboard] + self._gamepads:
+		for channel_src in (self._keyboard, self._gamepad):
 			for channel in channel_src.channels():
 				self.all_channels.append(channel)
 		
 		# TODO: Make this user-configurable
 		self.intent_channels = {
 			INTENT_TRANS_X : MultiChannel([
-				DoubleChannel(self._keyboard.key_channels[K_a], self._keyboard.key_channels[K_d]),
+				DigitalAxisChannel(self._keyboard.key_channels[K_a], self._keyboard.key_channels[K_d]),
 				self._gamepad.axis_channels[0],
 			]),
 			INTENT_TRANS_Y : MultiChannel([
-				DoubleChannel(self._keyboard.key_channels[K_s], self._keyboard.key_channels[K_w]),
+				DigitalAxisChannel(self._keyboard.key_channels[K_s], self._keyboard.key_channels[K_w]),
 				self._gamepad.axis_channels[1],
 			]),
 			INTENT_TRANS_Z : MultiChannel([
-				DoubleChannel(self._keyboard.key_channels[K_q], self._keyboard.key_channels[K_e]),
-				DoubleChannel(self._gamepad.axis_channels[12], self._gamepad.axis_channels[13]),
+				DigitalAxisChannel(self._keyboard.key_channels[K_q], self._keyboard.key_channels[K_e]),
+				DigitalAxisChannel(self._gamepad.axis_channels[12], self._gamepad.axis_channels[13]),
 			]),
 			INTENT_ROTATE_X : MultiChannel([
-				DoubleChannel(self._keyboard.key_channels[K_i], self._keyboard.key_channels[K_k]),
+				DigitalAxisChannel(self._keyboard.key_channels[K_i], self._keyboard.key_channels[K_k]),
 				self._gamepad.axis_channels[3],
 			]),
 			INTENT_ROTATE_Y : MultiChannel([
-				DoubleChannel(self._keyboard.key_channels[K_j], self._keyboard.key_channels[K_l]),
+				DigitalAxisChannel(self._keyboard.key_channels[K_j], self._keyboard.key_channels[K_l]),
 				self._gamepad.axis_channels[2],
 			]),
 			INTENT_ROTATE_Z : MultiChannel([
-				DoubleChannel(self._keyboard.key_channels[K_u], self._keyboard.key_channels[K_o]),
-				DoubleChannel(self._gamepad.axis_channels[14], self._gamepad.axis_channels[15]),
+				DigitalAxisChannel(self._keyboard.key_channels[K_u], self._keyboard.key_channels[K_o]),
+				DigitalAxisChannel(self._gamepad.axis_channels[14], self._gamepad.axis_channels[15]),
 			]),
 		}
+	
+	def update(self):
+		"""Calls update() on all the ChannelSources being managed.
+
+		You should call this once per frame before checking the Channels.
+		"""
+		pygame.event.pump()
+		self._keyboard.update()
+		self._gamepad.update()
