@@ -148,15 +148,22 @@ class Gamepad(ChannelSource):
 	# If a gamepad's name matches the regular expression, then we can use these more human-readable names for axis indices
 	_KNOWN_AXIS_NAMES = {
 		re.compile(r"PLAYSTATION\(R\)3") : {
-			# TODO: Use jstest and put in the rest of these
 			14: "L1",
 			12: "L2",
-			0: "Left Stick X",
-			1: "Left Stick Y",
+			0:  "Left Stick X",
+			1:  "Left Stick Y",
 			15: "R1",
 			13: "R2",
-			2: "Right Stick X",
-			3: "Right Stick Y",
+			2:  "Right Stick X",
+			3:  "Right Stick Y",
+			8:  "Up",
+			11: "Left",
+			9:  "Right",
+			10: "Down",
+			19: "Square",
+			18: "X",
+			17: "Circle",
+			16: "Triangle",
 		}
 	}
 	
