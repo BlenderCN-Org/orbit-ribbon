@@ -116,7 +116,7 @@ class Gamepad(ChannelSource):
 	
 	# If a gamepad's name matches the regular expression, then we can use these more human-readable names for button indices
 	_KNOWN_BTN_NAMES = {
-		re.compile(r"PS3") : {
+		re.compile(r"PLAYSTATION\(R\)3") : {
 			0  : "Select",
 			3  : "Start",
 			10 : "L1",
@@ -139,7 +139,7 @@ class Gamepad(ChannelSource):
 	
 	# If a gamepad's name matches the regular expression, then we can use these more human-readable names for axis indices
 	_KNOWN_AXIS_NAMES = {
-		re.compile(r"PS3") : {
+		re.compile(r"PLAYSTATION\(R\)3") : {
 			# TODO: Use jstest and put in the rest of these
 			14: "L1",
 			12: "L2",
@@ -177,6 +177,7 @@ class Gamepad(ChannelSource):
 				self._axis_names = namedict
 				break
 		
+		pygame.event.pump()
 		self.update()
 		self.axis_channels = {}
 		self.button_channels = {}
@@ -200,9 +201,9 @@ class Gamepad(ChannelSource):
 		self._axes = {}
 		for i in xrange(self._numaxes):
 			n = self._js.get_axis(i)
-			if abs(1 - n) < self.DEAD_ZONE:
+			if abs(n - 1) < self.DEAD_ZONE:
 				n = 1
-			elif abs(-1 - n) < self.DEAD_ZONE:
+			elif abs(n + 1) < self.DEAD_ZONE:
 				n = -1
 			elif abs(n) < self.DEAD_ZONE:
 				n = 0
@@ -239,7 +240,7 @@ class GamepadButtonChannel(Channel):
 	def desc(self):
 		btn_name = self._btn_num
 		if self._gamepad._btn_names is not None and self._btn_num in self._gamepad._btn_names:
-			btn_name = self._gamepad.btn_names[btn_name]
+			btn_name = self._gamepad._btn_names[btn_name]
 		return "JoyBtn:%s" % btn_name
 
 
@@ -254,10 +255,10 @@ class GamepadAxisChannel(Channel):
 	
 	def set_neutral(self):
 		"""Takes the current axis state as neutral."""
-		self._neutral = self.value()
+		self._neutral = self._gamepad._axes[self._axis_num]
 	
 	def is_on(self):
-		if self.value() != 0:
+		if abs(self._neutral - self._gamepad._axes[self._axis_num]) > Gamepad.DEAD_ZONE:
 			return True
 		return False
 	
@@ -273,7 +274,7 @@ class GamepadAxisChannel(Channel):
 	def desc(self):
 		axis_name = self._axis_num
 		if self._gamepad._axis_names is not None and self._axis_num in self._gamepad._axis_names:
-			axis_name = self._gamepad.axis_names[axis_name]
+			axis_name = self._gamepad._axis_names[axis_name]
 		return "JoyAxis:%s" % axis_name
 
 
@@ -369,6 +370,11 @@ class InputManager:
 		for channel_src in (self._keyboard, self._gamepad):
 			for channel in channel_src.channels():
 				self.all_channels.append(channel)
+		
+		#print "-----"
+		#time.sleep(1)
+		#self._gamepad.update()
+		#self._gamepad.set_neutral()
 		
 		# TODO: Make this user-configurable
 		self.intent_channels = {

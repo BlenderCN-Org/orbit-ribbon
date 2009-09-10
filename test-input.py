@@ -11,7 +11,7 @@ screen = pygame.display.set_mode((100, 100))
 m = input.InputManager()
 
 while True:
-	time.sleep(0.01)
+	time.sleep(0.05)
 	m.update()
 	
 	on_list = []
