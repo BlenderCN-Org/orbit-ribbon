@@ -3,7 +3,7 @@ from __future__ import division
 import ode, sys, math, pygame, pickle, time
 from pygame.locals import *
 
-import collision, console, camera, joy, sky, titlescreen, ore, avatar
+import collision, console, camera, sky, titlescreen, ore, avatar
 from geometry import *
 from gl import *
 
@@ -58,9 +58,8 @@ events = []
 #Billboard objects which should be drawn this frame
 billboards = []
 
-#The result of calls to joy.getAxes and joy.getButtons at the beginning of this simstep
-axes = {}
-buttons = {}
+#The input manager used to track what the player does with the controls
+input_man = None
 
 #Dictionary of collisions between geoms logged this step
 #Each key is the id of an ODE geom
@@ -112,19 +111,19 @@ def ui_init():
 
 	Must be called before sim_init().
 	"""
-	global screen, clock, cons, watchers
-
+	global screen, clock, cons, watchers, input_man
+	
 	pygame.display.init()
 	pygame.display.set_caption('Orbit Ribbon')
 	pygame.display.set_icon(pygame.image.load(os.path.join(APP_DIR, 'images', 'logo.png')))
 	pygame.mouse.set_visible(0)
 	screen = pygame.display.set_mode(winsize, DOUBLEBUF | OPENGL)
 
+	input_man = input.InputManager()
+
 	pygame.mixer.init(22050, -16, 2, 512)
 
 	clock = pygame.time.Clock()
-	
-	joy.init()
 	
 	glutInit(sys.argv) # GLUT is only used for drawing text and basic geometrical objects, not its full rigamarole of app control
 	
@@ -148,10 +147,10 @@ def ui_init():
 	watchers = []
 	sys.stderr = cons.pseudofile
 	sys.stdout = cons.pseudofile
-	watchers.append(console.Watcher("q", "a", pygame.Rect(20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
-	watchers.append(console.Watcher("d", "c", pygame.Rect(20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
-	watchers.append(console.Watcher("p", "l", pygame.Rect(5*winsize[0]/6 - 20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
-	watchers.append(console.Watcher("j", "n", pygame.Rect(5*winsize[0]/6 - 20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	watchers.append(console.Watcher("1", "2", pygame.Rect(20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	watchers.append(console.Watcher("3", "4", pygame.Rect(20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	watchers.append(console.Watcher("5", "6", pygame.Rect(5*winsize[0]/6 - 20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	watchers.append(console.Watcher("7", "8", pygame.Rect(5*winsize[0]/6 - 20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
 
 
 def sim_init(timing = False):
@@ -362,10 +361,6 @@ def _proc_input():
 		if w.expr != None:
 			w.update()
 	
-	global axes, buttons
-	axes = joy.getAxes()
-	buttons = joy.getButtons()
-
 
 def run():
 	"""Runs the game.

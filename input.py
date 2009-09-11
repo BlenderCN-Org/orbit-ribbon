@@ -5,9 +5,10 @@ from pygame.locals import *
 
 
 # Intentions are direct gameplay actions controlled by input Channels
-INTENT_TRANS_X, INTENT_TRANS_Y, INTENT_TRANS_Z, INTENT_ROTATE_X, INTENT_ROTATE_Y, INTENT_ROTATE_Z = range(6)
-
-# TODO: Add an invert flag to Channel, then change value() to value_impl() and have Channel's value() check that flag
+(INTENT_TRANS_X, INTENT_TRANS_Y, INTENT_TRANS_Z, INTENT_ROTATE_X, INTENT_ROTATE_Y, INTENT_ROTATE_Z,
+INTENT_UI_CONFIRM, INTENT_UI_BACK, INTENT_UI_X, INTENT_UI_Y,
+INTENT_DEBUG_OPEN, INTENT_DEBUG_A_AXIS, INTENT_DEBUG_B_AXIS, INTENT_DEBUG_C_AXIS, INTENT_DEBUG_D_AXIS,
+) = range(15)
 
 class Channel:
 	"""A single source of simple input information, such as a particular keyboard key or gamepad axis."""
@@ -59,8 +60,6 @@ class ChannelSource:
 class Keyboard(ChannelSource):
 	"""An object representing the keyboard, from which you can get KeyChannels.
 	
-	Before using the KeyChannels from a Keyboard at a particular time, call the Keyboard's update() method.
-	
 	Data attributes:
 	key_channels: A dictionary mapping pygame key constants to the same KeyChannels returned by channels().
 	"""
@@ -90,10 +89,7 @@ class Keyboard(ChannelSource):
 
 
 class KeyChannel(Channel):
-	"""A Channel indicating the state of a particular keyboard key.
-	
-	Before using any KeyChannels at a particular time, be sure to call update() on the Keyboard object.
-	"""
+	"""A Channel indicating the state of a particular keyboard key."""
 	
 	def __init__(self, _kbd, _keyconst):
 		"""Creates a KeyChannel. Don't call this; use a Keyboard object to get KeyChannels instead."""
@@ -120,7 +116,7 @@ class Gamepad(ChannelSource):
 	button_channels - A dictionary mapping button indices to the same GamepadButtonChannels returned by channels().
 	"""
 	
-	DEAD_ZONE = 0.02 # How far from -1, 0, or 1 where we consider it to just be at those exact values
+	DEAD_ZONE = 0.001 # How far from -1, 0, or 1 where we consider it to just be at those exact values
 	
 	# If a gamepad's name matches the regular expression, then we can use these more human-readable names for button indices
 	_KNOWN_BTN_NAMES = {
@@ -294,10 +290,11 @@ class GamepadAxisChannel(Channel):
 
 
 class DigitalAxisChannel(Channel):
-	"""A Channel that takes two existing Channel objects and uses their is_on() methods as either side of an axis.
+	"""A Channel that takes two existing Channel objects and uses their values as either side of a logical axis.
 	
-	The positive side is always checked first; if it's on, the value() is 1. If positive is off but negative is on,
-	then value() is -1. Otherwise, value() is 0.
+	The positive side is always checked first; if it's positive, its value becomes the DigitalAxisChannel's value.
+	If the positive side isn't positive, but the negative side is positive, then the negative of that value becomes the DAC's value.
+	Otherwise, the DigitalAxisChannel's value() is 0.
 	
 	Data attributes:
 	negative - The negative side Channel object.
@@ -311,8 +308,8 @@ class DigitalAxisChannel(Channel):
 		return self.positive.is_on() or self.negative.is_on()
 	
 	def value(self):
-		pos_val = self.positive.value()
-		neg_val = self.negative.value()
+		pos_val = self.positive.is_on()
+		neg_val = self.negative.is_on()
 
 		if pos_val > 0:
 			return pos_val
@@ -326,13 +323,14 @@ class DigitalAxisChannel(Channel):
 
 
 class MultiChannel:
-	"""A Channel that merges multiple Channels.
-
+	"""A Channel that merges multiple Channels into one logical channel.
+	
 	The MultiChannel is on if any of the sub-Channels are on. The MultiChannel's value is the sub-Channel value farthest from zero (highest abs).
-
+	
 	Data attributes:
 	channels - A list of sub-Channels.
 	"""
+	# TODO: Add an invert flag to MultiChannel
 	
 	def __init__(self, channels):
 		"""Creates a MultiChannel with the given list of sub-channels.
@@ -350,9 +348,9 @@ class MultiChannel:
 	def value(self):
 		v = 0.0
 		for c in self.channels:
-			sub_v = c.value()
-			if abs(sub_v) > abs(v):
-				v = sub_v
+			cand_v = c.value()
+			if abs(cand_v) > abs(v):
+				v = cand_v
 		return v
 	
 	def desc(self):
@@ -386,11 +384,6 @@ class InputManager:
 			for channel in channel_src.channels():
 				self.all_channels.append(channel)
 		
-		#print "-----"
-		#time.sleep(1)
-		#self._gamepad.update()
-		#self._gamepad.set_neutral()
-		
 		# TODO: Make this user-configurable
 		self.intent_channels = {
 			INTENT_TRANS_X : MultiChannel([
@@ -417,7 +410,39 @@ class InputManager:
 				DigitalAxisChannel(self._keyboard.key_channels[K_u], self._keyboard.key_channels[K_o]),
 				DigitalAxisChannel(self._gamepad.axis_channels[14], self._gamepad.axis_channels[15]),
 			]),
+			INTENT_UI_CONFIRM : MultiChannel([
+				self._keyboard.key_channels[K_SPACE],
+				self._keyboard.key_channels[K_RETURN],
+			]),
+			INTENT_UI_BACK : MultiChannel([
+				self._keyboard.key_channels[K_ESCAPE],
+			]),
+			INTENT_UI_X : MultiChannel([
+				DigitalAxisChannel(self._keyboard.key_channels[K_LEFT], self._keyboard.key_channels[K_RIGHT]),
+			]),
+			INTENT_UI_Y : MultiChannel([
+				DigitalAxisChannel(self._keyboard.key_channels[K_DOWN], self._keyboard.key_channels[K_UP]),
+			]),
+			INTENT_DEBUG_OPEN : MultiChannel([
+				self._keyboard.key_channels[K_BACKQUOTE],
+			]),
+			INTENT_DEBUG_A_AXIS : MultiChannel([
+				DigitalAxisChannel(self._keyboard.key_channels[K_1], self._keyboard.key_channels[K_2]),
+			]),
+			INTENT_DEBUG_B_AXIS : MultiChannel([
+				DigitalAxisChannel(self._keyboard.key_channels[K_3], self._keyboard.key_channels[K_4]),
+			]),
+			INTENT_DEBUG_C_AXIS : MultiChannel([
+				DigitalAxisChannel(self._keyboard.key_channels[K_5], self._keyboard.key_channels[K_6]),
+			]),
+			INTENT_DEBUG_D_AXIS : MultiChannel([
+				DigitalAxisChannel(self._keyboard.key_channels[K_7], self._keyboard.key_channels[K_8]),
+			]),
 		}
+		
+		# Treat relevant gameplay channels automatically as UI control channels
+		self.intent_channels[INTENT_UI_X].channels.append(self.intent_channels[INTENT_TRANS_X])
+		self.intent_channels[INTENT_UI_Y].channels.append(self.intent_channels[INTENT_TRANS_Y])
 	
 	def update(self):
 		"""Calls update() on all the ChannelSources being managed.
