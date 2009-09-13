@@ -423,7 +423,7 @@ class InputManager:
 				self._gamepad.axis_channels[0],
 			]),
 			INTENT_TRANS_Y : MultiOrChannel([
-				PseudoAxisChannel(self._keyboard.key_channels[K_s], self._keyboard.key_channels[K_w]),
+				PseudoAxisChannel(self._keyboard.key_channels[K_w], self._keyboard.key_channels[K_s]),
 				self._gamepad.axis_channels[1],
 			]),
 			INTENT_TRANS_Z : MultiOrChannel([
