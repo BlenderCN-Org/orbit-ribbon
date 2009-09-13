@@ -85,7 +85,14 @@ class Avatar(gameobj.GameObj):
 			self.body.addRelTorque((csx, 0.0, 0.0))
 		
 		# Moving between fly mode and prerun mode
-		if app.input_man.intent_channels[inputs.INTENT_RUN_STANCE].is_on():
+		# Do not leave prerun mode once entered until INTENT_RUN_STANCE is entirely off
+		if (
+			app.input_man.intent_channels[inputs.INTENT_RUN_STANCE].is_on() or
+			(
+				(self._mode == MODE_FLY_TO_PRERUN or self._mode == MODE_PRERUN) and
+				app.input_man.intent_channels[inputs.INTENT_RUN_STANCE].is_partially_on()
+			)
+		):
 			if self._mode == MODE_FLY:
 				self._anim = anim.AnimManager(ore_anim = self._oreman.animations["LIBAvatar-FlyToPrerun"])
 				self._mode = MODE_FLY_TO_PRERUN

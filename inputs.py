@@ -26,6 +26,13 @@ class Channel:
 		"""
 		raise NotImplemented
 	
+	def is_partially_on(self):
+		"""Returns True if this Channel requires that there be several things active at once to register is_on(), and at least one is active.
+
+		The default implementation just returns the value of is_on().
+		"""
+		return self.is_on()
+	
 	def value(self):
 		"""Returns a value in [-1,1] for this Channel when considered as an analog axis.
 		
@@ -420,6 +427,13 @@ class MultiOrChannel(Channel):
 				return True
 		return False
 	
+	def is_partially_on(self):
+		"""Returns True if any of the sub-Channels are partially on."""
+		for c in self.channels:
+			if c.is_partially_on():
+				return True
+		return False
+	
 	def value(self):
 		v = 0.0
 		for c in self.channels:
@@ -453,6 +467,13 @@ class MultiAndChannel(Channel):
 			if not c.is_on():
 				return False
 		return True
+	
+	def is_partially_on(self):
+		"""Returns True if any of the sub-Channels are on."""
+		for c in self.channels:
+			if c.is_on():
+				return True
+		return False
 	
 	def value(self):
 		v = None
