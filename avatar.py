@@ -43,13 +43,13 @@ class Avatar(gameobj.GameObj):
 		# X-strafing
 		v = app.input_man.intent_channels[inputs.INTENT_TRANS_X].value()
 		if v != 0.0:
-			tx = v*(MAX_STRAFE/app.maxfps)
+			tx = -v*(MAX_STRAFE/app.maxfps)
 			self.body.addRelForce((tx, 0, 0))
 		
 		# Y-strafing
 		v = app.input_man.intent_channels[inputs.INTENT_TRANS_Y].value()
 		if v != 0.0:
-			ty = v*(MAX_STRAFE/app.maxfps)
+			ty = -v*(MAX_STRAFE/app.maxfps)
 			self.body.addRelForce((0, ty, 0))
 		
 		# Forward/backward
@@ -69,7 +69,7 @@ class Avatar(gameobj.GameObj):
 		# X-turn and X-counterturn
 		v = app.input_man.intent_channels[inputs.INTENT_ROTATE_Y].value()
 		if v != 0.0:
-			sy = v*(MAX_TURN/app.maxfps)
+			sy = -v*(MAX_TURN/app.maxfps)
 			self.body.addRelTorque((0.0, sy, 0.0))
 		else:
 			csy = avel[1]*-CTURN_COEF/app.maxfps

@@ -294,7 +294,8 @@ class GamepadAxisChannel(Channel):
 class PseudoAxisChannel(Channel):
 	"""A Channel that takes two existing Channel objects and uses their values as either side of a logical axis.
 	
-	Otherwise, the PseudoAxisChannel's value() is the positive side's value minus the negative side's value.
+	The PseudoAxisChannel's value() is 0 if neither of the two sub-channels are on, or if both are on.
+	If only one is on, then the value() is that one's value(), though *-1 if it's the negative channel.
 	
 	Data attributes:
 	negative - The negative side Channel object.
@@ -308,7 +309,14 @@ class PseudoAxisChannel(Channel):
 		return abs(self.value()) > DEAD_ZONE
 	
 	def value(self):
-		return self.positive.value() - self.negative.value()
+		pos_on = self.positive.is_on()
+		neg_on = self.negative.is_on()
+		if pos_on != neg_on:
+			if pos_on:
+				return self.positive.value()
+			else:
+				return -self.negative.value()
+		return 0
 	
 	def desc(self):
 		return "%s/%s" % (self.negative.desc(), self.positive.desc())
