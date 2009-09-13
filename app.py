@@ -125,6 +125,10 @@ def ui_init():
 	watchers.append(console.Watcher(inputs.INTENT_DEBUG_C_AXIS, pygame.Rect(5*winsize[0]/6 - 20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
 	watchers.append(console.Watcher(inputs.INTENT_DEBUG_D_AXIS, pygame.Rect(5*winsize[0]/6 - 20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
 	
+	print
+	print "Orbit Ribbon, Version: %s" % VERSION
+	print
+	
 	pygame.display.init()
 	pygame.display.set_caption('Orbit Ribbon')
 	pygame.display.set_icon(pygame.image.load(os.path.join(APP_DIR, 'images', 'logo.png')))

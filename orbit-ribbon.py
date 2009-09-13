@@ -40,7 +40,6 @@ def opt_mission(arg):
 
 profiling = False
 def opt_profile(arg):
-	print "Profiling..."
 	global profiling
 	profiling = True
 
@@ -54,7 +53,6 @@ def opt_timeini(arg):
 
 timing_run = False
 def opt_timerun(arg):
-	print "Timing run..."
 	global timing_run
 	timing_run = True
 
@@ -69,7 +67,6 @@ no_psyco = False
 def opt_nopsyco(arg):
 	global no_psyco
 	no_psyco = True
-
 
 # Command line options, each as a tuple of (callback function, short arg name, long arg name, help description)
 options = (
@@ -104,6 +101,8 @@ if timing_init:
 	start_time = time.time()
 app.ui_init()
 app.sim_init(timing = timing_run)
+if timing_run:
+	print "Timing run..."
 if jump_area_name is not None:
 	app.init_area(jump_area_name)
 if jump_mission_name is not None:
@@ -112,6 +111,7 @@ if timing_init:
 	print "Init time: %.2f seconds" % (time.time() - start_time)
 
 if profiling:
+	print "Profiling..."
 	profile.run('app.run()', 'profile')
 else:
 	if not no_psyco:
