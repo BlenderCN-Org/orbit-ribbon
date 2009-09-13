@@ -19,7 +19,7 @@ import collision
 import console
 import gameobj
 from geometry import *
-import joy
+import inputs
 import missioncon
 import ore
 import oreshared

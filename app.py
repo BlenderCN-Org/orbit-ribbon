@@ -3,7 +3,7 @@ from __future__ import division
 import ode, sys, math, pygame, pickle, time
 from pygame.locals import *
 
-import collision, console, camera, sky, titlescreen, ore, avatar
+import collision, console, camera, sky, titlescreen, ore, avatar, inputs
 from geometry import *
 from gl import *
 
@@ -119,7 +119,7 @@ def ui_init():
 	pygame.mouse.set_visible(0)
 	screen = pygame.display.set_mode(winsize, DOUBLEBUF | OPENGL)
 
-	input_man = input.InputManager()
+	input_man = inputs.InputManager()
 
 	pygame.mixer.init(22050, -16, 2, 512)
 
@@ -344,6 +344,8 @@ def _draw_frame():
 
 
 def _proc_input():
+	input_man.update()
+
 	global events
 	events = []
 	for event in pygame.event.get():

@@ -3,12 +3,16 @@ from __future__ import division
 import pygame, re
 from pygame.locals import *
 
+# TODO: Figure out where inversion should go (maybe have an InversionChannel)
 
 # Intentions are direct gameplay actions controlled by input Channels
 (INTENT_TRANS_X, INTENT_TRANS_Y, INTENT_TRANS_Z, INTENT_ROTATE_X, INTENT_ROTATE_Y, INTENT_ROTATE_Z,
+INTENT_RUN_STANCE,
 INTENT_UI_CONFIRM, INTENT_UI_BACK, INTENT_UI_X, INTENT_UI_Y,
 INTENT_DEBUG_OPEN, INTENT_DEBUG_A_AXIS, INTENT_DEBUG_B_AXIS, INTENT_DEBUG_C_AXIS, INTENT_DEBUG_D_AXIS,
-) = range(15)
+) = range(16)
+
+DEAD_ZONE = 0.001 # How far from -1, 0, or 1 where we consider an axis to just be at those exact values
 
 class Channel:
 	"""A single source of simple input information, such as a particular keyboard key or gamepad axis."""
@@ -116,8 +120,6 @@ class Gamepad(ChannelSource):
 	button_channels - A dictionary mapping button indices to the same GamepadButtonChannels returned by channels().
 	"""
 	
-	DEAD_ZONE = 0.001 # How far from -1, 0, or 1 where we consider it to just be at those exact values
-	
 	# If a gamepad's name matches the regular expression, then we can use these more human-readable names for button indices
 	_KNOWN_BTN_NAMES = {
 		re.compile(r"PLAYSTATION\(R\)3") : {
@@ -212,11 +214,11 @@ class Gamepad(ChannelSource):
 		self._axes = {}
 		for i in xrange(self._numaxes):
 			n = self._js.get_axis(i)
-			if abs(n - 1) < self.DEAD_ZONE:
+			if abs(n - 1) < DEAD_ZONE:
 				n = 1
-			elif abs(n + 1) < self.DEAD_ZONE:
+			elif abs(n + 1) < DEAD_ZONE:
 				n = -1
-			elif abs(n) < self.DEAD_ZONE:
+			elif abs(n) < DEAD_ZONE:
 				n = 0
 			self._axes[i] = n
 		
@@ -269,7 +271,7 @@ class GamepadAxisChannel(Channel):
 		self._neutral = self._gamepad._axes[self._axis_num]
 	
 	def is_on(self):
-		if abs(self._neutral - self._gamepad._axes[self._axis_num]) > Gamepad.DEAD_ZONE:
+		if abs(self._neutral - self._gamepad._axes[self._axis_num]) > DEAD_ZONE:
 			return True
 		return False
 	
@@ -289,12 +291,10 @@ class GamepadAxisChannel(Channel):
 		return "JoyAxis:%s" % axis_name
 
 
-class DigitalAxisChannel(Channel):
+class PseudoAxisChannel(Channel):
 	"""A Channel that takes two existing Channel objects and uses their values as either side of a logical axis.
 	
-	The positive side is always checked first; if it's positive, its value becomes the DigitalAxisChannel's value.
-	If the positive side isn't positive, but the negative side is positive, then the negative of that value becomes the DAC's value.
-	Otherwise, the DigitalAxisChannel's value() is 0.
+	Otherwise, the PseudoAxisChannel's value() is the positive side's value minus the negative side's value.
 	
 	Data attributes:
 	negative - The negative side Channel object.
@@ -305,36 +305,27 @@ class DigitalAxisChannel(Channel):
 		self.positive = positive
 	
 	def is_on(self):
-		return self.positive.is_on() or self.negative.is_on()
+		return abs(self.value()) > DEAD_ZONE
 	
 	def value(self):
-		pos_val = self.positive.is_on()
-		neg_val = self.negative.is_on()
-
-		if pos_val > 0:
-			return pos_val
-		elif neg_val > 0:
-			return -neg_val
-		else:
-			return 0
-
+		return self.positive.value() - self.negative.value()
+	
 	def desc(self):
 		return "%s/%s" % (self.negative.desc(), self.positive.desc())
 
 
-class MultiChannel:
+class MultiOrChannel(Channel):
 	"""A Channel that merges multiple Channels into one logical channel.
 	
-	The MultiChannel is on if any of the sub-Channels are on. The MultiChannel's value is the sub-Channel value farthest from zero (highest abs).
+	The MultiOrChannel is on if any of the sub-Channels are on. The MultiOrChannel's value is the sub-Channel value farthest from zero (highest abs).
 	
 	Data attributes:
 	channels - A list of sub-Channels.
 	"""
-	# TODO: Add an invert flag to MultiChannel
 	
 	def __init__(self, channels):
-		"""Creates a MultiChannel with the given list of sub-channels.
-
+		"""Creates a MultiOrChannel with the given list of sub-channels.
+		
 		The list is assigned, not copied.
 		"""
 		self.channels = channels
@@ -356,6 +347,39 @@ class MultiChannel:
 	def desc(self):
 		return ",".join([c.desc() for c in self.channels])
 
+
+class MultiAndChannel(Channel):
+	"""A Channel that checks the state of several sub-channels, and is only on if every sub-channel is on.
+	
+	The value of the ReqAllChannel is the sub-channel value closest to zero (smallest abs).
+	
+	Data attributes:
+	channels - A list of sub-Channels.
+	"""
+	
+	def __init__(self, channels):
+		"""Creates a MultiAndChannel with the given list of sub-channels.
+		
+		The list is assigned, not copied.
+		"""
+		self.channels = channels
+	
+	def is_on(self):
+		for c in self.channels:
+			if not c.is_on():
+				return False
+		return True
+	
+	def value(self):
+		v = None
+		for c in self.channels:
+			cand_v = c.value()
+			if v is None or abs(cand_v) < abs(v):
+				v = cand_v
+		return v
+	
+	def desc(self):
+		return "+".join([c.desc() for c in self.channels])
 
 
 class InputManager:
@@ -386,57 +410,61 @@ class InputManager:
 		
 		# TODO: Make this user-configurable
 		self.intent_channels = {
-			INTENT_TRANS_X : MultiChannel([
-				DigitalAxisChannel(self._keyboard.key_channels[K_a], self._keyboard.key_channels[K_d]),
+			INTENT_TRANS_X : MultiOrChannel([
+				PseudoAxisChannel(self._keyboard.key_channels[K_a], self._keyboard.key_channels[K_d]),
 				self._gamepad.axis_channels[0],
 			]),
-			INTENT_TRANS_Y : MultiChannel([
-				DigitalAxisChannel(self._keyboard.key_channels[K_s], self._keyboard.key_channels[K_w]),
+			INTENT_TRANS_Y : MultiOrChannel([
+				PseudoAxisChannel(self._keyboard.key_channels[K_s], self._keyboard.key_channels[K_w]),
 				self._gamepad.axis_channels[1],
 			]),
-			INTENT_TRANS_Z : MultiChannel([
-				DigitalAxisChannel(self._keyboard.key_channels[K_q], self._keyboard.key_channels[K_e]),
-				DigitalAxisChannel(self._gamepad.axis_channels[12], self._gamepad.axis_channels[13]),
+			INTENT_TRANS_Z : MultiOrChannel([
+				PseudoAxisChannel(self._keyboard.key_channels[K_q], self._keyboard.key_channels[K_e]),
+				PseudoAxisChannel(self._gamepad.axis_channels[12], self._gamepad.axis_channels[13]),
 			]),
-			INTENT_ROTATE_X : MultiChannel([
-				DigitalAxisChannel(self._keyboard.key_channels[K_i], self._keyboard.key_channels[K_k]),
+			INTENT_ROTATE_X : MultiOrChannel([
+				PseudoAxisChannel(self._keyboard.key_channels[K_i], self._keyboard.key_channels[K_k]),
 				self._gamepad.axis_channels[3],
 			]),
-			INTENT_ROTATE_Y : MultiChannel([
-				DigitalAxisChannel(self._keyboard.key_channels[K_j], self._keyboard.key_channels[K_l]),
+			INTENT_ROTATE_Y : MultiOrChannel([
+				PseudoAxisChannel(self._keyboard.key_channels[K_j], self._keyboard.key_channels[K_l]),
 				self._gamepad.axis_channels[2],
 			]),
-			INTENT_ROTATE_Z : MultiChannel([
-				DigitalAxisChannel(self._keyboard.key_channels[K_u], self._keyboard.key_channels[K_o]),
-				DigitalAxisChannel(self._gamepad.axis_channels[14], self._gamepad.axis_channels[15]),
+			INTENT_ROTATE_Z : MultiOrChannel([
+				PseudoAxisChannel(self._keyboard.key_channels[K_u], self._keyboard.key_channels[K_o]),
+				PseudoAxisChannel(self._gamepad.axis_channels[14], self._gamepad.axis_channels[15]),
 			]),
-			INTENT_UI_CONFIRM : MultiChannel([
+			INTENT_RUN_STANCE : MultiOrChannel([
+				self._keyboard.key_channels[K_SPACE],
+				MultiAndChannel([self._gamepad.axis_channels[14], self._gamepad.axis_channels[15]]),
+			]),
+			INTENT_UI_CONFIRM : MultiOrChannel([
 				self._keyboard.key_channels[K_SPACE],
 				self._keyboard.key_channels[K_RETURN],
 			]),
-			INTENT_UI_BACK : MultiChannel([
+			INTENT_UI_BACK : MultiOrChannel([
 				self._keyboard.key_channels[K_ESCAPE],
 			]),
-			INTENT_UI_X : MultiChannel([
-				DigitalAxisChannel(self._keyboard.key_channels[K_LEFT], self._keyboard.key_channels[K_RIGHT]),
+			INTENT_UI_X : MultiOrChannel([
+				PseudoAxisChannel(self._keyboard.key_channels[K_LEFT], self._keyboard.key_channels[K_RIGHT]),
 			]),
-			INTENT_UI_Y : MultiChannel([
-				DigitalAxisChannel(self._keyboard.key_channels[K_DOWN], self._keyboard.key_channels[K_UP]),
+			INTENT_UI_Y : MultiOrChannel([
+				PseudoAxisChannel(self._keyboard.key_channels[K_DOWN], self._keyboard.key_channels[K_UP]),
 			]),
-			INTENT_DEBUG_OPEN : MultiChannel([
+			INTENT_DEBUG_OPEN : MultiOrChannel([
 				self._keyboard.key_channels[K_BACKQUOTE],
 			]),
-			INTENT_DEBUG_A_AXIS : MultiChannel([
-				DigitalAxisChannel(self._keyboard.key_channels[K_1], self._keyboard.key_channels[K_2]),
+			INTENT_DEBUG_A_AXIS : MultiOrChannel([
+				PseudoAxisChannel(self._keyboard.key_channels[K_1], self._keyboard.key_channels[K_2]),
 			]),
-			INTENT_DEBUG_B_AXIS : MultiChannel([
-				DigitalAxisChannel(self._keyboard.key_channels[K_3], self._keyboard.key_channels[K_4]),
+			INTENT_DEBUG_B_AXIS : MultiOrChannel([
+				PseudoAxisChannel(self._keyboard.key_channels[K_3], self._keyboard.key_channels[K_4]),
 			]),
-			INTENT_DEBUG_C_AXIS : MultiChannel([
-				DigitalAxisChannel(self._keyboard.key_channels[K_5], self._keyboard.key_channels[K_6]),
+			INTENT_DEBUG_C_AXIS : MultiOrChannel([
+				PseudoAxisChannel(self._keyboard.key_channels[K_5], self._keyboard.key_channels[K_6]),
 			]),
-			INTENT_DEBUG_D_AXIS : MultiChannel([
-				DigitalAxisChannel(self._keyboard.key_channels[K_7], self._keyboard.key_channels[K_8]),
+			INTENT_DEBUG_D_AXIS : MultiOrChannel([
+				PseudoAxisChannel(self._keyboard.key_channels[K_7], self._keyboard.key_channels[K_8]),
 			]),
 		}
 		

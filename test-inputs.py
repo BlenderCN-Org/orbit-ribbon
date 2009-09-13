@@ -2,13 +2,13 @@
 
 import time, pygame
 
-import input
+import inputs
 
 pygame.display.init()
 pygame.display.set_caption('Input Test')
 screen = pygame.display.set_mode((100, 100))
 
-m = input.InputManager()
+m = inputs.InputManager()
 
 while True:
 	time.sleep(0.05)

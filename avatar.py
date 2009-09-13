@@ -1,7 +1,7 @@
 from __future__ import division
 import ode
 
-import app, gameobj, collision, joy, resman, anim
+import app, gameobj, collision, resman, anim, inputs
 from geometry import *
 from util import *
 from gl import *
@@ -37,25 +37,25 @@ class Avatar(gameobj.GameObj):
 	
 	def step(self):
 		# TODO: Consider adding linear and angular velocity caps
-		# TODO: Make joystick range circular (see example code on pygame help pages)
+		# TODO: Set a maximum total acceleration, then force accel vector to be no longer than that magnitude
 		tx, ty, tz = 0, 0, 0
 		
 		# X-strafing
-		if app.axes[joy.LX] != 0.0:
-			tx = -app.axes[joy.LX]*(MAX_STRAFE/app.maxfps)
+		v = app.input_man.intent_channels[inputs.INTENT_TRANS_X].value()
+		if v != 0.0:
+			tx = v*(MAX_STRAFE/app.maxfps)
 			self.body.addRelForce((tx, 0, 0))
 		
 		# Y-strafing
-		if app.axes[joy.LY] != 0.0:
-			ty = -app.axes[joy.LY]*(MAX_STRAFE/app.maxfps)
+		v = app.input_man.intent_channels[inputs.INTENT_TRANS_Y].value()
+		if v != 0.0:
+			ty = v*(MAX_STRAFE/app.maxfps)
 			self.body.addRelForce((0, ty, 0))
 		
 		# Forward/backward
-		if app.axes[joy.L2] != 0.0:
-			tz = -app.axes[joy.L2]*(MAX_ACCEL/app.maxfps)
-			self.body.addRelForce((0, 0, tz))
-		elif app.axes[joy.R2] != 0.0:
-			tz = app.axes[joy.R2]*(MAX_ACCEL/app.maxfps)
+		v = app.input_man.intent_channels[inputs.INTENT_TRANS_Z].value()
+		if v != 0.0:
+			tz = v*(MAX_ACCEL/app.maxfps)
 			self.body.addRelForce((0, 0, tz))
 		
 		self._relThrustVec = Point(tx, ty, tz)
@@ -63,30 +63,29 @@ class Avatar(gameobj.GameObj):
 		sx, sy, sz = 0, 0, 0
 		csx, csy, csz = 0, 0, 0
 		avel = self.body.vectorFromWorld(self.body.getAngularVel())
-
+		
 		# TODO : Maybe introduce counterturn assistance if user is turning opposite their angular velocity?
 		
 		# X-turn and X-counterturn
-		if app.axes[joy.RX] != 0.0:
-			sy = -app.axes[joy.RX]*(MAX_TURN/app.maxfps)
+		v = app.input_man.intent_channels[inputs.INTENT_ROTATE_Y].value()
+		if v != 0.0:
+			sy = v*(MAX_TURN/app.maxfps)
 			self.body.addRelTorque((0.0, sy, 0.0))
 		else:
 			csy = avel[1]*-CTURN_COEF/app.maxfps
 			self.body.addRelTorque((0.0, csy, 0.0))
 		
 		# Y-turn and Y-counterturn
-		if app.axes[joy.RY] != 0.0:
-			sx = app.axes[joy.RY]*(MAX_TURN/app.maxfps)
+		v = app.input_man.intent_channels[inputs.INTENT_ROTATE_X].value()
+		if v != 0.0:
+			sx = v*(MAX_TURN/app.maxfps)
 			self.body.addRelTorque((sx, 0.0, 0.0))
 		else:
 			csx = avel[0]*-CTURN_COEF/app.maxfps
 			self.body.addRelTorque((csx, 0.0, 0.0))
 		
 		# Moving between fly mode and prerun mode
-		if (
-			(app.buttons[joy.L1] == joy.DOWN and app.buttons[joy.R1] == joy.DOWN)
-			or ((self._mode == MODE_FLY_TO_PRERUN or self._mode == MODE_PRERUN) and (app.buttons[joy.L1] == joy.DOWN or app.buttons[joy.R1] == joy.DOWN))
-		):
+		if app.input_man.intent_channels[inputs.INTENT_RUN_STANCE].is_on():
 			if self._mode == MODE_FLY:
 				self._anim = anim.AnimManager(ore_anim = self._oreman.animations["LIBAvatar-FlyToPrerun"])
 				self._mode = MODE_FLY_TO_PRERUN
@@ -108,17 +107,11 @@ class Avatar(gameobj.GameObj):
 				self._mode = MODE_FLY
 		
 		# Roll
-		if app.buttons[joy.L1] == joy.DOWN and app.buttons[joy.R1] == joy.UP:
-			self.running = False
-			sz = -MAX_ROLL/app.maxfps
+		v = app.input_man.intent_channels[inputs.INTENT_ROTATE_Z].value()
+		if v != 0.0:
+			sz = v*(MAX_ROLL/app.maxfps)
 			self.body.addRelTorque((0.0, 0.0, sz))
-		elif app.buttons[joy.R1] == joy.DOWN and app.buttons[joy.L1] == joy.UP:
-			self.running = False
-			sz = MAX_ROLL/app.maxfps
-			self.body.addRelTorque((0.0, 0.0, sz))
-		
-		# Counter-roll
-		if app.buttons[joy.L1] == app.buttons[joy.R1]: # If both L1 and R1 are up or both are down
+		else:
 			csz = avel[2]*-CROLL_COEF/app.maxfps
 			self.body.addRelTorque((0.0, 0.0, csz))
 		
