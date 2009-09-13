@@ -7,10 +7,10 @@ from pygame.locals import *
 
 # Intentions are direct gameplay actions controlled by input Channels
 (INTENT_TRANS_X, INTENT_TRANS_Y, INTENT_TRANS_Z, INTENT_ROTATE_X, INTENT_ROTATE_Y, INTENT_ROTATE_Z,
-INTENT_RUN_STANCE,
+INTENT_RUN_STANCE, INTENT_PAUSE,
 INTENT_UI_CONFIRM, INTENT_UI_BACK, INTENT_UI_X, INTENT_UI_Y,
 INTENT_DEBUG_OPEN, INTENT_DEBUG_A_AXIS, INTENT_DEBUG_B_AXIS, INTENT_DEBUG_C_AXIS, INTENT_DEBUG_D_AXIS,
-) = range(16)
+) = range(17)
 
 DEAD_ZONE = 0.001 # How far from -1, 0, or 1 where we consider an axis to just be at those exact values
 
@@ -29,7 +29,7 @@ class Channel:
 	def value(self):
 		"""Returns a value in [-1,1] for this Channel when considered as an analog axis.
 		
-		Not all channels are capable of this entire range; for example, buttons (whether analog or digital) can only be in [0,1].
+		Not all channels are capable of this entire range; for example, keyboard keys can only be in [0,1].
 		
 		Must be implemented by subclass.
 		"""
@@ -518,18 +518,27 @@ class InputManager:
 				self._keyboard.key_channel(K_SPACE),
 				MultiAndChannel((self._gamepad_man.gamepad(0).axis_channel(14), self._gamepad_man.gamepad(0).axis_channel(15))),
 			]),
+			INTENT_PAUSE : MultiOrChannel([
+				self._keyboard.key_channel(K_ESCAPE),
+				self._gamepad_man.gamepad(0).button_channel(3),
+			]),
 			INTENT_UI_CONFIRM : MultiOrChannel([
 				self._keyboard.key_channel(K_SPACE),
 				self._keyboard.key_channel(K_RETURN),
+				self._gamepad_man.gamepad(0).button_channel(13),
+				self._gamepad_man.gamepad(0).button_channel(3),
 			]),
 			INTENT_UI_BACK : MultiOrChannel([
 				self._keyboard.key_channel(K_ESCAPE),
+				self._gamepad_man.gamepad(0).button_channel(14),
 			]),
 			INTENT_UI_X : MultiOrChannel([
 				PseudoAxisChannel(self._keyboard.key_channel(K_LEFT), self._keyboard.key_channel(K_RIGHT)),
+				PseudoAxisChannel(self._gamepad_man.gamepad(0).button_channel(7), self._gamepad_man.gamepad(0).button_channel(5)),
 			]),
 			INTENT_UI_Y : MultiOrChannel([
-				PseudoAxisChannel(self._keyboard.key_channel(K_DOWN), self._keyboard.key_channel(K_UP)),
+				PseudoAxisChannel(self._keyboard.key_channel(K_UP), self._keyboard.key_channel(K_DOWN)),
+				PseudoAxisChannel(self._gamepad_man.gamepad(0).button_channel(4), self._gamepad_man.gamepad(0).button_channel(6)),
 			]),
 			INTENT_DEBUG_OPEN : MultiOrChannel([
 				self._keyboard.key_channel(K_BACKQUOTE),
