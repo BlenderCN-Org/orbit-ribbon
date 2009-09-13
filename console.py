@@ -1,7 +1,7 @@
 import code, pygame, sys, copy, re
 from pygame.locals import *
 
-import app
+import app, inputs
 from gl import *
 
 helphelp = """Interactive Python help is not available. You can use help(class) and help(module).
@@ -108,6 +108,7 @@ class EditBox:
 		elif self.inpat.match(event.unicode):
 			self.cont = self.cont[0:self.cursor] + event.unicode + self.cont[self.cursor:len(self.cont)]
 			self.cursor += 1
+
 
 class OutputBox:
 	"""Caches a certain number of lines of information, draws screenfuls of it.
@@ -224,6 +225,7 @@ class OutputBox:
 		"""Scrolls down one screenful."""
 		self.scroll = max(self.scroll-self.dispsize(), 0)
 
+
 class Watcher(OutputBox):
 	"""Displays continually-updated information to an on-screen debugging window.
 	
@@ -233,13 +235,11 @@ class Watcher(OutputBox):
 	expr -- Runs this expression on each call to update(), sets buffer to the result.
 	modVal -- If not None, then the Watcher runs "expr += 1" on posKey events and "expr -= 1" on negKey events.
 		Also, it displays a message indicating that this is so.
-	posKey -- The letter or number that is pressed to increment the expr by modVal, if modVal supplied.
-	negKey -- The letter or number that is pressed to decrement the expr by modVal, if modVal supplied.
+	modifyIntent -- The inputs.INTENT_* constant for the axis used to change the expr by modVal, if modVal supplied.
 	"""
-	def __init__(self, posKey, negKey, rect = None, expr = None, modVal = None):
+	def __init__(self, modifyIntent, rect = None, expr = None, modVal = None):
 		OutputBox.__init__(self, rect)
-		self.posKey = posKey
-		self.negKey = negKey
+		self.modifyIntent = modifyIntent
 		self.expr = expr
 		self.modVal = modVal
 		self.bufferlen = self.dispsize()
@@ -250,19 +250,17 @@ class Watcher(OutputBox):
 		try:
 			self.append(str(self.expr) + ":\n\n" + repr(eval(self.expr, consenv.__dict__)))
 			if self.modVal is not None:
-				self.append("\n%s/%s +/- %.4f" % (self.posKey, self.negKey, self.modVal))
-				for event in app.events:
-					if event.type == KEYDOWN and event.unicode in (self.posKey, self.negKey):
-						op = "+="
-						if event.unicode == self.negKey:
-							op = "-="
-						# Have to use an InteractiveConsole to do non-expression statements
-						intercons = code.InteractiveConsole(consenv.__dict__)
-						intercons.push("%s %s %s" % (str(self.expr), op, str(self.modVal)))
+				modifyChannel = app.input_man.intent_channels[self.modifyIntent]
+				self.append("\n%s +/- %.4f" % (modifyChannel.desc(), self.modVal))
+				if self.modifyIntent in app.event_intents: # Not using modifyChannel.is_on() since we only want the initial press-down event to trigger this
+					# Have to use an InteractiveConsole to do non-expression statements like 'x += y'
+					intercons = code.InteractiveConsole(consenv.__dict__)
+					intercons.push("%s += (%s)*(%s)" % (str(self.expr), modifyChannel.value(), str(self.modVal)))
 		except Exception, e:
 			self.append(str(self.expr) + "\nEXCEPTION: " + repr(e) + " : " + e.__str__())
 		except:
 			self.append(str(self.expr) + "\nUNKNOWN EXCEPTION")
+
 
 class Console:
 	"""An in-game debugging console.
@@ -300,31 +298,31 @@ class Console:
 		self.out.rect = pygame.Rect(20, 20, app.winsize[0]-40, app.winsize[1]-70)
 	
 	def draw(self):
-		"""Draws the console. Nothing happens if the active flag is off."""
-		if not self.active:
-			return
-		
-		self.out.draw()
-		self.edit.draw()
-		
-	def handle(self, event):
-		"""Handles an event, if possible. Commands aren't accepted if the active flag is off."""	
+		"""Handles all input and draws the console, activating it if the user has expressed INTENT_DEBUG_OPEN."""
+		if self.active:
+			for event in app.events:
+				self._handle(event)
+			self.out.draw()
+			self.edit.draw()
+		elif inputs.INTENT_DEBUG_OPEN in app.event_intents:
+			self._activate()
+	
+	def _activate(self):
+		self.active = True
+		pygame.key.set_repeat(400, 30)
+	
+	def _deactivate(self):
+		self.active = False
+		pygame.key.set_repeat()
+	
+	def _handle(self, event):
 		if event.type != KEYDOWN:
 			return
 		
-		if event.unicode == "~" and self.active is False:
-			self.active = True
-			pygame.key.set_repeat(400, 30)
-			return
-		
-		if not self.active:
-			return	
-
 		self.edit.handle(event)
-
+		
 		if event.key == K_ESCAPE:
-			self.active = False
-			pygame.key.set_repeat()
+			self._deactivate()
 		elif event.key == K_UP:
 			#Browse backwards in history
 			if self.histpos > 0 and len(self.hist) > 0:
@@ -374,7 +372,7 @@ class Console:
 				print helphelp
 				print quithelp
 				return
-			elif cleaned == "quit" or cleaned == "exit" or cleaned == "close":
+			elif cleaned in ("quit", "exit", "close", "off"):
 				print quithelp
 				return
 			

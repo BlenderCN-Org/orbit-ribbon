@@ -37,8 +37,6 @@ def opt_mission(arg):
 	if jump_area_name is None or jump_mission_name is None:
 		raise RuntimeError("Please supply a valid area-mission code. For example, A01-M02 for area 1, mission 2.")
 	
-	print "Jumping to area %s, mission %s" % (jump_area_name, jump_mission_name)
-
 
 profiling = False
 def opt_profile(arg):
@@ -117,7 +115,7 @@ if profiling:
 	profile.run('app.run()', 'profile')
 else:
 	if not no_psyco:
-		print "Loading psyco..."
+		print "Initializing psyco optimizer..."
 		import psyco
 		psyco.full()
 	app.run()

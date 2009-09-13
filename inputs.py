@@ -7,10 +7,10 @@ from pygame.locals import *
 
 # Intentions are direct gameplay actions controlled by input Channels
 (INTENT_TRANS_X, INTENT_TRANS_Y, INTENT_TRANS_Z, INTENT_ROTATE_X, INTENT_ROTATE_Y, INTENT_ROTATE_Z,
-INTENT_RUN_STANCE, INTENT_PAUSE,
+INTENT_RUN_STANCE, INTENT_PAUSE, INTENT_FORCE_QUIT,
 INTENT_UI_CONFIRM, INTENT_UI_BACK, INTENT_UI_X, INTENT_UI_Y,
 INTENT_DEBUG_OPEN, INTENT_DEBUG_A_AXIS, INTENT_DEBUG_B_AXIS, INTENT_DEBUG_C_AXIS, INTENT_DEBUG_D_AXIS,
-) = range(17)
+) = range(18)
 
 DEAD_ZONE = 0.001 # How far from -1, 0, or 1 where we consider an axis to just be at those exact values
 
@@ -24,11 +24,11 @@ class Channel:
 		
 		Must be implemented by subclass.
 		"""
-		raise NotImplemented
+		raise NotImplementedError
 	
 	def is_partially_on(self):
-		"""Returns True if this Channel requires that there be several things active at once to register is_on(), and at least one is active.
-
+		"""Returns True if this Channel requires that there be several things active at once to register is_on(), and at least one of those things is active.
+		
 		The default implementation just returns the value of is_on().
 		"""
 		return self.is_on()
@@ -40,14 +40,21 @@ class Channel:
 		
 		Must be implemented by subclass.
 		"""
-		raise NotImplemented
+		raise NotImplementedError
+	
+	def matches_events(self, event_list):
+		"""Checks a list of pygame events against this Channel; True is returned if whatever events required for this Channel are in event_list.
+		
+		Must be implemented by subclass.
+		"""
+		raise NotImplementedError
 	
 	def desc(self):
 		"""Returns a very short string describing this Channel.
 		
 		Must be implemented by subclass.
 		"""
-		raise NotImplemented
+		raise NotImplementedError
 
 
 class NullChannel(Channel):
@@ -61,6 +68,9 @@ class NullChannel(Channel):
 	
 	def value(self):
 		return 0.0
+	
+	def matches_events(self, event_list):
+		return False
 	
 	def desc(self):
 		return "NULL"
@@ -81,7 +91,7 @@ class ChannelSource:
 		
 		Must be implemented by subclass.
 		"""
-		raise NotImplemented
+		raise NotImplementedError
 
 
 class Keyboard(ChannelSource):
@@ -133,6 +143,13 @@ class KeyChannel(Channel):
 		if self._kbd._pressed_dict[self._keyconst]:
 			return 1.0
 		return 0.0
+	
+	def matches_events(self, event_list):
+		"""Matches only the key down event, not the key up event."""
+		for event in event_list:
+			if event.type == pygame.KEYDOWN and event.key == self._keyconst:
+				return True
+		return False
 	
 	def desc(self):
 		return "Key:%s" % pygame.key.name(self._keyconst)
@@ -219,13 +236,6 @@ class Gamepad(ChannelSource):
 		print "Inputs module: Accepted gamepad %u (%s)" % (js_num, jsname)
 		self._numaxes = self._js.get_numaxes()
 		self._numbtns = self._js.get_numbuttons()
-		
-		# TODO: Implement weird state detection, and come up with a better name for it
-		# The PS3 controller, when first plugged in, acts kind of weird until you push the PS3 button
-		# You can tell it's in this state because all axis readings return either a constant very near -1 or 0.0, though NOT the real neutral values
-		# We assume we're in weirdState and report no axis data until we get numbers that look okay
-		# Once we leave weirdState, then we can record real neutral values
-		self._weirdState = True
 		
 		self._btn_names, self._axis_names = None, None
 		for namepat, namedict in self._KNOWN_BTN_NAMES.iteritems():
@@ -333,6 +343,13 @@ class GamepadButtonChannel(Channel):
 			return 1.0
 		return 0.0
 	
+	def matches_events(self, event_list):
+		"""Matches only the button down event, not the button up event."""
+		for event in event_list:
+			if event.type == pygame.JOYBUTTONDOWN and event.button == self._btn_num:
+				return True
+		return False
+	
 	def desc(self):
 		btn_name = self._btn_num
 		if self._gamepad._btn_names is not None and self._btn_num in self._gamepad._btn_names:
@@ -367,6 +384,17 @@ class GamepadAxisChannel(Channel):
 			v = (v+1)/2
 		return v
 	
+	def matches_events(self, event_list):
+		"""Matches the joy axis motion event.
+		
+		This is probably not useful, as these events occur whenever the axis value changes, not whenever it is different
+		from neutral or whenever it leaves neutral. However, this is implemented for completeness.
+		"""
+		for event in event_list:
+			if event.type == pygame.JOYAXISMOTION and event.axis == self._axis_num:
+				return True
+		return False
+	
 	def desc(self):
 		axis_name = self._axis_num
 		if self._gamepad._axis_names is not None and self._axis_num in self._gamepad._axis_names:
@@ -400,6 +428,10 @@ class PseudoAxisChannel(Channel):
 			else:
 				return -self.negative.value()
 		return 0
+	
+	def matches_events(self, event_list):
+		"""Returns true if either sub-channel matches this event list."""
+		return self.negative.matches_events(event_list) or self.positive.matches_events(event_list)
 	
 	def desc(self):
 		return "%s/%s" % (self.negative.desc(), self.positive.desc())
@@ -442,6 +474,13 @@ class MultiOrChannel(Channel):
 				v = cand_v
 		return v
 	
+	def matches_events(self, event_list):
+		"""Returns True if any sub-channel matches this event list."""
+		for c in self.channels:
+			if c.matches_events(event_list):
+				return True
+		return False
+	
 	def desc(self):
 		return ",".join([c.desc() for c in self.channels])
 
@@ -482,6 +521,19 @@ class MultiAndChannel(Channel):
 			if v is None or abs(cand_v) < abs(v):
 				v = cand_v
 		return v
+	
+	def matches_events(self, event_list):
+		"""Returns true if every sub-Channel matches this events list.
+		
+		This is a little troublesome, as it requires that whatever actions fire off these events must occur
+		within the same frame (nearly simeltanously) in order to register. Therefore, one probably shouldn't
+		use MultiAndChannels to check events unless you're prepared for the player to have to try several
+		times at pushing the input combination.
+		"""
+		for c in self.channels:
+			if not c.matches_events(event_list):
+				return False
+		return True
 	
 	def desc(self):
 		return "+".join([c.desc() for c in self.channels])
@@ -543,6 +595,9 @@ class InputManager:
 				self._keyboard.key_channel(K_ESCAPE),
 				self._gamepad_man.gamepad(0).button_channel(3),
 			]),
+			INTENT_FORCE_QUIT : MultiOrChannel([
+				self._keyboard.key_channel(K_F4),
+			]),
 			INTENT_UI_CONFIRM : MultiOrChannel([
 				self._keyboard.key_channel(K_SPACE),
 				self._keyboard.key_channel(K_RETURN),
@@ -581,6 +636,19 @@ class InputManager:
 		# Treat relevant gameplay channels automatically as UI control channels
 		self.intent_channels[INTENT_UI_X].channels.append(self.intent_channels[INTENT_TRANS_X])
 		self.intent_channels[INTENT_UI_Y].channels.append(self.intent_channels[INTENT_TRANS_Y])
+	
+	def intents_matching_events(self, event_list):
+		"""Returns a set containing all the INTENT_* values matching against the given list of pygame events.
+		
+		This doesn't mean quite the same thing as checking the is_on() results of intent channels manually, as
+		pygame events only occur once at the beginning of the action, but Channels will continue to return
+		True from is_on() as long as the action (pressing the button down, etc.) continues to occur.
+		"""
+		ret = set()
+		for intent, channel in self.intent_channels.iteritems():
+			if channel.matches_events(event_list):
+				ret.add(intent)
+		return ret
 	
 	def update(self):
 		"""Calls update() on all the ChannelSources being managed.

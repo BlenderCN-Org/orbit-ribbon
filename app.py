@@ -55,6 +55,9 @@ mode = None
 #Input events (from PyGame) which occurred this step
 events = []
 
+#INTENT_* constants (from the inputs module) triggered by PyGame events this step
+event_intents = set()
+
 #Billboard objects which should be drawn this frame
 billboards = []
 
@@ -113,16 +116,26 @@ def ui_init():
 	"""
 	global screen, clock, cons, watchers, input_man
 	
+	cons = console.Console()
+	watchers = []
+	sys.stderr = cons.pseudofile
+	sys.stdout = cons.pseudofile
+	watchers.append(console.Watcher(inputs.INTENT_DEBUG_A_AXIS, pygame.Rect(20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	watchers.append(console.Watcher(inputs.INTENT_DEBUG_B_AXIS, pygame.Rect(20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	watchers.append(console.Watcher(inputs.INTENT_DEBUG_C_AXIS, pygame.Rect(5*winsize[0]/6 - 20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	watchers.append(console.Watcher(inputs.INTENT_DEBUG_D_AXIS, pygame.Rect(5*winsize[0]/6 - 20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
+	
 	pygame.display.init()
 	pygame.display.set_caption('Orbit Ribbon')
 	pygame.display.set_icon(pygame.image.load(os.path.join(APP_DIR, 'images', 'logo.png')))
 	pygame.mouse.set_visible(0)
+	print "Setting display mode %s" % str(winsize)
 	screen = pygame.display.set_mode(winsize, DOUBLEBUF | OPENGL)
-
+	
 	input_man = inputs.InputManager()
-
+	
 	pygame.mixer.init(22050, -16, 2, 512)
-
+	
 	clock = pygame.time.Clock()
 	
 	glutInit(sys.argv) # GLUT is only used for drawing text and basic geometrical objects, not its full rigamarole of app control
@@ -143,15 +156,6 @@ def ui_init():
 	glEnableClientState(GL_NORMAL_ARRAY)
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 	
-	cons = console.Console()
-	watchers = []
-	sys.stderr = cons.pseudofile
-	sys.stdout = cons.pseudofile
-	watchers.append(console.Watcher("1", "2", pygame.Rect(20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
-	watchers.append(console.Watcher("3", "4", pygame.Rect(20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
-	watchers.append(console.Watcher("5", "6", pygame.Rect(5*winsize[0]/6 - 20, winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
-	watchers.append(console.Watcher("7", "8", pygame.Rect(5*winsize[0]/6 - 20, 2*winsize[1]/5-30, winsize[0]/6, winsize[1]/5-20)))
-
 
 def sim_init(timing = False):
 	"""Initializes the camera and simulation, including ODE.
@@ -192,6 +196,7 @@ def sim_init(timing = False):
 def init_area(areaname):
 	"""Loads the given area, by internal name, into the game state. This includes objects, sky, etc."""
 	global objects, sky_stuff, cur_area, cur_area_tstart
+	print "Loading area %s" % areaname
 	cur_area = ore_man.areas[areaname]
 	cur_area_tstart = pygame.time.get_ticks()
 	objects = cur_area.objects[:] # FIXME Need to copy the contents of the objects themselves, so that the level can be restarted
@@ -203,6 +208,7 @@ def init_mission(missionname):
 	
 	You must first init the mission's area before calling this."""
 	global objects, mission_control, player_camera, cur_mission, cur_mission_tstart
+	print "Loading mission %s" % missionname
 	cur_mission = cur_area.missions[missionname]
 	cur_mission_tstart = pygame.time.get_ticks()
 	objects.extend(cur_mission.objects[:]) # FIXME Need to copy the contents of the objects themselves, so that the level can be restarted
@@ -343,27 +349,6 @@ def _draw_frame():
 	_rectime("DF-Flip")
 
 
-def _proc_input():
-	input_man.update()
-
-	global events
-	events = []
-	for event in pygame.event.get():
-		cons.handle(event)
-		if event.type == pygame.QUIT:
-			raise QuitException
-		elif event.type == pygame.KEYDOWN and event.key == pygame.K_F4:
-			raise QuitException
-		else:
-			if not cons.active:
-				events.append(event)
-	
-	# Update the watchers
-	for w in watchers:
-		if w.expr != None:
-			w.update()
-	
-
 def run():
 	"""Runs the game.
 	
@@ -372,7 +357,7 @@ def run():
 	Optionally, you may call init_area() and init_mission() to jump straight to a mission. If not, the
 	game will start at the title screen.
 	"""
-	global totalsteps, mode
+	global totalsteps, mode, events, event_intents
 	
 	if cur_area is not None and cur_mission is not None:
 		mode = MODE_GAMEPLAY
@@ -386,23 +371,41 @@ def run():
 			elapsedms = clock.tick(maxfps)
 			_rectime("Tick")
 			
+			events = []
+			for event in pygame.event.get():
+				events.append(event)
+				if event.type == pygame.QUIT:
+					print "Got a pygame quit event, closing app."
+					raise QuitException
+			
+			input_man.update()
+			event_intents = input_man.intents_matching_events(events)
+			if inputs.INTENT_FORCE_QUIT in event_intents:
+				print "Got a force quit intent, closing app."
+				raise QuitException
 			if cons.active:
-				_proc_input()
-			elif mode == MODE_GAMEPLAY:
+				# If the console is up, don't interpret any player input as a mapped intent, except for force quit (handled above)
+				event_intents = []
+			
+			_rectime("Input")
+			
+			if mode == MODE_GAMEPLAY and not cons.active:
 				totalms += elapsedms
 				#Figure out how many simulation steps we're doing this frame.
-				#In theory, shouldn't be zero, since max frames per second is the same as steps per second
-				#However, it's alright to be occasionally zero, since clock.tick is sometimes slightly off
+				#In theory, shouldn't ever be <1, since max frames per second is the same as steps per second
+				#However, it's alright to be occasionally zero, since clock.tick is sometimes a bit off
 				#FIXME: Do we really need totalms?
 				steps = int(math.floor((totalms*maxfps/1000)))-totalsteps
 				#Run the simulation the desired number of steps
 				for i in range(steps):
-					_proc_input()
 					_sim_step()
 					totalsteps += 1
-			elif mode == MODE_TITLE_SCREEN:
-				_proc_input()
 			_rectime("Sim")
+			
+			# Update any active debugging watchers
+			for w in watchers:
+				if w.expr != None:
+					w.update()
 			
 			#Draw everything
 			_draw_frame()
