@@ -19,7 +19,7 @@ class Channel:
 	
 	def is_on(self):
 		"""Returns True if, when considered as a digital button, the channel is on.
-
+		
 		For things that act like axes, this should return True whenever the axis leaves its neutral position.
 		
 		Must be implemented by subclass.
@@ -43,6 +43,22 @@ class Channel:
 		raise NotImplemented
 
 
+class NullChannel(Channel):
+	"""A logical Channel that always reports no activity."""
+	
+	def __init__(self):
+		pass
+	
+	def is_on(self):
+		return False
+	
+	def value(self):
+		return 0.0
+	
+	def desc(self):
+		return "NULL"
+
+
 class ChannelSource:
 	"""An object that represents a source for several distinct Channels, i.e. a keyboard or gamepad."""
 	
@@ -52,7 +68,7 @@ class ChannelSource:
 		May optionally be implemented by subclass.
 		"""
 		pass
-
+	
 	def channels(self):
 		"""Returns a sequence of all Channels offered by this ChannelSource.
 		
@@ -62,11 +78,7 @@ class ChannelSource:
 
 
 class Keyboard(ChannelSource):
-	"""An object representing the keyboard, from which you can get KeyChannels.
-	
-	Data attributes:
-	key_channels: A dictionary mapping pygame key constants to the same KeyChannels returned by channels().
-	"""
+	"""An object representing the keyboard, from which you can get KeyChannels."""
 
 	# Will not track keystrokes from keys with these names, since they've been known to cause problems
 	IGNORE_KEYS = (
@@ -77,12 +89,12 @@ class Keyboard(ChannelSource):
 	def __init__(self):
 		self.update()
 		self._channels = []
-		self.key_channels = {}
+		self._key_channels = {}
 		for keyconst, value in enumerate(self._pressed_dict):
 			if pygame.key.name(keyconst) in self.IGNORE_KEYS:
 				continue
 			channel = KeyChannel(self, keyconst)
-			self.key_channels[keyconst] = channel
+			self._key_channels[keyconst] = channel
 			self._channels.append(channel)
 	
 	def update(self):
@@ -90,6 +102,13 @@ class Keyboard(ChannelSource):
 	
 	def channels(self):
 		return self._channels
+	
+	def key_channel(self, keyconst):
+		"""Returns a KeyChannel for the given pygame key constant, or NullChannel if no such key exists."""
+		if keyconst in self._key_channels:
+			return self._key_channels[keyconst]
+		else:
+			return NullChannel()
 
 
 class KeyChannel(Channel):
@@ -112,13 +131,33 @@ class KeyChannel(Channel):
 		return "Key:%s" % pygame.key.name(self._keyconst)
 
 
-class Gamepad(ChannelSource):
-	"""An object representing a Gamepad, from which you can get GamepadButtonChannels and GamepadAxisChannels.
+class GamepadManager:
+	"""An object which handles all gamepads and joysticks connected to the system."""
 	
-	Data attributes:
-	axis_channels - A dictionary mapping axis indices to the same GamepadAxisChannels returned by channels().
-	button_channels - A dictionary mapping button indices to the same GamepadButtonChannels returned by channels().
-	"""
+	def __init__(self):
+		self._gamepads = []
+		for jnum in xrange(pygame.joystick.get_count()):
+			self._gamepads.append(Gamepad(jnum))
+	
+	def gamepad(self, num):
+		"""Returns the given numbered Gamepad, or NullGamepad if there is no pygame joystick with that number."""
+		if num < len(self._gamepads):
+			return self._gamepads[num]
+		else:
+			return NullGamepad()
+	
+	def gamepads(self):
+		"""Returns a list of all known Gamepads."""
+		return self._gamepads
+	
+	def update(self):
+		"""Calls update() on all gamepads managed by this object."""
+		for g in self._gamepads:
+			g.update()
+
+
+class Gamepad(ChannelSource):
+	"""An object representing a gamepad or joystick, from which you can get GamepadButtonChannels and GamepadAxisChannels."""
 	
 	# If a gamepad's name matches the regular expression, then we can use these more human-readable names for button indices
 	_KNOWN_BTN_NAMES = {
@@ -169,6 +208,8 @@ class Gamepad(ChannelSource):
 		"""Creates a Gamepad from the given numbered pygame joystick."""
 		self._js = pygame.joystick.Joystick(js_num)
 		self._js.init()
+		jsname = self._js.get_name()
+		print "Inputs module: Accepted gamepad %u (%s)" % (js_num, jsname)
 		self._numaxes = self._js.get_numaxes()
 		self._numbtns = self._js.get_numbuttons()
 		
@@ -180,7 +221,6 @@ class Gamepad(ChannelSource):
 		self._weirdState = True
 		
 		self._btn_names, self._axis_names = None, None
-		jsname = self._js.get_name()
 		for namepat, namedict in self._KNOWN_BTN_NAMES.iteritems():
 			if namepat.search(jsname):
 				self._btn_names = namedict
@@ -192,16 +232,16 @@ class Gamepad(ChannelSource):
 		
 		pygame.event.pump()
 		self.update()
-		self.axis_channels = {}
-		self.button_channels = {}
+		self._axis_channels = {}
+		self._button_channels = {}
 		self._channels = []
 		for idx in self._axes.iterkeys():
 			channel = GamepadAxisChannel(self, idx)
-			self.axis_channels[idx] = channel
+			self._axis_channels[idx] = channel
 			self._channels.append(channel)
 		for idx in self._btns.iterkeys():
 			channel = GamepadButtonChannel(self, idx)
-			self.button_channels[idx] = channel
+			self._button_channels[idx] = channel
 			self._channels.append(channel)
 		self.set_neutral()
 	
@@ -228,6 +268,42 @@ class Gamepad(ChannelSource):
 	
 	def channels(self):
 		return self._channels
+	
+	def button_channel(self, btn_num):
+		"""Returns a GamepadButtonChannel for the given button number, or NullChannel if no such button exists."""
+		if btn_num in self._button_channels:
+			return self._button_channels[btn_num]
+		else:
+			return NullChannel()
+	
+	def axis_channel(self, axis_num):
+		"""Returns a GamepadAxisChannel for the given axis number, or NullChannel if no such axis exists."""
+		if axis_num in self._axis_channels:
+			return self._axis_channels[axis_num]
+		else:
+			return NullChannel()
+
+
+class NullGamepad(ChannelSource):
+	"""An logical ChannelSource that acts like a Gamepad, but only returns NullChannels."""
+
+	def __init__(self):
+		pass
+	
+	def set_neutral(self):
+		pass
+	
+	def update(self):
+		pass
+	
+	def channels(self):
+		return []
+	
+	def button_channel(self, btn_num):
+		return NullChannel()
+	
+	def axis_channel(self, axis_num):
+		return NullChannel()
 
 
 class GamepadButtonChannel(Channel):
@@ -406,73 +482,69 @@ class InputManager:
 		self.all_channels = []
 		
 		self._keyboard = Keyboard()
+		self._gamepad_man = GamepadManager()
 		
-		# TODO : Implement Gamepad and gamepad channels that work even when no gamepad attached, so that we can:
-		# - Plug in or unplug gamepad while game is running, or even change gamepads (does pygame support this?)
-		# - Not have to mess with InputManager or conf file parser to have it deal with whether or not configured gamepad is plugged in
-		self._gamepad = Gamepad(0)
-		
-		for channel_src in (self._keyboard, self._gamepad):
+		for channel_src in [self._keyboard] + self._gamepad_man.gamepads():
 			for channel in channel_src.channels():
 				self.all_channels.append(channel)
 		
 		# TODO: Make this user-configurable
 		self.intent_channels = {
 			INTENT_TRANS_X : MultiOrChannel([
-				PseudoAxisChannel(self._keyboard.key_channels[K_a], self._keyboard.key_channels[K_d]),
-				self._gamepad.axis_channels[0],
+				PseudoAxisChannel(self._keyboard.key_channel(K_a), self._keyboard.key_channel(K_d)),
+				self._gamepad_man.gamepad(0).axis_channel(0),
 			]),
 			INTENT_TRANS_Y : MultiOrChannel([
-				PseudoAxisChannel(self._keyboard.key_channels[K_w], self._keyboard.key_channels[K_s]),
-				self._gamepad.axis_channels[1],
+				PseudoAxisChannel(self._keyboard.key_channel(K_w), self._keyboard.key_channel(K_s)),
+				self._gamepad_man.gamepad(0).axis_channel(1),
 			]),
 			INTENT_TRANS_Z : MultiOrChannel([
-				PseudoAxisChannel(self._keyboard.key_channels[K_q], self._keyboard.key_channels[K_e]),
-				PseudoAxisChannel(self._gamepad.axis_channels[12], self._gamepad.axis_channels[13]),
+				PseudoAxisChannel(self._keyboard.key_channel(K_q), self._keyboard.key_channel(K_e)),
+				PseudoAxisChannel(self._gamepad_man.gamepad(0).axis_channel(12), self._gamepad_man.gamepad(0).axis_channel(13)),
 			]),
 			INTENT_ROTATE_X : MultiOrChannel([
-				PseudoAxisChannel(self._keyboard.key_channels[K_i], self._keyboard.key_channels[K_k]),
-				self._gamepad.axis_channels[3],
+				PseudoAxisChannel(self._keyboard.key_channel(K_i), self._keyboard.key_channel(K_k)),
+				self._gamepad_man.gamepad(0).axis_channel(3),
 			]),
 			INTENT_ROTATE_Y : MultiOrChannel([
-				PseudoAxisChannel(self._keyboard.key_channels[K_j], self._keyboard.key_channels[K_l]),
-				self._gamepad.axis_channels[2],
+				PseudoAxisChannel(self._keyboard.key_channel(K_j), self._keyboard.key_channel(K_l)),
+				self._gamepad_man.gamepad(0).axis_channel(2),
 			]),
 			INTENT_ROTATE_Z : MultiOrChannel([
-				PseudoAxisChannel(self._keyboard.key_channels[K_u], self._keyboard.key_channels[K_o]),
-				PseudoAxisChannel(self._gamepad.axis_channels[14], self._gamepad.axis_channels[15]),
+				PseudoAxisChannel(self._keyboard.key_channel(K_u), self._keyboard.key_channel(K_o)),
+				PseudoAxisChannel(self._gamepad_man.gamepad(0).axis_channel(14), self._gamepad_man.gamepad(0).axis_channel(15)),
 			]),
 			INTENT_RUN_STANCE : MultiOrChannel([
-				self._keyboard.key_channels[K_SPACE],
-				MultiAndChannel([self._gamepad.axis_channels[14], self._gamepad.axis_channels[15]]),
+				self._keyboard.key_channel(K_SPACE),
+				MultiAndChannel((self._gamepad_man.gamepad(0).axis_channel(14), self._gamepad_man.gamepad(0).axis_channel(15))),
 			]),
 			INTENT_UI_CONFIRM : MultiOrChannel([
-				self._keyboard.key_channels[K_SPACE],
-				self._keyboard.key_channels[K_RETURN],
+				self._keyboard.key_channel(K_SPACE),
+				self._keyboard.key_channel(K_RETURN),
 			]),
 			INTENT_UI_BACK : MultiOrChannel([
-				self._keyboard.key_channels[K_ESCAPE],
+				self._keyboard.key_channel(K_ESCAPE),
 			]),
 			INTENT_UI_X : MultiOrChannel([
-				PseudoAxisChannel(self._keyboard.key_channels[K_LEFT], self._keyboard.key_channels[K_RIGHT]),
+				PseudoAxisChannel(self._keyboard.key_channel(K_LEFT), self._keyboard.key_channel(K_RIGHT)),
 			]),
 			INTENT_UI_Y : MultiOrChannel([
-				PseudoAxisChannel(self._keyboard.key_channels[K_DOWN], self._keyboard.key_channels[K_UP]),
+				PseudoAxisChannel(self._keyboard.key_channel(K_DOWN), self._keyboard.key_channel(K_UP)),
 			]),
 			INTENT_DEBUG_OPEN : MultiOrChannel([
-				self._keyboard.key_channels[K_BACKQUOTE],
+				self._keyboard.key_channel(K_BACKQUOTE),
 			]),
 			INTENT_DEBUG_A_AXIS : MultiOrChannel([
-				PseudoAxisChannel(self._keyboard.key_channels[K_1], self._keyboard.key_channels[K_2]),
+				PseudoAxisChannel(self._keyboard.key_channel(K_1), self._keyboard.key_channel(K_2)),
 			]),
 			INTENT_DEBUG_B_AXIS : MultiOrChannel([
-				PseudoAxisChannel(self._keyboard.key_channels[K_3], self._keyboard.key_channels[K_4]),
+				PseudoAxisChannel(self._keyboard.key_channel(K_3), self._keyboard.key_channel(K_4)),
 			]),
 			INTENT_DEBUG_C_AXIS : MultiOrChannel([
-				PseudoAxisChannel(self._keyboard.key_channels[K_5], self._keyboard.key_channels[K_6]),
+				PseudoAxisChannel(self._keyboard.key_channel(K_5), self._keyboard.key_channel(K_6)),
 			]),
 			INTENT_DEBUG_D_AXIS : MultiOrChannel([
-				PseudoAxisChannel(self._keyboard.key_channels[K_7], self._keyboard.key_channels[K_8]),
+				PseudoAxisChannel(self._keyboard.key_channel(K_7), self._keyboard.key_channel(K_8)),
 			]),
 		}
 		
@@ -487,4 +559,4 @@ class InputManager:
 		"""
 		pygame.event.pump()
 		self._keyboard.update()
-		self._gamepad.update()
+		self._gamepad_man.update()

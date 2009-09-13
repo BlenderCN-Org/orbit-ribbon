@@ -34,7 +34,6 @@ while True:
 	for c in m.all_channels:
 		if c.is_on():
 			s = "%s:%.03f" % (c.desc(), c.value())
-			print s
 			surf = font.render(s, True, (255,255,255), (0,0,0))
 			screen.blit(surf, (5, y))
 			y += font.get_linesize()
