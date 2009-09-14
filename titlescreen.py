@@ -174,7 +174,10 @@ class TitleScreenManager:
 				doneness = 1
 			app.fade_color = (0, 0, 0, 1 - doneness)
 			if doneness >= 1.0:
-				self._set_mode(TSMODE_PRE_MAIN)
+				if skipping:
+					self._set_mode(TSMODE_MAIN)
+				else:
+					self._set_mode(TSMODE_PRE_MAIN)
 		elif self._tsmode == TSMODE_PRE_MAIN:
 			### Transition from pre-pre-main into the main screen showing the title logo
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_MAIN_MILLISECS
