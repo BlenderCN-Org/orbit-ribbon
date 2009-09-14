@@ -387,8 +387,11 @@ def run():
 			if inputs.INTENT_FORCE_QUIT in event_intents:
 				print "Got a force quit intent, closing app."
 				raise QuitException
+			if inputs.INTENT_RESET_NEUTRAL in event_intents:
+				print "Resetting neutral state for inputs."
+				input_man.set_neutral()
 			if cons.active:
-				# If the console is up, don't interpret any player input as a mapped intent, except for force quit (handled above)
+				# If the console is up, don't interpret any player input as a mapped intent, except for force quit and reset neutral (handled above)
 				event_intents = []
 			
 			_rectime("Input")

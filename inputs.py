@@ -7,10 +7,10 @@ from pygame.locals import *
 
 # Intentions are direct gameplay actions controlled by input Channels
 (INTENT_TRANS_X, INTENT_TRANS_Y, INTENT_TRANS_Z, INTENT_ROTATE_X, INTENT_ROTATE_Y, INTENT_ROTATE_Z,
-INTENT_RUN_STANCE, INTENT_PAUSE, INTENT_FORCE_QUIT,
+INTENT_RUN_STANCE, INTENT_PAUSE, INTENT_FORCE_QUIT, INTENT_RESET_NEUTRAL,
 INTENT_UI_CONFIRM, INTENT_UI_BACK, INTENT_UI_X, INTENT_UI_Y,
 INTENT_DEBUG_OPEN, INTENT_DEBUG_A_AXIS, INTENT_DEBUG_B_AXIS, INTENT_DEBUG_C_AXIS, INTENT_DEBUG_D_AXIS,
-) = range(18)
+) = range(19)
 
 DEAD_ZONE = 0.001 # How far from -1, 0, or 1 where we consider an axis to just be at those exact values
 
@@ -178,6 +178,11 @@ class GamepadManager:
 		"""Calls update() on all gamepads managed by this object."""
 		for g in self._gamepads:
 			g.update()
+	
+	def set_neutral(self):
+		"""Calls set_neutral() on all gamepads managed by this object."""
+		for g in self._gamepads:
+			g.set_neutral()
 
 
 class Gamepad(ChannelSource):
@@ -598,6 +603,9 @@ class InputManager:
 			INTENT_FORCE_QUIT : MultiOrChannel([
 				self._keyboard.key_channel(K_F4),
 			]),
+			INTENT_RESET_NEUTRAL : MultiOrChannel([
+				self._keyboard.key_channel(K_F12),
+			]),
 			INTENT_UI_CONFIRM : MultiOrChannel([
 				self._keyboard.key_channel(K_SPACE),
 				self._keyboard.key_channel(K_RETURN),
@@ -658,3 +666,7 @@ class InputManager:
 		pygame.event.pump()
 		self._keyboard.update()
 		self._gamepad_man.update()
+	
+	def set_neutral(self):
+		"""Sets the current state as the neutral state for all inputs that it makes sense to do this on (i.e. gamepads)."""
+		self._gamepad_man.set_neutral()
