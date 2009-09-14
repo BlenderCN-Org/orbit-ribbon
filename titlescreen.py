@@ -2,7 +2,7 @@ from __future__ import division
 
 import pygame, os
 
-import app, resman, camera, sky, console
+import app, resman, camera, sky, console, inputs
 from geometry import *
 from util import *
 from gl import *
@@ -165,11 +165,7 @@ class TitleScreenManager:
 		self._title_tex.draw_2d(left_margin, top_margin, width, height)
 	
 	def draw(self):
-		skipping = False
-		for e in app.events:
-			if e.type == pygame.KEYDOWN and e.key in (pygame.K_ESCAPE, pygame.K_SPACE):
-				skipping = True
-				break
+		skipping = inputs.INTENT_UI_CONFIRM in app.event_intents
 		
 		if self._tsmode == TSMODE_PRE_PRE_MAIN:
 			### Transition from blank screen into distant view of Smoke Ring
@@ -191,10 +187,9 @@ class TitleScreenManager:
 		elif self._tsmode == TSMODE_MAIN:
 			### Draw/handle events for the main title screen interface
 			self._draw_title_logo(0.5)
-			for e in app.events:
-				if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
-					# Handle input events to proceed into area selection
-					self._set_mode(TSMODE_PRE_AREA)
+			if inputs.INTENT_UI_CONFIRM in app.event_intents:
+				# Proceed into area selection
+				self._set_mode(TSMODE_PRE_AREA)
 		elif self._tsmode == TSMODE_PRE_AREA:
 			### Transition from main title screen to area selection screen
 			doneness = (pygame.time.get_ticks() - self._tstart)/PRE_AREA_MILLISECS
@@ -232,18 +227,17 @@ class TitleScreenManager:
 				glEnd()
 				glDisable(GL_TEXTURE_2D)
 			if app.cur_area is None:
-				for e in app.events:
-					if e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE:
-						app.init_area("A01") # FIXME: Allow the user to select which area they want to go to
-						app.sky_stuff = sky.SkyStuff() # Override the sky choice made by the area loader
-						ang = rev2rad(area.sky_stuff.game_angle)
-						d = sky.GOLD_DIST + area.sky_stuff.game_d_offset
-						area_loc = Point(0, 0, sky.GOLD_DIST) - Point(d*math.sin(ang), 0, d*math.cos(ang))
-						self.camera.mission_cam = camera.FixedCamera(
-							position = area_loc + Point(0, sky.GOLD_DIST/10, 0),
-							target = area_loc,
-							up_vec = Point(0, 0, 1)
-						)
+				if inputs.INTENT_UI_CONFIRM in app.event_intents:
+					app.init_area("A01") # FIXME: Allow the user to select which area they want to go to
+					app.sky_stuff = sky.SkyStuff() # Override the sky choice made by the area loader
+					ang = rev2rad(area.sky_stuff.game_angle)
+					d = sky.GOLD_DIST + area.sky_stuff.game_d_offset
+					area_loc = Point(0, 0, sky.GOLD_DIST) - Point(d*math.sin(ang), 0, d*math.cos(ang))
+					self.camera.mission_cam = camera.FixedCamera(
+						position = area_loc + Point(0, sky.GOLD_DIST/10, 0),
+						target = area_loc,
+						up_vec = Point(0, 0, 1)
+					)
 			else:
 				if fade == 0.0:
 					# Once we've faded out the UI, transition to mission selection
@@ -278,21 +272,20 @@ class TitleScreenManager:
 					glEnd()
 				y += 50
 			if app.cur_mission is None:
-				for e in app.events:
-					if e.type == pygame.KEYDOWN:
-						if e.key == pygame.K_UP or e.key == pygame.K_DOWN:
-							if e.key == pygame.K_UP and self.cur_sel > 0:
-								self.cur_sel -= 1
-							elif e.key == pygame.K_DOWN and self.cur_sel < (len(mission_names)-1):
-								self.cur_sel += 1
-							# Move the cursor up or down
-						elif e.key == pygame.K_SPACE:
-							# Transition to pre-gameplay mode on the currently selected mission
-							mname = mission_names[self.cur_sel]
-							app.init_mission(mname)
-							# Override the camera set by init_mission, but keep it for later when we transition to actual gameplay mode
-							self.camera.gameplay_cam = app.player_camera
-							app.player_camera = self.camera
+					if inputs.INTENT_UI_CONFIRM in app.event_intents:
+						# Transition to pre-gameplay mode on the currently selected mission
+						mname = mission_names[self.cur_sel]
+						app.init_mission(mname)
+						# Override the camera set by init_mission, but keep it for later when we transition to actual gameplay mode
+						self.camera.gameplay_cam = app.player_camera
+						app.player_camera = self.camera
+					elif inputs.INTENT_UI_Y in app.event_intents:
+						# Move the cursor up or down
+						val = app.input_man.intent_channels[inputs.INTENT_UI_Y].value()
+						if val < 0 and self.cur_sel > 0:
+							self.cur_sel -= 1
+						elif val > 0 and self.cur_sel < (len(mission_names)-1):
+							self.cur_sel += 1
 			else:
 				if fade == 0.0:
 					# Once we've faded out the UI, transition to pre-gameplay
