@@ -215,7 +215,8 @@ class TitleScreenManager:
 				d = (app.winsize[1]/2)*0.855 * (1 + area.sky_stuff.game_d_offset/sky.GOLD_DIST)
 				ang = rev2rad(area.sky_stuff.game_angle)
 				pos = Point(app.winsize[0]/2, app.winsize[1]/2, 0) + Point(d*math.sin(ang), d*math.cos(ang), 0)
-				glEnable(GL_TEXTURE_2D)
+				# FIXME: Can't this be replaced by a call to Texture.draw_2d?
+				cachingGlEnable(GL_TEXTURE_2D)
 				glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
 				glBindTexture(GL_TEXTURE_2D, self._selsquare_inactive_tex.glname)
 				glBegin(GL_QUADS)
@@ -228,7 +229,7 @@ class TitleScreenManager:
 				glTexCoord2f(0.0, 0.0)
 				glVertex2f(pos[0] - selsize, pos[1] + selsize)
 				glEnd()
-				glDisable(GL_TEXTURE_2D)
+				cachingGlDisable(GL_TEXTURE_2D)
 			if app.cur_area is None:
 				if inputs.INTENT_UI_CONFIRM in app.event_intents:
 					app.init_area("A01") # FIXME: Allow the user to select which area they want to go to

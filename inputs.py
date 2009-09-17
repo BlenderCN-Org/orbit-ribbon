@@ -605,6 +605,7 @@ class InputManager:
 			]),
 			INTENT_RESET_NEUTRAL : MultiOrChannel([
 				self._keyboard.key_channel(K_F12),
+				self._gamepad_man.gamepad(0).button_channel(16),
 			]),
 			INTENT_UI_CONFIRM : MultiOrChannel([
 				self._keyboard.key_channel(K_SPACE),

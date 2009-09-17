@@ -154,7 +154,7 @@ class SkyStuff:
 			glutSolidSphere(1e15, 15, 15)
 		if sky_ratio < 0.5:
 			# Draw stars
-			glEnable(GL_POINT_SMOOTH)
+			cachingGlEnable(GL_POINT_SMOOTH)
 			for n, sublist in enumerate(STAR_LISTS):
 				size = 0.5 + (n+1)*1.5/len(STAR_LISTS) - sky_ratio
 				glColor3f(size/2 + 0.5, size/2 + 0.5, size/2 + 0.5)
@@ -163,11 +163,11 @@ class SkyStuff:
 				for pt in sublist:
 					glVertex3f(*pt)
 				glEnd()
-			glDisable(GL_POINT_SMOOTH)
+			cachingGlDisable(GL_POINT_SMOOTH)
 		glPopMatrix()
 		
 		### The Smoke Ring and the gas torus
-		glEnable(GL_CULL_FACE)
+		cachingGlEnable(GL_CULL_FACE)
 		glPushMatrix()
 		glRotatef(90, 1, 0, 0)
 		# Smoke ring itself
@@ -183,7 +183,7 @@ class SkyStuff:
 		#glColor4f(1.0, 1.0, 1.0, 0.05)
 		#glutSolidTorus(TORUS_RADIUS, (TORUS_INSIDE_DIST+TORUS_OUTSIDE_DIST)/2, 20, 20)
 		glPopMatrix()
-		glDisable(GL_CULL_FACE) # FIXME - Should have back face culling always enabled to hide camera mishaps and maybe boost performance a little
+		cachingGlDisable(GL_CULL_FACE) # FIXME - Should have back face culling always enabled to hide camera mishaps and maybe boost performance a little
 		
 		# Set up lighting parameters for the two stars of the Smoke Ring system
 		# Since lighting is disabled at this time, this does not affect the drawing of the sky objects themselves
@@ -192,7 +192,7 @@ class SkyStuff:
 		t3_pos = self._t3_pos()
 		glLightfv(GL_LIGHT1, GL_POSITION, (t3_pos[0], t3_pos[1], t3_pos[2], 1.0))
 		glLightfv(GL_LIGHT1, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0))
-		glEnable(GL_LIGHT1)
+		cachingGlEnable(GL_LIGHT1)
 		
 		# Voy
 		# FIXME - Set up lighting for Voy
@@ -207,7 +207,7 @@ class SkyStuff:
 		):
 			glLightfv(lightcons, GL_POSITION, (pos[0], pos[1], pos[2], 1.0))
 			glLightfv(lightcons, GL_DIFFUSE, AMB_LIGHT_DIFFUSE)
-			glEnable(lightcons)
+			cachingGlEnable(lightcons)
 		
 		glPopMatrix()
 	

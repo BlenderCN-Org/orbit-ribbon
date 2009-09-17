@@ -9,6 +9,26 @@ from OpenGL.GLUT import *
 from OpenGL.raw import GL as RawGL
 from OpenGL.arrays import ArrayDatatype as ADT
 
+class _GLFlagCacher:
+	def __init__(self):
+		self.flags = {}
+	
+	def set(self, flag, tgt):
+		if flag not in self.flags or self.flags[flag] != tgt:
+			if tgt is True:
+				glEnable(flag)
+			else:
+				glDisable(flag)
+			self.flags[flag] = tgt
+
+_glFlagCache = _GLFlagCacher()
+
+def cachingGlEnable(flag):
+	_glFlagCache.set(flag, True)
+
+def cachingGlDisable(flag):
+	_glFlagCache.set(flag, False)
+
 
 class GLDisplayList:
 	"""A class representing an OpenGL display list.

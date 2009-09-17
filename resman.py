@@ -74,7 +74,7 @@ class Texture(object):
 		
 		OpenGL must be in a proper state for drawing 2D images before you call this.
 		"""
-		glEnable(GL_TEXTURE_2D)
+		cachingGlEnable(GL_TEXTURE_2D)
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
 		glBindTexture(GL_TEXTURE_2D, self.glname)
 		glBegin(GL_QUADS)
@@ -87,7 +87,7 @@ class Texture(object):
 		glTexCoord2f(0.0, 0.0)
 		glVertex2f(left, top + height)
 		glEnd()
-		glDisable(GL_TEXTURE_2D)
+		cachingGlDisable(GL_TEXTURE_2D)
 
 def unload_all():
 	"""Unloads all resources.

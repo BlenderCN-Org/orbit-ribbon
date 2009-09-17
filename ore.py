@@ -109,26 +109,19 @@ class OREMesh:
 	def draw_gl(self):
 		self._vbo.bind_interleaved(GL_T2F_N3F_V3F)
 		
-		textureFlag = None # True means textures enabled, False means textures disabled, None means unknown state
-		
 		i = 0
 		for (tex, count) in self._texsteps:
 			if tex is None:
-				if textureFlag is not False:
-					glDisable(GL_TEXTURE_2D)
-					# Pick a noticeable purple color for untextured meshes
-					glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))
-					glMaterialfv(GL_FRONT, GL_SPECULAR, (0.1, 0.0, 0.1, 1.0,))
-					textureFlag = False
+				cachingGlDisable(GL_TEXTURE_2D)
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, (1.0, 0.0, 1.0, 1.0,))
+				glMaterialfv(GL_FRONT, GL_SPECULAR, (0.1, 0.0, 0.1, 1.0,))
 			else:
-				if textureFlag is not True:
-					glEnable(GL_TEXTURE_2D)
-					textureFlag = True
+				cachingGlEnable(GL_TEXTURE_2D)
 				glBindTexture(GL_TEXTURE_2D, tex.glname)
 			glDrawArrays(GL_TRIANGLES, i*3, count*3)
 			i += count
 		
-		glDisable(GL_TEXTURE_2D)
+		cachingGlDisable(GL_TEXTURE_2D)
 		
 
 class OREAnimation:

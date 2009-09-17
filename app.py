@@ -151,7 +151,7 @@ def ui_init():
 	
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
 	
-	glEnable(GL_BLEND)
+	cachingGlEnable(GL_BLEND)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
@@ -200,11 +200,11 @@ def sim_init(timing = False):
 def init_area(areaname):
 	"""Loads the given area, by internal name, into the game state. This includes objects, sky, etc."""
 	global objects, sky_stuff, cur_area, cur_area_tstart
-	print "Loading area %s" % areaname
 	cur_area = ore_man.areas[areaname]
 	cur_area_tstart = pygame.time.get_ticks()
 	objects = cur_area.objects[:] # FIXME Need to copy the contents of the objects themselves, so that the level can be restarted
 	sky_stuff = cur_area.sky_stuff # FIXME Should probably also copy the SkyStuff for the sake of completeness
+	print "Loaded area %s, object count %u" % (areaname, len(objects))
 
 
 def init_mission(missionname):
@@ -212,7 +212,6 @@ def init_mission(missionname):
 	
 	You must first init the mission's area before calling this."""
 	global objects, mission_control, player_camera, cur_mission, cur_mission_tstart
-	print "Loading mission %s" % missionname
 	cur_mission = cur_area.missions[missionname]
 	cur_mission_tstart = pygame.time.get_ticks()
 	objects.extend(cur_mission.objects[:]) # FIXME Need to copy the contents of the objects themselves, so that the level can be restarted
@@ -227,6 +226,8 @@ def init_mission(missionname):
 	if avatar_obj is None:
 		raise RuntimeError("Unable to find Avatar in mission %s!" % missionname)
 	player_camera = camera.FollowCamera(target_obj = avatar_obj)
+	
+	print "Loaded mission %s, object count %u" % (missionname, len(objects))
 
 
 def _sim_step():
@@ -277,30 +278,30 @@ def _draw_frame():
 	_rectime("DF-Sort")
 	
 	# 3D projection mode for sky objects and billboards without depth-testing
-	glDisable(GL_LIGHTING)
+	cachingGlDisable(GL_LIGHTING)
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
 	gluPerspective(FOV, winsize[0]/winsize[1], 0.1, SKY_CLIP_DIST)
 	glMatrixMode(GL_MODELVIEW)
 	
 	# Draw the atmosphere
-	glDisable(GL_DEPTH_TEST)
+	cachingGlDisable(GL_DEPTH_TEST)
 	sky_stuff.draw_geometry()
 	_rectime("DF-Atmo")
 	
 	# Draw the billboards for sky objects and distant gameplay objects
-	glEnable(GL_DEPTH_TEST)
-	glEnable(GL_TEXTURE_2D)
+	cachingGlEnable(GL_DEPTH_TEST)
+	cachingGlEnable(GL_TEXTURE_2D)
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE)
 	sky_stuff.draw_billboards()
 	for o in far_objs:
 		o.distdraw()
-	glDisable(GL_TEXTURE_2D)
+	cachingGlDisable(GL_TEXTURE_2D)
 	_rectime("DF-Dist")
 	
 	# 3D projection mode for nearby gameplay objects with depth-testing
-	glEnable(GL_DEPTH_TEST)
-	glEnable(GL_LIGHTING)
+	cachingGlEnable(GL_DEPTH_TEST)
+	cachingGlEnable(GL_LIGHTING)
 	glMatrixMode(GL_PROJECTION)
 	glLoadIdentity()
 	gluPerspective(FOV, winsize[0]/winsize[1], 0.1, GAMEPLAY_CLIP_DIST)
@@ -317,8 +318,8 @@ def _draw_frame():
 	gluOrtho2D(0.0, winsize[0], winsize[1], 0.0)
 	glMatrixMode(GL_MODELVIEW)
 	glLoadIdentity()
-	glDisable(GL_DEPTH_TEST)
-	glDisable(GL_LIGHTING)
+	cachingGlDisable(GL_DEPTH_TEST)
+	cachingGlDisable(GL_LIGHTING)
 	
 	# Draw the virtual interface
 	if mode == MODE_GAMEPLAY:
