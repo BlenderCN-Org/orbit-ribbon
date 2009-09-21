@@ -9,3 +9,6 @@ def flush():
 	global _cmd_queue
 	shuttle_backend.flush(_cmd_queue)
 	_cmd_queue = []
+
+def quit():
+	shuttle_backend.quit()

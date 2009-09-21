@@ -171,29 +171,12 @@ int main( int argc, char **argv ) {
 	   Quit( 1 );
 	}
 
-	/* Fetch the video info */
-	 videoInfo = SDL_GetVideoInfo();
-
-	 if ( !videoInfo ) {
-	   fprintf( stderr, "Video query failed: %s\n", SDL_GetError() );
-	   Quit( 1 );
-	}
-
 	/* the flags to pass to SDL_SetVideoMode */
 	videoFlags  = SDL_OPENGL;		  /* Enable OpenGL in SDL */
 	videoFlags |= SDL_GL_DOUBLEBUFFER; /* Enable double buffering */
 	videoFlags |= SDL_HWPALETTE;	   /* Store the palette in hardware */
-
-	/* This checks to see if surfaces can be stored in memory */
-	if ( videoInfo->hw_available ) {
-		videoFlags |= SDL_HWSURFACE;
-	} else {
-		videoFlags |= SDL_SWSURFACE;
-	}
-
-	/* This checks if hardware blits can be done */
-	if ( videoInfo->blit_hw ) videoFlags |= SDL_HWACCEL;
-
+	videoFlags |= SDL_SWSURFACE;
+	
 	/* Sets up OpenGL double buffering */
 	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 

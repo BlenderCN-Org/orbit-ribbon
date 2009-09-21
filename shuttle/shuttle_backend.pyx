@@ -1,10 +1,29 @@
 cdef extern from "SDL.h":
-	void SDL_Quit()
-	void SDL_GL_SwapBuffers()
+	int SDL_INIT_VIDEO
+	int SDL_OPENGL
+	int SDL_GL_DOUBLEBUFFER
+	int SDL_HWPALETTE
+	int SDL_SWSURFACE
+
 	void SDL_GL_SetAttribute(int, int)
+	void SDL_GL_SwapBuffers()
+	void SDL_Init(int)
+	void SDL_Quit()
 	void SDL_SetVideoMode(int, int, int, int)
 
 cdef extern from "gl.h":
+	int SYM_GL_COLOR_BUFFER_BIT "GL_COLOR_BUFFER_BIT"
+	int SYM_GL_DEPTH_BUFFER_BIT "GL_DEPTH_BUFFER_BIT"
+	int SYM_GL_DEPTH_TEST "GL_DEPTH_TEST"
+	int SYM_GL_LEQUAL "GL_LEQUAL"
+	int SYM_GL_MODELVIEW "GL_MODELVIEW"
+	int SYM_GL_NICEST "GL_NICEST"
+	int SYM_GL_PERSPECTIVE_CORRECTION_HINT "GL_PERSPECTIVE_CORRECTION_HINT"
+	int SYM_GL_PROJECTION "GL_PROJECTION"
+	int SYM_GL_QUADS "GL_QUADS"
+	int SYM_GL_SMOOTH "GL_SMOOTH"
+	int SYM_GL_TRIANGLES "GL_TRIANGLES"
+	
 	void glBegin(int)
 	void glClearColor(float, float, float, float)
 	void glClearDepth(float)
@@ -26,6 +45,18 @@ cdef extern from "gl.h":
 
 cdef extern from "glu.h":
 	void gluPerspective(float, float, float, float)
+
+GL_COLOR_BUFFER_BIT = SYM_GL_COLOR_BUFFER_BIT
+GL_DEPTH_BUFFER_BIT = SYM_GL_DEPTH_BUFFER_BIT
+GL_DEPTH_TEST = SYM_GL_DEPTH_TEST
+GL_LEQUAL = SYM_GL_LEQUAL
+GL_MODELVIEW = SYM_GL_MODELVIEW
+GL_NICEST = SYM_GL_NICEST
+GL_PERSPECTIVE_CORRECTION_HINT = SYM_GL_PERSPECTIVE_CORRECTION_HINT
+GL_PROJECTION = SYM_GL_PROJECTION
+GL_QUADS = SYM_GL_QUADS
+GL_SMOOTH = SYM_GL_SMOOTH
+GL_TRIANGLES = SYM_GL_TRIANGLES
 
 (
 	CMD_glBegin,
@@ -95,8 +126,14 @@ _cmd_map = {
 }
 
 def init():
-	pass
+	SDL_Init(SDL_INIT_VIDEO)
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1)
+	SDL_SetVideoMode(800, 600, 16, SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_HWPALETTE | SDL_SWSURFACE)
 
 def flush(cmdlist):
 	for cmdseq in cmdlist:
 		_cmd_map[cmdseq[0]](*(cmdseq[1:]))
+	SDL_GL_SwapBuffers()
+
+def quit():
+	SDL_Quit()
