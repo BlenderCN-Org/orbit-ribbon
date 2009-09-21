@@ -17,7 +17,7 @@ def _c(cmdseq):
 	shuttle_middle._cmd_queue.append(cmdseq)
 
 def glBegin(a):
-	_c((sb.CMD_glBegin,))
+	_c((sb.CMD_glBegin, a))
 
 def glClearColor(a, b, c, d):
 	_c((sb.CMD_glClearColor, a, b, c, d,))
@@ -37,6 +37,9 @@ def glDepthFunc(a):
 def glEnable(a):
 	_c((sb.CMD_glEnable, a,))
 
+def glEnd():
+	_c((sb.CMD_glEnd,))
+
 def glHint(a, b):
 	_c((sb.CMD_glHint, a, b,))
 
@@ -55,20 +58,20 @@ def glPushMatrix():
 def glRotatef(a, b, c, d):
 	_c((sb.CMD_glRotatef, a, b, c, d,))
 
-def glScalef(a, b, c, d):
-	_c((sb.CMD_glScalef, a, b, c, d,))
+def glScalef(a, b, c):
+	_c((sb.CMD_glScalef, a, b, c,))
 
 def glShadeModel(a):
 	_c((sb.CMD_glShadeModel, a,))
 
-def glTranslatef(a, b, c, d):
-	_c((sb.CMD_glScalef, a, b, c, d,))
+def glTranslatef(a, b, c):
+	_c((sb.CMD_glTranslatef, a, b, c,))
 
 def glVertex3f(a, b, c):
 	_c((sb.CMD_glVertex3f, a, b, c,))
 
 def glViewport(a, b, c, d):
-	_c((sb.CMD_glVertex3f, a, b, c, d,))
+	_c((sb.CMD_glViewport, a, b, c, d,))
 
 def gluPerspective(a, b, c, d):
 	_c((sb.CMD_gluPerspective, a, b, c, d,))

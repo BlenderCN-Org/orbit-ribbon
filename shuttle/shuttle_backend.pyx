@@ -31,6 +31,7 @@ cdef extern from "gl.h":
 	void glColor3f(float, float, float)
 	void glDepthFunc(int)
 	void glEnable(int)
+	void glEnd()
 	void glHint(int, int)
 	void glLoadIdentity()
 	void glMatrixMode(int)
@@ -66,6 +67,7 @@ GL_TRIANGLES = SYM_GL_TRIANGLES
 	CMD_glColor3f,
 	CMD_glDepthFunc,
 	CMD_glEnable,
+	CMD_glEnd,
 	CMD_glHint,
 	CMD_glLoadIdentity,
 	CMD_glMatrixMode,
@@ -79,7 +81,7 @@ GL_TRIANGLES = SYM_GL_TRIANGLES
 	CMD_glViewport,
 	
 	CMD_gluPerspective,
-) = range(19)
+) = range(20)
 
 def _impl_glBegin(int a): glBegin(a)
 def _impl_glClearColor(float a, float b, float c, float d): glClearColor(a, b, c, d)
@@ -88,6 +90,7 @@ def _impl_glClear(int a): glClear(a)
 def _impl_glColor3f(float a, float b, float c): glColor3f(a, b, c)
 def _impl_glDepthFunc(int a): glDepthFunc(a)
 def _impl_glEnable(int a): glEnable(a)
+def _impl_glEnd(): glEnd()
 def _impl_glHint(int a, int b): glHint(a, b)
 def _impl_glLoadIdentity(): glLoadIdentity()
 def _impl_glMatrixMode(int a): glMatrixMode(a)
@@ -110,6 +113,7 @@ _cmd_map = {
 	CMD_glColor3f: _impl_glColor3f,
 	CMD_glDepthFunc: _impl_glDepthFunc,
 	CMD_glEnable: _impl_glEnable,
+	CMD_glEnd: _impl_glEnd,
 	CMD_glHint: _impl_glHint,
 	CMD_glLoadIdentity: _impl_glLoadIdentity,
 	CMD_glMatrixMode: _impl_glMatrixMode,
