@@ -111,7 +111,6 @@ int drawGLScene( GLvoid ) {
 		for (col = 0; col < 40; ++col) {
 			glPushMatrix();
 			glTranslatef(-60 + col*3, 45 - row*3, 0);
-			//glTranslatef(-100 + row, -100 + col, 0);
 			
 			glPushMatrix();
 			glRotatef( rtri, 0.0f, 1.0f, 0.0f );
@@ -136,7 +135,7 @@ int drawGLScene( GLvoid ) {
 				glVertex3f(  1.0f, -1.0f,  0.0f ); /* Bottom Right Of The Quad */
 			glEnd();							/* Done Drawing The Quad	*/
 			glPopMatrix();
-
+			
 			glPopMatrix();
 		}
 	}
