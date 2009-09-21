@@ -19,6 +19,7 @@ import __init__ as shuttle
 from cmds import *
 
 pygame.display.init()
+pygame.display.set_caption('Test')
 screen = pygame.display.set_mode((800, 600), DOUBLEBUF | OPENGL)
 
 glShadeModel(GL_SMOOTH)
@@ -41,6 +42,9 @@ cur_time = start_time
 frames = 0
 
 while True:
+	for event in pygame.event.get():
+		pass
+	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 	
 	glPushMatrix()
