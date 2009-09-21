@@ -4,8 +4,8 @@ from __future__ import division
 
 import time
 
-import shuttle
-from shuttle.cmds import *
+import __init__ as shuttle
+from cmds import *
 
 shuttle.init()
 
