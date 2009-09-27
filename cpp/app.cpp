@@ -1,19 +1,100 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <SDL/SDL.h>
-#include <ode/ode.h>
 
 #include <string>
 
 #include "app.h"
 #include "except.h"
+#include "sim.h"
 
-SDL_Surface* App::_screen;
+const GLfloat gameplay_clip_dist = 50000;
+const GLfloat sky_clip_dist = 1e12;
+const GLfloat fov = 45;
 
-dWorldID App::_ode_world;
-dSpaceID App::_static_space;
-dSpaceID App::_dyn_space;
-dJointGroupID App::_contact_group;
+SDL_Surface* screen;
+GLfloat fade_r, fade_g, fade_b, fade_a;
+bool fade_flag = false;
+
+void screen_resize() {
+	glViewport(0, 0, App::get_screen_width(), App::get_screen_height());
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+}
+
+void draw_frame() {
+	const GLsizei screen_width = App::get_screen_width();
+	const GLsizei screen_height = App::get_screen_height();
+	
+	// Clear the screen
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	// 3D projection mode for nearby gameplay objects with depth-testing
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(fov, GLfloat(screen_width)/GLfloat(screen_height), 0.1, gameplay_clip_dist);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	
+	// FIXME Test render
+	glPushMatrix();
+	glTranslatef(0.0f, 0.0f, -6.0f);
+	glScalef(0.05, 0.05, 0.05);
+	GLint row, col;
+	for (row = 0; row < 30; ++row) {
+		for (col = 0; col < 40; ++col) {
+			glPushMatrix();
+			glTranslatef(-60 + col*3, 45 - row*3, 0);
+			glPushMatrix();
+			glBegin( GL_TRIANGLES );			 /* Drawing Using Triangles	   */
+				glColor3f(   1.0f,  0.0f,  0.0f ); /* Red						   */
+				glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle			   */
+				glColor3f(   0.0f,  1.0f,  0.0f ); /* Green						 */
+				glVertex3f( -1.0f, -1.0f,  0.0f ); /* Left Of Triangle			  */
+				glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue						  */
+				glVertex3f(  1.0f, -1.0f,  0.0f ); /* Right Of Triangle			 */
+			glEnd();							/* Finished Drawing The Triangle */
+			glPopMatrix();
+			glPushMatrix();
+			glTranslatef(0.0f, 0.0f, -3.0f);
+			glColor3f( 0.5f, 0.5f, 1.0f);
+			glBegin( GL_QUADS );				 /* Draw A Quad			  */
+				glVertex3f(  1.0f,  1.0f,  0.0f ); /* Top Right Of The Quad	*/
+				glVertex3f( -1.0f,  1.0f,  0.0f ); /* Top Left Of The Quad	 */
+				glVertex3f( -1.0f, -1.0f,  0.0f ); /* Bottom Left Of The Quad  */
+				glVertex3f(  1.0f, -1.0f,  0.0f ); /* Bottom Right Of The Quad */
+			glEnd();							/* Done Drawing The Quad	*/
+			glPopMatrix();
+			glPopMatrix();
+		}
+	}
+	glPopMatrix();
+	
+	// 2D drawing mode
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0.0, screen_width, screen_height, 0.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_LIGHTING);
+	
+	// If fading is enabled, then mask what's been drawn with a big ol' translucent quad
+	if (fade_flag) {
+		glColor4f(fade_r, fade_g, fade_b, fade_a);
+		glBegin(GL_QUADS);
+			glVertex2f(0, 0);
+			glVertex2f(screen_width, 0);
+			glVertex2f(screen_width, screen_height);
+			glVertex2f(0, screen_height);
+		glEnd();
+	}
+	
+	// Output and flip buffers
+	SDL_GL_SwapBuffers();
+}
 
 void App::init() {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -27,8 +108,8 @@ void App::init() {
 	videoFlags |= SDL_GL_DOUBLEBUFFER;
 	videoFlags |= SDL_HWPALETTE;
 	videoFlags |= SDL_SWSURFACE;
-	_screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, videoFlags);
-	if (!_screen) {
+	screen = SDL_SetVideoMode(get_screen_width(), get_screen_height(), get_screen_depth(), videoFlags);
+	if (!screen) {
 		throw GameException(std::string("Video mode set failed: ") + std::string(SDL_GetError()));
 	}
 	
@@ -38,18 +119,10 @@ void App::init() {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	glViewport(0, 0, (GLsizei)SCREEN_WIDTH, (GLsizei)SCREEN_HEIGHT);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(45.0f, GLfloat(SCREEN_WIDTH)/GLfloat(SCREEN_HEIGHT), 0.1f, 100.0f);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	_ode_world = dWorldCreate();
-	dWorldSetQuickStepNumIterations(_ode_world, 10);
-	_static_space = dHashSpaceCreate(0);
-	_dyn_space = dHashSpaceCreate(0);
-	_contact_group = dJointGroupCreate(0);
+	
+	Sim::_init();
+	
+	screen_resize();
 }
 
 void App::load_area(const std::string& area_name) {
@@ -60,7 +133,7 @@ void App::load_mission(const std::string& mission_name) {
 
 void App::run() {
 	GLint t0 = SDL_GetTicks();
-
+	
 	while (1) {
 		SDL_Event event;
 	   while (SDL_PollEvent(&event)) {
@@ -72,8 +145,8 @@ void App::run() {
 			}
 		}
 		
-		_sim_step();
-		_draw_frame();
+		Sim::_sim_step();
+		draw_frame();
 	
 		/* Gather our frames per second */
 		GLint t = SDL_GetTicks();
@@ -83,68 +156,25 @@ void App::run() {
 	}
 }
 
-void App::_sim_step() {
-	dJointGroupEmpty(_contact_group);
-	
-	dWorldQuickStep(_ode_world, 1.0f/GLfloat(MAX_FPS));
+void App::set_fade_color(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
+	fade_r = r;
+	fade_g = g;
+	fade_b = b;
+	fade_a = a;
 }
 
-void App::_draw_frame() {
-	/* rotational vars for the triangle and quad, respectively */
-	static GLfloat rtri, rquad;
-	
-	GLint t = SDL_GetTicks();
-	
-	/* Clear The Screen And The Depth Buffer */
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	
-	glPushMatrix();
-	glTranslatef(0.0f, 0.0f, -6.0f);
-	glScalef(0.05, 0.05, 0.05);
-	
-	GLint row, col;
-	for (row = 0; row < 30; ++row) {
-		for (col = 0; col < 40; ++col) {
-			glPushMatrix();
-			glTranslatef(-60 + col*3, 45 - row*3, 0);
-			
-			glPushMatrix();
-			glRotatef( rtri, 0.0f, 1.0f, 0.0f );
-			glBegin( GL_TRIANGLES );			 /* Drawing Using Triangles	   */
-				glColor3f(   1.0f,  0.0f,  0.0f ); /* Red						   */
-				glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle			   */
-				glColor3f(   0.0f,  1.0f,  0.0f ); /* Green						 */
-				glVertex3f( -1.0f, -1.0f,  0.0f ); /* Left Of Triangle			  */
-				glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue						  */
-				glVertex3f(  1.0f, -1.0f,  0.0f ); /* Right Of Triangle			 */
-			glEnd();							/* Finished Drawing The Triangle */
-			glPopMatrix();
+void App::set_fade(bool flag) {
+	fade_flag = flag;
+}
 
-			glPushMatrix();
-			glTranslatef(0.0f, 0.0f, -3.0f);
-			glRotatef( rquad, 1.0f, 0.0f, 0.0f );
-			glColor3f( 0.5f, 0.5f, 1.0f);
-			glBegin( GL_QUADS );				 /* Draw A Quad			  */
-				glVertex3f(  1.0f,  1.0f,  0.0f ); /* Top Right Of The Quad	*/
-				glVertex3f( -1.0f,  1.0f,  0.0f ); /* Top Left Of The Quad	 */
-				glVertex3f( -1.0f, -1.0f,  0.0f ); /* Bottom Left Of The Quad  */
-				glVertex3f(  1.0f, -1.0f,  0.0f ); /* Bottom Right Of The Quad */
-			glEnd();							/* Done Drawing The Quad	*/
-			glPopMatrix();
-			
-			glPopMatrix();
-		}
-	}
-	
-	glPopMatrix();
-	
-	/* Draw it to the screen */
-	SDL_GL_SwapBuffers();
-	
-	GLint tdiff = SDL_GetTicks() - t;
-	
-	/* Increase The Rotation Variable For The Triangle ( NEW ) */
-	rtri  += 0.2f*tdiff;
-	/* Decrease The Rotation Variable For The Quad	 ( NEW ) */
-	rquad -=0.15f*tdiff;
+GLsizei App::get_screen_width() {
+	return 800;
+}
+
+GLsizei App::get_screen_height() {
+	return 600;
+}
+
+GLint App::get_screen_depth() {
+	return 16;
 }

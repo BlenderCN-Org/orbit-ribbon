@@ -344,7 +344,7 @@ def _draw_frame():
 	
 	# Draw the console, if it's up
 	cons.draw()
-
+	
 	_rectime("DF-Iface")
 	
 	# Output and flip buffers
