@@ -4,7 +4,6 @@
 #include <ode/ode.h>
 
 #include <string>
-#include <iostream>
 
 #include "app.h"
 #include "except.h"
@@ -67,8 +66,7 @@ void App::run() {
 		/* Gather our frames per second */
 		GLint t = SDL_GetTicks();
 		if (t - t0 >= 10000) {
-			std::cout << "Finished" << std::endl;
-			break;
+			throw GameQuitException("Frames rendered.");
 		}
 	}
 }

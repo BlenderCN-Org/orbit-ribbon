@@ -12,4 +12,9 @@ class GameException {
 		std::string _msg;
 };
 
+class GameQuitException : public GameException {
+	public:
+		GameQuitException(const std::string& msg) : GameException(msg) {}
+};
+
 #endif
