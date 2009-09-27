@@ -10,6 +10,11 @@
 
 SDL_Surface* App::_screen;
 
+dWorldId App::_ode_world;
+dSpaceId App::_static_space;
+dSpaceId App::_dyn_space;
+dJointGroupId App::_contact_group;
+
 void App::init() {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 	   throw GameException(std::string("Video initialization failed: ") + std::string(SDL_GetError()));
@@ -17,7 +22,7 @@ void App::init() {
 	
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	
-	int videoFlags;
+	GLint videoFlags;
 	videoFlags  = SDL_OPENGL;
 	videoFlags |= SDL_GL_DOUBLEBUFFER;
 	videoFlags |= SDL_HWPALETTE;
@@ -39,6 +44,12 @@ void App::init() {
 	gluPerspective(45.0f, GLfloat(SCREEN_WIDTH)/GLfloat(SCREEN_HEIGHT), 0.1f, 100.0f);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+
+	_ode_world = dWorldCreate();
+	dWorldSetQuickStepNumIterations(_ode_world, 10)
+	_static_space = dHashSpaceCreate(0);
+	_dyn_space = dHashSpaceCreate(0);
+	_contact_group = dJointGroupCreate(0);
 }
 
 void App::load_area(const std::string& area_name) {
@@ -61,6 +72,7 @@ void App::run() {
 			}
 		}
 		
+		_sim_step();
 		_draw_frame();
 	
 		/* Gather our frames per second */
@@ -72,6 +84,9 @@ void App::run() {
 }
 
 void App::_sim_step() {
+	dJointGroupEmpty(_contact_group);
+	
+	dWorldQuickStep(_ode_world, 1.0f/GLfloat(MAX_FPS))
 }
 
 void App::_draw_frame() {
@@ -87,7 +102,7 @@ void App::_draw_frame() {
 	glTranslatef(0.0f, 0.0f, -6.0f);
 	glScalef(0.05, 0.05, 0.05);
 	
-	int row, col;
+	GLint row, col;
 	for (row = 0; row < 30; ++row) {
 		for (col = 0; col < 40; ++col) {
 			glPushMatrix();

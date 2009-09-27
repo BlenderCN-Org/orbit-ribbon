@@ -1,1 +1,3 @@
 To build this program, run 'scons' in this directory.
+
+If you don't have SCons installed, it's only one apt-get or one Google away!
