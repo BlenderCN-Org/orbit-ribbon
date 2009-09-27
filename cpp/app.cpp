@@ -10,10 +10,10 @@
 
 SDL_Surface* App::_screen;
 
-dWorldId App::_ode_world;
-dSpaceId App::_static_space;
-dSpaceId App::_dyn_space;
-dJointGroupId App::_contact_group;
+dWorldID App::_ode_world;
+dSpaceID App::_static_space;
+dSpaceID App::_dyn_space;
+dJointGroupID App::_contact_group;
 
 void App::init() {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -46,7 +46,7 @@ void App::init() {
 	glLoadIdentity();
 
 	_ode_world = dWorldCreate();
-	dWorldSetQuickStepNumIterations(_ode_world, 10)
+	dWorldSetQuickStepNumIterations(_ode_world, 10);
 	_static_space = dHashSpaceCreate(0);
 	_dyn_space = dHashSpaceCreate(0);
 	_contact_group = dJointGroupCreate(0);
@@ -86,7 +86,7 @@ void App::run() {
 void App::_sim_step() {
 	dJointGroupEmpty(_contact_group);
 	
-	dWorldQuickStep(_ode_world, 1.0f/GLfloat(MAX_FPS))
+	dWorldQuickStep(_ode_world, 1.0f/GLfloat(MAX_FPS));
 }
 
 void App::_draw_frame() {

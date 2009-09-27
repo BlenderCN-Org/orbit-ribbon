@@ -5,5 +5,3 @@ Thinh's ideas:
 - Y-axis inversion option
 - More stuff in the sky for orientation
 - Reduced rotation speed, cap
-
-- On failure to initialize sim, display error message in ui, don't just allow process to die

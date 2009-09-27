@@ -21,19 +21,19 @@ class App {
 		static void load_area(const std::string& area_name);
 		static void load_mission(const std::string& mission_name);
 		
-		static dWorldId get_ode_world() { return _ode_world; }
-		static dSpaceId get_static_space() { return _static_space; }
-		static dSpaceId get_dyn_space() { return _dyn_space; }
+		static dWorldID get_ode_world() { return _ode_world; }
+		static dSpaceID get_static_space() { return _static_space; }
+		static dSpaceID get_dyn_space() { return _dyn_space; }
 		
 		static void run();
 		
 	private:
 		static SDL_Surface* _screen;
 		
-		static dWorldId _ode_world;
-		static dSpaceId _static_space;
-		static dSpaceId _dyn_space;
-		static dJointGroupId _contact_group;
+		static dWorldID _ode_world;
+		static dSpaceID _static_space;
+		static dSpaceID _dyn_space;
+		static dJointGroupID _contact_group;
 		
 		static void _sim_step();
 		static void _draw_frame();
