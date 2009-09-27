@@ -3,6 +3,7 @@
 #include <SDL/SDL.h>
 
 #include <string>
+#include <list>
 
 #include "app.h"
 #include "except.h"
@@ -13,8 +14,13 @@ const GLfloat sky_clip_dist = 1e12;
 const GLfloat fov = 45;
 
 SDL_Surface* screen;
+
 GLfloat fade_r, fade_g, fade_b, fade_a;
 bool fade_flag = false;
+
+GLint total_steps = 0;
+
+std::list<SDL_Event> frame_events;
 
 void screen_resize() {
 	glViewport(0, 0, App::get_screen_width(), App::get_screen_height());
@@ -31,7 +37,7 @@ void draw_frame() {
 	
 	// 3D projection mode for nearby gameplay objects with depth-testing
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
+	//glEnable(GL_LIGHTING);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(fov, GLfloat(screen_width)/GLfloat(screen_height), 0.1, gameplay_clip_dist);
@@ -114,11 +120,13 @@ void App::init() {
 	}
 	
 	glShadeModel(GL_SMOOTH);
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClearDepth(1.0f);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
 	Sim::_init();
 	
@@ -132,28 +140,45 @@ void App::load_mission(const std::string& mission_name) {
 }
 
 void App::run() {
-	GLint t0 = SDL_GetTicks();
+	const GLint max_ticks_per_frame = 1000/get_max_fps();
+	int unsimulated_ticks = 0;
 	
 	while (1) {
+		GLint frame_start = SDL_GetTicks();
+		
+		// Add all new events to the events list for this frame, and quit on QUIT events
+		frame_events.clear();
 		SDL_Event event;
 	   while (SDL_PollEvent(&event)) {
-		   switch(event.type) {
-				case SDL_QUIT:
-					break;
-				default:
-					break;
+			frame_events.push_back(event);
+		  	if (event.type == SDL_QUIT) {
+				throw GameQuitException("Closed on quit event");
 			}
 		}
 		
-		Sim::_sim_step();
-		draw_frame();
-	
-		/* Gather our frames per second */
-		GLint t = SDL_GetTicks();
-		if (t - t0 >= 10000) {
-			throw GameQuitException("Frames rendered.");
+		// Do simulation steps until we've caught up with the display
+		while (unsimulated_ticks > max_ticks_per_frame) {
+			Sim::_sim_step();
+			total_steps += 1;
+			unsimulated_ticks -= max_ticks_per_frame;
 		}
+		
+		// Re-draw the display
+		draw_frame();
+		
+		// Sleep if we're running faster than our maximum fps
+		GLint frame_ticks = SDL_GetTicks() - frame_start;
+		if (frame_ticks > 0 & frame_ticks < max_ticks_per_frame) {
+			SDL_Delay(max_ticks_per_frame - frame_ticks); // Slow down, buster!
+		}
+		
+		// The time that passed during this frame needs to pass in the simulator next frame
+		unsimulated_ticks += SDL_GetTicks() - frame_start;
 	}
+}
+
+const std::list<SDL_Event>& App::get_frame_events() {
+	return frame_events;
 }
 
 void App::set_fade_color(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
@@ -176,5 +201,9 @@ GLsizei App::get_screen_height() {
 }
 
 GLint App::get_screen_depth() {
+	return 16;
+}
+
+GLint App::get_total_steps() {
 	return 16;
 }

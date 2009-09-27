@@ -17,6 +17,6 @@ int main(int argc, char** argv) {
 	} catch (GameException e) {
 		std::cout << "FATAL EXCEPTION DURING RUN: " << e.get_msg() << std::endl;
 	}
-
+	
 	return 0;
 }
