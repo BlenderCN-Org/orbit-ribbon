@@ -5,3 +5,8 @@ Thinh's ideas:
 - Y-axis inversion option
 - More stuff in the sky for orientation
 - Reduced rotation speed, cap
+
+- Consider having an optimized-output build mode that does some of the following:
+	- Enables optimization flags (compare -O2 with -O3 to see if latter helps...)
+	- Builds the entire project at once to see if g++'s unit-at-a-time thing helps
+	- Uses g++'s profiling mechanism with some kind of demo
