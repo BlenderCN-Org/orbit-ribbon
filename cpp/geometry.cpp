@@ -41,6 +41,7 @@ Point& Point::operator=(const Point& other) {
 
 std::string Point::to_str() const {
 	// FIXME : Implement
+	return std::string("");
 }
 
 Point Point::operator+(const Point& other) const {

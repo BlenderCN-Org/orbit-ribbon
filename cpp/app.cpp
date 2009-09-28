@@ -53,7 +53,7 @@ void App::run() {
 		
 		// Sleep if we're running faster than our maximum fps
 		GLint frame_ticks = SDL_GetTicks() - frame_start;
-		if (frame_ticks > 0 & frame_ticks < max_ticks_per_frame) {
+		if (frame_ticks > 0 && frame_ticks < max_ticks_per_frame) {
 			SDL_Delay(max_ticks_per_frame - frame_ticks); // Slow down, buster!
 		}
 		
