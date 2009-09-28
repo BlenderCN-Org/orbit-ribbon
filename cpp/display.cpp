@@ -79,18 +79,18 @@ void Display::_screen_resize() {
 void Display::_draw_frame() {
 	const GLsizei screen_width = Display::get_screen_width();
 	const GLsizei screen_height = Display::get_screen_height();
+	const GLfloat screen_ratio = GLfloat(screen_width)/GLfloat(screen_height);
 	
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	// 3D projection mode for nearby gameplay objects with depth-testing
-	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_LIGHTING);
+	// 3D projection mode for sky objects and billboards without depth-testing
+	glDisable(GL_LIGHTING);
+	glDisable(GL_DEPTH_TEST);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(fov, GLfloat(screen_width)/GLfloat(screen_height), 0.1, gameplay_clip_dist);
+	gluPerspective(fov, screen_ratio, 0.1, sky_clip_dist);
 	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
 	
 	// FIXME Test render
 	glPushMatrix();
@@ -102,16 +102,6 @@ void Display::_draw_frame() {
 			glPushMatrix();
 			glTranslatef(-60 + col*3, 45 - row*3, 0);
 			glPushMatrix();
-			glBegin( GL_TRIANGLES );			 /* Drawing Using Triangles	   */
-				glColor3f(   1.0f,  0.0f,  0.0f ); /* Red						   */
-				glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle			   */
-				glColor3f(   0.0f,  1.0f,  0.0f ); /* Green						 */
-				glVertex3f( -1.0f, -1.0f,  0.0f ); /* Left Of Triangle			  */
-				glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue						  */
-				glVertex3f(  1.0f, -1.0f,  0.0f ); /* Right Of Triangle			 */
-			glEnd();							/* Finished Drawing The Triangle */
-			glPopMatrix();
-			glPushMatrix();
 			glTranslatef(0.0f, 0.0f, -3.0f);
 			glColor3f( 0.5f, 0.5f, 1.0f);
 			glBegin( GL_QUADS );				 /* Draw A Quad			  */
@@ -121,19 +111,38 @@ void Display::_draw_frame() {
 				glVertex3f(  1.0f, -1.0f,  0.0f ); /* Bottom Right Of The Quad */
 			glEnd();							/* Done Drawing The Quad	*/
 			glPopMatrix();
+			glPushMatrix();
+			glBegin( GL_TRIANGLES );			 /* Drawing Using Triangles	   */
+				glColor3f(   1.0f,  0.0f,  0.0f ); /* Red						   */
+				glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle			   */
+				glColor3f(   0.0f,  1.0f,  0.0f ); /* Green						 */
+				glVertex3f( -1.0f, -1.0f,  0.0f ); /* Left Of Triangle			  */
+				glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue						  */
+				glVertex3f(  1.0f, -1.0f,  0.0f ); /* Right Of Triangle			 */
+			glEnd();							/* Finished Drawing The Triangle */
+			glPopMatrix();
 			glPopMatrix();
 		}
 	}
 	glPopMatrix();
 	
+	// 3D projection mode for nearby gameplay objects with depth-testing
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(fov, screen_ratio, 0.1, gameplay_clip_dist);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	
 	// 2D drawing mode
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_LIGHTING);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0.0, screen_width, screen_height, 0.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_LIGHTING);
 	
 	// If fading is enabled, then mask what's been drawn with a big ol' translucent quad
 	if (fade_flag) {
