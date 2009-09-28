@@ -3,7 +3,7 @@
 
 #include <ode/ode.h>
 
-#include "app.h"
+class App;
 
 class Sim {
 	public:

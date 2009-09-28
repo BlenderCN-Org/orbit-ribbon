@@ -18,12 +18,6 @@ class App {
 		
 		static const std::list<SDL_Event>& get_frame_events();
 		
-		static void set_fade_color(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
-		static void set_fade(bool flag);
-		
-		static GLsizei get_screen_width();
-		static GLsizei get_screen_height();
-		static GLint get_screen_depth();
 		static GLint get_total_steps();
 		
 		static GLint get_max_fps() { return 60; }

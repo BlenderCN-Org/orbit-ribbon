@@ -1,5 +1,7 @@
+#include <GL/gl.h>
 #include <ode/ode.h>
 
+#include "app.h"
 #include "sim.h"
 
 dWorldID ode_world;
