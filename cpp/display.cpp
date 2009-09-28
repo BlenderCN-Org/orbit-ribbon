@@ -44,6 +44,9 @@ void Display::_init() {
 	}
 	
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	std::string win_title = std::string("Orbit Ribbon (") + App::get_version() + std::string(")");
+	SDL_WM_SetCaption(win_title.c_str(), win_title.c_str());
+	//FIXME : Set window icon here
 	
 	GLint videoFlags;
 	videoFlags  = SDL_OPENGL;

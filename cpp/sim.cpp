@@ -29,9 +29,16 @@ void Sim::_init() {
 	contact_group = dJointGroupCreate(0);
 }
 
+void collision_callback(void* data, dGeomID o1, dGeomID o2) {
+}
+
 void Sim::_sim_step() {
+	// Check for collisions
 	dJointGroupEmpty(contact_group);
+	dSpaceCollide(dyn_space, NULL, &collision_callback); // Collisions among dyn_space objects
+	dSpaceCollide2(dGeomID(dyn_space), dGeomID(static_space), NULL, &collision_callback); // Collisions between dyn_space objects and static_space objects
 	
+	// Run the simulation
 	dWorldQuickStep(ode_world, 1.0f/GLfloat(App::get_max_fps()));
 }
 
