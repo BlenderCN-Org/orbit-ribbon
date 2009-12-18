@@ -1,6 +1,7 @@
 #include <GL/gl.h>
 #include <SDL/SDL.h>
 
+#include <iostream>
 #include <string>
 #include <list>
 
@@ -13,18 +14,7 @@ GLint total_steps = 0;
 
 std::list<SDL_Event> frame_events;
 
-void App::init() {
-	Display::_init();
-	Sim::_init();
-}
-
-void App::load_area(const std::string& area_name) {
-}
-
-void App::load_mission(const std::string& mission_name) {
-}
-
-void App::run() {
+void App::frame_loop() {
 	const GLint max_ticks_per_frame = 1000/get_max_fps();
 	int unsimulated_ticks = 0;
 	
@@ -59,6 +49,29 @@ void App::run() {
 		
 		// The time that passed during this frame needs to pass in the simulator next frame
 		unsimulated_ticks += SDL_GetTicks() - frame_start;
+	}
+}
+
+void fatal_error(const std::string& msg) {
+	std::cout << msg << std::endl;
+}
+
+void App::run(const std::string& starting_area, const std::string& starting_mission) {
+	try {
+		Display::_init();
+		Sim::_init();
+	} catch (GameException e) {
+		fatal_error(std::string("FATAL EXCEPTION DURING INIT: ") + e.get_msg());
+		return;
+	}
+	
+	try {
+		frame_loop();
+	} catch (GameQuitException e) {
+		return;
+	} catch (GameException e) {
+		fatal_error(std::string("FATAL EXCEPTION DURING RUN: ") + e.get_msg());
+		return;
 	}
 }
 

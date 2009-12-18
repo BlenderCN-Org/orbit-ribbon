@@ -10,11 +10,7 @@ union SDL_Event;
 
 class App {
 	public:
-		static void init();
-		static void load_area(const std::string& area_name);
-		static void load_mission(const std::string& mission_name);
-		
-		static void run();
+		static void run(const std::string& starting_area = "", const std::string& starting_mission = "");
 		
 		static const std::list<SDL_Event>& get_frame_events();
 		
@@ -22,6 +18,9 @@ class App {
 		
 		static GLint get_max_fps() { return 60; }
 		static std::string get_version() { return std::string("prealpha"); }
+	
+	private:
+		static void frame_loop();
 };
 
 #endif
