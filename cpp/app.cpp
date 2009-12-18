@@ -11,7 +11,6 @@
 #include "sim.h"
 
 GLint total_steps = 0;
-
 std::list<SDL_Event> frame_events;
 
 void App::frame_loop() {
@@ -80,5 +79,5 @@ const std::list<SDL_Event>& App::get_frame_events() {
 }
 
 GLint App::get_total_steps() {
-	return 16;
+	return total_steps;
 }
