@@ -10,7 +10,7 @@ union SDL_Event;
 
 class App {
 	public:
-		static void run(const std::string& starting_area = "", const std::string& starting_mission = "");
+		static void run(const std::list<std::string>& arguments);
 		
 		static const std::list<SDL_Event>& get_frame_events();
 		

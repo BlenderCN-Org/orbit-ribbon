@@ -104,11 +104,9 @@ void Point::operator/=(GLfloat f) {
 	z /= f;
 }
 
-/* FIXME
-bool operator==(const Point& other) const {
+bool Point::operator==(const Point& other) const {
 	return x == other.x && y == other.y && z == other.z;
 }
-*/
 
 Point Point::operator-() const {
 	return Point(-x, -y, -z);
@@ -141,7 +139,7 @@ GLfloat Point::ang_to(const Point& other) const {
 Point Point::to_length(GLfloat len) const {
 	GLfloat old_len = mag();
 	if (old_len != 0.0) {
-		return *this/old_len;
+		return (*this) * (len/old_len);
 	} else {
 		return *this;
 	}

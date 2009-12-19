@@ -55,7 +55,7 @@ void fatal_error(const std::string& msg) {
 	std::cout << msg << std::endl;
 }
 
-void App::run(const std::string& starting_area, const std::string& starting_mission) {
+void App::run(const std::list<std::string>& args) {
 	try {
 		Display::_init();
 		Sim::_init();

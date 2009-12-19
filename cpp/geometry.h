@@ -39,9 +39,8 @@ class Point {
 		void operator/=(const Point& other);
 		void operator/=(GLfloat f);
 		
-		// FIXME
-		//bool operator==(const Point& other) const;
-		//bool operator!=(const Point& other) const { return !(*this == other); }
+		bool operator==(const Point& other) const;
+		bool operator!=(const Point& other) const { return !(*this == other); }
 		
 		Point operator-() const;
 		
