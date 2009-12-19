@@ -11,4 +11,10 @@
 #define DEFAULT_VEL_DAMP_COEF 0.15
 #define DEFAULT_ANG_DAMP_COEF 0.15
 
+// How far from -1, 0, or 1 where we consider an input axis to just be at those exact values
+#define DEAD_ZONE 0.001
+
+// Space separated list of key names to ignore in the input module because they cause problems
+#define IGNORE_KEYS "[-] numlock"
+
 #endif
