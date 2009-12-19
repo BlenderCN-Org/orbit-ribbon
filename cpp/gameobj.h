@@ -24,10 +24,8 @@ class GameObj {
 		
 		std::string to_str() const;
 
-		void near_draw();
-		void far_draw();
+		void draw(bool near);
 		void step();
-		void damp();
 	
 	protected:
 		dBodyID get_body() const { return body; }
