@@ -1,7 +1,6 @@
 #include <GL/gl.h>
 #include <SDL/SDL.h>
 
-#include <iostream>
 #include <string>
 #include <list>
 
