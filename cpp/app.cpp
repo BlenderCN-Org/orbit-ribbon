@@ -6,6 +6,7 @@
 #include <list>
 
 #include "app.h"
+#include "debug.h"
 #include "display.h"
 #include "except.h"
 #include "sim.h"
@@ -51,16 +52,12 @@ void App::frame_loop() {
 	}
 }
 
-void fatal_error(const std::string& msg) {
-	std::cout << msg << std::endl;
-}
-
 void App::run(const std::list<std::string>& args) {
 	try {
 		Display::_init();
 		Sim::_init();
 	} catch (GameException e) {
-		fatal_error(std::string("FATAL EXCEPTION DURING INIT: ") + e.get_msg());
+		Debug::error_msg(std::string("Uncaught exception during init: ") + e.get_msg());
 		return;
 	}
 	
@@ -69,7 +66,7 @@ void App::run(const std::list<std::string>& args) {
 	} catch (GameQuitException e) {
 		return;
 	} catch (GameException e) {
-		fatal_error(std::string("FATAL EXCEPTION DURING RUN: ") + e.get_msg());
+		Debug::error_msg(std::string("Uncaught exception during run: ") + e.get_msg());
 		return;
 	}
 }
