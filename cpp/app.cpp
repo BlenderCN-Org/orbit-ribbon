@@ -5,6 +5,7 @@
 #include <list>
 
 #include "app.h"
+#include "constants.h"
 #include "debug.h"
 #include "display.h"
 #include "except.h"
@@ -14,7 +15,7 @@ GLint total_steps = 0;
 std::list<SDL_Event> frame_events;
 
 void App::frame_loop() {
-	const GLint max_ticks_per_frame = 1000/get_max_fps();
+	const GLint max_ticks_per_frame = 1000/MAX_FPS;
 	int unsimulated_ticks = 0;
 	
 	while (1) {

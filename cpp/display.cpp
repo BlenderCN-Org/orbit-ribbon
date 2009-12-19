@@ -2,7 +2,7 @@
 #include <GL/glu.h>
 #include <SDL/SDL.h>
 
-#include "app.h"
+#include "constants.h"
 #include "display.h"
 #include "except.h"
 
@@ -44,7 +44,7 @@ void Display::_init() {
 	}
 	
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	std::string win_title = std::string("Orbit Ribbon (") + App::get_version() + std::string(")");
+	std::string win_title = std::string("Orbit Ribbon (") + APP_VERSION + std::string(")");
 	SDL_WM_SetCaption(win_title.c_str(), win_title.c_str());
 	//FIXME : Set window icon here
 	

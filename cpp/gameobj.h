@@ -8,9 +8,6 @@
 
 class GameObj {
 	public:
-		static GLfloat get_default_vel_damp_coef() { return 0.15; }
-		static GLfloat get_default_ang_damp_coef() { return 0.15; }
-		
 		GameObj(const Point& npos, const Rotation& nrot);
 		~GameObj();
 		
@@ -42,8 +39,12 @@ class GameObj {
 		Point pos;
 		Rotation rot;
 		Vector vel;
-		GLfloat vel_damp_coef;
-		GLfloat ang_damp_coef;
+
+		// Damping coefficients for linear and angular velocity along each body axis
+		// For example, vel_damp_coef[0] is the linear damping coefficient along relative x axis
+		// Each step, vel_damp_coef[0]/MAX_FPS * relative x velocity is removed
+		GLfloat vel_damp_coef[3];
+		GLfloat ang_damp_coef[3];
 		
 		dBodyID body;
 		dGeomID geom;
