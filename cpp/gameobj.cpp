@@ -4,6 +4,7 @@
 #include "constants.h"
 #include "gameobj.h"
 #include "geometry.h"
+#include "gloo.h"
 
 GameObj::GameObj(const Point& npos, const Rotation& nrot) :
 	pos(npos),
@@ -78,6 +79,10 @@ std::string GameObj::to_str() const {
 }
 
 void GameObj::draw(bool near) {
+	GLOOPushedMatrix pm;
+	glTranslatef(pos.x, pos.y, pos.z);
+	// FIXME : Apply rotation matrix here
+	
 	if (near) {
 		near_draw_impl();
 	} else {

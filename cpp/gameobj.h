@@ -37,7 +37,7 @@ class GameObj {
 	
 	private:
 		Point pos;
-		Rotation rot;
+		Rotation rot; // FIXME : Must use a matrix here if I want to avoid porting headaches
 		Vector vel;
 
 		// Damping coefficients for linear and angular velocity along each body axis
