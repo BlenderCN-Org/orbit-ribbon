@@ -55,4 +55,7 @@ class Point {
 		std::string to_str() const;
 };
 
+typedef Point Vector;
+typedef Point Size;
+
 #endif
