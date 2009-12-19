@@ -4,7 +4,7 @@
 #include "gameobj.h"
 #include "geometry.h"
 
-GameObj::GameObj(const Point& npos, const Vector& nrot) :
+GameObj::GameObj(const Point& npos, const Rotation& nrot) :
 	pos(npos),
 	rot(nrot),
 	vel(Vector()),
@@ -22,7 +22,7 @@ GameObj::~GameObj() {
 void GameObj::set_pos(const Point& npos) {
 }
 
-void GameObj::set_rot(const Vector& nrot) {
+void GameObj::set_rot(const Rotation& nrot) {
 }
 
 std::string GameObj::to_str() const {

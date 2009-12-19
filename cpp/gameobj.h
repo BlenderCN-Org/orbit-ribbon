@@ -11,14 +11,14 @@ class GameObj {
 		static GLfloat get_default_vel_damp_coef() { return 0.15; }
 		static GLfloat get_default_ang_damp_coef() { return 0.15; }
 		
-		GameObj(const Point& npos, const Vector& nrot);
+		GameObj(const Point& npos, const Rotation& nrot);
 		~GameObj();
 		
 		const Point& get_pos() const { return pos; }
 		void set_pos(const Point& npos);
 		
-		const Vector& get_rot() const { return rot; }
-		void set_rot(const Vector& nrot);
+		const Rotation& get_rot() const { return rot; }
+		void set_rot(const Rotation& nrot);
 		
 		const Vector& get_vel() const { return vel; }
 		
@@ -42,7 +42,7 @@ class GameObj {
 	
 	private:
 		Point pos;
-		Vector rot;
+		Rotation rot;
 		Vector vel;
 		GLfloat vel_damp_coef;
 		GLfloat ang_damp_coef;
