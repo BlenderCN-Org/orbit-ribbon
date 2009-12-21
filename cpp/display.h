@@ -7,6 +7,7 @@ class App;
 
 class Display {
 	public:
+		// FIXME : Abstract this out to the game mode controller
 		static void set_fade_color(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
 		static void set_fade(bool flag);
 		

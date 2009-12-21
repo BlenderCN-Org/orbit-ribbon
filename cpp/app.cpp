@@ -11,6 +11,7 @@
 #include "except.h"
 #include "globals.h"
 #include "sim.h"
+#include "resman.h"
 
 void App::frame_loop() {
 	const GLint max_ticks_per_frame = 1000/MAX_FPS;
@@ -54,6 +55,7 @@ void App::run(const std::vector<std::string>& args) {
 	try {
 		Display::_init();
 		Sim::_init();
+		ResMan::_init("orefiles/main.ore"); // FIXME
 	} catch (GameException e) {
 		Debug::error_msg(std::string("Uncaught exception during init: ") + e.get_msg());
 		return;
