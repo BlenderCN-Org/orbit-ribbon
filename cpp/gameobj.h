@@ -4,10 +4,11 @@
 #include <GL/gl.h>
 #include <ode/ode.h>
 #include <boost/array.hpp>
+#include <boost/utility.hpp>
 
 #include "geometry.h"
 
-class GameObj {
+class GameObj : boost::noncopyable {
 	public:
 		GameObj(const Point& npos, const boost::array<GLfloat, 9>& nrot);
 		~GameObj();
