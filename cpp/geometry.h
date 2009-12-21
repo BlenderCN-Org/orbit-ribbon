@@ -55,7 +55,6 @@ class Point {
 };
 
 typedef Point Vector;
-typedef Point Rotation;
 typedef Point Size;
 
 #endif

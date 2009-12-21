@@ -3,19 +3,20 @@
 
 #include <GL/gl.h>
 #include <ode/ode.h>
+#include <boost/array.hpp>
 
 #include "geometry.h"
 
 class GameObj {
 	public:
-		GameObj(const Point& npos, const Rotation& nrot);
+		GameObj(const Point& npos, const boost::array<GLfloat, 9>& nrot);
 		~GameObj();
 		
 		const Point& get_pos() const { return pos; }
 		void set_pos(const Point& npos);
 		
-		const Rotation& get_rot() const { return rot; }
-		void set_rot(const Rotation& nrot);
+		const boost::array<GLfloat, 9>& get_rot() const { return rot; }
+		void set_rot(const boost::array<GLfloat, 9>& nrot);
 		
 		const Vector& get_vel() const { return vel; }
 		
@@ -37,7 +38,7 @@ class GameObj {
 	
 	private:
 		Point pos;
-		Rotation rot; // FIXME : Must use a matrix here if I want to avoid porting headaches
+		boost::array<GLfloat, 9> rot; // 3x3 column-major
 		Vector vel;
 
 		// Damping coefficients for linear and angular velocity along each body axis

@@ -1,12 +1,13 @@
 #include <GL/gl.h>
 #include <ode/ode.h>
+#include <boost/array.hpp>
 
 #include "constants.h"
 #include "gameobj.h"
 #include "geometry.h"
 #include "gloo.h"
 
-GameObj::GameObj(const Point& npos, const Rotation& nrot) :
+GameObj::GameObj(const Point& npos, const boost::array<GLfloat, 9>& nrot) :
 	pos(npos),
 	rot(nrot),
 	vel(Vector()),
@@ -61,11 +62,14 @@ void recursive_geom_set_rot(dGeomID g, const dMatrix3& matr) {
 	}
 }
 
-void GameObj::set_rot(const Rotation& nrot) {
+void GameObj::set_rot(const boost::array<GLfloat, 9>& nrot) {
 	rot = nrot;
-
+	
+	// Convert column-major to row-major
 	dMatrix3 matr;
-	dRFromEulerAngles(matr, nrot.x, nrot.y, nrot.z);
+	matr[0] = nrot[0]; matr[1] = nrot[3]; matr[2] = nrot[6];
+	matr[3] = nrot[1]; matr[4] = nrot[4]; matr[5] = nrot[7];
+	matr[6] = nrot[2]; matr[7] = nrot[5]; matr[8] = nrot[8];
 	if (body != 0) {
 		dBodySetRotation(body, matr);
 	} else if (geom != 0) {
@@ -101,8 +105,15 @@ void GameObj::step() {
 		pos.z = *p;
 		
 		p = dBodyGetRotation(body);
-		// FIXME Convert ODE rotation matrix to Euler rotation
-		// FIXME Also, make sure that Euler rotation is what I'm actually using, heh
+		rot[0] = *p; ++p;
+		rot[3] = *p; ++p;
+		rot[6] = *p; ++p;
+		rot[1] = *p; ++p;
+		rot[4] = *p; ++p;
+		rot[7] = *p; ++p;
+		rot[2] = *p; ++p;
+		rot[5] = *p; ++p;
+		rot[8] = *p;
 		
 		p = dBodyGetLinearVel(body);
 		vel.x = *p; ++p;
@@ -140,18 +151,31 @@ void GameObj::step() {
 	}
 }
 
+void recursive_geom_set_body(dGeomID geom, dBodyID body) {
+	if (dGeomIsSpace(geom)) {
+		dSpaceID s = dSpaceID(geom);
+		GLint end = dSpaceGetNumGeoms(s);
+		for (int i = 0; i < end; ++i) {
+			recursive_geom_set_body(dSpaceGetGeom(s, i), body);
+		}
+	} else {
+		dGeomSetBody(geom, body);
+	}
+}
+
 void GameObj::set_body(dBodyID nbody) {
 	if (body != 0) {
 		dBodyDestroy(body);
 	}
 	body = nbody;
-	dBodySetPosition(body, pos.x, pos.y, pos.z);
-	dMatrix3 matr;
-	dRFromEulerAngles(matr, rot.x, rot.y, rot.z);
-	dBodySetRotation(body, matr);
+		
 	if (geom != 0) {
-		dGeomSetBody(geom, body);
+		recursive_geom_set_body(geom, body);
 	}
+	
+	// This will load our current position and velocity into the body
+	set_pos(pos);
+	set_rot(rot);
 }
 
 void GameObj::set_geom(dGeomID ngeom) {
@@ -160,11 +184,6 @@ void GameObj::set_geom(dGeomID ngeom) {
 	}
 	geom = ngeom;
 	if (body != 0) {
-		dGeomSetBody(geom, body);
-	} else {
-		recursive_geom_set_pos(geom, pos);
-		dMatrix3 matr;
-		dRFromEulerAngles(matr, rot.x, rot.y, rot.z);
-		recursive_geom_set_rot(geom, matr);
+		recursive_geom_set_body(geom, body);
 	}
 }
