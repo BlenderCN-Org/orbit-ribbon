@@ -2,7 +2,7 @@
 #include <SDL/SDL.h>
 
 #include <string>
-#include <list>
+#include <vector>
 
 #include "app.h"
 #include "constants.h"
@@ -12,7 +12,7 @@
 #include "sim.h"
 
 GLint total_steps = 0;
-std::list<SDL_Event> frame_events;
+std::vector<SDL_Event> frame_events;
 
 void App::frame_loop() {
 	const GLint max_ticks_per_frame = 1000/MAX_FPS;
@@ -24,7 +24,7 @@ void App::frame_loop() {
 		// Add all new events to the events list for this frame, and quit on QUIT events
 		frame_events.clear();
 		SDL_Event event;
-	   while (SDL_PollEvent(&event)) {
+		while (SDL_PollEvent(&event)) {
 			frame_events.push_back(event);
 		  	if (event.type == SDL_QUIT) {
 				throw GameQuitException("Closed on quit event");
@@ -52,7 +52,7 @@ void App::frame_loop() {
 	}
 }
 
-void App::run(const std::list<std::string>& args) {
+void App::run(const std::vector<std::string>& args) {
 	try {
 		Display::_init();
 		Sim::_init();
@@ -71,7 +71,7 @@ void App::run(const std::list<std::string>& args) {
 	}
 }
 
-const std::list<SDL_Event>& App::get_frame_events() {
+const std::vector<SDL_Event>& App::get_frame_events() {
 	return frame_events;
 }
 

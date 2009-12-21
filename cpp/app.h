@@ -4,15 +4,15 @@
 #include <GL/gl.h>
 
 #include <string>
-#include <list>
+#include <vector>
 
 union SDL_Event;
 
 class App {
 	public:
-		static void run(const std::list<std::string>& arguments);
+		static void run(const std::vector<std::string>& arguments);
 		
-		static const std::list<SDL_Event>& get_frame_events();
+		static const std::vector<SDL_Event>& get_frame_events();
 		
 		static GLint get_total_steps();
 		
