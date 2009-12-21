@@ -9,10 +9,8 @@
 #include "debug.h"
 #include "display.h"
 #include "except.h"
+#include "globals.h"
 #include "sim.h"
-
-GLint total_steps = 0;
-std::vector<SDL_Event> frame_events;
 
 void App::frame_loop() {
 	const GLint max_ticks_per_frame = 1000/MAX_FPS;
@@ -22,10 +20,10 @@ void App::frame_loop() {
 		GLint frame_start = SDL_GetTicks();
 		
 		// Add all new events to the events list for this frame, and quit on QUIT events
-		frame_events.clear();
+		Globals::frame_events.clear();
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
-			frame_events.push_back(event);
+			Globals::frame_events.push_back(event);
 		  	if (event.type == SDL_QUIT) {
 				throw GameQuitException("Closed on quit event");
 			}
@@ -34,7 +32,7 @@ void App::frame_loop() {
 		// Do simulation steps until we've caught up with the display
 		while (unsimulated_ticks > max_ticks_per_frame) {
 			Sim::_sim_step();
-			total_steps += 1;
+			Globals::total_steps += 1;
 			unsimulated_ticks -= max_ticks_per_frame;
 		}
 		
@@ -69,12 +67,4 @@ void App::run(const std::vector<std::string>& args) {
 		Debug::error_msg(std::string("Uncaught exception during run: ") + e.get_msg());
 		return;
 	}
-}
-
-const std::vector<SDL_Event>& App::get_frame_events() {
-	return frame_events;
-}
-
-GLint App::get_total_steps() {
-	return total_steps;
 }
