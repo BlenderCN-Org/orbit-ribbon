@@ -49,11 +49,11 @@
 	</xsd:complexType>
 	
 	<xsd:simpleType name="Coord3DType">
-		<xsd:list itemType="xsd:float" length="3">
+		<xsd:list itemType="xsd:float" length="3" />
 	</xsd:simpleType>
 	
 	<xsd:simpleType name="RotMatrixType">
-		<xsd:list itemType="xsd:float" length="9">
+		<xsd:list itemType="xsd:float" length="9" />
 	</xsd:simpleType>
 
 </xsd:schema>

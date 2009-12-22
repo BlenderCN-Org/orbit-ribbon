@@ -21,17 +21,17 @@
 	</xsd:complexType>
 	
 	<xsd:complexType name="VertexType">
-		<xsd:element name="p" type="Coord3DType">
-		<xsd:element name="n" type="Coord3DType">
-		<xsd:element name="t" type="Coord2DType">
+		<xsd:element name="p" type="Coord3DType" />
+		<xsd:element name="n" type="Coord3DType" />
+		<xsd:element name="t" type="Coord2DType" />
 	</xsd:complexType>
 	
 	<xsd:simpleType name="Coord3DType">
-		<xsd:list itemType="xsd:float" length="3">
+		<xsd:list itemType="xsd:float" length="3" />
 	</xsd:simpleType>
 	
 	<xsd:simpleType name="Coord2DType">
-		<xsd:list itemType="xsd:float" length="2">
+		<xsd:list itemType="xsd:float" length="2" />
 	</xsd:simpleType>
 
 </xsd:schema>
