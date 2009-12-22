@@ -1,0 +1,14 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+	<include schemaLocation="oremeshtype.xsd" />
+
+	<xsd:element name="animation" type="OreAnimationType" />
+	
+	<xsd:complexType name="OreAnimationType">
+		<xsd:sequence>
+			<xsd:element name="frame" minOccurs="1" maxOccurs="unbounded" type="OreMeshType" />
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string" />
+	</xsd:complexType>
+
+</xsd:schema>

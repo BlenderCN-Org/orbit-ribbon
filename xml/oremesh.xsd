@@ -1,0 +1,7 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+	<include schemaLocation="oremeshtype.xsd" />
+
+	<xsd:element name="mesh" type="OreMeshType" />
+
+</xsd:schema>

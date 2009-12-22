@@ -1,0 +1,59 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+	<xsd:element name="orePkgDesc" type="OrePkgDescType" />
+	
+	<xsd:complexType name="OrePkgDescType">
+		<xsd:element name="niceName" type="xsd:string" />
+		<xsd:sequence>
+			<xsd:element name="area" minOccurs="1" maxOccurs="unbounded" type="OreAreaType" />
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string" />
+	</xsd:complexType>
+	
+	<xsd:complexType name="OreAreaType">
+		<xsd:element name="niceName" type="xsd:string" />
+		<xsd:element name="sky" type="OreSkySettingsType" />
+		<xsd:sequence>
+			<xsd:element name="mission" minOccurs="1" maxOccurs="unbounded" type="OreMissionType" />
+		</xsd:sequence>
+		<xsd:sequence>
+			<xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="OreObjType" />
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string" />
+	</xsd:complexType>
+	
+	<xsd:complexType name="OreSkySettingsType">
+		<xsd:element name="game_angle" type="xsd:float" />
+		<xsd:element name="y_offset" type="xsd:float" />
+		<xsd:element name="d_offset" type="xsd:float" />
+		<xsd:element name="tilt_angle" type="xsd:float" />
+		<xsd:element name="tilt_x" type="xsd:float" />
+		<xsd:element name="tilt_z" type="xsd:float" />
+	</xsd:complexType>
+	
+	<xsd:complexType name="OreMissionType">
+		<xsd:element name="niceName" type="xsd:string" />
+		<xsd:element name="winConditionFunc" type="xsd:string" />
+		<xsd:element name="timerStartFunc" type="xsd:string" />
+		<xsd:sequence>
+			<xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="OreObjType" />
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string" />
+	</xsd:complexType>
+	
+	<xsd:complexType name="OreObjType">
+		<xsd:element name="pos" type="Coord3DType" />
+		<xsd:element name="rot" type="RotMatrixType" />
+		<xsd:attribute name="objName" type="xsd:string" />
+		<xsd:attribute name="meshName" type="xsd:string" />
+	</xsd:complexType>
+	
+	<xsd:simpleType name="Coord3DType">
+		<xsd:list itemType="xsd:float" length="3">
+	</xsd:simpleType>
+	
+	<xsd:simpleType name="RotMatrixType">
+		<xsd:list itemType="xsd:float" length="9">
+	</xsd:simpleType>
+
+</xsd:schema>
