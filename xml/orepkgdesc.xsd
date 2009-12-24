@@ -1,11 +1,38 @@
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-
+<xsd:schema
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns="http://www.orbit-ribbon.org/ORE1"
+	targetNamespace="http://www.orbit-ribbon.org/ORE1">
+	
+	<xsd:annotation>
+		<xsd:documentation xml:lang="en">
+		Schema for the Orbit Ribbon ORE package description format.
+		
+		Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+		
+		This file is part of Orbit Ribbon.
+		
+		Orbit Ribbon is free software: you can redistribute it and/or modify
+		it under the terms of the GNU General Public License as published by
+		the Free Software Foundation, either version 3 of the License, or
+		(at your option) any later version.
+		
+		Orbit Ribbon is distributed in the hope that it will be awesome,
+		but WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+		GNU General Public License for more details.
+		
+		You should have received a copy of the GNU General Public License
+		along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
+		</xsd:documentation>
+	</xsd:annotation>
+	
 	<xsd:element name="orePkgDesc" type="OrePkgDescType" />
 	
 	<xsd:complexType name="OrePkgDescType">
 		<xsd:element name="niceName" type="xsd:string" />
+		<xsd:element name="created" type="xsd:dateTime" minOccurs="0" />
 		<xsd:sequence>
-			<xsd:element name="area" minOccurs="1" maxOccurs="unbounded" type="OreAreaType" />
+			<xsd:element name="area" minOccurs="0" maxOccurs="unbounded" type="OreAreaType" />
 		</xsd:sequence>
 		<xsd:attribute name="name" type="xsd:string" />
 	</xsd:complexType>
@@ -14,7 +41,7 @@
 		<xsd:element name="niceName" type="xsd:string" />
 		<xsd:element name="sky" type="OreSkySettingsType" />
 		<xsd:sequence>
-			<xsd:element name="mission" minOccurs="1" maxOccurs="unbounded" type="OreMissionType" />
+			<xsd:element name="mission" minOccurs="0" maxOccurs="unbounded" type="OreMissionType" />
 		</xsd:sequence>
 		<xsd:sequence>
 			<xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="OreObjType" />
@@ -23,12 +50,13 @@
 	</xsd:complexType>
 	
 	<xsd:complexType name="OreSkySettingsType">
-		<xsd:element name="game_angle" type="xsd:float" />
-		<xsd:element name="y_offset" type="xsd:float" />
-		<xsd:element name="d_offset" type="xsd:float" />
-		<xsd:element name="tilt_angle" type="xsd:float" />
-		<xsd:element name="tilt_x" type="xsd:float" />
-		<xsd:element name="tilt_z" type="xsd:float" />
+		<xsd:element name="gameAngle" type="xsd:float" />
+		<xsd:element name="yOffset" type="xsd:float" />
+		<xsd:element name="dOffset" type="xsd:float" />
+		<xsd:element name="tiltAngle" type="xsd:float" />
+		<xsd:element name="tiltX" type="xsd:float" />
+		<xsd:element name="tiltZ" type="xsd:float" />
+		<xsd:element name="t3Angle" type="xsd:float" />
 	</xsd:complexType>
 	
 	<xsd:complexType name="OreMissionType">

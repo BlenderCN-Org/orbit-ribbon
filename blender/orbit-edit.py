@@ -1,4 +1,27 @@
-import Blender, BPyMesh, bpy, os, cPickle, sys, ConfigParser, StringIO, zipfile, datetime
+# -*- coding: utf-8 -*-
+
+"""
+orbit-edit.py: Blender utility script for doing Orbit Ribbon development
+
+Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+
+This file is part of Orbit Ribbon.
+
+Orbit Ribbon is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Orbit Ribbon is distributed in the hope that it will be awesome,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
+"""
+
+import Blender, BPyMesh, bpy, os, sys, StringIO, zipfile, datetime, xml.dom.minidom
 from math import *
 
 WORKING_DIR = os.path.dirname(Blender.Get("filename"))
@@ -20,7 +43,6 @@ def rad2deg(v):
 
 
 def genrotmatrix(x, y, z): # Returns a 9-tuple for a column-major 3x3 rotation matrix with axes corrected ala fixcoords
-	#return (1, 0, 0, 0, 1, 0, 0, 0, 1) # For testing purposes
 	m = (
 		MATRIX_INV_BLEN2ORE *
 		Blender.Mathutils.RotationMatrix(rad2deg(x), 4, 'x') *
@@ -154,8 +176,7 @@ def do_resanify():
 def do_export():
 	# FIXME: Need to also consider auxillary objects within LIB scenes
 	# Though must keep in mind that objects in LIB scenes only have position/rotation relative to each other
-	# Probably should turn Mission and Area into one class, Scene
-
+	
 	Blender.Window.DrawProgressBar(0.0, "Initializing export")
 	
 	# Record the frame the editor was in before we started mucking about
@@ -167,25 +188,11 @@ def do_export():
 		mode = "w",
 		compression = zipfile.ZIP_DEFLATED
 	)
-	zfh.writestr("ore-version", "1") # Version of the ORE file format in use (this will be 1 until the first backwards-incompatible change after release)i
-	zfh.writestr("ore-created", str(datetime.datetime.now())) # When the ORE file was created
+	zfh.writestr("ore-version", "1") # ORE file format version (this will be 1 until the first backwards-incompatible change after release)
 	
-	conf = None
-	try:
-		conf = "\n".join(bpy.data.texts["oreconf"].asLines())
-	except exceptions.KeyError:
-		pup_error("Unable to find the 'oreconf' text!")
-	confparser = ConfigParser.ConfigParser()
-	try:
-		confparser.readfp(StringIO.StringIO(conf))
-	except Exception, e:
-		pup_error("Unable to parse the oreconf text: %s" % str(e))
-	pkgname = None
-	try:
-		pkgname = confparser.get("Package", "visible_name")
-	except Exception, e:
-		pup_error("Unable to extract 'visible_name' from '[Package]' section!'")
-	zfh.writestr("ore-name", pkgname) # The player-visible name of the ORE package
+	confText = "\n".join(bpy.data.texts["oreconf"].asLines())
+	
+	zfh.writestr("ore-name", pkgname) # The player-visible name of the ORE package, separate so that we can get it without having to parse XML
 	zfh.writestr("ore-conf", conf)
 
 	Blender.Window.DrawProgressBar(0.1, "Exporting Mission and Area data")
