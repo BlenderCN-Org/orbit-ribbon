@@ -21,14 +21,11 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 """
 
-import Blender, BPyMesh, bpy, os, sys, StringIO, zipfile, datetime, xml.dom.minidom
+import Blender, BPyMesh, bpy, os, sys, zipfile, datetime, lxml.etree, traceback
 from math import *
 
 WORKING_DIR = os.path.dirname(Blender.Get("filename"))
 BLENDER_FILENAME = os.path.basename(Blender.Get("filename"))
-
-sys.path.append(os.path.join(WORKING_DIR, os.path.pardir))
-import oreshared # This is found in the directory we just located above
 
 MATRIX_BLEN2ORE = Blender.Mathutils.RotationMatrix(-90, 4, 'x')
 MATRIX_INV_BLEN2ORE = MATRIX_BLEN2ORE.copy().invert()
@@ -58,9 +55,10 @@ def genrotmatrix(x, y, z): # Returns a 9-tuple for a column-major 3x3 rotation m
 
 
 def pup_error(msg):
+	Blender.Window.DrawProgressBar(1.0, "Aborting")
 	r = Blender.Draw.PupMenu("Error: %s%%t|OK" % msg)
 	Blender.Redraw()
-	Blender.Exit()
+	raise RuntimeError(msg)
 
 
 def do_add_libobject():
@@ -177,11 +175,27 @@ def do_export():
 	# FIXME: Need to also consider auxillary objects within LIB scenes
 	# Though must keep in mind that objects in LIB scenes only have position/rotation relative to each other
 	
+	# Load the schemas we need
+	def schema_load(sname):
+		return lxml.etree.XMLSchema(lxml.etree.parse(os.path.join(WORKING_DIR, os.path.pardir, "xml", sname)))
+	descSchema = schema_load("orepkgdesc.xsd")
+	meshSchema = schema_load("oremesh.xsd")
+	animationSchema = schema_load("oreanimation.xsd")
+	
 	Blender.Window.DrawProgressBar(0.0, "Initializing export")
+	
+	# Load the description from TX:oredesc, and validate it against the description schema
+	descDoc = lxml.etree.fromstring(
+		"\n".join(bpy.data.texts["oredesc"].asLines()),
+		parser=lxml.etree.XMLParser(remove_blank_text=True, schema=descSchema),
+	)
 	
 	# Record the frame the editor was in before we started mucking about
 	orig_frame = Blender.Get("curframe")
 	
+	Blender.Window.DrawProgressBar(0.1, "Creating ORE file")
+	
+	# Create a new ORE zip file
 	target_fn = BLENDER_FILENAME[:-6] + ".ore" # Replace ".blend" with ".ore" for output filename (ore = Orbit Ribbon Export)
 	zfh = zipfile.ZipFile(
 		file = os.path.join(WORKING_DIR, os.path.pardir, "orefiles", target_fn),
@@ -189,61 +203,56 @@ def do_export():
 		compression = zipfile.ZIP_DEFLATED
 	)
 	zfh.writestr("ore-version", "1") # ORE file format version (this will be 1 until the first backwards-incompatible change after release)
+	zfh.writestr("ore-name", descDoc.xpath("niceName/text()")[0]) # The nice name of the ORE package, separate so that we can get it without XML
 	
-	confText = "\n".join(bpy.data.texts["oreconf"].asLines())
-	
-	zfh.writestr("ore-name", pkgname) # The player-visible name of the ORE package, separate so that we can get it without having to parse XML
-	zfh.writestr("ore-conf", conf)
-
-	Blender.Window.DrawProgressBar(0.1, "Exporting Mission and Area data")
-	
+	# Add the mission and area information to the desc document
 	for scene in bpy.data.scenes:
 		name = scene.name
 		if name.startswith("A"):
-			# Either an Area base or a Mission; we need a list of (objname, meshname, position, rotmatrix) tuples
-			exp_obj_tuples = []
-			filt = None
+			filt = None # Expression used to determine if a Blender object should be exported
+			tgt = None # An XML node to insert the object nodes underneath
 			
 			if name.endswith("-Base"):
-				# Area base scene: log all non-TestLamp BASE objects
+				# Area base scene: write all non-TestLamp BASE objects to the Area node
 				filt = lambda n: True if (n.startswith("BASE") and not ("TestLamp") in n) else False
+				tgt = descDoc.xpath("area[@name='%s']" % (name[:3]))[0] # Use the 'A##' name
 			else:
-				# Mission scene: log all non-BASE objects (whether LIB or not)
+				# Mission scene: write all non-BASE objects (whether LIB or not) to the Mission node under the Area node
 				filt = lambda n: True if not n.startswith("BASE") else False
+				tgt = descDoc.xpath("area[@name='%s']/mission[@name='%s']" % (name[:3], name[4:]))[0] # Use the 'A##' and 'M##' names
 			
 			for obj in scene.objects:
 				if not filt(obj.name):
 					continue
 				try:
-					exp_obj_tuples.append((
-						obj.name,
-						obj.getData().name,
-						fixcoords(obj.loc),
-						genrotmatrix(*obj.rot),
-					))
+					objNode = lxml.etree.SubElement(tgt, "obj", objName=obj.name, meshName=obj.getData().name)
+					posNode = lxml.etree.SubElement(objNode, "pos"); posNode.text = " ".join([str(x) for x in fixcoords(obj.loc)])
+					rotNode = lxml.etree.SubElement(objNode, "rot"); rotNode.text = " ".join([str(x) for x in genrotmatrix(*obj.rot)])
 				except Exception, e:
 					pup_error("Problem exporting object %s: %s" % (obj.name, str(e)))
-			
-			if len(exp_obj_tuples) == 0:
-				continue
-			if name.endswith("-Base"):
-				zfh.writestr("area-%s" % name[:-5], cPickle.dumps(oreshared.Area(tuple(exp_obj_tuples)), 2))
-			else:
-				area_name = name[:-4] + "-Base" # Remove the "-M##" and add "-Base" to get base area scene name
-				zfh.writestr("mission-%s" % name, cPickle.dumps(oreshared.Mission(area_name, tuple(exp_obj_tuples)), 2))
+	
+	# Revalidate and write out the description now that all the area and mission information has been added in
+	descSchema.assertValid(descDoc)
+	zfh.writestr("ore-desc", lxml.etree.tostring(descDoc, pretty_print=True, xml_declaration=True))
 	
 	copiedImages = set() # Set of image names that have already been copied into the zipfile
-	def writeMesh(mesh, tgtName):
-		facelists = {}
+	def createMeshNode(mesh):
+		meshNode = lxml.etree.Element("mesh", name=mesh.name)
+		
 		for f in mesh.faces:
 			imgName = None
 			try:
 				imgName = f.image.name
 			except ValueError:
-				pass # No image mapped to this face
-			if imgName not in facelists:
-				facelists[imgName] = []
-				if imgName is not None and imgName not in copiedImages:
+				imgName = "" # No image mapped to this face
+			
+			facelistResult = meshNode.xpath("/facelist[@image='%s']" % imgName)
+			facelistNode = None
+			if len(facelistResult) > 0:
+				facelistNode = facelistResult[0]
+			else:
+				facelistNode = lxml.etree.SubElement(meshNode, "facelist", image=imgName)
+				if imgName is not "" and imgName not in copiedImages:
 					copiedImages.add(imgName)
 					# ZIP_STORED disables compression, it is used here because PNG images are already compressed
 					zfh.write(f.image.filename, "image-%s" % imgName, zipfile.ZIP_STORED)
@@ -253,16 +262,15 @@ def do_export():
 				# Convert quads to triangles
 				offsets.append((0,2,3))
 			for a, b, c in offsets:
-				vertices = tuple([fixcoords(f.verts[x].co) for x in (a,b,c)])
-				normals = tuple([fixcoords(f.verts[x].no) for x in (a,b,c)])
-				if imgName is not None:
-					uvpts = tuple([tuple(f.uv[x]) for x in (a,b,c)])
-				else:
-					uvpts = (None, None, None)
-				facelists[imgName].append((vertices, normals, uvpts))
-
-		omesh = oreshared.Mesh(facelists)
-		zfh.writestr(tgtName, cPickle.dumps(omesh, 2))
+				faceNode = lxml.etree.SubElement(facelistNode, "face")
+				for offset in (a, b, c):
+					vxNode = lxml.etree.SubElement(faceNode, "v")
+					ptNode = lxml.etree.SubElement(vxNode, "p"); ptNode.text = " ".join([str(x) for x in fixcoords(f.verts[offset].co)])
+					nmNode = lxml.etree.SubElement(vxNode, "n"); nmNode.text = " ".join([str(x) for x in fixcoords(f.verts[offset].no)])
+					if imgName != "":
+						txNode = lxml.etree.SubElement(vxNode, "t"); txNode.text = " ".join([str(x) for x in f.uv[offset]])
+		
+		return meshNode
 	
 	progress = 0.2
 	progressInc = (1.0 - progress)/(len(bpy.data.objects) + len(bpy.data.actions))
@@ -270,7 +278,9 @@ def do_export():
 	for mesh in bpy.data.meshes:
 		Blender.Window.DrawProgressBar(progress, "Exporting object meshes and images")
 		progress += progressInc
-		writeMesh(mesh, "mesh-%s" % mesh.name)
+		meshNode = createMeshNode(mesh)
+		meshSchema.assertValid(meshNode)
+		zfh.writestr("mesh-%s" % mesh.name, xml.etree.tostring(meshNode, pretty_print=True, xml_declaration=True))
 	
 	for action in bpy.data.actions:
 		if not action.name.startswith("LIB"):
@@ -280,22 +290,23 @@ def do_export():
 		arm_name = obj_name + "-Armature"
 		orig_action = bpy.data.objects[arm_name].getAction() # Save the selected action for the armature
 		
-		anim_meshes = []
-		lastFrame = action.getFrameNumbers()[-1]
-		subProgressInc = progressInc/lastFrame
-		for frameNum in xrange(1, lastFrame+1):
+		animNode = lxml.etree.Element("animation", name=action.name)
+		
+		frameCount = action.getFrameNumbers()[-1]
+		subProgressInc = progressInc/frameCount
+		for frameNum in xrange(1, frameCount+1):
 			Blender.Window.DrawProgressBar(progress, "Exporting animation meshes")
 			progress += subProgressInc
-			frame_mesh_name = "%s-%s-%04u" % (obj_name, action.name.split("-")[1], frameNum)
-			anim_meshes.append(frame_mesh_name)
 			Blender.Set("curframe", frameNum)
 			mesh = BPyMesh.getMeshFromObject(bpy.data.objects[obj_name], None, True, False, None)
-			writeMesh(mesh, "animmesh-%s" % frame_mesh_name)
+			meshNode = createMeshNode(mesh)
+			meshNode.tag = "frame"
+			animNode.append(meshNode)
 		
 		orig_action.setActive(bpy.data.objects[arm_name]) # Restore the saved action
 		
-		oanim = oreshared.Animation(anim_meshes)
-		zfh.writestr("animation-%s" % action.name, cPickle.dumps(oanim, 2))
+		animationSchema.assertValid(animNode)
+		zfh.writestr("animation-%s" % action.name, xml.etree.tostring(animNode, pretty_print=True, xml_declaration=True))
 	
 	Blender.Window.DrawProgressBar(1.0, "Closing ORE file")
 	zfh.close()
@@ -329,9 +340,11 @@ def menu():
 		try:
 			menu_items[r][1]()
 		except:
-			Blender.Window.DrawProgressBar(1.0, "Aborting")
-			Blender.Draw.PupMenu("DANGER WILL ROBINSON! OPERATION FAILED!%t|Gee, I'd better check the console for error output")
-			raise
+			print "-----"
+			print "EXCEPTION TRACEBACK:"
+			traceback.print_exc()
+			print "-----"
+			pup_error("DANGER WILL ROBINSON! OPERATION FAILED!")
 	Blender.Redraw()
 
 ### Execution begins here

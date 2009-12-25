@@ -26,21 +26,21 @@
 		</xsd:documentation>
 	</xsd:annotation>
 
-	<xsd:complexType name="OreMeshType">
+	<xsd:complexType name="MeshType">
 		<xsd:sequence>
-			<xsd:element name="facelist" type="OreFacelistType" />
+			<xsd:element name="facelist" type="FacelistType" />
 		</xsd:sequence>
 		<xsd:attribute name="name" type="xsd:string" />
 	</xsd:complexType>
 	
-	<xsd:complexType name="OreFacelistType">
+	<xsd:complexType name="FacelistType">
 		<xsd:sequence>
-			<xsd:element name="face" type="OreFaceType" />
+			<xsd:element name="face" type="FaceType" />
 		</xsd:sequence>
 		<xsd:attribute name="image" />
 	</xsd:complexType>
 	
-	<xsd:complexType name="OreFaceType">
+	<xsd:complexType name="FaceType">
 		<xsd:sequence minOccurs="3" maxOccurs="3">
 			<xsd:element name="v" type="VertexType" />
 		</xsd:sequence>

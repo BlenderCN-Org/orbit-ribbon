@@ -26,27 +26,27 @@
 		</xsd:documentation>
 	</xsd:annotation>
 	
-	<xsd:element name="orePkgDesc" type="OrePkgDescType"/>
+	<xsd:element name="pkgDesc" type="PkgDescType"/>
 	
-	<xsd:complexType name="OrePkgDescType">
+	<xsd:complexType name="PkgDescType">
 		<xsd:sequence>
 			<xsd:element name="niceName" type="xsd:string" />
 			<xsd:element name="created" type="xsd:dateTime" minOccurs="0" />
-			<xsd:element name="area" minOccurs="0" maxOccurs="unbounded" type="OreAreaType" />
+			<xsd:element name="area" minOccurs="0" maxOccurs="unbounded" type="AreaType" />
 		</xsd:sequence>
 	</xsd:complexType>
 	
-	<xsd:complexType name="OreAreaType">
+	<xsd:complexType name="AreaType">
 		<xsd:sequence>
 			<xsd:element name="niceName" type="xsd:string" />
-			<xsd:element name="sky" type="OreSkySettingsType" />
-			<xsd:element name="mission" minOccurs="0" maxOccurs="unbounded" type="OreMissionType" />
-			<xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="OreObjType" />
+			<xsd:element name="sky" type="SkySettingsType" />
+			<xsd:element name="mission" minOccurs="0" maxOccurs="unbounded" type="MissionType" />
+			<xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />
 		</xsd:sequence>
 		<xsd:attribute name="name" type="xsd:string" />
 	</xsd:complexType>
 	
-	<xsd:complexType name="OreSkySettingsType">
+	<xsd:complexType name="SkySettingsType">
 		<xsd:sequence>
 			<xsd:element name="gameAngle" type="xsd:float" />
 			<xsd:element name="yOffset" type="xsd:float" />
@@ -58,17 +58,17 @@
 		</xsd:sequence>
 	</xsd:complexType>
 	
-	<xsd:complexType name="OreMissionType">
+	<xsd:complexType name="MissionType">
 		<xsd:sequence>
 			<xsd:element name="niceName" type="xsd:string" />
 			<xsd:element name="winConditionFunc" type="xsd:string" />
 			<xsd:element name="timerStartFunc" type="xsd:string" />
-			<xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="OreObjType" />
+			<xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />
 		</xsd:sequence>
 		<xsd:attribute name="name" type="xsd:string" />
 	</xsd:complexType>
 	
-	<xsd:complexType name="OreObjType">
+	<xsd:complexType name="ObjType">
 		<xsd:sequence>
 			<xsd:element name="pos" type="Coord3DType" />
 			<xsd:element name="rot" type="RotMatrixType" />

@@ -28,11 +28,11 @@
 	
 	<xsd:include schemaLocation="oremeshtype.xsd" />
 
-	<xsd:element name="animation" type="OreAnimationType" />
+	<xsd:element name="animation" type="AnimationType" />
 	
-	<xsd:complexType name="OreAnimationType">
+	<xsd:complexType name="AnimationType">
 		<xsd:sequence>
-			<xsd:element name="frame" minOccurs="1" maxOccurs="unbounded" type="OreMeshType" />
+			<xsd:element name="frame" minOccurs="1" maxOccurs="unbounded" type="MeshType" />
 		</xsd:sequence>
 		<xsd:attribute name="name" type="xsd:string" />
 	</xsd:complexType>

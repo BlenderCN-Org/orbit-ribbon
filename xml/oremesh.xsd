@@ -28,6 +28,6 @@
 	
 	<xsd:include schemaLocation="oremeshtype.xsd" />
 	
-	<xsd:element name="mesh" type="OreMeshType" />
+	<xsd:element name="mesh" type="MeshType" />
 
 </xsd:schema>
