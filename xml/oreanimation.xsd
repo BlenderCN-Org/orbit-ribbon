@@ -26,7 +26,7 @@
 		</xsd:documentation>
 	</xsd:annotation>
 	
-	<include schemaLocation="oremeshtype.xsd" />
+	<xsd:include schemaLocation="oremeshtype.xsd" />
 
 	<xsd:element name="animation" type="OreAnimationType" />
 	

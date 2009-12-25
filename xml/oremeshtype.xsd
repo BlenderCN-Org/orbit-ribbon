@@ -34,10 +34,10 @@
 	</xsd:complexType>
 	
 	<xsd:complexType name="OreFacelistType">
-		<xsd:attribute name="image" use="optional" />
 		<xsd:sequence>
 			<xsd:element name="face" type="OreFaceType" />
 		</xsd:sequence>
+		<xsd:attribute name="image" />
 	</xsd:complexType>
 	
 	<xsd:complexType name="OreFaceType">
@@ -47,17 +47,27 @@
 	</xsd:complexType>
 	
 	<xsd:complexType name="VertexType">
-		<xsd:element name="p" type="Coord3DType" />
-		<xsd:element name="n" type="Coord3DType" />
-		<xsd:element name="t" type="Coord2DType" />
+		<xsd:sequence>
+			<xsd:element name="p" type="Coord3DType" />
+			<xsd:element name="n" type="Coord3DType" />
+			<xsd:element name="t" type="Coord2DType" minOccurs="0" />
+		</xsd:sequence>
 	</xsd:complexType>
 	
+	<xsd:simpleType name="FloatList">
+		<xsd:list itemType="xsd:float" />
+	</xsd:simpleType>
+	
 	<xsd:simpleType name="Coord3DType">
-		<xsd:list itemType="xsd:float" length="3" />
+		<xsd:restriction base="FloatList">
+			<xsd:length value='3' />
+		</xsd:restriction>
 	</xsd:simpleType>
 	
 	<xsd:simpleType name="Coord2DType">
-		<xsd:list itemType="xsd:float" length="2" />
+		<xsd:restriction base="FloatList">
+			<xsd:length value='2' />
+		</xsd:restriction>
 	</xsd:simpleType>
 
 </xsd:schema>
