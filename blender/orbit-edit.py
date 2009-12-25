@@ -30,6 +30,10 @@ BLENDER_FILENAME = os.path.basename(Blender.Get("filename"))
 MATRIX_BLEN2ORE = Blender.Mathutils.RotationMatrix(-90, 4, 'x')
 MATRIX_INV_BLEN2ORE = MATRIX_BLEN2ORE.copy().invert()
 
+ORE_NAMESPACE = "http://www.orbit-ribbon.org/ORE1"
+ORE_NS_PREFIX = "{%s}" % ORE_NAMESPACE
+NSMAP = {"ore" : ORE_NAMESPACE}
+
 def fixcoords(t): # Given a 3-sequence, returns it so that axes changed to fit OpenGL standards (y is up, z is forward)
 	t = Blender.Mathutils.Vector(t) * MATRIX_BLEN2ORE
 	return (t[0], t[1], t[2])
@@ -179,8 +183,8 @@ def do_export():
 	def schema_load(sname):
 		return lxml.etree.XMLSchema(lxml.etree.parse(os.path.join(WORKING_DIR, os.path.pardir, "xml", sname)))
 	descSchema = schema_load("orepkgdesc.xsd")
-	meshSchema = schema_load("oremesh.xsd")
-	animationSchema = schema_load("oreanimation.xsd")
+	#meshSchema = schema_load("oremesh.xsd")
+	#animationSchema = schema_load("oreanimation.xsd")
 	
 	Blender.Window.DrawProgressBar(0.0, "Initializing export")
 	
@@ -231,14 +235,12 @@ def do_export():
 				except Exception, e:
 					pup_error("Problem exporting object %s: %s" % (obj.name, str(e)))
 	
-	# Revalidate and write out the description now that all the area and mission information has been added in
-	descSchema.assertValid(descDoc)
-	zfh.writestr("ore-desc", lxml.etree.tostring(descDoc, pretty_print=True, xml_declaration=True))
+	# Write out the description now that all the area and mission information has been added in
+	#descSchema.assertValid(descDoc)
+	zfh.writestr("ore-desc", lxml.etree.tostring(descDoc, xml_declaration=True))
 	
 	copiedImages = set() # Set of image names that have already been copied into the zipfile
-	def createMeshNode(mesh):
-		meshNode = lxml.etree.Element("mesh", name=mesh.name)
-		
+	def populateMeshNode(meshNode, mesh):
 		for f in mesh.faces:
 			imgName = None
 			try:
@@ -246,7 +248,7 @@ def do_export():
 			except ValueError:
 				imgName = "" # No image mapped to this face
 			
-			facelistResult = meshNode.xpath("/facelist[@image='%s']" % imgName)
+			facelistResult = meshNode.xpath("facelist[@image='%s']" % imgName)
 			facelistNode = None
 			if len(facelistResult) > 0:
 				facelistNode = facelistResult[0]
@@ -278,9 +280,10 @@ def do_export():
 	for mesh in bpy.data.meshes:
 		Blender.Window.DrawProgressBar(progress, "Exporting object meshes and images")
 		progress += progressInc
-		meshNode = createMeshNode(mesh)
-		meshSchema.assertValid(meshNode)
-		zfh.writestr("mesh-%s" % mesh.name, xml.etree.tostring(meshNode, pretty_print=True, xml_declaration=True))
+		meshNode = lxml.etree.Element(ORE_NS_PREFIX + "mesh", nsmap=NSMAP)
+		populateMeshNode(meshNode, mesh)
+		#meshSchema.assertValid(meshNode)
+		zfh.writestr("mesh-%s" % mesh.name, lxml.etree.tostring(meshNode, xml_declaration=True))
 	
 	for action in bpy.data.actions:
 		if not action.name.startswith("LIB"):
@@ -290,7 +293,7 @@ def do_export():
 		arm_name = obj_name + "-Armature"
 		orig_action = bpy.data.objects[arm_name].getAction() # Save the selected action for the armature
 		
-		animNode = lxml.etree.Element("animation", name=action.name)
+		animNode = lxml.etree.Element(ORE_NS_PREFIX + "animation", name=action.name, nsmap=NSMAP)
 		
 		frameCount = action.getFrameNumbers()[-1]
 		subProgressInc = progressInc/frameCount
@@ -299,14 +302,13 @@ def do_export():
 			progress += subProgressInc
 			Blender.Set("curframe", frameNum)
 			mesh = BPyMesh.getMeshFromObject(bpy.data.objects[obj_name], None, True, False, None)
-			meshNode = createMeshNode(mesh)
-			meshNode.tag = "frame"
-			animNode.append(meshNode)
+			meshNode = lxml.etree.SubElement(animNode, "frame")
+			populateMeshNode(meshNode, mesh)
 		
 		orig_action.setActive(bpy.data.objects[arm_name]) # Restore the saved action
 		
-		animationSchema.assertValid(animNode)
-		zfh.writestr("animation-%s" % action.name, xml.etree.tostring(animNode, pretty_print=True, xml_declaration=True))
+		#animationSchema.assertValid(animNode)
+		zfh.writestr("animation-%s" % action.name, lxml.etree.tostring(animNode, xml_declaration=True))
 	
 	Blender.Window.DrawProgressBar(1.0, "Closing ORE file")
 	zfh.close()

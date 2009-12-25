@@ -28,14 +28,13 @@
 
 	<xsd:complexType name="MeshType">
 		<xsd:sequence>
-			<xsd:element name="facelist" type="FacelistType" />
+			<xsd:element name="facelist" type="FacelistType" minOccurs="0" maxOccurs="unbounded"/>
 		</xsd:sequence>
-		<xsd:attribute name="name" type="xsd:string" />
 	</xsd:complexType>
 	
 	<xsd:complexType name="FacelistType">
 		<xsd:sequence>
-			<xsd:element name="face" type="FaceType" />
+			<xsd:element name="face" type="FaceType" minOccurs="0" maxOccurs="unbounded"/>
 		</xsd:sequence>
 		<xsd:attribute name="image" />
 	</xsd:complexType>
