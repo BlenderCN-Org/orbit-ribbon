@@ -36,7 +36,7 @@
 		<xsd:sequence>
 			<xsd:element name="face" type="FaceType" minOccurs="0" maxOccurs="unbounded"/>
 		</xsd:sequence>
-		<xsd:attribute name="image" />
+		<xsd:attribute name="image" type="xsd:string" />
 	</xsd:complexType>
 	
 	<xsd:complexType name="FaceType">
