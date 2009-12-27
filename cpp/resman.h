@@ -30,6 +30,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <vector>
 #include <zzip/zzip.h>
 
+#include "autoxsd/orepkgdesc.h"
+
 class OrePackage;
 class OreFileHandle;
 
