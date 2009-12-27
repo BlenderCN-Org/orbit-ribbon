@@ -21,9 +21,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 import os
 
-VariantDir('buildtmp', 'cpp', duplicate=0)
-env = Environment()
-
 def build_xsd(mode, source, target, env):
 	args = [mode]
 	args.extend(["--guard-prefix", "ORBIT_RIBBON_AUTOXSD"])
@@ -51,7 +48,7 @@ def build_xsd(mode, source, target, env):
 	else:
 		tgt_list = [str(target)]
 	
-	if len(src_list) != len(tgt_list):
+	if len(src_list)*2 != len(tgt_list):
 		raise RuntimeError("build_xsd: Source and target lists mismatched on length")
 	
 	output_dir = None
@@ -70,41 +67,61 @@ def build_xsd(mode, source, target, env):
 		tgt_base = os.path.basename(s)[:-4]
 		if mode == 'cxx-parser':
 			tgt_base += "-pskel"
-		if (tgt_base + ".cpp") not in [os.path.basename(t) for t in tgt_list]:
-			raise RuntimeError("build_xsd: No cpp file in target list corresponding with source file %s" % s)
+		for ext in ("cpp", "h"):
+			if (tgt_base + "." + ext) not in [os.path.basename(t) for t in tgt_list]:
+				raise RuntimeError("build_xsd: No file with extension %s in target list corresponding with source file %s" % (ext, s))
 		args.append(s)
 	
 	if Execute(Action([["xsdcxx"] + args])):
 		raise RuntimeError("build_xsd: xsdcxx call failed")
 	for t in tgt_list:
-		for fn in (t, t[:-4] + ".h"):
-			tmpfn = fn + ".tmp"
-			if Execute(Action([["sed", "-n", "s/long long/long/; w %s" % tmpfn, fn]])):
-				raise RuntimeError("build_xsd: sed call failed")
-			if Execute(Move(fn, tmpfn)):
-				raise RuntimeError("build_xsd: post-sed move failed")
+		tmpfn = t + ".tmp"
+		if Execute(Action([["sed", "-n", "s/long long/long/; w %s" % tmpfn, t]])):
+			raise RuntimeError("build_xsd: sed call failed")
+		if Execute(Move(t, tmpfn)):
+			raise RuntimeError("build_xsd: post-sed move failed")
 
+
+def xsd_emitter(target, source, env):
+	added = []
+	target_strs = [str(t) for t in target]
+	for t in target_strs:
+		if t.endswith(".cpp"):
+			header = t[:-4] + ".h"
+			if header not in target_strs:
+				added.append(header)
+	return (target + added, source)
+
+
+VariantDir('buildtmp', 'cpp', duplicate=0)
+env = Environment()
 
 env['BUILDERS']['XSDTree'] = Builder(
 	action = lambda source, target, env: build_xsd('cxx-tree', source, target, env),
-	suffix = {'.xsd' : '.cpp'}
+	suffix = {'.xsd' : '.cpp'},
+	emitter = xsd_emitter
 )
 env['BUILDERS']['XSDParser'] = Builder(
 	action = lambda source, target, env: build_xsd('cxx-parser', source, target, env),
-	suffix = {'.xsd' : '-pskel.cpp'}
+	suffix = {'.xsd' : '-pskel.cpp'},
+	emitter = xsd_emitter
 )
 
+tree_xsds = ['orepkgdesc']
+parser_xsds = ['oreanimation', 'oremeshtype', 'oremesh']
+xsd_cpp_dir = 'cpp/autoxsd/'
+
 tree_built = env.XSDTree(
-	['cpp/autoxsd/orepkgdesc.cpp'],
-	['xml/orepkgdesc.xsd']
+	['%s/%s.cpp' % (xsd_cpp_dir, n) for n in tree_xsds],
+	['xml/%s.xsd' % n for n in tree_xsds]
 )
 parser_built = env.XSDParser(
-	['cpp/autoxsd/oreanimation-pskel.cpp', 'cpp/autoxsd/oremeshtype-pskel.cpp', 'cpp/autoxsd/oremesh-pskel.cpp'],
-	['xml/oreanimation.xsd', 'xml/oremeshtype.xsd', 'xml/oremesh.xsd']
+	['%s/%s-pskel.cpp' % (xsd_cpp_dir, n) for n in parser_xsds],
+	['xml/%s.xsd' % n for n in parser_xsds]
 )
 env.Program(
 	'orbit-ribbon',
-	tree_built + parser_built + Glob('buildtmp/*.cpp'),
+	[b for b in (tree_built + parser_built) if str(b).endswith(".cpp")] + Glob('buildtmp/*.cpp'),
 	LIBS=['GL', 'GLU', 'ode', 'SDL', 'SDL_mixer', 'SDL_image', 'zzip', 'boost_filesystem-mt', 'xerces-c'],
 	CCFLAGS='-Wall -Wextra -pedantic-errors'
 )
