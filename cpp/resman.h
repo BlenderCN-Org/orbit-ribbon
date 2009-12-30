@@ -63,10 +63,12 @@ class OrePackage : boost::noncopyable {
 		std::vector<boost::shared_ptr<OrePackage> > base_pkgs;
 		ZZIP_DIR* zzip_h;
 		
-		friend class OreFileHandle;
-		
-	public:
 		OrePackage(const boost::filesystem::path& p);
+		
+		friend class OreFileHandle;
+		friend class ResMan; // Only ResMan can construct OrePackages, since all OrePackages must be owned by shared_ptrs
+	public:
+		
 		~OrePackage();
 		
 		boost::shared_ptr<OreFileHandle> get_fh(const std::string& name);
