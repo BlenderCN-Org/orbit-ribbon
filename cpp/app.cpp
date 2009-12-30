@@ -77,7 +77,7 @@ void App::run(const std::vector<std::string>& args) {
 	try {
 		Display::_init();
 		Sim::_init();
-		ResMan::_init("orefiles/main.ore"); // FIXME
+		ResMan::_init("main.ore");
 	} catch (GameException e) {
 		Debug::error_msg(std::string("Uncaught exception during init: ") + e.get_msg());
 		return;

@@ -31,22 +31,37 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <zzip/zzip.h>
 
 #include "autoxsd/orepkgdesc.h"
+#include "except.h"
+
+class OreException : public GameException {
+	public:
+		OreException(const std::string& msg) : GameException(msg) {}
+};
 
 class OrePackage;
 class OreFileHandle;
 
 class OreFileHandle : boost::noncopyable {
 	private:
+		ZZIP_FILE* fp;
 		boost::shared_ptr<OrePackage> origin;
-		OreFileHandle(OrePackage& pkg, const std::string& name);
+		
+		OreFileHandle(OrePackage& pkg, const std::string& name, bool dont_own_origin);
+		
+		friend class OrePackage;
 	
 	public:
+		unsigned int read(char* buf, unsigned int len);
+		void rewind();
+		
 		~OreFileHandle();
 };
 
 class OrePackage : boost::noncopyable {
 	private:
+		boost::filesystem::path path;
 		std::vector<boost::shared_ptr<OrePackage> > base_pkgs;
+		ZZIP_DIR* zzip_h;
 		
 		friend class OreFileHandle;
 		
@@ -66,9 +81,11 @@ class ResMan {
 		static boost::shared_ptr<OreFileHandle> get_fh(const std::string& name);
 		
 	private:
+		// Initializes the resource manager with the given ORE package
+		// Supply a full path or else a filename to look for in the standard locations
 		// Can be called again in order to switch to a different top ORE package
 		// But before doing so, make sure all OreFileHandles are closed!
-		static void _init(const boost::filesystem::path& top_ore_package_path);
+		static void _init(const std::string& top_ore_package_name);
 		
 		friend class App;
 };

@@ -27,7 +27,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 class Debug {
 	public:
+		static void debug_msg(const std::string& msg);
 		static void error_msg(const std::string& msg);
+		static void status_msg(const std::string& msg);
 };
 
 #endif
