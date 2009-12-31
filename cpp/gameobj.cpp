@@ -106,8 +106,15 @@ std::string GameObj::to_str() const {
 
 void GameObj::draw(bool near) {
 	GLOOPushedMatrix pm;
+	
 	glTranslatef(pos.x, pos.y, pos.z);
-	// FIXME : Apply rotation matrix here
+	GLfloat rotMatr[16] = {  // Pad out with 4th row and column for OpenGL
+		rot[0], rot[1], rot[2], 0,
+		rot[3], rot[4], rot[5], 0,
+		rot[6], rot[7], rot[8], 0,
+		     0,      0,      0, 1
+	};
+	glMultMatrixf(rotMatr);
 	
 	if (near) {
 		near_draw_impl();
