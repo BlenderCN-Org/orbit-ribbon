@@ -38,4 +38,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 // Space separated list of key names to ignore in the input module because they cause problems
 #define IGNORE_KEYS "[-] numlock"
 
+// How many bytes to load from ORE files in each chunk
+#define ORE_CHUNK_SIZE 4096
+
 #endif

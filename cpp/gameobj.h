@@ -33,7 +33,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 class GameObj : boost::noncopyable {
 	public:
 		GameObj(const Point& npos, const boost::array<GLfloat, 9>& nrot);
-		~GameObj();
+		virtual ~GameObj();
 		
 		const Point& get_pos() const { return pos; }
 		void set_pos(const Point& npos);

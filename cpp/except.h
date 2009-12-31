@@ -23,11 +23,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_EXCEPT_H
 
 #include <string>
+#include <exception>
 
-class GameException {
+class GameException : public std::exception {
 	public:
 		GameException(const std::string& msg) : _msg(msg) {}
-		std::string get_msg() { return _msg; }
+		virtual ~GameException() throw() {}
+		std::string get_msg() const { return _msg; }
 	
 	private:
 		std::string _msg;
@@ -36,6 +38,7 @@ class GameException {
 class GameQuitException : public GameException {
 	public:
 		GameQuitException(const std::string& msg) : GameException(msg) {}
+		virtual ~GameQuitException() throw() {}
 };
 
 #endif

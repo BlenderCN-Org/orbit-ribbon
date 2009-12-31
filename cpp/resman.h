@@ -26,6 +26,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
+#include <istream>
 #include <string>
 #include <vector>
 #include <zzip/zzip.h>
@@ -36,12 +37,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 class OreException : public GameException {
 	public:
 		OreException(const std::string& msg) : GameException(msg) {}
+		virtual ~OreException() throw() {}
 };
 
 class OrePackage;
 class OreFileHandle;
 
-class OreFileHandle : boost::noncopyable {
+class OreFileHandle : boost::noncopyable, public std::istream {
 	private:
 		ZZIP_FILE* fp;
 		boost::shared_ptr<OrePackage> origin;
@@ -53,6 +55,7 @@ class OreFileHandle : boost::noncopyable {
 	public:
 		unsigned int read(char* buf, unsigned int len);
 		void rewind();
+		void append_to_string(std::string& tgt);
 		
 		~OreFileHandle();
 };
@@ -62,6 +65,7 @@ class OrePackage : boost::noncopyable {
 		boost::filesystem::path path;
 		std::vector<boost::shared_ptr<OrePackage> > base_pkgs;
 		ZZIP_DIR* zzip_h;
+		boost::shared_ptr<ORE1::PkgDescType> pkg_desc;
 		
 		OrePackage(const boost::filesystem::path& p);
 		

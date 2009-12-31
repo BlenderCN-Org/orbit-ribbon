@@ -29,9 +29,11 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include "constants.h"
 #include "debug.h"
 #include "except.h"
 #include "resman.h"
+#include "autoxsd/orepkgdesc.h"
 
 std::vector<boost::filesystem::path> loaded_ore_package_paths;
 boost::shared_ptr<OrePackage> top_ore_package;
@@ -55,6 +57,14 @@ unsigned int OreFileHandle::read(char* buf, unsigned int len) {
 
 void OreFileHandle::rewind() {
 	zzip_seek(fp, 0, SEEK_SET);
+}
+
+void OreFileHandle::append_to_string(std::string& tgt) {
+	char buf[ORE_CHUNK_SIZE];
+	unsigned int len;
+	while ((len = read(buf, ORE_CHUNK_SIZE))) {
+		tgt.append(buf, len);
+	}
 }
 
 OreFileHandle::~OreFileHandle() {
@@ -86,8 +96,11 @@ OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
 			throw OreException("Unable to read from ore-version file within ORE package");
 		}
 		
+		OreFileHandle pdesc_fh(*this, "ore-desc", true);
+		pkg_desc = boost::shared_ptr<ORE1::PkgDescType>(ORE1::pkgDesc(pdesc_fh, "ore-desc"));
+		
 		loaded_ore_package_paths.push_back(p);
-	} catch (OreException e) {
+	} catch (const std::exception& e) {
 		zzip_dir_close(zzip_h);
 		throw e;
 	}
@@ -101,6 +114,7 @@ OrePackage::~OrePackage() {
 }
 
 boost::shared_ptr<OreFileHandle> OrePackage::get_fh(const std::string& name) {
+	// TODO Implement looking in other OrePackages for files not found in this one ("base packages")
 	return boost::shared_ptr<OreFileHandle>(new OreFileHandle(*this, name, false));
 }
 
@@ -132,8 +146,8 @@ void ResMan::_init(const std::string& top_ore_package_name) {
 			loaded = true;
 			Debug::status_msg("Loaded ORE package '" + top_ore_package_name + "' from location " + p.string());
 			break;
-		} catch (OreException) {
-			Debug::status_msg("Unable to load ORE package '" + top_ore_package_name + "' from location " + p.string());
+		} catch (const OreException& e) {
+			Debug::status_msg("Unable to load ORE package '" + top_ore_package_name + "' from location " + p.string() + " : " + e.get_msg());
 			continue;
 		}
 	}
