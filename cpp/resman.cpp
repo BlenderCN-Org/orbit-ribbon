@@ -114,7 +114,7 @@ OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
 		}
 		
 		OreFileHandle pdesc_fh(*this, "ore-desc", true);
-		pkg_desc = boost::shared_ptr<ORE1::PkgDescType>(ORE1::pkgDesc(pdesc_fh, "ore-desc"));
+		pkg_desc = boost::shared_ptr<ORE1::PkgDescType>(ORE1::pkgDesc(pdesc_fh, "ore-desc", xsd::cxx::tree::flags::dont_validate));
 		
 		loaded_ore_package_paths.push_back(p);
 	} catch (const std::exception& e) {
