@@ -183,8 +183,7 @@ def do_export():
 	def schema_load(sname):
 		return lxml.etree.XMLSchema(lxml.etree.parse(os.path.join(WORKING_DIR, os.path.pardir, "xml", sname)))
 	descSchema = schema_load("orepkgdesc.xsd")
-	#meshSchema = schema_load("oremesh.xsd")
-	#animationSchema = schema_load("oreanimation.xsd")
+	#animSchema = schema_load("oreanim.xsd")
 	
 	Blender.Window.DrawProgressBar(0.0, "Initializing export")
 	
@@ -219,11 +218,11 @@ def do_export():
 			if name.endswith("-Base"):
 				# Area base scene: write all non-TestLamp BASE objects to the Area node
 				filt = lambda n: True if (n.startswith("BASE") and not ("TestLamp") in n) else False
-				tgt = descDoc.xpath("area[@name='%s']" % (name[:3]))[0] # Use the 'A##' name
+				tgt = descDoc.xpath("area[@n='%u']" % (int(name[1:3])))[0] # Use the 'A##' name
 			else:
 				# Mission scene: write all non-BASE objects (whether LIB or not) to the Mission node under the Area node
 				filt = lambda n: True if not n.startswith("BASE") else False
-				tgt = descDoc.xpath("area[@name='%s']/mission[@name='%s']" % (name[:3], name[4:]))[0] # Use the 'A##' and 'M##' names
+				tgt = descDoc.xpath("area[@n='%u']/mission[@n='%u']" % (int(name[1:3]), int(name[5:])))[0] # Use the 'A##' and 'M##' names
 			
 			for obj in scene.objects:
 				if not filt(obj.name):
@@ -278,12 +277,15 @@ def do_export():
 	progressInc = (1.0 - progress)/(len(bpy.data.objects) + len(bpy.data.actions))
 	
 	for mesh in bpy.data.meshes:
+		# Export each simple mesh as a 1-frame animation
 		Blender.Window.DrawProgressBar(progress, "Exporting object meshes and images")
 		progress += progressInc
-		meshNode = lxml.etree.Element(ORE_NS_PREFIX + "mesh", nsmap=NSMAP)
+		
+		animNode = lxml.etree.Element(ORE_NS_PREFIX + "animation", name=mesh.name, nsmap=NSMAP)
+		meshNode = lxml.etree.SubElement(animNode, "frame")
 		populateMeshNode(meshNode, mesh)
-		#meshSchema.assertValid(meshNode)
-		zfh.writestr("mesh-%s" % mesh.name, lxml.etree.tostring(meshNode, xml_declaration=True))
+		#animSchema.assertValid(animNode)
+		zfh.writestr("mesh-%s" % mesh.name, lxml.etree.tostring(animNode, xml_declaration=True))
 	
 	for action in bpy.data.actions:
 		if not action.name.startswith("LIB"):
@@ -307,8 +309,8 @@ def do_export():
 		
 		orig_action.setActive(bpy.data.objects[arm_name]) # Restore the saved action
 		
-		#animationSchema.assertValid(animNode)
-		zfh.writestr("animation-%s" % action.name, lxml.etree.tostring(animNode, xml_declaration=True))
+		#animSchema.assertValid(animNode)
+		zfh.writestr("action-%s" % action.name, lxml.etree.tostring(animNode, xml_declaration=True))
 	
 	Blender.Window.DrawProgressBar(1.0, "Closing ORE file")
 	zfh.close()

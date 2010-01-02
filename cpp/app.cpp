@@ -77,9 +77,12 @@ void App::run(const std::vector<std::string>& args) {
 	try {
 		Display::_init();
 		Sim::_init();
-		ResMan::_init("main.ore");
-	} catch (const GameException& e) {
-		Debug::error_msg(std::string("Uncaught exception during init: ") + e.get_msg());
+		ResMan::_init("main.ore"); // TODO Allow user-selectable ORE file
+		
+		// TODO Use a menu and/or command-line arguments to select mission and area
+		load_mission(1, 1);
+	} catch (const std::exception& e) {
+		Debug::error_msg(std::string("Uncaught exception during init: ") + e.what());
 		return;
 	}
 	
@@ -87,8 +90,11 @@ void App::run(const std::vector<std::string>& args) {
 		frame_loop();
 	} catch (const GameQuitException& e) {
 		return;
-	} catch (const GameException& e) {
-		Debug::error_msg(std::string("Uncaught exception during run: ") + e.get_msg());
+	} catch (const std::exception& e) {
+		Debug::error_msg(std::string("Uncaught exception during run: ") + e.what());
 		return;
 	}
+}
+
+void App::load_mission(unsigned int area, unsigned int mission) {
 }

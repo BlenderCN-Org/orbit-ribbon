@@ -1,5 +1,6 @@
 /*
-globals.h: Header for game-wide globals
+mesh.cpp: Implementation for mesh and animation classes.
+This module handles loading and displaying meshes, animations, and textures
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 
@@ -19,21 +20,21 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
-#ifndef ORBIT_RIBBON_GLOBALS_H
-#define ORBIT_RIBBON_GLOBALS_H
+#include <string>
+#include <boost/shared_ptr.hpp>
 
-#include <SDL/SDL.h>
-#include <GL/gl.h>
-#include <vector>
-#include <boost/ptr_container/ptr_vector.hpp>
+#include "autoxsd/oreanim-pskel.h"
+#include "cache.h"
+#include "mesh.h"
+#include "resman.h"
 
-class GameObj;
-
-class Globals {
-	public:
-		static std::vector<SDL_Event> frame_events;
-		static GLint total_steps;
-		static boost::ptr_vector<GameObj> gameobjs;
+class MeshAnimationCache : public CacheBase<MeshAnimation> {
+	boost::shared_ptr<MeshAnimation> generate(const std::string& id) {
+	}
 };
 
-#endif
+MeshAnimationCache mesh_animation_cache;
+
+boost::shared_ptr<MeshAnimation> MeshAnimation::create(const std::string& name) {
+	return mesh_animation_cache.get(name);
+}

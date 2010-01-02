@@ -23,6 +23,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <algorithm>
 #include <vector>
 #include <string>
+#include <memory>
 #include <zzip/zzip.h>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
@@ -68,10 +69,12 @@ int OreFileHandle::OFHStreamBuf::underflow() {
 	}
 }
 
-OreFileHandle::OreFileHandle(OrePackage& pkg, const std::string& name, bool dont_own_origin) :
-	std::istream(&sb) 
+OreFileHandle::OreFileHandle(const OrePackage& pkg, const std::string& name, bool dont_own_origin) :
+	std::istream(&sb)
 {
 	sb.set_ofh(*this);
+	
+	exceptions(std::istream::badbit | std::istream::failbit); // Have istream throw an exception if it has any problems
 	
 	// This is a stupid hack to allow OreFileHandles to be used and safely destroyed within the constructor of OrePackage
 	// Without it in that scenario, when the origin smart pointer is destroyed, it attempts to destruct an incomplete OrePackage
@@ -130,17 +133,17 @@ OrePackage::~OrePackage() {
 	loaded_ore_package_paths.erase(std::find(loaded_ore_package_paths.begin(), loaded_ore_package_paths.end(), path));
 }
 
-boost::shared_ptr<OreFileHandle> OrePackage::get_fh(const std::string& name) {
+boost::shared_ptr<OreFileHandle> OrePackage::get_fh(const std::string& name) const {
 	// TODO Implement looking in other OrePackages for files not found in this one ("base packages")
 	return boost::shared_ptr<OreFileHandle>(new OreFileHandle(*this, name, false));
 }
 
-boost::shared_ptr<OreFileHandle> ResMan::get_fh(const std::string& name) {
+const OrePackage& ResMan::pkg() {
 	if (!top_ore_package) {
-		throw OreException("Attempted to get filehandle from uninitialized ResMan");
+		throw OreException("Attempted to get pkg from uninitialized ResMan");
 	}
 	
-	return top_ore_package->get_fh(name);
+	return *top_ore_package;
 }
 
 std::vector<boost::filesystem::path> ore_pkg_std_locations; // Standard directories to look for ORE files in

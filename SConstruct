@@ -108,7 +108,7 @@ env['BUILDERS']['XSDParser'] = Builder(
 )
 
 tree_xsds = ['orepkgdesc']
-parser_xsds = ['oreanimation', 'oremeshtype', 'oremesh']
+parser_xsds = ['oreanim']
 xsd_cpp_dir = 'cpp/autoxsd/'
 
 tree_built = env.XSDTree(

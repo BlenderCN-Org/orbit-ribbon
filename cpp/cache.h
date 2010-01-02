@@ -1,6 +1,6 @@
 /*
-app.h: Header of the App class
-App is responsible for the main frame loop and calling all the other parts of the program.
+cache.h: Header and implementation for cache base class.
+Provides a mechanism to allow re-using objects which have already been loaded.
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 
@@ -20,21 +20,32 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
-#ifndef ORBIT_RIBBON_APP_H
-#define ORBIT_RIBBON_APP_H
+#ifndef ORBIT_RIBBON_CACHE_H
+#define ORBIT_RIBBON_CACHE_H
 
 #include <string>
-#include <vector>
+#include <boost/unordered_map.hpp>
+#include <boost/weak_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 
-class App {
-	public:
-		static void run(const std::vector<std::string>& arguments);
-		
-		// To just load the base objects for an area, specify 0 for mission
-		static void load_mission(unsigned int area, unsigned int mission);
-		
+template<typename T> class CacheBase {
 	private:
-		static void frame_loop();
+		typedef boost::unordered_map<std::string, boost::weak_ptr<T> > CacheMap;
+		CacheMap _cache;
+		
+	public:
+		virtual boost::shared_ptr<T> generate(const std::string& id) =0;
+		
+		boost::shared_ptr<T> get(const std::string& id) {
+			boost::weak_ptr<T>& p = _cache[id];
+			if (p.expired()) {
+				boost::shared_ptr<T> gen = generate(id);
+				p = gen;
+				return gen;
+			} else {
+				return p.lock();
+			}
+		}
 };
 
 #endif

@@ -33,6 +33,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "autoxsd/orepkgdesc.h"
 #include "except.h"
+#include "constants.h"
 
 class OreException : public GameException {
 	public:
@@ -43,6 +44,7 @@ class OreException : public GameException {
 class OrePackage;
 class OreFileHandle;
 
+// Allows you to read information from a particular file in an ORE package
 class OreFileHandle : boost::noncopyable, public std::istream {
 	private:
 		class OFHStreamBuf : public std::streambuf {
@@ -62,20 +64,19 @@ class OreFileHandle : boost::noncopyable, public std::istream {
 		};
 		
 		ZZIP_FILE* fp;
-		boost::shared_ptr<OrePackage> origin;
+		boost::shared_ptr<const OrePackage> origin;
 		OFHStreamBuf sb;
 		
-		OreFileHandle(OrePackage& pkg, const std::string& name, bool dont_own_origin);
+		OreFileHandle(const OrePackage& pkg, const std::string& name, bool dont_own_origin);
 		
 		friend class OFHStreamBuf;
 		friend class OrePackage;
 	
-	public:
-		unsigned int read(char* buf, unsigned int len);
-		
-		~OreFileHandle();
+	public:	
+		virtual ~OreFileHandle();
 };
 
+// Represents an opened ORE package
 class OrePackage : boost::noncopyable {
 	private:
 		boost::filesystem::path path;
@@ -88,10 +89,10 @@ class OrePackage : boost::noncopyable {
 		friend class OreFileHandle;
 		friend class ResMan; // Only ResMan can construct OrePackages, since all OrePackages must be owned by shared_ptrs
 	public:
-		
 		~OrePackage();
 		
-		boost::shared_ptr<OreFileHandle> get_fh(const std::string& name);
+		boost::shared_ptr<OreFileHandle> get_fh(const std::string& name) const;
+		const ORE1::PkgDescType& get_pkg_desc() const { return *pkg_desc; }
 };
 
 class App;
@@ -99,8 +100,7 @@ class App;
 // Resource management
 class ResMan {
 	public:
-		// Returns an OreFileHandle from the current ORE package
-		static boost::shared_ptr<OreFileHandle> get_fh(const std::string& name);
+		static const OrePackage& pkg();
 		
 	private:
 		// Initializes the resource manager with the given ORE package
