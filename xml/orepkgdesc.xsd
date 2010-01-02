@@ -26,7 +26,9 @@
 		</xsd:documentation>
 	</xsd:annotation>
 	
-	<xsd:element name="pkgDesc" type="PkgDescType"/>
+	<!-- TODO Enforce uniqueness among area numbers, and among mission numbers within an area -->
+	
+	<xsd:element name="pkgDesc" type="PkgDescType" />
 	
 	<xsd:complexType name="PkgDescType">
 		<xsd:sequence>
@@ -43,7 +45,7 @@
 			<xsd:element name="mission" minOccurs="0" maxOccurs="unbounded" type="MissionType" />
 			<xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />
 		</xsd:sequence>
-		<xsd:attribute name="name" type="xsd:string" />
+		<xsd:attribute name="n" type="xsd:unsignedInt" />
 	</xsd:complexType>
 	
 	<xsd:complexType name="SkySettingsType">
@@ -65,7 +67,7 @@
 			<xsd:element name="timerStartFunc" type="xsd:string" />
 			<xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />
 		</xsd:sequence>
-		<xsd:attribute name="name" type="xsd:string" />
+		<xsd:attribute name="n" type="xsd:unsignedInt" />
 	</xsd:complexType>
 	
 	<xsd:complexType name="ObjType">
