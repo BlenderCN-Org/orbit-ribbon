@@ -45,17 +45,33 @@ class OreFileHandle;
 
 class OreFileHandle : boost::noncopyable, public std::istream {
 	private:
+		class OFHStreamBuf : public std::streambuf {
+			private:
+				char _in_buf[ORE_CHUNK_SIZE];
+				OreFileHandle* _ofhp;
+				
+				void _reset_sptrs(unsigned int len);
+			
+			public:
+				OFHStreamBuf();
+				
+				void set_ofh(OreFileHandle& ofh);
+			
+			protected:
+				int underflow();
+		};
+		
 		ZZIP_FILE* fp;
 		boost::shared_ptr<OrePackage> origin;
+		OFHStreamBuf sb;
 		
 		OreFileHandle(OrePackage& pkg, const std::string& name, bool dont_own_origin);
 		
+		friend class OFHStreamBuf;
 		friend class OrePackage;
 	
 	public:
 		unsigned int read(char* buf, unsigned int len);
-		void rewind();
-		void append_to_string(std::string& tgt);
 		
 		~OreFileHandle();
 };

@@ -38,7 +38,41 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 std::vector<boost::filesystem::path> loaded_ore_package_paths;
 boost::shared_ptr<OrePackage> top_ore_package;
 
-OreFileHandle::OreFileHandle(OrePackage& pkg, const std::string& name, bool dont_own_origin) {
+void OreFileHandle::OFHStreamBuf::_reset_sptrs(unsigned int len) {
+	setg(&(_in_buf[0]), &(_in_buf[0]), &(_in_buf[0]) + len);
+}
+
+OreFileHandle::OFHStreamBuf::OFHStreamBuf() {
+	_reset_sptrs(0);
+}
+
+void OreFileHandle::OFHStreamBuf::set_ofh(OreFileHandle& ofh) {
+	_ofhp = &ofh;
+}
+
+int OreFileHandle::OFHStreamBuf::underflow() {
+	if (gptr() < egptr()) {
+		return *gptr();
+	}
+	
+	if (_ofhp == 0) {
+		throw OreException("Attempted to read from uninitialized OFHStreamBuf");
+	}
+	
+	unsigned int read_amt = zzip_file_read(_ofhp->fp, &_in_buf, ORE_CHUNK_SIZE);
+	_reset_sptrs(read_amt);
+	if (read_amt == 0) {
+		return std::char_traits<char>::eof();
+	} else {
+		return sgetc();
+	}
+}
+
+OreFileHandle::OreFileHandle(OrePackage& pkg, const std::string& name, bool dont_own_origin) :
+	std::istream(&sb) 
+{
+	sb.set_ofh(*this);
+	
 	// This is a stupid hack to allow OreFileHandles to be used and safely destroyed within the constructor of OrePackage
 	// Without it in that scenario, when the origin smart pointer is destroyed, it attempts to destruct an incomplete OrePackage
 	if (!dont_own_origin) {
@@ -48,22 +82,6 @@ OreFileHandle::OreFileHandle(OrePackage& pkg, const std::string& name, bool dont
 	fp = zzip_file_open(pkg.zzip_h, name.c_str(), 0);
 	if (!fp) {
 		throw OreException("Unable to open file " + name + " from ORE package");
-	}
-}
-
-unsigned int OreFileHandle::read(char* buf, unsigned int len) {
-	return zzip_file_read(fp, buf, len);
-}
-
-void OreFileHandle::rewind() {
-	zzip_seek(fp, 0, SEEK_SET);
-}
-
-void OreFileHandle::append_to_string(std::string& tgt) {
-	char buf[ORE_CHUNK_SIZE];
-	unsigned int len;
-	while ((len = read(buf, ORE_CHUNK_SIZE))) {
-		tgt.append(buf, len);
 	}
 }
 
@@ -85,15 +103,14 @@ OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
 	
 	try {
 		OreFileHandle fh(*this, "ore-version", true);
-		char buf[16];
-		unsigned int len = fh.read(buf, 16);
-		if (len) {
-			std::string ver(buf, len);
-			if (ver != "1") {
-				throw OreException("ORE package has unrecognized version '" + ver + "'. Update your copy of Orbit Ribbon!");
-			}
-		} else {
-			throw OreException("Unable to read from ore-version file within ORE package");
+		int ver;
+		fh >> ver;
+		if (ver != 1) {
+			throw OreException(
+				std::string("Unrecognized ORE package version '") +
+				boost::lexical_cast<std::string>(ver) +
+				"'. Update your copy of Orbit Ribbon!"
+			);
 		}
 		
 		OreFileHandle pdesc_fh(*this, "ore-desc", true);
@@ -102,7 +119,7 @@ OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
 		loaded_ore_package_paths.push_back(p);
 	} catch (const std::exception& e) {
 		zzip_dir_close(zzip_h);
-		throw e;
+		throw OreException(std::string("Error while opening ORE package : ") + e.what());
 	}
 	
 	// TODO Implement looking in other OrePackages for files not found in this one ("base packages")

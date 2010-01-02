@@ -29,7 +29,8 @@ class GameException : public std::exception {
 	public:
 		GameException(const std::string& msg) : _msg(msg) {}
 		virtual ~GameException() throw() {}
-		std::string get_msg() const { return _msg; }
+		std::string get_msg() const throw() { return _msg; }
+		const char* what() const throw() { return _msg.c_str(); }
 	
 	private:
 		std::string _msg;
