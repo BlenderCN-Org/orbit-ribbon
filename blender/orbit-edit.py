@@ -240,6 +240,16 @@ def do_export():
 	
 	copiedImages = set() # Set of image names that have already been copied into the zipfile
 	def populateMeshNode(meshNode, mesh):
+		# First pass: count the number of tri-meshes
+		faceCount = 0
+		for f in mesh.faces:
+			if len(f.verts) != 3:
+				faceCount += 2
+			else:
+				faceCount += 1
+		meshNode.set("facecount", str(faceCount))
+		
+		# Second pass: insert the mesh data into the XML node structure
 		for f in mesh.faces:
 			imgName = None
 			try:

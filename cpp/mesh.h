@@ -25,25 +25,45 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <string>
 #include <vector>
+#include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 
-class Mesh;
-class MeshAnimation;
+#include "gloo.h"
 
-class Mesh : boost::noncopyable {
-	private:
-		Mesh() {}
-		friend class MeshAnimation;
-};
+class MeshAnimation;
+class _AnimationParser;
+class _Mesh;
+class _MeshParser;
 
 class MeshAnimation : boost::noncopyable {
 	private:
-		std::vector<boost::shared_ptr<Mesh> > frames;
+		std::vector<boost::shared_ptr<_Mesh> > frames;
+		std::string name;
+		
 		MeshAnimation() {}
+		
+		friend class _MeshAnimationParser;
 	
 	public:
 		static boost::shared_ptr<MeshAnimation> create(const std::string& name);
+		
+		const std::string& get_name() { return name; }
+};
+
+class _Mesh : boost::noncopyable {
+	private:
+		struct _Facelist {
+			boost::shared_ptr<GLOOTexture> tex;
+			GLuint face_count;
+		};
+		std::vector<_Facelist> facelists;
+		boost::scoped_ptr<GLOOVertexBuffer> vbuf;
+		
+		_Mesh() {}
+		
+		friend class MeshAnimation;
+		friend class _MeshParser;
 };
 
 #endif

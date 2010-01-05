@@ -28,8 +28,58 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "mesh.h"
 #include "resman.h"
 
+class _MeshAnimationParser : public ORE1::AnimationType_pskel {
+	private:
+		MeshAnimation* _anim_p;
+	
+	public:
+		_MeshAnimationParser() : _anim_p(0) {}
+		
+		void pre() {
+			_anim_p = new MeshAnimation();
+		}
+		
+		void frame() {
+		}
+		
+		void name(const std::string& n) {
+			_anim_p->name = n;
+		}
+		
+		MeshAnimation* post_AnimationType() {
+			return _anim_p;
+		}
+};
+
+class _MeshParser : public ORE1::MeshType_pskel {
+};
+
+class _FacelistParser : public ORE1::FacelistType_pskel {
+};
+
+class _FaceParser : public ORE1::FaceType_pskel {
+};
+
+class _VertexParser : public ORE1::VertexType_pskel {
+};
+
+class _FloatListParser : public ORE1::FloatListType_pskel {
+};
+
 class MeshAnimationCache : public CacheBase<MeshAnimation> {
 	boost::shared_ptr<MeshAnimation> generate(const std::string& id) {
+		boost::shared_ptr<OreFileHandle> fh = ResMan::pkg().get_fh(std::string(id));
+		
+		// Build the parser framework
+		xml_schema::string_pimpl string_parser;
+		_MeshAnimationParser anim_parser;
+		//anim_parser.parsers(0, string_parser);
+		
+		// Parse the XML data
+		xml_schema::document doc_p(anim_parser, "animation");
+		anim_parser.pre();
+		doc_p.parse(*fh, xsd::cxx::parser::xerces::flags::dont_validate);
+		return boost::shared_ptr<MeshAnimation>(anim_parser.post_AnimationType());
 	}
 };
 

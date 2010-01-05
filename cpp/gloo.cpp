@@ -21,12 +21,15 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <string>
 #include <sstream>
+#include <GL/glew.h>
 #include <GL/gl.h>
+#include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 
 #include "cache.h"
+#include "debug.h"
 #include "except.h"
 #include "gloo.h"
 #include "resman.h"
@@ -52,12 +55,15 @@ boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
 		boost::shared_ptr<OreFileHandle> fh = ResMan::pkg().get_fh(std::string("image-") + id);
 		std::stringstream raw;
 		(*fh) >> raw.rdbuf();
-		
 		SDL_RWops* sdl_raw = SDL_RWFromConstMem(raw.str().data(), raw.str().size());
 		SDLSurf surf(IMG_Load_RW(sdl_raw, 0));
+		tex->width = surf.s->w;
+		tex->height = surf.s->h;
+		Debug::debug_msg("BYTES PER PIXEL: " + boost::lexical_cast<std::string>(surf.s->format->BytesPerPixel));
 		
 		try {
 			glGenTextures(1, &(tex->_tex_name));
+			
 		} catch (const std::exception& e) {
 			glDeleteTextures(1, &(tex->_tex_name));
 			throw e;
@@ -77,4 +83,16 @@ boost::shared_ptr<GLOOTexture> GLOOTexture::create(const std::string& name) {
 
 GLOOTexture::~GLOOTexture() {
 	glDeleteTextures(1, &_tex_name);
+}
+
+GLOOVertexBuffer::GLOOVertexBuffer(GLfloat* data, GLuint elements) {
+	glGenBuffers(1, &_buf_name);
+}
+
+boost::shared_ptr<GLOOVertexBuffer> GLOOVertexBuffer::create(GLfloat* data, GLuint elements) {
+	return boost::shared_ptr<GLOOVertexBuffer>(new GLOOVertexBuffer(data, elements));
+}
+
+GLOOVertexBuffer::~GLOOVertexBuffer() {
+	glDeleteBuffers(1, &_buf_name);
 }

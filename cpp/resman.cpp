@@ -69,18 +69,11 @@ int OreFileHandle::OFHStreamBuf::underflow() {
 	}
 }
 
-OreFileHandle::OreFileHandle(const OrePackage& pkg, const std::string& name, bool dont_own_origin) :
+OreFileHandle::OreFileHandle(const OrePackage& pkg, const std::string& name) :
 	std::istream(&sb)
 {
 	sb.set_ofh(*this);
-	
 	exceptions(std::istream::badbit | std::istream::failbit); // Have istream throw an exception if it has any problems
-	
-	// This is a stupid hack to allow OreFileHandles to be used and safely destroyed within the constructor of OrePackage
-	// Without it in that scenario, when the origin smart pointer is destroyed, it attempts to destruct an incomplete OrePackage
-	if (!dont_own_origin) {
-		origin.reset(&pkg);
-	}
 	
 	fp = zzip_file_open(pkg.zzip_h, name.c_str(), 0);
 	if (!fp) {
@@ -105,7 +98,7 @@ OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
 	}
 	
 	try {
-		OreFileHandle fh(*this, "ore-version", true);
+		OreFileHandle fh(*this, "ore-version");
 		int ver;
 		fh >> ver;
 		if (ver != 1) {
@@ -116,7 +109,7 @@ OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
 			);
 		}
 		
-		OreFileHandle pdesc_fh(*this, "ore-desc", true);
+		OreFileHandle pdesc_fh(*this, "ore-desc");
 		pkg_desc = boost::shared_ptr<ORE1::PkgDescType>(ORE1::pkgDesc(pdesc_fh, "ore-desc", xsd::cxx::tree::flags::dont_validate));
 		
 		loaded_ore_package_paths.push_back(p);
@@ -135,7 +128,7 @@ OrePackage::~OrePackage() {
 
 boost::shared_ptr<OreFileHandle> OrePackage::get_fh(const std::string& name) const {
 	// TODO Implement looking in other OrePackages for files not found in this one ("base packages")
-	return boost::shared_ptr<OreFileHandle>(new OreFileHandle(*this, name, false));
+	return boost::shared_ptr<OreFileHandle>(new OreFileHandle(*this, name));
 }
 
 const OrePackage& ResMan::pkg() {

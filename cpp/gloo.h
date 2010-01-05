@@ -23,13 +23,14 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_GLOO_H
 
 #include <boost/shared_ptr.hpp>
+#include <boost/utility.hpp>
 #include <string>
 #include <GL/gl.h>
 
 #include "cache.h"
 #include "geometry.h"
 
-class GLOOPushedMatrix {
+class GLOOPushedMatrix : boost::noncopyable {
 	public:
 		GLOOPushedMatrix();
 		~GLOOPushedMatrix();
@@ -41,10 +42,10 @@ class _TextureCache : public CacheBase<GLOOTexture> {
 	boost::shared_ptr<GLOOTexture> generate(const std::string& id);
 };
 
-class GLOOTexture {
+class GLOOTexture : boost::noncopyable {
 	private:
 		GLuint _tex_name;
-		Size _size;
+		GLuint width, height;
 		
 		GLOOTexture() {}
 		
@@ -54,6 +55,17 @@ class GLOOTexture {
 		static boost::shared_ptr<GLOOTexture> create(const std::string& name);
 		
 		virtual ~GLOOTexture();
+};
+
+class GLOOVertexBuffer : boost::noncopyable {
+	private:
+		GLuint _buf_name;
+		GLOOVertexBuffer(GLfloat* data, GLuint count);
+	
+	public:
+		static boost::shared_ptr<GLOOVertexBuffer> create(GLfloat* data, GLuint count);
+		
+		virtual ~GLOOVertexBuffer();
 };
 
 #endif

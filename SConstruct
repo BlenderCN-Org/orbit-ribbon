@@ -32,7 +32,7 @@ def build_xsd(mode, source, target, env):
 		args.extend(["--generate-doxygen"])
 		args.extend(["--generate-serialization"])
 	elif mode == 'cxx-parser':
-		pass
+		args.extend(["--type-map", "xml/types.map"])
 	else:
 		raise RuntimeError("build_xsd: Unknown mode %s" % mode)
 		
@@ -122,6 +122,6 @@ parser_built = env.XSDParser(
 env.Program(
 	'orbit-ribbon',
 	[b for b in (tree_built + parser_built) if str(b).endswith(".cpp")] + Glob('buildtmp/*.cpp'),
-	LIBS=['GL', 'GLU', 'ode', 'SDL', 'SDL_mixer', 'SDL_image', 'zzip', 'boost_filesystem-mt', 'xerces-c'],
+	LIBS=['GL', 'GLU', 'GLEW', 'ode', 'SDL', 'SDL_mixer', 'SDL_image', 'zzip', 'boost_filesystem-mt', 'xerces-c'],
 	CCFLAGS='-Wall -Wextra -pedantic-errors'
 )

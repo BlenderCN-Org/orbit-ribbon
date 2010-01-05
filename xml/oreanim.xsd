@@ -37,13 +37,14 @@
 	
 	<xsd:complexType name="MeshType">
 		<xsd:sequence>
-			<xsd:element name="facelist" type="FacelistType" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="facelist" type="FacelistType" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
+		<xsd:attribute name="facecount" type="xsd:unsignedInt" />
 	</xsd:complexType>
 	
 	<xsd:complexType name="FacelistType">
 		<xsd:sequence>
-			<xsd:element name="face" type="FaceType" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="face" type="FaceType" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
 		<xsd:attribute name="image" type="xsd:string" />
 	</xsd:complexType>
@@ -62,18 +63,18 @@
 		</xsd:sequence>
 	</xsd:complexType>
 	
-	<xsd:simpleType name="FloatList">
+	<xsd:simpleType name="FloatListType">
 		<xsd:list itemType="xsd:float" />
 	</xsd:simpleType>
 	
 	<xsd:simpleType name="Coord3DType">
-		<xsd:restriction base="FloatList">
+		<xsd:restriction base="FloatListType">
 			<xsd:length value='3' />
 		</xsd:restriction>
 	</xsd:simpleType>
 	
 	<xsd:simpleType name="Coord2DType">
-		<xsd:restriction base="FloatList">
+		<xsd:restriction base="FloatListType">
 			<xsd:length value='2' />
 		</xsd:restriction>
 	</xsd:simpleType>

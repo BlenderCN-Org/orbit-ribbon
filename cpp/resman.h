@@ -64,15 +64,14 @@ class OreFileHandle : boost::noncopyable, public std::istream {
 		};
 		
 		ZZIP_FILE* fp;
-		boost::shared_ptr<const OrePackage> origin;
 		OFHStreamBuf sb;
 		
-		OreFileHandle(const OrePackage& pkg, const std::string& name, bool dont_own_origin);
+		OreFileHandle(const OrePackage& pkg, const std::string& name);
 		
 		friend class OFHStreamBuf;
 		friend class OrePackage;
 	
-	public:	
+	public:
 		virtual ~OreFileHandle();
 };
 

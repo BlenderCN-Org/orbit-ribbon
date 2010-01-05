@@ -25,8 +25,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <SDL/SDL.h>
 
 #include "constants.h"
+#include "debug.h"
 #include "display.h"
 #include "except.h"
+#include "gloo.h"
 
 const GLfloat gameplay_clip_dist = 50000;
 const GLfloat sky_clip_dist = 1e12;
@@ -60,6 +62,8 @@ GLint Display::get_screen_depth() {
 	return 16;
 }
 
+boost::shared_ptr<GLOOTexture> dbg_texture; // FIXME
+
 void Display::_init() {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 	   throw GameException(std::string("Video initialization failed: ") + std::string(SDL_GetError()));
@@ -90,6 +94,8 @@ void Display::_init() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
 	_screen_resize();
+	
+	//dbg_texture = GLOOTexture::create("jungletex.png"); // FIXME
 }
 
 void Display::_screen_resize() {
@@ -113,6 +119,7 @@ void Display::_draw_frame() {
 	glLoadIdentity();
 	gluPerspective(fov, screen_ratio, 0.1, sky_clip_dist);
 	glMatrixMode(GL_MODELVIEW);
+
 	
 	// FIXME Test render
 	glPushMatrix();

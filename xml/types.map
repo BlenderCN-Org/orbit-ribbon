@@ -1,0 +1,6 @@
+namespace http://www.orbit-ribbon.org/ORE1 {
+	include "../mesh.h";
+	
+	AnimationType ::MeshAnimation*;
+	MeshType ::_Mesh*;
+}
