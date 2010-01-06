@@ -25,6 +25,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 #include <string>
+#include <SDL/SDL.h>
+#include <GL/glew.h>
 #include <GL/gl.h>
 
 #include "cache.h"
@@ -45,7 +47,7 @@ class _TextureCache : public CacheBase<GLOOTexture> {
 class GLOOTexture : boost::noncopyable {
 	private:
 		GLuint _tex_name;
-		GLuint width, height;
+		GLuint _width, _height;
 		
 		GLOOTexture() {}
 		
@@ -54,13 +56,24 @@ class GLOOTexture : boost::noncopyable {
 	public:
 		static boost::shared_ptr<GLOOTexture> create(const std::string& name);
 		
+		GLuint get_width() { return _width; }
+		GLuint get_height() { return _height; }
+		
 		virtual ~GLOOTexture();
+};
+
+struct GLOOVertex {
+	float x, y, z;
+	float nx, ny, nz;
+	float u0, v0;
+	float u1, t1;
+	float u2, t2;
 };
 
 class GLOOVertexBuffer : boost::noncopyable {
 	private:
 		GLuint _buf_name;
-		GLOOVertexBuffer(GLfloat* data, GLuint count);
+		GLOOVertexBuffer(GLfloat* vbo_data, GLuint vbo_count);
 	
 	public:
 		static boost::shared_ptr<GLOOVertexBuffer> create(GLfloat* data, GLuint count);

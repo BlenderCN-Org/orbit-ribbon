@@ -22,8 +22,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_GLOBALS_H
 #define ORBIT_RIBBON_GLOBALS_H
 
-#include <SDL/SDL.h>
+#include <GL/glew.h>
 #include <GL/gl.h>
+#include <SDL/SDL.h>
 #include <vector>
 #include <boost/ptr_container/ptr_vector.hpp>
 

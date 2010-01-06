@@ -20,6 +20,7 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
+#include <GL/glew.h>
 #include <GL/gl.h>
 #include <ode/ode.h>
 #include <boost/array.hpp>

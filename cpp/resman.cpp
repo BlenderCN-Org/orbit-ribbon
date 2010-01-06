@@ -29,6 +29,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
+#include <SDL/SDL.h>
 
 #include "constants.h"
 #include "debug.h"
@@ -38,6 +39,25 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 std::vector<boost::filesystem::path> loaded_ore_package_paths;
 boost::shared_ptr<OrePackage> top_ore_package;
+
+// Functions to allow OreFileHandle to work with SDL_RWops
+int sdl_rwops_seek(SDL_RWops* context, int offset, int whence) {
+	zzip_seek((ZZIP_FILE*)context->hidden.unknown.data1, offset, whence);
+	return zzip_tell((ZZIP_FILE*)context->hidden.unknown.data1);
+}
+
+int sdl_rwops_read(SDL_RWops* context, void* ptr, int size, int maxnum) {
+	return zzip_file_read((ZZIP_FILE*)context->hidden.unknown.data1, ptr, size*maxnum);
+}
+
+int sdl_rwops_write(SDL_RWops* context, const void* ptr, int size, int num) {
+	throw OreException("Attempted to write to ORE filehandle via SDL RWops");
+}
+
+int sdl_rwops_close(SDL_RWops* context) {
+	// Do nothing; de-initialization will occur in OreFileHandle dtor
+	return 0;
+}
 
 void OreFileHandle::OFHStreamBuf::_reset_sptrs(unsigned int len) {
 	setg(&(_in_buf[0]), &(_in_buf[0]), &(_in_buf[0]) + len);
@@ -79,6 +99,16 @@ OreFileHandle::OreFileHandle(const OrePackage& pkg, const std::string& name) :
 	if (!fp) {
 		throw OreException("Unable to open file " + name + " from ORE package");
 	}
+}
+
+SDL_RWops OreFileHandle::get_sdl_rwops() {
+	SDL_RWops ret;
+	ret.seek = &sdl_rwops_seek;
+	ret.read = &sdl_rwops_read;
+	ret.write = &sdl_rwops_write;
+	ret.close = &sdl_rwops_close;
+	ret.hidden.unknown.data1 = (void*)fp;
+	return ret;
 }
 
 OreFileHandle::~OreFileHandle() {

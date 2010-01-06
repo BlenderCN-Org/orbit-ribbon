@@ -22,8 +22,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_GEOMETRY_H
 #define ORBIT_RIBBON_GEOMETRY_H
 
+#include <GL/glew.h>
 #include <GL/gl.h>
-
 #include <string>
 
 GLfloat rev2rad(GLfloat ang); // FIXME: In old version, this also converted cw to ccw. Make sure everything that needed that does it itself!

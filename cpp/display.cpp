@@ -20,6 +20,7 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
+#include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <SDL/SDL.h>
@@ -65,6 +66,7 @@ GLint Display::get_screen_depth() {
 boost::shared_ptr<GLOOTexture> dbg_texture; // FIXME
 
 void Display::_init() {
+	// Initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 	   throw GameException(std::string("Video initialization failed: ") + std::string(SDL_GetError()));
 	}
@@ -84,6 +86,11 @@ void Display::_init() {
 		throw GameException(std::string("Video mode set failed: ") + std::string(SDL_GetError()));
 	}
 	
+	GLenum glew_err = glewInit();
+	if (glew_err != GLEW_OK) {
+		throw GameException(std::string("GLEW init failed: " ) + std::string((const char*)glewGetErrorString((glew_err))));
+	}
+	
 	glShadeModel(GL_SMOOTH);
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -95,7 +102,7 @@ void Display::_init() {
 	
 	_screen_resize();
 	
-	//dbg_texture = GLOOTexture::create("jungletex.png"); // FIXME
+	dbg_texture = GLOOTexture::create("jungletex.png"); // FIXME
 }
 
 void Display::_screen_resize() {

@@ -30,6 +30,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <string>
 #include <vector>
 #include <zzip/zzip.h>
+#include <SDL/SDL.h>
 
 #include "autoxsd/orepkgdesc.h"
 #include "except.h"
@@ -72,6 +73,8 @@ class OreFileHandle : boost::noncopyable, public std::istream {
 		friend class OrePackage;
 	
 	public:
+		SDL_RWops get_sdl_rwops(); // Do not mix SDL usage with istream usage of in one filehandle!
+		
 		virtual ~OreFileHandle();
 };
 

@@ -44,7 +44,7 @@ GLOOPushedMatrix::~GLOOPushedMatrix() {
 
 struct SDLSurf {
 	SDL_Surface* s;	
-	SDLSurf(SDL_Surface* i) : s(i) { if (!i) throw GameException("Error while loading texture surface"); }
+	SDLSurf(SDL_Surface* i) : s(i) { if (!i) throw GameException(std::string("Error while loading texture surface: ") + SDL_GetError()); }
 	~SDLSurf() { SDL_FreeSurface(s); }
 };
 
@@ -53,21 +53,25 @@ boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
 		boost::shared_ptr<GLOOTexture> tex(new GLOOTexture());
 		
 		boost::shared_ptr<OreFileHandle> fh = ResMan::pkg().get_fh(std::string("image-") + id);
-		std::stringstream raw;
-		(*fh) >> raw.rdbuf();
-		SDL_RWops* sdl_raw = SDL_RWFromConstMem(raw.str().data(), raw.str().size());
-		SDLSurf surf(IMG_Load_RW(sdl_raw, 0));
-		tex->width = surf.s->w;
-		tex->height = surf.s->h;
-		Debug::debug_msg("BYTES PER PIXEL: " + boost::lexical_cast<std::string>(surf.s->format->BytesPerPixel));
-		
-		try {
-			glGenTextures(1, &(tex->_tex_name));
-			
-		} catch (const std::exception& e) {
-			glDeleteTextures(1, &(tex->_tex_name));
-			throw e;
+		SDL_RWops sdl_rwops = fh->get_sdl_rwops();
+		SDL_Surface* surf = IMG_Load_RW(&sdl_rwops, 0);
+		if (!surf) {
+			throw OreException("Unable to create SDL surface from image data");
 		}
+		
+		// Load the texture with the image
+		tex->_width = surf->w;
+		tex->_height = surf->h;
+		/*
+		glGenTextures(1, &(tex->_tex_name));
+		glBindTexture(GL_TEXTURE_2D, tex->_tex_name);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_BGRA, GL_UNSIGNED_BYTE, img_data);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		
+		if (glGetError()) {
+			throw GameException("GL error while loading texture");
+		}
+		*/
 		
 		return tex;
 	} catch (const std::exception& e) {
