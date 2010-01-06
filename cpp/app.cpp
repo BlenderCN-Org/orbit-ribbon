@@ -76,8 +76,8 @@ void App::frame_loop() {
 
 void App::run(const std::vector<std::string>& args) {
 	try {
-		ResMan::_init("main.ore"); // TODO Allow user-selectable ORE file
 		Display::_init();
+		ResMan::_init("main.ore"); // TODO Allow user-selectable ORE file
 		Sim::_init();
 		
 		// TODO Use a menu and/or command-line arguments to select mission and area

@@ -29,7 +29,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "debug.h"
 #include "display.h"
 #include "except.h"
-#include "gloo.h"
 
 const GLfloat gameplay_clip_dist = 50000;
 const GLfloat sky_clip_dist = 1e12;
@@ -62,8 +61,6 @@ GLsizei Display::get_screen_height() {
 GLint Display::get_screen_depth() {
 	return 16;
 }
-
-boost::shared_ptr<GLOOTexture> dbg_texture; // FIXME
 
 void Display::_init() {
 	// Initialize SDL
@@ -101,8 +98,6 @@ void Display::_init() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
 	_screen_resize();
-	
-	dbg_texture = GLOOTexture::create("jungletex.png"); // FIXME
 }
 
 void Display::_screen_resize() {
