@@ -52,6 +52,7 @@ boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
 	try {
 		boost::shared_ptr<GLOOTexture> tex(new GLOOTexture());
 		
+		// Create an SDL surface from the requested ORE image file
 		boost::shared_ptr<OreFileHandle> fh = ResMan::pkg().get_fh(std::string("image-") + id);
 		SDL_RWops sdl_rwops = fh->get_sdl_rwops();
 		SDL_Surface* surf = IMG_Load_RW(&sdl_rwops, 0);
@@ -79,7 +80,7 @@ boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
 		glGenTextures(1, &(tex->_tex_name));
 		glBindTexture(GL_TEXTURE_2D, tex->_tex_name);
 		SDL_LockSurface(surf);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, img_format, GL_UNSIGNED_BYTE, surf->pixels);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA, surf->w, surf->h, 0, img_format, GL_UNSIGNED_BYTE, surf->pixels);
 		SDL_UnlockSurface(surf);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		
