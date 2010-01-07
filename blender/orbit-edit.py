@@ -183,7 +183,7 @@ def do_export():
 	def schema_load(sname):
 		return lxml.etree.XMLSchema(lxml.etree.parse(os.path.join(WORKING_DIR, os.path.pardir, "xml", sname)))
 	descSchema = schema_load("orepkgdesc.xsd")
-	#animSchema = schema_load("oreanim.xsd")
+	animSchema = schema_load("oreanim.xsd")
 	
 	Blender.Window.DrawProgressBar(0.0, "Initializing export")
 	
@@ -240,48 +240,62 @@ def do_export():
 	
 	copiedImages = set() # Set of image names that have already been copied into the zipfile
 	def populateMeshNode(meshNode, mesh):
-		# First pass: count the number of tri-meshes
+		# Find UV information for each vertex by loading it out of a face that uses that vertex
+		imgName = None
+		uvData = {} # Map of vertex index to uv 2-tuple
+		uvMatches = 0 # FIXME Debugging
+		for fOffset, f in enumerate(mesh.faces):
+			faceImageName = None
+			try:
+				faceImageName = f.image.name
+			except ValueError:
+				continue # Face doesn't have an associated UV texture
+			
+			if imgName is None:
+				imgName = faceImageName
+			elif imgName != faceImageName:
+				pup_error("Multiple UV textures associated with mesh %s" % mesh.name)
+			
+			for vOffset, v in enumerate(f.v):
+				if v.index not in uvData:
+					uvData[v.index] = tuple(f.uv[vOffset])
+				elif uvData[v.index] != tuple(f.uv[vOffset]):
+					# FIXME Don't need this test once I've checked that it works properly
+					pup_error("UV mismatch, %u MATCHES, MESH %s, FACE %u, %s VS %s" %
+						(uvMatches, mesh.name, fOffset, str(uvData[v.index]), str(tuple(f.uv[vOffset])))
+					)
+				else:
+					uvMatches += 1
+		
+		# If this mesh has a texture image, specify it in the node and make sure the image is in the ORE file
+		if imgName != None:
+			meshNode.set("texture", imgName)
+			if imgName is not "" and imgName not in copiedImages:
+				copiedImages.add(imgName)
+				# ZIP_STORED disables compression, it is used here because PNG images are already compressed
+				zfh.write(f.image.filename, "image-%s" % imgName, zipfile.ZIP_STORED)
+		
+		# Load the vertices into the node
+		for v in mesh.verts:
+			vxNode = lxml.etree.SubElement(meshNode, "v")
+			ptNode = lxml.etree.SubElement(vxNode, "p"); ptNode.text = " ".join([str(x) for x in fixcoords(v.co)])
+			nmNode = lxml.etree.SubElement(vxNode, "n"); nmNode.text = " ".join([str(x) for x in fixcoords(v.no)])
+			txNode = lxml.etree.SubElement(vxNode, "t"); txNode.text = " ".join([str(x) for x in uvData.get(v.index, (0.0, 0.0))])
+		meshNode.set("vertcount", str(len(mesh.verts)))
+		
+		# Load the face indices into the node (converting quads to tris as we go)
 		faceCount = 0
 		for f in mesh.faces:
-			if len(f.verts) != 3:
-				faceCount += 2
-			else:
-				faceCount += 1
-		meshNode.set("facecount", str(faceCount))
-		
-		# Second pass: insert the mesh data into the XML node structure
-		for f in mesh.faces:
-			imgName = None
-			try:
-				imgName = f.image.name
-			except ValueError:
-				imgName = "" # No image mapped to this face
-			
-			facelistResult = meshNode.xpath("facelist[@image='%s']" % imgName)
-			facelistNode = None
-			if len(facelistResult) > 0:
-				facelistNode = facelistResult[0]
-			else:
-				facelistNode = lxml.etree.SubElement(meshNode, "facelist", image=imgName)
-				if imgName is not "" and imgName not in copiedImages:
-					copiedImages.add(imgName)
-					# ZIP_STORED disables compression, it is used here because PNG images are already compressed
-					zfh.write(f.image.filename, "image-%s" % imgName, zipfile.ZIP_STORED)
-			
 			offsets = [(0,1,2)]
 			if len(f.verts) != 3:
-				# Convert quads to triangles
+				# Treat each quad as though it were just two triangles
 				offsets.append((0,2,3))
-			for a, b, c in offsets:
-				faceNode = lxml.etree.SubElement(facelistNode, "face")
-				for offset in (a, b, c):
-					vxNode = lxml.etree.SubElement(faceNode, "v")
-					ptNode = lxml.etree.SubElement(vxNode, "p"); ptNode.text = " ".join([str(x) for x in fixcoords(f.verts[offset].co)])
-					nmNode = lxml.etree.SubElement(vxNode, "n"); nmNode.text = " ".join([str(x) for x in fixcoords(f.verts[offset].no)])
-					if imgName != "":
-						txNode = lxml.etree.SubElement(vxNode, "t"); txNode.text = " ".join([str(x) for x in f.uv[offset]])
-		
-		return meshNode
+			for offsetGroup in offsets:
+				faceCount += 1
+				fNode = lxml.etree.SubElement(meshNode, "f")
+				fNode.text = " ".join([str(f.v[offset].index) for offset in offsetGroup])
+		meshNode.set("facecount", str(faceCount))
+	
 	
 	progress = 0.2
 	progressInc = (1.0 - progress)/(len(bpy.data.objects) + len(bpy.data.actions))
@@ -294,7 +308,7 @@ def do_export():
 		animNode = lxml.etree.Element(ORE_NS_PREFIX + "animation", name=mesh.name, nsmap=NSMAP)
 		meshNode = lxml.etree.SubElement(animNode, "frame")
 		populateMeshNode(meshNode, mesh)
-		#animSchema.assertValid(animNode)
+		animSchema.assertValid(animNode)
 		zfh.writestr("mesh-%s" % mesh.name, lxml.etree.tostring(animNode, xml_declaration=True))
 	
 	for action in bpy.data.actions:
@@ -319,7 +333,7 @@ def do_export():
 		
 		orig_action.setActive(bpy.data.objects[arm_name]) # Restore the saved action
 		
-		#animSchema.assertValid(animNode)
+		animSchema.assertValid(animNode)
 		zfh.writestr("action-%s" % action.name, lxml.etree.tostring(animNode, xml_declaration=True))
 	
 	Blender.Window.DrawProgressBar(1.0, "Closing ORE file")

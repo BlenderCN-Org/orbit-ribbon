@@ -37,31 +37,31 @@
 	
 	<xsd:complexType name="MeshType">
 		<xsd:sequence>
-			<xsd:element name="facelist" type="FacelistType" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="v" type="VertexType" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="f" type="FaceType" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
+		<xsd:attribute name="texture" type="xsd:string" use="optional" />
+		<xsd:attribute name="vertcount" type="xsd:unsignedInt" />
 		<xsd:attribute name="facecount" type="xsd:unsignedInt" />
 	</xsd:complexType>
 	
-	<xsd:complexType name="FacelistType">
-		<xsd:sequence>
-			<xsd:element name="face" type="FaceType" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
-		<xsd:attribute name="image" type="xsd:string" />
-	</xsd:complexType>
-	
-	<xsd:complexType name="FaceType">
-		<xsd:sequence minOccurs="3" maxOccurs="3">
-			<xsd:element name="v" type="VertexType" />
-		</xsd:sequence>
-	</xsd:complexType>
+	<xsd:simpleType name="FaceType">
+		<xsd:restriction base="IntListType">
+			<xsd:length value='3' />
+		</xsd:restriction>
+	</xsd:simpleType>
 	
 	<xsd:complexType name="VertexType">
 		<xsd:sequence>
 			<xsd:element name="p" type="Coord3DType" />
 			<xsd:element name="n" type="Coord3DType" />
-			<xsd:element name="t" type="Coord2DType" minOccurs="0" />
+			<xsd:element name="t" type="Coord2DType" />
 		</xsd:sequence>
 	</xsd:complexType>
+	
+	<xsd:simpleType name="IntListType">
+		<xsd:list itemType="xsd:unsignedInt" />
+	</xsd:simpleType>
 	
 	<xsd:simpleType name="FloatListType">
 		<xsd:list itemType="xsd:float" />
