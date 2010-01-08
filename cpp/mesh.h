@@ -57,8 +57,8 @@ class _Mesh : boost::noncopyable {
 			boost::shared_ptr<GLOOTexture> tex;
 			GLuint face_count;
 		};
-		std::vector<_Facelist> facelists;
-		boost::scoped_ptr<GLOOVertexBuffer> vbuf;
+		std::vector<_Facelist> _facelists;
+		boost::scoped_ptr<GLOOBufferedMesh> _glmesh;
 		
 		_Mesh() {}
 		

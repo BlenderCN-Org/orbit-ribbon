@@ -63,22 +63,91 @@ class GLOOTexture : boost::noncopyable {
 };
 
 struct GLOOVertex {
-	float x, y, z;
-	float nx, ny, nz;
-	float u0, v0;
-	float u1, t1;
-	float u2, t2;
+	GLfloat x, y, z;
+	GLfloat nx, ny, nz;
+	GLfloat u, v;
 };
 
-class GLOOVertexBuffer : boost::noncopyable {
+struct GLOOFace {
+	// Indices to the vertices forming a triangle face
+	GLuint a, b, c;
+};
+
+class _BufferAllocManager : boost::noncopyable {
 	private:
-		GLuint _buf_name;
-		GLOOVertexBuffer(GLfloat* vbo_data, GLuint vbo_count);
+		struct Allocation {
+			unsigned int offset, length;
+		};
+		
+		unsigned int _max_length;
+		std::list<Allocation> _allocs;
 	
 	public:
-		static boost::shared_ptr<GLOOVertexBuffer> create(GLfloat* data, GLuint count);
+		_BufferAllocManager(unsigned int max_length) : _max_length(max_length) {}
 		
-		virtual ~GLOOVertexBuffer();
+		typedef std::list<Allocation>::iterator AllocToken;
+		
+		AllocToken allocate(unsigned int length);
+		void free(const AllocToken& tok) { _allocs.erase(tok); }
+		
+		unsigned int get_offset(const AllocToken& tok) { return tok->offset; }
+		unsigned int get_length(const AllocToken& tok) { return tok->length; }
+};
+
+class _MeshBufferManager;
+
+class _MeshBufferManager : boost::noncopyable {
+	private:
+		GLuint _vboid, _iboid;
+		BufferAllocManager _vbo_aman;
+		BufferAllocManager _ibo_aman;
+		bool anything_mapped;
+	
+	public:
+		class MeshBOInfo : boost::noncopyable {
+			private:
+				BufferAllocManager::Allocation _vbo_alloc, _ibo_alloc;
+				unsigned int _vertices_added, _faces_added;
+				GLOOVertex* _vbo_mapping;
+				GLOOFace* _ibo_mapping;
+				
+				MeshBOInfo(BufferAllocManager::Allocation vbo_alloc, BufferAllocManager::Allocation ibo_alloc);
+				
+				friend class _MeshBufferManager;
+			
+			public:
+				void add_vertex(const GLOOVertex& v);
+				void add_face(const GLOOFace& f);
+		};
+		
+		_MeshBufferManager();
+		
+		boost::shared_ptr<MeshBOInfo> allocate(unsigned int vertexCount, unsigned int faceCount);
+		void unmap(const MeshBOInfo& bo_info);
+		void free(const MeshBOInfo& bo_info);
+		
+		~_MeshBufferManager();
+};
+
+class GLOOBufferedMesh : boost::noncopyable {
+	private:
+		boost::shared_ptr<_MeshBufferManager::MeshBOInfo> _bo_info;
+		GLOOBufferedMesh(unsigned int vertexCount, unsigned int faceCount);
+	
+	public:
+		static boost::shared_ptr<GLOOBufferedMesh> create(unsigned int vertexCount, unsigned int faceCount);
+		
+		// These functions can only be called before the finish_loading() method is called
+		void load_vertex(const GLOOVertex& v);
+		void load_face(const GLOOFace& f);
+		
+		// Once you're done calling the load_* methods, call this method to make the Mesh ready to draw
+		void finish_loading();
+		
+		// Call this method to draw the mesh, after finish_loading() has been called
+		void draw();
+		
+		virtual ~GLOOBufferedMesh();
 };
 
 #endif

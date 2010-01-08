@@ -54,13 +54,15 @@ class _MeshAnimationParser : public ORE1::AnimationType_pskel {
 class _MeshParser : public ORE1::MeshType_pskel {
 };
 
-class _FacelistParser : public ORE1::FacelistType_pskel {
-};
-
 class _FaceParser : public ORE1::FaceType_pskel {
 };
 
 class _VertexParser : public ORE1::VertexType_pskel {
+};
+
+// No need to make a parser for each subtype of FloatList/IntList, since they'd all do the same thing: append to the VBO
+
+class _IntListParser : public ORE1::IntListType_pskel {
 };
 
 class _FloatListParser : public ORE1::FloatListType_pskel {
