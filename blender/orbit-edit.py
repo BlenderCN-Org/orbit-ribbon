@@ -240,10 +240,12 @@ def do_export():
 	
 	copiedImages = set() # Set of image names that have already been copied into the zipfile
 	def populateMeshNode(meshNode, mesh):
-		# Find UV information for each vertex by loading it out of a face that uses that vertex
+		faceCount = 0
+		
+		# For each face, add it to the meshNode and add to the vertex list any vertices it has that are new
+		# Also, find out which texture image (if any) this mesh is using
 		imgName = None
-		uvData = {} # Map of vertex index to uv 2-tuple
-		uvMatches = 0 # FIXME Debugging
+		vertices = {} # Map of (pos, normal, uv) tuple to vertex index
 		for fOffset, f in enumerate(mesh.faces):
 			faceImageName = None
 			try:
@@ -254,18 +256,29 @@ def do_export():
 			if imgName is None:
 				imgName = faceImageName
 			elif imgName != faceImageName:
-				pup_error("Multiple UV textures associated with mesh %s" % mesh.name)
+				pup_error("Multiple texture images associated with mesh %s" % mesh.name)
 			
-			for vOffset, v in enumerate(f.v):
-				if v.index not in uvData:
-					uvData[v.index] = tuple(f.uv[vOffset])
-				elif uvData[v.index] != tuple(f.uv[vOffset]):
-					# FIXME Don't need this test once I've checked that it works properly
-					pup_error("UV mismatch, %u MATCHES, MESH %s, FACE %u, %s VS %s" %
-						(uvMatches, mesh.name, fOffset, str(uvData[v.index]), str(tuple(f.uv[vOffset])))
-					)
-				else:
-					uvMatches += 1
+			offsets = [(0,1,2)]
+			if len(f.verts) == 4:
+				# Treat each quad as though it were two triangles
+				offsets.append((0,2,3))
+			elif len(f.verts) > 4:
+				pup_error("Face with over four vertices found in mesh %s" % mesh.name)
+			for offsetGroup in offsets:
+				vertIndexes = []
+				for offset in offsetGroup:
+					uvData = (0.0, 0.0)
+					if faceImageName is not None:
+						uvData = f.uv[offset]
+					vertKey = (tuple(f.v[offset].co), tuple(f.v[offset].no), tuple(uvData))
+					vertIdx = vertices.get(vertKey, None)
+					if vertIdx is None:
+						vertIdx = len(vertices)
+						vertices[vertKey] = vertIdx
+					vertIndexes.append(vertIdx)
+				faceCount += 1
+				fNode = lxml.etree.SubElement(meshNode, "f")
+				fNode.text = " ".join([str(idx) for idx in vertIndexes])
 		
 		# If this mesh has a texture image, specify it in the node and make sure the image is in the ORE file
 		if imgName != None:
@@ -276,24 +289,16 @@ def do_export():
 				zfh.write(f.image.filename, "image-%s" % imgName, zipfile.ZIP_STORED)
 		
 		# Load the vertices into the node
-		for v in mesh.verts:
+		vertexList = vertices.items()
+		vertexList.sort(lambda x, y: cmp(x[1], y[1]))
+		for ((p, n, t), idx) in vertexList:
 			vxNode = lxml.etree.SubElement(meshNode, "v")
-			ptNode = lxml.etree.SubElement(vxNode, "p"); ptNode.text = " ".join([str(x) for x in fixcoords(v.co)])
-			nmNode = lxml.etree.SubElement(vxNode, "n"); nmNode.text = " ".join([str(x) for x in fixcoords(v.no)])
-			txNode = lxml.etree.SubElement(vxNode, "t"); txNode.text = " ".join([str(x) for x in uvData.get(v.index, (0.0, 0.0))])
-		meshNode.set("vertcount", str(len(mesh.verts)))
+			ptNode = lxml.etree.SubElement(vxNode, "p"); ptNode.text = " ".join([str(x) for x in fixcoords(p)])
+			nmNode = lxml.etree.SubElement(vxNode, "n"); nmNode.text = " ".join([str(x) for x in fixcoords(n)])
+			txNode = lxml.etree.SubElement(vxNode, "t"); txNode.text = " ".join([str(x) for x in t])
 		
-		# Load the face indices into the node (converting quads to tris as we go)
-		faceCount = 0
-		for f in mesh.faces:
-			offsets = [(0,1,2)]
-			if len(f.verts) != 3:
-				# Treat each quad as though it were just two triangles
-				offsets.append((0,2,3))
-			for offsetGroup in offsets:
-				faceCount += 1
-				fNode = lxml.etree.SubElement(meshNode, "f")
-				fNode.text = " ".join([str(f.v[offset].index) for offset in offsetGroup])
+		# Set the attributes that let the loader know in advance how much space to allocate
+		meshNode.set("vertcount", str(len(vertexList)))
 		meshNode.set("facecount", str(faceCount))
 	
 	

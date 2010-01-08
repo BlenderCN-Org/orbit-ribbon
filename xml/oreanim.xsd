@@ -37,8 +37,8 @@
 	
 	<xsd:complexType name="MeshType">
 		<xsd:sequence>
-			<xsd:element name="v" type="VertexType" minOccurs="0" maxOccurs="unbounded" />
 			<xsd:element name="f" type="FaceType" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="v" type="VertexType" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
 		<xsd:attribute name="texture" type="xsd:string" use="optional" />
 		<xsd:attribute name="vertcount" type="xsd:unsignedInt" />
