@@ -23,8 +23,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_GLOO_H
 
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/utility.hpp>
 #include <string>
+#include <list>
 #include <SDL/SDL.h>
 #include <GL/glew.h>
 #include <GL/gl.h>
@@ -73,69 +75,64 @@ struct GLOOFace {
 	GLuint a, b, c;
 };
 
-class _BufferAllocManager : boost::noncopyable {
+class _VBOManager;
+class _VBOManager : boost::noncopyable {
 	private:
-		struct Allocation {
-			unsigned int offset, length;
+		struct AllocRange {
+			unsigned int offset, bytes;
 		};
 		
-		unsigned int _max_length;
-		std::list<Allocation> _allocs;
+		GLenum _tgt;
+		GLuint _buf_id;
+		unsigned int _max_bytes;
+		bool _mapped;
+		std::list<AllocRange> _ranges;
 	
 	public:
-		_BufferAllocManager(unsigned int max_length) : _max_length(max_length) {}
-		
-		typedef std::list<Allocation>::iterator AllocToken;
-		
-		AllocToken allocate(unsigned int length);
-		void free(const AllocToken& tok) { _allocs.erase(tok); }
-		
-		unsigned int get_offset(const AllocToken& tok) { return tok->offset; }
-		unsigned int get_length(const AllocToken& tok) { return tok->length; }
-};
-
-class _MeshBufferManager;
-
-class _MeshBufferManager : boost::noncopyable {
-	private:
-		GLuint _vboid, _iboid;
-		BufferAllocManager _vbo_aman;
-		BufferAllocManager _ibo_aman;
-		bool anything_mapped;
-	
-	public:
-		class MeshBOInfo : boost::noncopyable {
+		class Allocation;
+		friend class Allocation;
+		class Allocation : boost::noncopyable {
 			private:
-				BufferAllocManager::Allocation _vbo_alloc, _ibo_alloc;
-				unsigned int _vertices_added, _faces_added;
-				GLOOVertex* _vbo_mapping;
-				GLOOFace* _ibo_mapping;
+				std::list<AllocRange>::iterator _iter;
+				_VBOManager* _man;
 				
-				MeshBOInfo(BufferAllocManager::Allocation vbo_alloc, BufferAllocManager::Allocation ibo_alloc);
+				Allocation(unsigned int length, _VBOManager* man);
 				
-				friend class _MeshBufferManager;
+				friend class _VBOManager;
 			
 			public:
-				void add_vertex(const GLOOVertex& v);
-				void add_face(const GLOOFace& f);
+				unsigned int offset() { return _iter->offset; }
+				unsigned int bytes() { return _iter->bytes; }
+				void* map();
+				void unmap();
+				
+				~Allocation();
 		};
 		
-		_MeshBufferManager();
+		_VBOManager(GLenum tgt, unsigned int max_bytes);
+		~_VBOManager();
 		
-		boost::shared_ptr<MeshBOInfo> allocate(unsigned int vertexCount, unsigned int faceCount);
-		void unmap(const MeshBOInfo& bo_info);
-		void free(const MeshBOInfo& bo_info);
+		boost::shared_ptr<Allocation> allocate(unsigned int bytes)
+			{ return boost::shared_ptr<Allocation>(new Allocation(bytes, this)); }
 		
-		~_MeshBufferManager();
+		bool mapped() { return _mapped; }
 };
 
 class GLOOBufferedMesh : boost::noncopyable {
 	private:
-		boost::shared_ptr<_MeshBufferManager::MeshBOInfo> _bo_info;
-		GLOOBufferedMesh(unsigned int vertexCount, unsigned int faceCount);
+		static bool _initialized;
+		static boost::scoped_ptr<_VBOManager> _vertices_vboman, _faces_vboman;
+		
+		boost::shared_ptr<_VBOManager::Allocation> _vertices_alloc, _faces_alloc;
+		unsigned int _vertices_added, _total_vertices, _faces_added, _total_faces;
+		GLOOVertex* _next_vertex;
+		GLOOFace* _next_face;
+		
+		GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_count);
 	
 	public:
-		static boost::shared_ptr<GLOOBufferedMesh> create(unsigned int vertexCount, unsigned int faceCount);
+		static boost::shared_ptr<GLOOBufferedMesh> create(unsigned int vertex_count, unsigned int face_count)
+			{ return boost::shared_ptr<GLOOBufferedMesh>(new GLOOBufferedMesh(vertex_count, face_count)); }
 		
 		// These functions can only be called before the finish_loading() method is called
 		void load_vertex(const GLOOVertex& v);

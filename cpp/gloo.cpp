@@ -25,6 +25,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <sstream>
 #include <GL/glew.h>
 #include <GL/gl.h>
+#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
 #include <SDL/SDL.h>
@@ -111,116 +112,129 @@ GLOOTexture::~GLOOTexture() {
 	glDeleteTextures(1, &_tex_name);
 }
 
-_BufferAllocManager::AllocToken _BufferAllocManager::allocate(unsigned int length) {
-	Allocation alloc;
-	alloc.length = length;
-	alloc.offset = 0;
-	if (!_allocs.empty()) {
-		std::list<Allocation>::iterator end = _allocs.end();
-		alloc.offset = end->offset + end->length;
+_VBOManager::Allocation::Allocation(unsigned int bytes, _VBOManager* man) :
+	_man(man)
+{
+	AllocRange rng;
+	rng.bytes = bytes;
+	rng.offset = 0;
+	if (!_man->_ranges.empty()) {
+		rng.offset = _man->_ranges.back().offset + _man->_ranges.back().bytes;
 	}
-	if (alloc.offset + alloc.length > _max_length) {
-		throw OreException("Ran out of space while attempting GL buffer allocation!");
+	if (rng.offset + rng.bytes > _man->_max_bytes) {
+		throw OreException("Ran out of space while attempting allocation within VBO!");
 	}
-	_allocs.push_back(alloc);
-	return _allocs.end()-1;
+	_man->_ranges.push_back(rng);
+	_iter = _man->_ranges.end();
+	--_iter;
 }
 
-_MeshBufferManager::MeshBOInfo::MeshBOInfo(BufferAllocManager::Allocation vbo_alloc, BufferAllocManager::Allocation ibo_alloc) :
-	_vbo_alloc(vbo_alloc),
-	_ibo_alloc(ibo_alloc),
+void* _VBOManager::Allocation::map() {
+	if (!_man->_mapped) {
+		throw OreException("Attempted to map memory within already-mapped VBO");
+	} else {
+		_man->_mapped = true;
+		return glMapBufferRange(_man->_tgt, offset(), bytes(), GL_MAP_WRITE_BIT);
+	}
+}
+
+void _VBOManager::Allocation::unmap() {
+	if (_man->_mapped) {
+		glUnmapBuffer(_man->_tgt);
+		_man->_mapped = false;
+	}
+}
+
+_VBOManager::Allocation::~Allocation() {
+	unmap();
+	_man->_ranges.erase(_iter);
+}
+
+_VBOManager::_VBOManager(GLenum tgt, unsigned int max_bytes) :
+	_tgt(tgt),
+	_max_bytes(max_bytes),
+	_mapped(false)
+{
+	glGenBuffers(1, &_buf_id);
+	glBindBuffer(tgt, _buf_id);
+	glBufferData(tgt, max_bytes, NULL, GL_STATIC_DRAW);
+}
+
+_VBOManager::~_VBOManager() {
+	glDeleteBuffers(1, &_buf_id);
+}
+
+bool GLOOBufferedMesh::_initialized = false;
+boost::scoped_ptr<_VBOManager> GLOOBufferedMesh::_vertices_vboman, GLOOBufferedMesh::_faces_vboman;
+
+GLOOBufferedMesh::GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_count) :
 	_vertices_added(0),
-	_faces_added(0)
+	_total_vertices(vertex_count),
+	_faces_added(0),
+	_total_faces(face_count)
 {
-	_vbo_mapping = (GLOOVertex*)glMapBufferRange(GL_ARRAY_BUFFER, _vbo_alloc.get_offset(), _vbo_alloc.get_length(), GL_MAP_WRITE_BIT);
-	_ibo_mapping = (GLOOFace*)glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, _ibo_alloc.get_offset()*3, _ibo_alloc.get_length()*3, GL_MAP_WRITE_BIT);
-}
-
-void _MeshBufferManager::MeshBOInfo::add_vertex(const GLOOVertex& v) {
-	if (_vertices_added >= _vbo_alloc.get_length()) {
-		throw OreException("Attempted to add more vertices than space was allocated for")
-	}
-	*_vbo_mapping = v;
-	++_vbo_mapping;
-	++_vertices_added;
-}
-
-void _MeshBufferManager::MeshBOInfo::add_face(const GLOOFace& f) {
-	if (_faces_added >= _ibo_alloc.get_length()) {
-		throw OreException("Attempted to add more faces than space was allocated for")
-	}
-	*_ibo_mapping = f;
-	++_ibo_mapping;
-	++_faces_added;
-}
-
-_MeshBufferManager::_MeshBufferManager() :
-	_vbo_aman((VBO_ALLOCATED_SIZE*1024)/sizeof(GLOOVertex)),
-	_ibo_aman((IBO_ALLOCATED_SIZE*1024)/sizeof(GLOOFace)),
-	anything_mapped(false)
-{
-	glGenBuffers(1, &_vboid);
-	glBindBuffer(GL_ARRAY_BUFFER, _vboid);
-	glBufferData(GL_ARRAY_BUFFER, VBO_ALLOCATED_SIZE*1024, NULL, GL_STATIC_DRAW);
-	
-	glGenBuffers(1, &_iboid);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _iboid);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, IBO_ALLOCATED_SIZE*1024, NULL, GL_STATIC_DRAW);
-}
-
-boost::shared_ptr<_MeshBufferManager::MeshBOInfo> _MeshBufferManager::allocate(unsigned int vertexCount, unsigned int faceCount) {
-	if (anything_mapped) {
-		throw OreException("Attempted to allocate from VBO/IBO while a mapping was already active!");
+	if (!_initialized) {
+		_vertices_vboman.reset(new _VBOManager(GL_ARRAY_BUFFER, VERTICES_BUFFER_ALLOCATED_SIZE*1024));
+		_faces_vboman.reset(new _VBOManager(GL_ELEMENT_ARRAY_BUFFER, FACES_BUFFER_ALLOCATED_SIZE*1024));
+		_initialized = true;
 	}
 	
-	anything_mapped = true;
-	return boost::shared_ptr<_MeshBufferManager::MeshBOInfo>(new _MeshBuffManager::MeshBOInfo(vertexCount, faceCount));
-}
-
-void _MeshBufferManager::unmap(const _MeshBufferManager::MeshBOInfo& bo_info) {
-	if (anything_mapped && bo_info.mapped) {
-		bo_info._vbo_mapping = 0;
-		bo_info._ibo_mapping = 0;
-		glUnmapBuffer(GL_ARRAY_BUFFER);
-		glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-		anything_mapped = false;
-	}
-}
-
-void _MeshBufferManager::free(const _MeshBufferManager::MeshBOInfo& bo_info) {
-	unmap(bo_info);
-	_vbo_aman.free(bo_info._vbo_alloc);
-	_ibo_aman.free(bo_info._ibo_alloc);
-}
-
-_MeshBufferManager::~_MeshBufferManager() {
-	glDeleteBuffers(1, &_vboid);
-	glDeleteBuffers(1, &_iboid);
-}
-
-GLOOBufferedMesh::GLOOBufferedMesh(unsigned int vertexCount, unsigned int faceCount) {
-	static MeshBufferManager buf_man;
-	_bo_info = buf_man.allocate(vertexCount, faceCount);
-}
-
-boost::shared_ptr<GLOOBufferedMesh> GLOOBufferedMesh::create(unsigned int vertexCount, unsigned int faceCount) {
-	return boost::shared_ptr<GLOOBufferedMesh>(new GLOOBufferedMesh(vertexCount, faceCount));
+	_vertices_alloc = _vertices_vboman->allocate(_total_vertices*sizeof(GLOOVertex));
+	_next_vertex = (GLOOVertex*)_vertices_alloc->map();
+	
+	_faces_alloc = _faces_vboman->allocate(_total_faces*sizeof(GLOOFace));
+	_next_face = (GLOOFace*)_faces_alloc->map();
 }
 
 void GLOOBufferedMesh::load_vertex(const GLOOVertex& v) {
-	_bo_info->add_vertex(v);
+	if (_vertices_added >= _total_vertices) {
+		throw OreException("Attempted to load more vertices than space was allocated for");
+	}
+	if (!_next_vertex) {
+		throw OreException("Attempted to load a vertex while unmapped");
+	}
+	*_next_vertex = v;
+	++_next_vertex;
+	++_vertices_added;
 }
 
-void GLOOBufferedMesh::load_face(const GLOOFace& v) {
-	_bo_info->add_face(f);
+void GLOOBufferedMesh::load_face(const GLOOFace& f) {
+	if (_faces_added >= _total_faces) {
+		throw OreException("Attempted to load more faces than space was allocated for");
+	}
+	if (!_next_face) {
+		throw OreException("Attempted to load a face while unmapped");
+	}
+	*_next_face = f;
+	++_next_face;
+	++_faces_added;
 }
 
 void GLOOBufferedMesh::finish_loading() {
-	// FIXME AAAARRGH! Need to rethink this; avoid use of static locals, and reduce number of classes
+	if (_next_vertex == 0 && _next_face == 0) {
+		return;
+	}
+	
+	if (_vertices_added != _total_vertices) {
+		throw OreException((boost::format("Allocated space for %1% vertices, but only loaded %2%") % _total_vertices % _vertices_added).str());
+	}
+	
+	if (_faces_added != _total_faces) {
+		throw OreException((boost::format("Allocated space for %1% faces, but only loaded %2%") % _total_faces % _faces_added).str());
+	}
+	
+	_vertices_alloc->unmap();
+	_next_vertex = 0;
+	_faces_alloc->unmap();
+	_next_face = 0;
 }
 
 void GLOOBufferedMesh::draw() {
+	if (_vertices_vboman->mapped() or _faces_vboman->mapped()) {
+		throw OreException("Attempted to draw GLOOBufferedMesh while still mapped");
+	}
 }
 
 GLOOBufferedMesh::~GLOOBufferedMesh() {
+	finish_loading();
 }

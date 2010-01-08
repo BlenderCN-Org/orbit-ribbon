@@ -41,8 +41,8 @@ const char* const IGNORE_KEYS = "[-] numlock";
 // How many bytes to load from ORE files in each chunk
 const int ORE_CHUNK_SIZE = 4096;
 
-// How many kilobytes should be allocated for the VBO and IBO respectively
-const int VBO_ALLOCATED_SIZE = 4096;
-const int IBO_ALLOCATED_SIZE = 1024;
+// How many kilobytes should be allocated for the vertices buffer and faces buffer respectively
+const int VERTICES_BUFFER_ALLOCATED_SIZE = 4096;
+const int FACES_BUFFER_ALLOCATED_SIZE = 1024;
 
 #endif
