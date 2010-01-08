@@ -1,6 +1,15 @@
 namespace http://www.orbit-ribbon.org/ORE1 {
 	include "../mesh.h";
+	include "../gloo.h";
+	include <boost/shared_ptr.hpp>;
+	include <boost/array.hpp>;
+	include <GL/glew.h>;
+	include <GL/gl.h>;
 	
-	AnimationType ::MeshAnimation*;
-	MeshType ::_Mesh*;
+	AnimationType "boost::shared_ptr<MeshAnimation>" "boost::shared_ptr<MeshAnimation>";
+	MeshType "boost::shared_ptr<_Mesh>" "boost::shared_ptr<_Mesh>";
+	FaceType "GLOOFace*" "GLOOFace*";
+	VertexType "GLOOVertex*" "GLOOVertex*";
+	Coord3DType "boost::array<GLfloat,3>*" "boost::array<GLfloat,3>*";
+	Coord2DType "boost::array<GLfloat,2>*" "boost::array<GLfloat,2>*";
 }

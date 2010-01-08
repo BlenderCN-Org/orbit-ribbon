@@ -25,18 +25,17 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "autoxsd/oreanim-pskel.h"
 #include "cache.h"
+#include "gloo.h"
 #include "mesh.h"
 #include "resman.h"
 
 class _MeshAnimationParser : public ORE1::AnimationType_pskel {
 	private:
-		MeshAnimation* _anim_p;
+		boost::shared_ptr<MeshAnimation> _anim_p;
 	
 	public:
-		_MeshAnimationParser() : _anim_p(0) {}
-		
 		void pre() {
-			_anim_p = new MeshAnimation();
+			_anim_p = boost::shared_ptr<MeshAnimation>(new MeshAnimation());
 		}
 		
 		void frame() {
@@ -46,26 +45,96 @@ class _MeshAnimationParser : public ORE1::AnimationType_pskel {
 			_anim_p->name = n;
 		}
 		
-		MeshAnimation* post_AnimationType() {
+		boost::shared_ptr<MeshAnimation> post_AnimationType() {
 			return _anim_p;
 		}
 };
 
 class _MeshParser : public ORE1::MeshType_pskel {
+	private:
+	
+	public:
+		void pre() {
+		}
+		
+		void f(GLOOFace* face) {
+		}
+		
+		void v(GLOOVertex* v) {
+		}
+		
+		void texture(const std::string& tex_name) {
+		}
+		
+		void vertcount(unsigned int c) {
+		}
+		
+		void facecount(unsigned int c) {
+		}
+		
+		boost::shared_ptr<_Mesh> post_MeshType() {
+		}
 };
 
 class _FaceParser : public ORE1::FaceType_pskel {
+	private:
+	
+	public:
+		void item(unsigned int i) {
+		}
+		
+		GLOOFace* post_FaceType() {
+		}
 };
 
 class _VertexParser : public ORE1::VertexType_pskel {
+	private:
+		
+	public:
+		void p(boost::array<GLfloat,3>* pos) {
+		}
+		
+		void n(boost::array<GLfloat,3>* normal) {
+		}
+		
+		void t(boost::array<GLfloat,2>* uv) {
+		}
+		
+		GLOOVertex* post_VertexType() {
+		}
 };
 
-// No need to make a parser for each subtype of FloatList/IntList, since they'd all do the same thing: append to the VBO
-
-class _IntListParser : public ORE1::IntListType_pskel {
+class _PosParser : public ORE1::Coord3DType_pskel {
+	private:
+	
+	public:
+		void item(float i) {
+		}
+		
+		boost::array<GLfloat,3>* post_Coord3DType() {
+		}
 };
 
-class _FloatListParser : public ORE1::FloatListType_pskel {
+class _NormalParser : public ORE1::Coord3DType_pskel {
+	private:
+	
+	public:
+		void item(float i) {
+		}
+		
+		boost::array<GLfloat,3>* post_Coord3DType() {
+		}
+};
+
+class _UvParser : public ORE1::Coord2DType_pskel {
+	private:
+	
+	public:
+		void item(float i) {
+		}
+		
+		boost::array<GLfloat,2>* post_Coord2DType() {
+		}
 };
 
 class MeshAnimationCache : public CacheBase<MeshAnimation> {
@@ -74,14 +143,29 @@ class MeshAnimationCache : public CacheBase<MeshAnimation> {
 		
 		// Build the parser framework
 		xml_schema::string_pimpl string_parser;
+		xml_schema::unsigned_int_pimpl uint_parser;
+		xml_schema::float_pimpl float_parser;
 		_MeshAnimationParser anim_parser;
-		//anim_parser.parsers(0, string_parser);
+		_MeshParser mesh_parser;
+		_FaceParser face_parser;
+		_VertexParser vertex_parser;
+		_PosParser pos_parser;
+		_NormalParser normal_parser;
+		_UvParser uv_parser;
+		
+		anim_parser.parsers(mesh_parser, string_parser);
+		mesh_parser.parsers(face_parser, vertex_parser, string_parser, uint_parser, uint_parser);
+		face_parser.parsers(uint_parser);
+		vertex_parser.parsers(pos_parser, normal_parser, uv_parser);
+		pos_parser.parsers(float_parser);
+		normal_parser.parsers(float_parser);
+		uv_parser.parsers(float_parser);
 		
 		// Parse the XML data
 		xml_schema::document doc_p(anim_parser, "animation");
 		anim_parser.pre();
 		doc_p.parse(*fh, xsd::cxx::parser::xerces::flags::dont_validate);
-		return boost::shared_ptr<MeshAnimation>(anim_parser.post_AnimationType());
+		return anim_parser.post_AnimationType();
 	}
 };
 
