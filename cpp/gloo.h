@@ -68,11 +68,16 @@ struct GLOOVertex {
 	GLfloat x, y, z;
 	GLfloat nx, ny, nz;
 	GLfloat u, v;
+	
+	static void set_gl_pointers();
 };
 
 struct GLOOFace {
 	// Indices to the vertices forming a triangle face
 	GLuint a, b, c;
+	
+	static GLenum gl_type() { return GL_UNSIGNED_INT; }
+	static unsigned int elem_bytes() { return sizeof(GLuint); }
 };
 
 class _VBOManager;

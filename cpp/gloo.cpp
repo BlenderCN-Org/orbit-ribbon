@@ -112,6 +112,14 @@ GLOOTexture::~GLOOTexture() {
 	glDeleteTextures(1, &_tex_name);
 }
 
+void GLOOVertex::set_gl_pointers() {
+	const char* offset = 0;
+	glVertexPointer(3, GL_FLOAT, sizeof(GLOOVertex), offset);
+	glNormalPointer(GL_FLOAT, sizeof(GLOOVertex), offset + 3*sizeof(float));
+	glClientActiveTexture(GL_TEXTURE0);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(GLOOVertex), offset + 6*sizeof(float));
+}
+
 _VBOManager::Allocation::Allocation(unsigned int bytes, _VBOManager* man) :
 	_man(man)
 {
@@ -140,7 +148,10 @@ void* _VBOManager::Allocation::map() {
 
 void _VBOManager::Allocation::unmap() {
 	if (_man->_mapped) {
-		glUnmapBuffer(_man->_tgt);
+		GLenum result = glUnmapBuffer(_man->_tgt);
+		if (result == GL_FALSE) {
+			throw OreException("Memory corruption during VBO unmap");
+		}
 		_man->_mapped = false;
 	}
 }
@@ -176,6 +187,7 @@ GLOOBufferedMesh::GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_
 	if (!_initialized) {
 		_vertices_vboman.reset(new _VBOManager(GL_ARRAY_BUFFER, VERTICES_BUFFER_ALLOCATED_SIZE*1024));
 		_faces_vboman.reset(new _VBOManager(GL_ELEMENT_ARRAY_BUFFER, FACES_BUFFER_ALLOCATED_SIZE*1024));
+		GLOOVertex::set_gl_pointers();
 		_initialized = true;
 	}
 	
@@ -233,6 +245,16 @@ void GLOOBufferedMesh::draw() {
 	if (_vertices_vboman->mapped() or _faces_vboman->mapped()) {
 		throw OreException("Attempted to draw GLOOBufferedMesh while still mapped");
 	}
+	
+	const char* offset = 0;
+	glDrawRangeElements(
+		GL_TRIANGLES,
+		(_vertices_alloc->offset())/sizeof(GLOOVertex),
+		(_vertices_alloc->offset() + _vertices_alloc->bytes())/sizeof(GLOOVertex),
+		_faces_alloc->bytes()/GLOOFace::elem_bytes(),
+		GLOOFace::gl_type(),
+		offset + _faces_alloc->offset()
+	);
 }
 
 GLOOBufferedMesh::~GLOOBufferedMesh() {
