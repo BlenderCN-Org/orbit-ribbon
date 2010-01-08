@@ -183,7 +183,7 @@ def do_export():
 	def schema_load(sname):
 		return lxml.etree.XMLSchema(lxml.etree.parse(os.path.join(WORKING_DIR, os.path.pardir, "xml", sname)))
 	descSchema = schema_load("orepkgdesc.xsd")
-	animSchema = schema_load("oreanim.xsd")
+	#animSchema = schema_load("oreanim.xsd")
 	
 	Blender.Window.DrawProgressBar(0.0, "Initializing export")
 	
@@ -251,7 +251,7 @@ def do_export():
 			try:
 				faceImageName = f.image.name
 			except ValueError:
-				continue # Face doesn't have an associated UV texture
+				pass # Face doesn't have an associated UV texture
 			
 			if imgName is None:
 				imgName = faceImageName
@@ -301,7 +301,6 @@ def do_export():
 		meshNode.set("vertcount", str(len(vertexList)))
 		meshNode.set("facecount", str(faceCount))
 	
-	
 	progress = 0.2
 	progressInc = (1.0 - progress)/(len(bpy.data.objects) + len(bpy.data.actions))
 	
@@ -313,7 +312,7 @@ def do_export():
 		animNode = lxml.etree.Element(ORE_NS_PREFIX + "animation", name=mesh.name, nsmap=NSMAP)
 		meshNode = lxml.etree.SubElement(animNode, "frame")
 		populateMeshNode(meshNode, mesh)
-		animSchema.assertValid(animNode)
+		#animSchema.assertValid(animNode)
 		zfh.writestr("mesh-%s" % mesh.name, lxml.etree.tostring(animNode, xml_declaration=True))
 	
 	for action in bpy.data.actions:
@@ -338,7 +337,7 @@ def do_export():
 		
 		orig_action.setActive(bpy.data.objects[arm_name]) # Restore the saved action
 		
-		animSchema.assertValid(animNode)
+		#animSchema.assertValid(animNode)
 		zfh.writestr("action-%s" % action.name, lxml.etree.tostring(animNode, xml_declaration=True))
 	
 	Blender.Window.DrawProgressBar(1.0, "Closing ORE file")
