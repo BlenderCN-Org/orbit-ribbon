@@ -38,7 +38,7 @@ class _MeshParser;
 
 class MeshAnimation : boost::noncopyable {
 	private:
-		std::vector<boost::shared_ptr<_Mesh> > frames;
+		std::vector<boost::shared_ptr<GLOOBufferedMesh> > frames;
 		std::string name;
 		
 		MeshAnimation() {}
@@ -49,21 +49,6 @@ class MeshAnimation : boost::noncopyable {
 		static boost::shared_ptr<MeshAnimation> create(const std::string& name);
 		
 		const std::string& get_name() { return name; }
-};
-
-class _Mesh : boost::noncopyable {
-	private:
-		struct _Facelist {
-			boost::shared_ptr<GLOOTexture> tex;
-			GLuint face_count;
-		};
-		std::vector<_Facelist> _facelists;
-		boost::scoped_ptr<GLOOBufferedMesh> _glmesh;
-		
-		_Mesh() {}
-		
-		friend class MeshAnimation;
-		friend class _MeshParser;
 };
 
 #endif

@@ -38,7 +38,8 @@ class _MeshAnimationParser : public ORE1::AnimationType_pskel {
 			_anim_p = boost::shared_ptr<MeshAnimation>(new MeshAnimation());
 		}
 		
-		void frame() {
+		void frame(boost::shared_ptr<GLOOBufferedMesh> mesh) {
+			_anim_p->frames.push_back(mesh);
 		}
 		
 		void name(const std::string& n) {
@@ -52,88 +53,143 @@ class _MeshAnimationParser : public ORE1::AnimationType_pskel {
 
 class _MeshParser : public ORE1::MeshType_pskel {
 	private:
+		boost::shared_ptr<GLOOBufferedMesh> _mesh;
+		unsigned int _verts, _faces;
+		
+		void init_mesh() {
+			if (!_mesh) {
+				if (_verts == 0 || _faces == 0) {
+					throw OreException("Unable to create GLOOBufferedMesh without allocation attributes");
+				}
+			}
+			_mesh = GLOOBufferedMesh::create(_verts, _faces);
+		}
 	
 	public:
 		void pre() {
+			_mesh.reset();
 		}
 		
 		void f(GLOOFace* face) {
+			init_mesh();
+			_mesh->load_face(*face);
 		}
 		
 		void v(GLOOVertex* v) {
+			init_mesh();
+			_mesh->load_vertex(*v);
 		}
 		
 		void texture(const std::string& tex_name) {
+			// FIXME
 		}
 		
 		void vertcount(unsigned int c) {
+			_verts = c;
 		}
 		
 		void facecount(unsigned int c) {
+			_faces = c;
 		}
 		
-		boost::shared_ptr<_Mesh> post_MeshType() {
+		boost::shared_ptr<GLOOBufferedMesh> post_MeshType() {
+			return _mesh;
 		}
 };
 
 class _FaceParser : public ORE1::FaceType_pskel {
 	private:
+		GLOOFace _face;
+		unsigned int _idx;
 	
 	public:
+		void pre() {
+			_idx = 0;
+		}
+		
 		void item(unsigned int i) {
+			switch (_idx) {
+				case 0:
+					_face.a = i;
+				case 1:
+					_face.b = i;
+				case 2:
+					_face.c = i;
+				default:
+					throw OreException("Too many indices supplied for a face");
+			}
+			++_idx;
 		}
 		
 		GLOOFace* post_FaceType() {
+			return &_face;
 		}
 };
 
 class _VertexParser : public ORE1::VertexType_pskel {
 	private:
+		GLOOVertex _vert;
 		
 	public:
 		void p(boost::array<GLfloat,3>* pos) {
+			_vert.x = pos->at(0);
+			_vert.y = pos->at(1);
+			_vert.z = pos->at(2);
 		}
 		
 		void n(boost::array<GLfloat,3>* normal) {
+			_vert.nx = normal->at(0);
+			_vert.ny = normal->at(1);
+			_vert.nz = normal->at(2);
 		}
 		
 		void t(boost::array<GLfloat,2>* uv) {
+			_vert.u = uv->at(0);
+			_vert.v = uv->at(1);
 		}
 		
 		GLOOVertex* post_VertexType() {
+			return &_vert;
 		}
 };
 
-class _PosParser : public ORE1::Coord3DType_pskel {
+class _Coord3DParser : public ORE1::Coord3DType_pskel {
 	private:
+		boost::array<GLfloat,3> _data;
+		unsigned int _idx;
 	
 	public:
+		void pre() {
+			_idx = 0;
+		}
+		
 		void item(float i) {
+			_data[_idx] = i;
+			++_idx;
 		}
 		
 		boost::array<GLfloat,3>* post_Coord3DType() {
-		}
-};
-
-class _NormalParser : public ORE1::Coord3DType_pskel {
-	private:
-	
-	public:
-		void item(float i) {
-		}
-		
-		boost::array<GLfloat,3>* post_Coord3DType() {
+			return &_data;
 		}
 };
 
 class _UvParser : public ORE1::Coord2DType_pskel {
 	private:
+		boost::array<GLfloat,2> _data;
+		unsigned int _idx;
 	
 	public:
+		void pre() {
+			_idx = 0;
+		}
+		
 		void item(float i) {
+			_data[_idx] = i;
+			++_idx;
 		}
 		
 		boost::array<GLfloat,2>* post_Coord2DType() {
+			return &_data;
 		}
 };
 
@@ -149,16 +205,14 @@ class MeshAnimationCache : public CacheBase<MeshAnimation> {
 		_MeshParser mesh_parser;
 		_FaceParser face_parser;
 		_VertexParser vertex_parser;
-		_PosParser pos_parser;
-		_NormalParser normal_parser;
+		_Coord3DParser coord3d_parser;
 		_UvParser uv_parser;
 		
 		anim_parser.parsers(mesh_parser, string_parser);
 		mesh_parser.parsers(face_parser, vertex_parser, string_parser, uint_parser, uint_parser);
 		face_parser.parsers(uint_parser);
-		vertex_parser.parsers(pos_parser, normal_parser, uv_parser);
-		pos_parser.parsers(float_parser);
-		normal_parser.parsers(float_parser);
+		vertex_parser.parsers(coord3d_parser, coord3d_parser, uv_parser);
+		coord3d_parser.parsers(float_parser);
 		uv_parser.parsers(float_parser);
 		
 		// Parse the XML data
