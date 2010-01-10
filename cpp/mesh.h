@@ -1,6 +1,6 @@
 /*
-mesh.h: Header for mesh and animation classes.
-This module handles loading and displaying meshes, animations, and textures
+mesh.h: Header for the mesh animation classes.
+This module handles loading and displaying mesh animations.
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 
@@ -46,7 +46,7 @@ class MeshAnimation : boost::noncopyable {
 		friend class _MeshAnimationParser;
 	
 	public:
-		static boost::shared_ptr<MeshAnimation> create(const std::string& name);
+		static boost::shared_ptr<MeshAnimation> load(const std::string& name);
 		
 		const std::string& get_name() { return name; }
 };

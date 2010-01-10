@@ -32,7 +32,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/gl.h>
 
 #include "cache.h"
-#include "geometry.h"
 
 class GLOOPushedMatrix : boost::noncopyable {
 	public:
@@ -56,10 +55,12 @@ class GLOOTexture : boost::noncopyable {
 		friend class _TextureCache;
 	
 	public:
-		static boost::shared_ptr<GLOOTexture> create(const std::string& name);
+		static boost::shared_ptr<GLOOTexture> load(const std::string& name);
 		
 		GLuint get_width() { return _width; }
 		GLuint get_height() { return _height; }
+		
+		void bind();
 		
 		virtual ~GLOOTexture();
 };
@@ -75,7 +76,7 @@ struct GLOOVertex {
 struct GLOOFace {
 	// Indices to the vertices forming a triangle face
 	GLuint a, b, c;
-	
+		
 	static GLenum gl_type() { return GL_UNSIGNED_INT; }
 	static unsigned int elem_bytes() { return sizeof(GLuint); }
 };
@@ -128,16 +129,17 @@ class GLOOBufferedMesh : boost::noncopyable {
 		static bool _initialized;
 		static boost::scoped_ptr<_VBOManager> _vertices_vboman, _faces_vboman;
 		
+		boost::shared_ptr<GLOOTexture> _tex;
 		boost::shared_ptr<_VBOManager::Allocation> _vertices_alloc, _faces_alloc;
 		unsigned int _vertices_added, _total_vertices, _faces_added, _total_faces;
 		GLOOVertex* _next_vertex;
 		GLOOFace* _next_face;
 		
-		GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_count);
+		GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_count, boost::shared_ptr<GLOOTexture> tex);
 	
 	public:
-		static boost::shared_ptr<GLOOBufferedMesh> create(unsigned int vertex_count, unsigned int face_count)
-			{ return boost::shared_ptr<GLOOBufferedMesh>(new GLOOBufferedMesh(vertex_count, face_count)); }
+		static boost::shared_ptr<GLOOBufferedMesh> create(unsigned int vertex_count, unsigned int face_count, boost::shared_ptr<GLOOTexture> tex)
+			{ return boost::shared_ptr<GLOOBufferedMesh>(new GLOOBufferedMesh(vertex_count, face_count, tex)); }
 		
 		// These functions can only be called before the finish_loading() method is called
 		void load_vertex(const GLOOVertex& v);

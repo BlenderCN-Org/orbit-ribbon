@@ -104,8 +104,12 @@ boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
 
 _TextureCache cache;
 
-boost::shared_ptr<GLOOTexture> GLOOTexture::create(const std::string& name) {
+boost::shared_ptr<GLOOTexture> GLOOTexture::load(const std::string& name) {
 	return cache.get(name);
+}
+
+void GLOOTexture::bind() {
+	glBindTexture(GL_TEXTURE_2D, _tex_name);
 }
 
 GLOOTexture::~GLOOTexture() {
@@ -178,7 +182,8 @@ _VBOManager::~_VBOManager() {
 bool GLOOBufferedMesh::_initialized = false;
 boost::scoped_ptr<_VBOManager> GLOOBufferedMesh::_vertices_vboman, GLOOBufferedMesh::_faces_vboman;
 
-GLOOBufferedMesh::GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_count) :
+GLOOBufferedMesh::GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_count, boost::shared_ptr<GLOOTexture> tex) :
+	_tex(tex),
 	_vertices_added(0),
 	_total_vertices(vertex_count),
 	_faces_added(0),
@@ -217,7 +222,10 @@ void GLOOBufferedMesh::load_face(const GLOOFace& f) {
 	if (!_next_face) {
 		throw OreException("Attempted to load a face while unmapped");
 	}
-	*_next_face = f;
+	unsigned int vtx_offset = (_vertices_alloc->offset()/sizeof(GLOOVertex));
+	_next_face->a = f.a + vtx_offset;
+	_next_face->b = f.b + vtx_offset;
+	_next_face->c = f.c + vtx_offset;
 	++_next_face;
 	++_faces_added;
 }
@@ -246,6 +254,13 @@ void GLOOBufferedMesh::draw() {
 		throw OreException("Attempted to draw GLOOBufferedMesh while still mapped");
 	}
 	
+	if (_tex) {
+		_tex->bind();
+	} else {
+		glDisable(GL_TEXTURE_2D);
+		glColor3f(1.0, 0.0, 1.0); // FIXME: Once lighting is enabled, do this with materials instead
+	}
+	
 	const char* offset = 0;
 	glDrawRangeElements(
 		GL_TRIANGLES,
@@ -255,6 +270,10 @@ void GLOOBufferedMesh::draw() {
 		GLOOFace::gl_type(),
 		offset + _faces_alloc->offset()
 	);
+	
+	if (!_tex) {
+		glEnable(GL_TEXTURE_2D);
+	}
 }
 
 GLOOBufferedMesh::~GLOOBufferedMesh() {

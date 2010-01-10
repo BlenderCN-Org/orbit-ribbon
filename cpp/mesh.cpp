@@ -55,6 +55,7 @@ class _MeshParser : public ORE1::MeshType_pskel {
 	private:
 		boost::shared_ptr<GLOOBufferedMesh> _mesh;
 		unsigned int _verts, _faces;
+		std::string _tex_name;
 		
 		void init_mesh() {
 			if (!_mesh) {
@@ -62,12 +63,18 @@ class _MeshParser : public ORE1::MeshType_pskel {
 					throw OreException("Unable to create GLOOBufferedMesh without allocation attributes");
 				}
 			}
-			_mesh = GLOOBufferedMesh::create(_verts, _faces);
+			boost::shared_ptr<GLOOTexture> _tex;
+			if (_tex_name.size() > 0) {
+				_tex = GLOOTexture::load(_tex_name);
+			}
+			_mesh = GLOOBufferedMesh::create(_verts, _faces, _tex);
 		}
 	
 	public:
 		void pre() {
 			_mesh.reset();
+			_verts = _faces = 0;
+			_tex_name = "";
 		}
 		
 		void f(GLOOFace* face) {
@@ -81,7 +88,7 @@ class _MeshParser : public ORE1::MeshType_pskel {
 		}
 		
 		void texture(const std::string& tex_name) {
-			// FIXME
+			_tex_name = tex_name;
 		}
 		
 		void vertcount(unsigned int c) {
@@ -193,11 +200,8 @@ class _UvParser : public ORE1::Coord2DType_pskel {
 		}
 };
 
-class MeshAnimationCache : public CacheBase<MeshAnimation> {
-	boost::shared_ptr<MeshAnimation> generate(const std::string& id) {
-		boost::shared_ptr<OreFileHandle> fh = ResMan::pkg().get_fh(std::string(id));
-		
-		// Build the parser framework
+class _MeshParsingFrame {
+	private:
 		xml_schema::string_pimpl string_parser;
 		xml_schema::unsigned_int_pimpl uint_parser;
 		xml_schema::float_pimpl float_parser;
@@ -207,24 +211,36 @@ class MeshAnimationCache : public CacheBase<MeshAnimation> {
 		_VertexParser vertex_parser;
 		_Coord3DParser coord3d_parser;
 		_UvParser uv_parser;
+	
+	public:
+		_MeshParsingFrame() {
+			anim_parser.parsers(mesh_parser, string_parser);
+			mesh_parser.parsers(face_parser, vertex_parser, string_parser, uint_parser, uint_parser);
+			face_parser.parsers(uint_parser);
+			vertex_parser.parsers(coord3d_parser, coord3d_parser, uv_parser);
+			coord3d_parser.parsers(float_parser);
+			uv_parser.parsers(float_parser);
+		}
 		
-		anim_parser.parsers(mesh_parser, string_parser);
-		mesh_parser.parsers(face_parser, vertex_parser, string_parser, uint_parser, uint_parser);
-		face_parser.parsers(uint_parser);
-		vertex_parser.parsers(coord3d_parser, coord3d_parser, uv_parser);
-		coord3d_parser.parsers(float_parser);
-		uv_parser.parsers(float_parser);
-		
-		// Parse the XML data
-		xml_schema::document doc_p(anim_parser, "animation");
-		anim_parser.pre();
-		doc_p.parse(*fh, xsd::cxx::parser::xerces::flags::dont_validate);
-		return anim_parser.post_AnimationType();
+		boost::shared_ptr<MeshAnimation> parse(OreFileHandle& fh) {
+			xml_schema::document doc_p(anim_parser, "animation");
+			anim_parser.pre();
+			doc_p.parse(fh, xsd::cxx::parser::xerces::flags::dont_validate);
+			return anim_parser.post_AnimationType();
+		}
+};
+
+_MeshParsingFrame parsing_frame;
+
+class MeshAnimationCache : public CacheBase<MeshAnimation> {
+	boost::shared_ptr<MeshAnimation> generate(const std::string& id) {
+		boost::shared_ptr<OreFileHandle> fh = ResMan::pkg().get_fh(std::string(id));
+		return parsing_frame.parse(*fh);
 	}
 };
 
 MeshAnimationCache mesh_animation_cache;
 
-boost::shared_ptr<MeshAnimation> MeshAnimation::create(const std::string& name) {
+boost::shared_ptr<MeshAnimation> MeshAnimation::load(const std::string& name) {
 	return mesh_animation_cache.get(name);
 }

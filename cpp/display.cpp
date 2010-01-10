@@ -88,6 +88,8 @@ void Display::_init() {
 		throw GameException(std::string("GLEW init failed: " ) + std::string((const char*)glewGetErrorString((glew_err))));
 	}
 	
+	glEnable(GL_TEXTURE_2D);
+	
 	glShadeModel(GL_SMOOTH);
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -100,6 +102,7 @@ void Display::_init() {
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_INDEX_ARRAY);
 	
 	_screen_resize();
 }
@@ -125,41 +128,6 @@ void Display::_draw_frame() {
 	glLoadIdentity();
 	gluPerspective(fov, screen_ratio, 0.1, sky_clip_dist);
 	glMatrixMode(GL_MODELVIEW);
-
-	
-	// FIXME Test render
-	glPushMatrix();
-	glTranslatef(0.0f, 0.0f, -6.0f);
-	glScalef(0.05, 0.05, 0.05);
-	GLint row, col;
-	for (row = 0; row < 30; ++row) {
-		for (col = 0; col < 40; ++col) {
-			glPushMatrix();
-			glTranslatef(-60 + col*3, 45 - row*3, 0);
-			glPushMatrix();
-			glTranslatef(0.0f, 0.0f, -3.0f);
-			glColor3f( 0.5f, 0.5f, 1.0f);
-			glBegin( GL_QUADS );				 /* Draw A Quad			  */
-				glVertex3f(  1.0f,  1.0f,  0.0f ); /* Top Right Of The Quad	*/
-				glVertex3f( -1.0f,  1.0f,  0.0f ); /* Top Left Of The Quad	 */
-				glVertex3f( -1.0f, -1.0f,  0.0f ); /* Bottom Left Of The Quad  */
-				glVertex3f(  1.0f, -1.0f,  0.0f ); /* Bottom Right Of The Quad */
-			glEnd();							/* Done Drawing The Quad	*/
-			glPopMatrix();
-			glPushMatrix();
-			glBegin( GL_TRIANGLES );			 /* Drawing Using Triangles	   */
-				glColor3f(   1.0f,  0.0f,  0.0f ); /* Red						   */
-				glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle			   */
-				glColor3f(   0.0f,  1.0f,  0.0f ); /* Green						 */
-				glVertex3f( -1.0f, -1.0f,  0.0f ); /* Left Of Triangle			  */
-				glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue						  */
-				glVertex3f(  1.0f, -1.0f,  0.0f ); /* Right Of Triangle			 */
-			glEnd();							/* Finished Drawing The Triangle */
-			glPopMatrix();
-			glPopMatrix();
-		}
-	}
-	glPopMatrix();
 	
 	// 3D projection mode for nearby gameplay objects with depth-testing
 	glEnable(GL_DEPTH_TEST);
@@ -180,6 +148,7 @@ void Display::_draw_frame() {
 	glLoadIdentity();
 	
 	// If fading is enabled, then mask what's been drawn with a big ol' translucent quad
+	// FIXME This should be the game mode's responsibility
 	if (fade_flag) {
 		glColor4f(fade_r, fade_g, fade_b, fade_a);
 		glBegin(GL_QUADS);
