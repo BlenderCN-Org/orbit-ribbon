@@ -32,7 +32,7 @@
 		<xsd:sequence>
 			<xsd:element name="frame" minOccurs="1" maxOccurs="unbounded" type="MeshType" />
 		</xsd:sequence>
-		<xsd:attribute name="name" type="xsd:string" />
+		<xsd:attribute name="name" type="xsd:string" use="required" />
 	</xsd:complexType>
 	
 	<xsd:complexType name="MeshType">
@@ -41,8 +41,8 @@
 			<xsd:element name="v" type="VertexType" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
 		<xsd:attribute name="texture" type="xsd:string" use="optional" />
-		<xsd:attribute name="vertcount" type="xsd:unsignedInt" />
-		<xsd:attribute name="facecount" type="xsd:unsignedInt" />
+		<xsd:attribute name="vertcount" type="xsd:unsignedInt" use="required" />
+		<xsd:attribute name="facecount" type="xsd:unsignedInt" use="required" />
 	</xsd:complexType>
 	
 	<xsd:simpleType name="FaceType">

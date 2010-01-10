@@ -31,7 +31,8 @@ class App {
 		static void run(const std::vector<std::string>& arguments);
 		
 		// To just load the base objects for an area, specify 0 for mission
-		static void load_mission(unsigned int area, unsigned int mission);
+		// TODO Implement above feature
+		static void load_mission(unsigned int area_num, unsigned int mission);
 		
 	private:
 		static void frame_loop();

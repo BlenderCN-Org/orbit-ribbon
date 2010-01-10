@@ -33,46 +33,46 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 class GameObj : boost::noncopyable {
 	public:
-		GameObj(const Point& npos, const boost::array<GLfloat, 9>& nrot);
+		GameObj(const Point& pos, const boost::array<GLfloat, 9>& rot);
 		virtual ~GameObj();
 		
-		const Point& get_pos() const { return pos; }
-		void set_pos(const Point& npos);
+		const Point& get_pos() const { return _pos; }
+		void set_pos(const Point& pos);
 		
-		const boost::array<GLfloat, 9>& get_rot() const { return rot; }
-		void set_rot(const boost::array<GLfloat, 9>& nrot);
+		const boost::array<GLfloat, 9>& get_rot() const { return _rot; }
+		void set_rot(const boost::array<GLfloat, 9>& rot);
 		
-		const Vector& get_vel() const { return vel; }
+		const Vector& get_vel() const { return _vel; }
 		
 		std::string to_str() const;
-
+		
 		void draw(bool near);
 		void step();
 	
 	protected:
-		dBodyID get_body() const { return body; }
-		void set_body(dBodyID nbody);
-
-		dGeomID get_geom() const { return geom; }
-		void set_geom(dGeomID ngeom);
+		dBodyID get_body() const { return _body; }
+		void set_body(dBodyID body);
+		
+		dGeomID get_geom() const { return _geom; }
+		void set_geom(dGeomID geom);
 		
 		virtual void near_draw_impl() {}
 		virtual void far_draw_impl() { near_draw_impl(); }
 		virtual void step_impl() {}
 	
 	private:
-		Point pos;
-		boost::array<GLfloat, 9> rot; // 3x3 column-major
-		Vector vel;
-
+		Point _pos;
+		boost::array<GLfloat, 9> _rot; // 3x3 column-major
+		Vector _vel;
+		
 		// Damping coefficients for linear and angular velocity along each body axis
 		// For example, vel_damp_coef[0] is the linear damping coefficient along relative x axis
 		// Each step, vel_damp_coef[0]/MAX_FPS * relative x velocity is removed
-		GLfloat vel_damp_coef[3];
-		GLfloat ang_damp_coef[3];
+		GLfloat _vel_damp_coef[3];
+		GLfloat _ang_damp_coef[3];
 		
-		dBodyID body;
-		dGeomID geom;
+		dBodyID _body;
+		dGeomID _geom;
 };
 
 #endif

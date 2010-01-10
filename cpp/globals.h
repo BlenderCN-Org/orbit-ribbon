@@ -26,15 +26,22 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/gl.h>
 #include <SDL/SDL.h>
 #include <vector>
-#include <boost/ptr_container/ptr_vector.hpp>
+#include <string>
+#include <boost/ptr_container/ptr_map.hpp>
+#include <boost/array.hpp>
+#include <boost/scoped_ptr.hpp>
 
 class GameObj;
+class Mode;
+
+typedef boost::ptr_map<std::string, GameObj> GOMap;
 
 class Globals {
 	public:
 		static std::vector<SDL_Event> frame_events;
 		static GLint total_steps;
-		static boost::ptr_vector<GameObj> gameobjs;
+		static GOMap gameobjs;
+		static boost::scoped_ptr<Mode> mode;
 };
 
 #endif

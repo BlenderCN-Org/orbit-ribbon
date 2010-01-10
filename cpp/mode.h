@@ -1,5 +1,6 @@
 /*
-globals.cpp: Translation unit for game-wide globals
+mode.h: Header for the Mode class and its subclasses.
+GameMode classes are responsible for handling overall control of gameplay and menu behaviour
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 
@@ -19,16 +20,23 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <SDL/SDL.h>
-#include <boost/ptr_container/ptr_vector.hpp>
+#ifndef ORBIT_RIBBON_MODE_H
+#define ORBIT_RIBBON_MODE_H
 
-#include "gameobj.h"
-#include "globals.h"
-#include "mode.h"
+#include <string>
 
-std::vector<SDL_Event> Globals::frame_events;
-GLint Globals::total_steps = 0;
-GOMap Globals::gameobjs;
-boost::scoped_ptr<Mode> Globals::mode;
+class Mode {
+	public:
+		virtual void set_camera() {}
+};
+
+class GameplayMode : public Mode {
+	private:
+		std::string _avatar_key;
+		
+	public:
+		GameplayMode();
+		void set_camera();
+};
+
+#endif

@@ -30,20 +30,20 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "geometry.h"
 #include "gloo.h"
 
-GameObj::GameObj(const Point& npos, const boost::array<GLfloat, 9>& nrot) :
-	pos(npos),
-	rot(nrot),
-	vel(Vector()),
-	body(0),
-	geom(0)
+GameObj::GameObj(const Point& pos, const boost::array<GLfloat, 9>& rot) :
+	_pos(pos),
+	_rot(rot),
+	_vel(Vector()),
+	_body(0),
+	_geom(0)
 {
-	vel_damp_coef[0] = DEFAULT_VEL_DAMP_COEF;
-	vel_damp_coef[1] = DEFAULT_VEL_DAMP_COEF;
-	vel_damp_coef[2] = DEFAULT_VEL_DAMP_COEF;
+	_vel_damp_coef[0] = DEFAULT_VEL_DAMP_COEF;
+	_vel_damp_coef[1] = DEFAULT_VEL_DAMP_COEF;
+	_vel_damp_coef[2] = DEFAULT_VEL_DAMP_COEF;
 	
-	ang_damp_coef[0] = DEFAULT_ANG_DAMP_COEF;
-	ang_damp_coef[1] = DEFAULT_ANG_DAMP_COEF;
-	ang_damp_coef[2] = DEFAULT_ANG_DAMP_COEF;
+	_ang_damp_coef[0] = DEFAULT_ANG_DAMP_COEF;
+	_ang_damp_coef[1] = DEFAULT_ANG_DAMP_COEF;
+	_ang_damp_coef[2] = DEFAULT_ANG_DAMP_COEF;
 }
 
 GameObj::~GameObj() {
@@ -51,25 +51,25 @@ GameObj::~GameObj() {
 	set_geom(0);
 }
 
-void recursive_geom_set_pos(dGeomID g, const Point& npos) {
+void recursive_geom_set_pos(dGeomID g, const Point& pos) {
 	if (dGeomIsSpace(g)) {
 		dSpaceID s = dSpaceID(g);
 		GLint end = dSpaceGetNumGeoms(s);
 		for (int i = 0; i < end; ++i) {
-			recursive_geom_set_pos(dSpaceGetGeom(s, i), npos);
+			recursive_geom_set_pos(dSpaceGetGeom(s, i),pos);
 		}
 	} else {
-		dGeomSetPosition(g, npos.x, npos.y, npos.z);
+		dGeomSetPosition(g, pos.x, pos.y, pos.z);
 	}
 }
 
-void GameObj::set_pos(const Point& npos) {
-	pos = npos;
+void GameObj::set_pos(const Point& pos) {
+	_pos = pos;
 	
-	if (body != 0) {
-		dBodySetPosition(body, pos.x, pos.y, pos.z);
-	} else if (geom != 0) {
-		recursive_geom_set_pos(geom, pos);
+	if (_body != 0) {
+		dBodySetPosition(_body, pos.x, pos.y, pos.z);
+	} else if (_geom != 0) {
+		recursive_geom_set_pos(_geom, pos);
 	}
 }
 
@@ -85,34 +85,34 @@ void recursive_geom_set_rot(dGeomID g, const dMatrix3& matr) {
 	}
 }
 
-void GameObj::set_rot(const boost::array<GLfloat, 9>& nrot) {
-	rot = nrot;
+void GameObj::set_rot(const boost::array<GLfloat, 9>& rot) {
+	_rot = rot;
 	
 	// Convert column-major to row-major
 	dMatrix3 matr;
-	matr[0] = nrot[0]; matr[1] = nrot[3]; matr[2] = nrot[6];
-	matr[3] = nrot[1]; matr[4] = nrot[4]; matr[5] = nrot[7];
-	matr[6] = nrot[2]; matr[7] = nrot[5]; matr[8] = nrot[8];
-	if (body != 0) {
-		dBodySetRotation(body, matr);
-	} else if (geom != 0) {
-		recursive_geom_set_rot(geom, matr);
+	matr[0] = rot[0]; matr[1] = rot[3]; matr[2] = rot[6];
+	matr[3] = rot[1]; matr[4] = rot[4]; matr[5] = rot[7];
+	matr[6] = rot[2]; matr[7] = rot[5]; matr[8] = rot[8];
+	if (_body != 0) {
+		dBodySetRotation(_body, matr);
+	} else if (_geom != 0) {
+		recursive_geom_set_rot(_geom, matr);
 	}
 }
 
 std::string GameObj::to_str() const {
-	// FIXME : Implement
+	// TODO Implement
 	return std::string("");
 }
 
 void GameObj::draw(bool near) {
 	GLOOPushedMatrix pm;
 	
-	glTranslatef(pos.x, pos.y, pos.z);
+	glTranslatef(_pos.x, _pos.y, _pos.z);
 	GLfloat rotMatr[16] = {  // Pad out with 4th row and column for OpenGL
-		rot[0], rot[1], rot[2], 0,
-		rot[3], rot[4], rot[5], 0,
-		rot[6], rot[7], rot[8], 0,
+		_rot[0], _rot[1], _rot[2], 0,
+		_rot[3], _rot[4], _rot[5], 0,
+		_rot[6], _rot[7], _rot[8], 0,
 		     0,      0,      0, 1
 	};
 	glMultMatrixf(rotMatr);
@@ -128,56 +128,56 @@ void GameObj::step() {
 	const dReal* p;
 	
 	// Load position, rotation, and velocity from ODE if there are dynamics for this GameObj
-	if (body != 0) {
-		p = dBodyGetPosition(body);
-		pos.x = *p; ++p;
-		pos.y = *p; ++p;
-		pos.z = *p;
+	if (_body != 0) {
+		p = dBodyGetPosition(_body);
+		_pos.x = *p; ++p;
+		_pos.y = *p; ++p;
+		_pos.z = *p;
 		
-		p = dBodyGetRotation(body);
-		rot[0] = *p; ++p;
-		rot[3] = *p; ++p;
-		rot[6] = *p; ++p;
-		rot[1] = *p; ++p;
-		rot[4] = *p; ++p;
-		rot[7] = *p; ++p;
-		rot[2] = *p; ++p;
-		rot[5] = *p; ++p;
-		rot[8] = *p;
+		p = dBodyGetRotation(_body);
+		_rot[0] = *p; ++p;
+		_rot[3] = *p; ++p;
+		_rot[6] = *p; ++p;
+		_rot[1] = *p; ++p;
+		_rot[4] = *p; ++p;
+		_rot[7] = *p; ++p;
+		_rot[2] = *p; ++p;
+		_rot[5] = *p; ++p;
+		_rot[8] = *p;
 		
-		p = dBodyGetLinearVel(body);
-		vel.x = *p; ++p;
-		vel.y = *p; ++p;
-		vel.z = *p;
+		p = dBodyGetLinearVel(_body);
+		_vel.x = *p; ++p;
+		_vel.y = *p; ++p;
+		_vel.z = *p;
 	}
 	
 	step_impl();
 	
 	// Apply damping
-	if (body != 0) {
+	if (_body != 0) {
 		GLint i;
 		dReal x, y, z;
 		dVector3 v;
 		
-		p = dBodyGetLinearVel(body);
+		p = dBodyGetLinearVel(_body);
 		x = *p; ++p;
 		y = *p; ++p;
 		z = *p;
-		dBodyVectorFromWorld(body, x, y, z, v);
+		dBodyVectorFromWorld(_body, x, y, z, v);
 		for (i = 0; i < 3; ++i) {
-			v[i] *= -vel_damp_coef[i]/MAX_FPS;
+			v[i] *= -_vel_damp_coef[i]/MAX_FPS;
 		}
-		dBodyAddRelForce(body, v[0], v[1], v[2]);
+		dBodyAddRelForce(_body, v[0], v[1], v[2]);
 		
-		p = dBodyGetAngularVel(body);
+		p = dBodyGetAngularVel(_body);
 		x = *p; ++p;
 		y = *p; ++p;
 		z = *p;
-		dBodyVectorFromWorld(body, x, y, z, v);
+		dBodyVectorFromWorld(_body, x, y, z, v);
 		for (i = 0; i < 3; ++i) {
-			v[i] *= -ang_damp_coef[i]/MAX_FPS;
+			v[i] *= -_ang_damp_coef[i]/MAX_FPS;
 		}
-		dBodyAddRelTorque(body, v[0], v[1], v[2]);
+		dBodyAddRelTorque(_body, v[0], v[1], v[2]);
 	}
 }
 
@@ -193,27 +193,27 @@ void recursive_geom_set_body(dGeomID geom, dBodyID body) {
 	}
 }
 
-void GameObj::set_body(dBodyID nbody) {
-	if (body != 0) {
-		dBodyDestroy(body);
+void GameObj::set_body(dBodyID body) {
+	if (_body != 0) {
+		dBodyDestroy(_body);
 	}
-	body = nbody;
+	_body = body;
 		
-	if (geom != 0) {
-		recursive_geom_set_body(geom, body);
+	if (_geom != 0) {
+		recursive_geom_set_body(_geom, _body);
 	}
 	
 	// This will load our current position and velocity into the body
-	set_pos(pos);
-	set_rot(rot);
+	set_pos(_pos);
+	set_rot(_rot);
 }
 
-void GameObj::set_geom(dGeomID ngeom) {
-	if (geom != 0) {
-		dGeomDestroy(geom);
+void GameObj::set_geom(dGeomID geom) {
+	if (_geom != 0) {
+		dGeomDestroy(_geom);
 	}
-	geom = ngeom;
-	if (body != 0) {
-		recursive_geom_set_body(geom, body);
+	_geom = geom;
+	if (_body != 0) {
+		recursive_geom_set_body(_geom, _body);
 	}
 }

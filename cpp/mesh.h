@@ -25,11 +25,11 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <string>
 #include <vector>
-#include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 
 #include "gloo.h"
+#include "gameobj.h"
 
 class MeshAnimation;
 class _AnimationParser;
@@ -38,8 +38,8 @@ class _MeshParser;
 
 class MeshAnimation : boost::noncopyable {
 	private:
-		std::vector<boost::shared_ptr<GLOOBufferedMesh> > frames;
-		std::string name;
+		std::vector<boost::shared_ptr<GLOOBufferedMesh> > _frames;
+		std::string _name;
 		
 		MeshAnimation() {}
 		
@@ -48,7 +48,19 @@ class MeshAnimation : boost::noncopyable {
 	public:
 		static boost::shared_ptr<MeshAnimation> load(const std::string& name);
 		
-		const std::string& get_name() { return name; }
+		const std::string& get_name() { return _name; }
+		void draw();
+};
+
+class MeshGameObj : public GameObj {
+	private:
+		boost::shared_ptr<MeshAnimation> _mesh_anim;
+		
+	protected:
+		void near_draw_impl();
+	
+	public:
+		MeshGameObj(const Point& pos, const::boost::array<GLfloat, 9>& rot, const boost::shared_ptr<MeshAnimation>& mesh_anim, bool set_geom);
 };
 
 #endif

@@ -88,9 +88,7 @@ boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
 		glGenTextures(1, &(tex->_tex_name));
 		glBindTexture(GL_TEXTURE_2D, tex->_tex_name);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA, surf->w, surf->h, 0, img_format, GL_UNSIGNED_BYTE, surf->pixels);
-		glEnable(GL_TEXTURE_2D); // Work around a bug on some ATI drivers
 		glGenerateMipmap(GL_TEXTURE_2D);
-		glDisable(GL_TEXTURE_2D);
 		
 		if (glGetError()) {
 			throw GameException("GL error while loading texture");

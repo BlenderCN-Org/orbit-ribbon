@@ -23,16 +23,23 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <SDL/SDL.h>
-
+#include <boost/array.hpp>
+#include <boost/assign/ptr_map_inserter.hpp>
+#include <boost/lexical_cast.hpp>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "app.h"
 #include "constants.h"
 #include "debug.h"
 #include "display.h"
 #include "except.h"
+#include "geometry.h"
 #include "globals.h"
+#include "gameobj.h"
+#include "mesh.h"
+#include "mode.h"
 #include "sim.h"
 #include "resman.h"
 
@@ -97,5 +104,57 @@ void App::run(const std::vector<std::string>& args) {
 	}
 }
 
-void App::load_mission(unsigned int area, unsigned int mission) {
+void insert_obj(const ORE1::ObjType& obj) {
+	Point pos(obj.pos()[0], obj.pos()[1], obj.pos()[2]);
+	boost::array<GLfloat, 9> rot;
+	std::copy(obj.rot().begin(), obj.rot().end(), rot.begin());
+	
+	boost::assign::ptr_map_insert<MeshGameObj>(Globals::gameobjs)(
+		obj.objName(), // ptr_map key : object name
+		pos, // First argument to MeshGameObj ctor : position
+		rot, // Second argument to MeshGameObj ctor : rotation matrix
+		MeshAnimation::load(obj.meshName()), // Third argument to MeshGameObj ctor : MeshAnimation
+		false // Fourth argument to MeshGameObj cgtor : set_geom boolean flag
+	);
+}
+
+void App::load_mission(unsigned int area_num, unsigned int mission_num) {
+	const ORE1::PkgDescType* desc = &ResMan::pkg().get_pkg_desc();
+	
+	const ORE1::AreaType* area = NULL;
+	for (ORE1::PkgDescType::AreaConstIterator i = desc->area().begin(); i != desc->area().end(); ++i) {
+		if (i->n() == area_num) {
+			area = &(*i);
+			break;
+		}
+	}
+	if (!area) {
+		throw GameException(
+			"Unable to load area " + boost::lexical_cast<std::string>(area_num)
+		);
+	}
+	
+	const ORE1::MissionType* mission = NULL;
+	for (ORE1::AreaType::MissionConstIterator i = area->mission().begin(); i != area->mission().end(); ++i) {
+		if (i->n() == mission_num) {
+			mission = &(*i);
+			break;
+		}
+	}
+	if (!mission) {
+		throw GameException(
+			"Unable to load mission " + boost::lexical_cast<std::string>(mission_num) + " from area " + boost::lexical_cast<std::string>(area_num)
+		);
+	}
+	
+	// Okay, we're now sure we have the area and mission we want. Let's load all the objects.
+	Globals::gameobjs.clear();
+	for (ORE1::AreaType::ObjConstIterator i = area->obj().begin(); i != area->obj().end(); ++i) {
+		insert_obj(*i);
+	}
+	for (ORE1::MissionType::ObjConstIterator i = mission->obj().begin(); i != mission->obj().end(); ++i) {
+		insert_obj(*i);
+	}
+	
+	Globals::mode.reset(new GameplayMode());
 }

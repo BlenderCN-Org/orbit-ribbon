@@ -39,11 +39,11 @@ class _MeshAnimationParser : public ORE1::AnimationType_pskel {
 		}
 		
 		void frame(boost::shared_ptr<GLOOBufferedMesh> mesh) {
-			_anim_p->frames.push_back(mesh);
+			_anim_p->_frames.push_back(mesh);
 		}
 		
 		void name(const std::string& n) {
-			_anim_p->name = n;
+			_anim_p->_name = n;
 		}
 		
 		boost::shared_ptr<MeshAnimation> post_AnimationType() {
@@ -200,7 +200,7 @@ class _UvParser : public ORE1::Coord2DType_pskel {
 		}
 };
 
-class _MeshParsingFrame {
+class _MeshParsingRig {
 	private:
 		xml_schema::string_pimpl string_parser;
 		xml_schema::unsigned_int_pimpl uint_parser;
@@ -213,7 +213,7 @@ class _MeshParsingFrame {
 		_UvParser uv_parser;
 	
 	public:
-		_MeshParsingFrame() {
+		_MeshParsingRig() {
 			anim_parser.parsers(mesh_parser, string_parser);
 			mesh_parser.parsers(face_parser, vertex_parser, string_parser, uint_parser, uint_parser);
 			face_parser.parsers(uint_parser);
@@ -230,12 +230,12 @@ class _MeshParsingFrame {
 		}
 };
 
-_MeshParsingFrame parsing_frame;
+_MeshParsingRig parsing_rig;
 
 class MeshAnimationCache : public CacheBase<MeshAnimation> {
 	boost::shared_ptr<MeshAnimation> generate(const std::string& id) {
-		boost::shared_ptr<OreFileHandle> fh = ResMan::pkg().get_fh(std::string(id));
-		return parsing_frame.parse(*fh);
+		boost::shared_ptr<OreFileHandle> fh = ResMan::pkg().get_fh(std::string("mesh-") + id);
+		return parsing_rig.parse(*fh);
 	}
 };
 
@@ -243,4 +243,22 @@ MeshAnimationCache mesh_animation_cache;
 
 boost::shared_ptr<MeshAnimation> MeshAnimation::load(const std::string& name) {
 	return mesh_animation_cache.get(name);
+}
+
+void MeshAnimation::draw() {
+	//FIXME Advance through the frames
+	_frames[0]->draw();
+}
+
+void MeshGameObj::near_draw_impl() {
+	_mesh_anim->draw();
+}
+
+MeshGameObj::MeshGameObj(const Point& pos, const::boost::array<GLfloat, 9>& rot, const boost::shared_ptr<MeshAnimation>& mesh_anim, bool set_geom) :
+	GameObj(pos, rot),
+	_mesh_anim(mesh_anim)
+{
+	if (set_geom) {
+		// TODO Set up ODE geometry
+	}
 }

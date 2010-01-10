@@ -45,7 +45,7 @@
 			<xsd:element name="mission" minOccurs="0" maxOccurs="unbounded" type="MissionType" />
 			<xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />
 		</xsd:sequence>
-		<xsd:attribute name="n" type="xsd:unsignedInt" />
+		<xsd:attribute name="n" type="xsd:unsignedInt" use="required" />
 	</xsd:complexType>
 	
 	<xsd:complexType name="SkySettingsType">
@@ -67,7 +67,7 @@
 			<xsd:element name="timerStartFunc" type="xsd:string" />
 			<xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />
 		</xsd:sequence>
-		<xsd:attribute name="n" type="xsd:unsignedInt" />
+		<xsd:attribute name="n" type="xsd:unsignedInt" use="required" />
 	</xsd:complexType>
 	
 	<xsd:complexType name="ObjType">
@@ -75,8 +75,8 @@
 			<xsd:element name="pos" type="Coord3DType" />
 			<xsd:element name="rot" type="RotMatrixType" />
 		</xsd:sequence>
-		<xsd:attribute name="objName" type="xsd:string" />
-		<xsd:attribute name="meshName" type="xsd:string" />
+		<xsd:attribute name="objName" type="xsd:string" use="required" />
+		<xsd:attribute name="meshName" type="xsd:string" use="required" />
 	</xsd:complexType>
 	
 	<xsd:simpleType name="FloatListType">

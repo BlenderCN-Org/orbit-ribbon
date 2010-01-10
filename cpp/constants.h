@@ -22,6 +22,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_CONSTANTS_H
 #define ORBIT_RIBBON_CONSTANTS_H
 
+#include "geometry.h"
+
 // String describing the current version of Orbit Ribbon
 const char* const APP_VERSION = "prealpha";
 
@@ -51,5 +53,10 @@ const float SKY_CLIP_DIST = 1e12;
 
 // Field-of-view in degrees
 const float FOV = 45;
+
+// Camera positioning relative to avatar's reference frame
+const Vector GAMEPLAY_CAMERA_POS_OFFSET(0.0, 1.1, -6.0);
+const Vector GAMEPLAY_CAMERA_TGT_OFFSET(0.0, 1.1, 0.0);
+const Vector GAMEPLAY_CAMERA_UP_VECTOR(0.0, 1.0, 0.0);
 
 #endif

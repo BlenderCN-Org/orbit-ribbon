@@ -24,11 +24,15 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <SDL/SDL.h>
+#include <boost/ptr_container/ptr_map.hpp>
 
 #include "constants.h"
 #include "debug.h"
 #include "display.h"
 #include "except.h"
+#include "gameobj.h"
+#include "globals.h"
+#include "mode.h"
 
 GLfloat fade_r, fade_g, fade_b, fade_a;
 bool fade_flag = false;
@@ -118,6 +122,9 @@ void Display::_draw_frame() {
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
+	// Set camera position and orientation
+	Globals::mode->set_camera();
+	
 	// 3D projection mode for sky objects and billboards without depth-testing
 	glDisable(GL_LIGHTING);
 	glDisable(GL_DEPTH_TEST);
@@ -134,6 +141,11 @@ void Display::_draw_frame() {
 	gluPerspective(FOV, screen_ratio, 0.1, GAMEPLAY_CLIP_DIST);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	
+	// Draw every game object (FIXME Do near/far sorting)
+	for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
+		i->second->draw(true);
+	}
 	
 	// 2D drawing mode
 	glDisable(GL_DEPTH_TEST);
