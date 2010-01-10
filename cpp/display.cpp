@@ -135,7 +135,7 @@ void Display::_draw_frame() {
 	
 	// 3D projection mode for nearby gameplay objects with depth-testing
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
+	//glEnable(GL_LIGHTING);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(FOV, screen_ratio, 0.1, GAMEPLAY_CLIP_DIST);

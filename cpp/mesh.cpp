@@ -48,7 +48,9 @@ class _MeshAnimationParser : public ORE1::AnimationType_pskel {
 		}
 		
 		boost::shared_ptr<MeshAnimation> post_AnimationType() {
-			return _anim_p;
+			boost::shared_ptr<MeshAnimation> ret = _anim_p;
+			_anim_p.reset();
+			return ret;
 		}
 };
 
@@ -101,8 +103,10 @@ class _MeshParser : public ORE1::MeshType_pskel {
 		}
 		
 		boost::shared_ptr<GLOOBufferedMesh> post_MeshType() {
-			_mesh->finish_loading();
-			return _mesh;
+			boost::shared_ptr<GLOOBufferedMesh> ret = _mesh;
+			_mesh.reset();
+			ret->finish_loading();
+			return ret;
 		}
 };
 
