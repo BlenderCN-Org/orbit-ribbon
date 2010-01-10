@@ -33,7 +33,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "cache.h"
 #include "constants.h"
-#include "debug.h"
 #include "except.h"
 #include "gloo.h"
 #include "resman.h"
@@ -60,6 +59,7 @@ struct SDLSurf {
 boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
 	try {
 		boost::shared_ptr<GLOOTexture> tex(new GLOOTexture());
+		tex->_load_name = id;
 		
 		// Create an SDL surface from the requested ORE image file
 		boost::shared_ptr<OreFileHandle> fh = ResMan::pkg().get_fh(std::string("image-") + id);
@@ -140,7 +140,7 @@ _VBOManager::Allocation::Allocation(unsigned int bytes, _VBOManager* man) :
 }
 
 void* _VBOManager::Allocation::map() {
-	if (!_man->_mapped) {
+	if (_man->_mapped) {
 		throw OreException("Attempted to map memory within already-mapped VBO");
 	} else {
 		_man->_mapped = true;

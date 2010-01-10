@@ -21,6 +21,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
 #include <string>
+#include <sstream>
 #include <boost/shared_ptr.hpp>
 
 #include "autoxsd/oreanim-pskel.h"
@@ -62,12 +63,12 @@ class _MeshParser : public ORE1::MeshType_pskel {
 				if (_verts == 0 || _faces == 0) {
 					throw OreException("Unable to create GLOOBufferedMesh without allocation attributes");
 				}
+				boost::shared_ptr<GLOOTexture> _tex;
+				if (_tex_name.size() > 0) {
+					_tex = GLOOTexture::load(_tex_name);
+				}
+				_mesh = GLOOBufferedMesh::create(_verts, _faces, _tex);
 			}
-			boost::shared_ptr<GLOOTexture> _tex;
-			if (_tex_name.size() > 0) {
-				_tex = GLOOTexture::load(_tex_name);
-			}
-			_mesh = GLOOBufferedMesh::create(_verts, _faces, _tex);
 		}
 	
 	public:
@@ -100,6 +101,7 @@ class _MeshParser : public ORE1::MeshType_pskel {
 		}
 		
 		boost::shared_ptr<GLOOBufferedMesh> post_MeshType() {
+			_mesh->finish_loading();
 			return _mesh;
 		}
 };
@@ -118,10 +120,13 @@ class _FaceParser : public ORE1::FaceType_pskel {
 			switch (_idx) {
 				case 0:
 					_face.a = i;
+					break;
 				case 1:
 					_face.b = i;
+					break;
 				case 2:
 					_face.c = i;
+					break;
 				default:
 					throw OreException("Too many indices supplied for a face");
 			}
@@ -223,7 +228,7 @@ class _MeshParsingRig {
 		}
 		
 		boost::shared_ptr<MeshAnimation> parse(OreFileHandle& fh) {
-			xml_schema::document doc_p(anim_parser, "animation");
+			xml_schema::document doc_p(anim_parser, "http://www.orbit-ribbon.org/ORE1", "animation");
 			anim_parser.pre();
 			doc_p.parse(fh, xsd::cxx::parser::xerces::flags::dont_validate);
 			return anim_parser.post_AnimationType();
@@ -235,7 +240,13 @@ _MeshParsingRig parsing_rig;
 class MeshAnimationCache : public CacheBase<MeshAnimation> {
 	boost::shared_ptr<MeshAnimation> generate(const std::string& id) {
 		boost::shared_ptr<OreFileHandle> fh = ResMan::pkg().get_fh(std::string("mesh-") + id);
-		return parsing_rig.parse(*fh);
+		try {
+			return parsing_rig.parse(*fh);
+		} catch (const xml_schema::parsing& e) {
+			std::stringstream ss;
+			ss << e;
+			throw GameException("Unable to parse MeshAnimation " + id + " : " + ss.str());
+		}
 	}
 };
 

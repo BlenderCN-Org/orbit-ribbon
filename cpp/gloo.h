@@ -47,16 +47,18 @@ class _TextureCache : public CacheBase<GLOOTexture> {
 
 class GLOOTexture : boost::noncopyable {
 	private:
+		std::string _load_name;
 		GLuint _tex_name;
 		GLuint _width, _height;
 		
-		GLOOTexture() {}
+		GLOOTexture() : _tex_name(0) {}
 		
 		friend class _TextureCache;
 	
 	public:
 		static boost::shared_ptr<GLOOTexture> load(const std::string& name);
 		
+		std::string get_load_name() { return _load_name; }
 		GLuint get_width() { return _width; }
 		GLuint get_height() { return _height; }
 		
