@@ -122,6 +122,8 @@ class _VBOManager : boost::noncopyable {
 		
 		boost::shared_ptr<Allocation> allocate(unsigned int bytes)
 			{ return boost::shared_ptr<Allocation>(new Allocation(bytes, this)); }
+			
+		float get_usage();
 		
 		bool mapped() { return _mapped; }
 };
@@ -142,6 +144,9 @@ class GLOOBufferedMesh : boost::noncopyable {
 	public:
 		static boost::shared_ptr<GLOOBufferedMesh> create(unsigned int vertex_count, unsigned int face_count, boost::shared_ptr<GLOOTexture> tex)
 			{ return boost::shared_ptr<GLOOBufferedMesh>(new GLOOBufferedMesh(vertex_count, face_count, tex)); }
+			
+		static float get_vertices_usage() { return _vertices_vboman ? _vertices_vboman->get_usage() : 0.0; }
+		static float get_faces_usage() { return _faces_vboman ? _faces_vboman->get_usage() : 0.0; }
 		
 		// These functions can only be called before the finish_loading() method is called
 		void load_vertex(const GLOOVertex& v);

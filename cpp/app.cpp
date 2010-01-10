@@ -25,6 +25,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <SDL/SDL.h>
 #include <boost/array.hpp>
 #include <boost/assign/ptr_map_inserter.hpp>
+#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>
 #include <vector>
@@ -109,7 +110,12 @@ void App::frame_loop() {
 		++frames_since_perf_display;
 		if (frames_since_perf_display >= MAX_FPS) {
 			frames_since_perf_display = 0;
-			Debug::debug_msg(Performance::get_perf_info());
+			Debug::debug_msg(
+				Performance::get_perf_info() + 
+				(boost::format(" VBO:%.3f%% IBO:%.3f%%")
+				% (GLOOBufferedMesh::get_vertices_usage()*100)
+				% (GLOOBufferedMesh::get_faces_usage()*100)
+			).str());
 		}
 	}
 }

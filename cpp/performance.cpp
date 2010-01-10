@@ -44,7 +44,7 @@ void Performance::record_frame(unsigned int total_ticks, unsigned int idle_ticks
 
 std::string Performance::get_perf_info() {
 	if (frames.size() < PERF_FRAMES_WINDOW) {
-		return std::string("CALCULATING FPS...");
+		return std::string("CALCULATING FPS...   ");
 	}
 	
 	unsigned int sum_t = 0;

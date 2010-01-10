@@ -177,6 +177,14 @@ _VBOManager::~_VBOManager() {
 	glDeleteBuffers(1, &_buf_id);
 }
 
+float _VBOManager::get_usage() {
+	float used = 0.0;
+	if (!_ranges.empty()) {
+		used = float(_ranges.back().offset + _ranges.back().bytes);
+	}
+	return used/float(_max_bytes);
+}
+
 bool GLOOBufferedMesh::_initialized = false;
 boost::scoped_ptr<_VBOManager> GLOOBufferedMesh::_vertices_vboman, GLOOBufferedMesh::_faces_vboman;
 

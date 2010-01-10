@@ -63,6 +63,6 @@ const Vector GAMEPLAY_CAMERA_TGT_OFFSET(0.0, 1.1, 0.0);
 const Vector GAMEPLAY_CAMERA_UP_VECTOR(0.0, 1.0, 0.0);
 
 // How many frames are analyzed in calculating performance info
-const unsigned int PERF_FRAMES_WINDOW = 100;
+const unsigned int PERF_FRAMES_WINDOW = 30;
 
 #endif
