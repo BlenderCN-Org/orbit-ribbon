@@ -40,12 +40,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gameobj.h"
 #include "mesh.h"
 #include "mode.h"
+#include "performance.h"
 #include "sim.h"
 #include "resman.h"
 
 void App::frame_loop() {
-	const GLint max_ticks_per_frame = 1000/MAX_FPS;
-	int unsimulated_ticks = 0;
+	unsigned int unsimulated_ticks = 0;
+	unsigned int frames_since_perf_display = 0;
 	
 	while (1) {
 		GLint frame_start = SDL_GetTicks();
@@ -58,26 +59,58 @@ void App::frame_loop() {
 		  	if (event.type == SDL_QUIT) {
 				throw GameQuitException("Closed on quit event");
 			}
+
+			// FIXME Debugging
+			if (event.type == SDL_KEYDOWN) {
+				GameObj& a = Globals::gameobjs.at("LIBAvatar.005");
+				switch (event.key.keysym.sym) {
+					case SDLK_LEFT:
+						a.set_pos(a.get_pos() + Vector(-100, 0, 0));
+						break;
+					case SDLK_RIGHT:
+						a.set_pos(a.get_pos() + Vector(100, 0, 0));
+						break;
+					case SDLK_UP:
+						a.set_pos(a.get_pos() + Vector(0, 0, 100));
+						break;
+					case SDLK_DOWN:
+						a.set_pos(a.get_pos() + Vector(0, 0, -100));
+						break;
+					default:
+						break;
+				}
+			}
 		}
 		
-		// Do simulation steps until we've caught up with the display
-		while (unsimulated_ticks > max_ticks_per_frame) {
+		// Do simulation steps until we've no more than one frame behind the display
+		while (unsimulated_ticks > MIN_TICKS_PER_FRAME) {
 			Sim::_sim_step();
 			Globals::total_steps += 1;
-			unsimulated_ticks -= max_ticks_per_frame;
+			unsimulated_ticks -= MIN_TICKS_PER_FRAME;
 		}
 		
 		// Re-draw the display
 		Display::_draw_frame();
 		
 		// Sleep if we're running faster than our maximum fps
-		GLint frame_ticks = SDL_GetTicks() - frame_start;
-		if (frame_ticks > 0 && frame_ticks < max_ticks_per_frame) {
-			SDL_Delay(max_ticks_per_frame - frame_ticks); // Slow down, buster!
+		unsigned int frame_ticks = SDL_GetTicks() - frame_start;
+		if (frame_ticks > 0 && frame_ticks < MIN_TICKS_PER_FRAME) {
+			SDL_Delay(MIN_TICKS_PER_FRAME - frame_ticks); // Slow down, buster!
 		}
 		
 		// The time that passed during this frame needs to pass in the simulator next frame
-		unsimulated_ticks += SDL_GetTicks() - frame_start;
+		unsigned int total_ticks = SDL_GetTicks() - frame_start;
+		unsimulated_ticks += total_ticks;
+		
+		// Put this frame into the FPS calculations
+		Performance::record_frame(total_ticks, total_ticks - frame_ticks);
+		
+		//FIXME Should output to display instead of console, and should be possible to turn this on and off
+		++frames_since_perf_display;
+		if (frames_since_perf_display >= MAX_FPS) {
+			frames_since_perf_display = 0;
+			Debug::debug_msg(Performance::get_perf_info());
+		}
 	}
 }
 
@@ -88,7 +121,7 @@ void App::run(const std::vector<std::string>& args) {
 		Sim::_init();
 		
 		// TODO Use a menu and/or command-line arguments to select mission and area
-		load_mission(1, 1);
+		load_mission(1, 3);
 	} catch (const std::exception& e) {
 		Debug::error_msg(std::string("Uncaught exception during init: ") + e.what());
 		return;
@@ -97,11 +130,12 @@ void App::run(const std::vector<std::string>& args) {
 	try {
 		frame_loop();
 	} catch (const GameQuitException& e) {
-		return;
+		// Do nothing.
 	} catch (const std::exception& e) {
 		Debug::error_msg(std::string("Uncaught exception during run: ") + e.what());
-		return;
 	}
+	
+	// TODO Deinitialize as well as possible here, to reduce possibility of weird error messages on close
 }
 
 void insert_obj(const ORE1::ObjType& obj) {

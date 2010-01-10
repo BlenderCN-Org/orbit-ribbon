@@ -21,7 +21,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <GL/glew.h>
 #include <GL/gl.h>
-
+#include <boost/format.hpp>
 #include <cmath>
 #include <string>
 #include <sstream>
@@ -62,8 +62,7 @@ Point& Point::operator=(const Point& other) {
 }
 
 std::string Point::to_str() const {
-	// FIXME : Implement
-	return std::string("");
+	return (boost::format("%.3f, %.3f, %.3f") % x % y % z).str();
 }
 
 Point Point::operator+(const Point& other) const {

@@ -140,11 +140,12 @@ void Display::_draw_frame() {
 	glLoadIdentity();
 	gluPerspective(FOV, screen_ratio, 0.1, GAMEPLAY_CLIP_DIST);
 	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
 	
 	// Draw every game object (FIXME Do near/far sorting)
 	for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
-		i->second->draw(true);
+		if (i->first != "LIBAvatar.005") { // FIXME Silly temporary hack to get around some kind of camera positioning bug
+			i->second->draw(true);
+		}
 	}
 	
 	// 2D drawing mode

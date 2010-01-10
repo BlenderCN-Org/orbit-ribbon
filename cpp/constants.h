@@ -28,7 +28,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 const char* const APP_VERSION = "prealpha";
 
 // Maximum number of frames per second, and the base number of simulated steps per second
-const int MAX_FPS = 60;
+const unsigned int MAX_FPS = 60;
+
+// How many ticks each frame must at least last
+const unsigned int MIN_TICKS_PER_FRAME = 1000/MAX_FPS;
 
 // Default coefficients for linear and angular damping on new GameObjs
 const float DEFAULT_VEL_DAMP_COEF = 0.15;
@@ -58,5 +61,8 @@ const float FOV = 45;
 const Vector GAMEPLAY_CAMERA_POS_OFFSET(0.0, 1.1, -6.0);
 const Vector GAMEPLAY_CAMERA_TGT_OFFSET(0.0, 1.1, 0.0);
 const Vector GAMEPLAY_CAMERA_UP_VECTOR(0.0, 1.0, 0.0);
+
+// How many frames are analyzed in calculating performance info
+const unsigned int PERF_FRAMES_WINDOW = 100;
 
 #endif
