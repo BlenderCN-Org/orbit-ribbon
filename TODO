@@ -10,3 +10,6 @@ Thinh's ideas:
 	- Enables optimization flags (compare -O2 with -O3 to see if latter helps...)
 	- Builds the entire project at once to see if g++'s unit-at-a-time thing helps
 	- Uses g++'s profiling mechanism with some kind of demo
+
+- Split up the constants out of constants.h, since changing it means recompiling lots of files
+- Make sure mipmapping and texture compression are both actually working

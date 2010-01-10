@@ -45,4 +45,11 @@ const int ORE_CHUNK_SIZE = 4096;
 const int VERTICES_BUFFER_ALLOCATED_SIZE = 4096;
 const int FACES_BUFFER_ALLOCATED_SIZE = 1024;
 
+// Clipping distance for gameplay objects and background objects respectively
+const float GAMEPLAY_CLIP_DIST = 50000;
+const float SKY_CLIP_DIST = 1e12;
+
+// Field-of-view in degrees
+const float FOV = 45;
+
 #endif

@@ -30,14 +30,15 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "display.h"
 #include "except.h"
 
-const GLfloat gameplay_clip_dist = 50000;
-const GLfloat sky_clip_dist = 1e12;
-const GLfloat fov = 45;
-
 GLfloat fade_r, fade_g, fade_b, fade_a;
 bool fade_flag = false;
 
 SDL_Surface* screen;
+
+GLsizei Display::screen_width = 800;
+GLsizei Display::screen_height = 600;
+GLint Display::screen_depth = 16;
+GLfloat Display::screen_ratio;
 
 void Display::set_fade_color(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
 	fade_r = r;
@@ -48,18 +49,6 @@ void Display::set_fade_color(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
 
 void Display::set_fade(bool flag) {
 	fade_flag = flag;
-}
-
-GLsizei Display::get_screen_width() {
-	return 800;
-}
-
-GLsizei Display::get_screen_height() {
-	return 600;
-}
-
-GLint Display::get_screen_depth() {
-	return 16;
 }
 
 void Display::_init() {
@@ -88,6 +77,14 @@ void Display::_init() {
 		throw GameException(std::string("GLEW init failed: " ) + std::string((const char*)glewGetErrorString((glew_err))));
 	}
 	
+	if (!GLEW_VERSION_2_1) {
+		throw GameException(std::string("Need OpenGL version 2.1 or greater"));
+	}
+	
+	if (!GLEW_ARB_map_buffer_range) {
+		throw GameException(std::string("Need OpenGL extension ARB_map_buffer_range"));
+	}
+	
 	glEnable(GL_TEXTURE_2D);
 	
 	glShadeModel(GL_SMOOTH);
@@ -108,16 +105,16 @@ void Display::_init() {
 }
 
 void Display::_screen_resize() {
-	glViewport(0, 0, Display::get_screen_width(), Display::get_screen_height());
+	screen_width = Display::get_screen_width();
+	screen_height = Display::get_screen_height();
+	screen_ratio = GLfloat(screen_width)/GLfloat(screen_height);
+	
+	glViewport(0, 0, screen_width, screen_height);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 }
 
 void Display::_draw_frame() {
-	const GLsizei screen_width = Display::get_screen_width();
-	const GLsizei screen_height = Display::get_screen_height();
-	const GLfloat screen_ratio = GLfloat(screen_width)/GLfloat(screen_height);
-	
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
@@ -126,7 +123,7 @@ void Display::_draw_frame() {
 	glDisable(GL_DEPTH_TEST);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(fov, screen_ratio, 0.1, sky_clip_dist);
+	gluPerspective(FOV, screen_ratio, 0.1, SKY_CLIP_DIST);
 	glMatrixMode(GL_MODELVIEW);
 	
 	// 3D projection mode for nearby gameplay objects with depth-testing
@@ -134,7 +131,7 @@ void Display::_draw_frame() {
 	glEnable(GL_LIGHTING);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(fov, screen_ratio, 0.1, gameplay_clip_dist);
+	gluPerspective(FOV, screen_ratio, 0.1, GAMEPLAY_CLIP_DIST);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
@@ -143,7 +140,7 @@ void Display::_draw_frame() {
 	glDisable(GL_LIGHTING);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(0.0, screen_width, screen_height, 0.0);
+	gluOrtho2D(0.0, screen_width, screen_height, 0.0); // Set origin at top-left of screen
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	

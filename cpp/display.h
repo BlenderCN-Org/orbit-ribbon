@@ -29,14 +29,19 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 class App;
 
 class Display {
+	private:
+		static GLsizei screen_width, screen_height;
+		static GLint screen_depth;
+		static GLfloat screen_ratio;
+	
 	public:
 		// FIXME : Abstract this out to the game mode controller
 		static void set_fade_color(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
 		static void set_fade(bool flag);
 		
-		static GLsizei get_screen_width();
-		static GLsizei get_screen_height();
-		static GLint get_screen_depth();
+		static GLsizei get_screen_width() { return screen_width; }
+		static GLsizei get_screen_height() { return screen_height; }
+		static GLint get_screen_depth() { return screen_depth; }
 		
 	private:
 		static void _init();
