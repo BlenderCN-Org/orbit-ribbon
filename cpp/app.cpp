@@ -24,7 +24,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/gl.h>
 #include <SDL/SDL.h>
 #include <boost/array.hpp>
-#include <boost/assign/ptr_map_inserter.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>

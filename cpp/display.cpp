@@ -24,7 +24,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <SDL/SDL.h>
-#include <boost/ptr_container/ptr_map.hpp>
 
 #include "constants.h"
 #include "debug.h"
