@@ -24,19 +24,22 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/gl.h>
 #include <ode/ode.h>
 #include <boost/array.hpp>
+#include <boost/regex.hpp>
+#include <cctype>
 
 #include "constants.h"
 #include "gameobj.h"
 #include "geometry.h"
 #include "gloo.h"
 
-GameObj::GameObj(const Point& pos, const boost::array<GLfloat, 9>& rot) :
-	_pos(pos),
-	_rot(rot),
+GameObj::GameObj(const ORE1::ObjType& obj) :
+	_pos(Point(obj.pos()[0], obj.pos()[1], obj.pos()[2])),
 	_vel(Vector()),
 	_body(0),
 	_geom(0)
 {
+	std::copy(obj.rot().begin(), obj.rot().end(), _rot.begin());
+	
 	_vel_damp_coef[0] = DEFAULT_VEL_DAMP_COEF;
 	_vel_damp_coef[1] = DEFAULT_VEL_DAMP_COEF;
 	_vel_damp_coef[2] = DEFAULT_VEL_DAMP_COEF;
@@ -216,4 +219,24 @@ void GameObj::set_geom(dGeomID geom) {
 	if (_body != 0) {
 		recursive_geom_set_body(_geom, _body);
 	}
+}
+
+bool GOFactoryRegistry::_initialized;
+GOFactoryRegistry::_Factories* GOFactoryRegistry::_factories;
+
+boost::shared_ptr<GameObj> GOFactoryRegistry::create(const ORE1::ObjType& obj) {
+	static const boost::regex e("LIB(.+?)(?:\\.\\d+)?");
+	
+	init();
+	boost::smatch m;
+	if (boost::regex_match(obj.meshName(), m, e)) {
+		std::map<std::string, boost::shared_ptr<GOFactory> >::iterator i = _factories->_factory_map.find(m[1]);
+		if (i != _factories->_factory_map.end()) {
+			return i->second->create(obj);
+		}
+	}
+	if (!_factories->_default_factory) {
+		throw GameException("No GameObj default factory registered!");
+	}
+	return _factories->_default_factory->create(obj);
 }

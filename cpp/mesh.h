@@ -52,6 +52,11 @@ class MeshAnimation : boost::noncopyable {
 		void draw();
 };
 
+// Forward declaration
+namespace ORE1 {
+	class ObjType;
+}
+
 class MeshGameObj : public GameObj {
 	private:
 		boost::shared_ptr<MeshAnimation> _mesh_anim;
@@ -60,7 +65,7 @@ class MeshGameObj : public GameObj {
 		void near_draw_impl();
 	
 	public:
-		MeshGameObj(const Point& pos, const::boost::array<GLfloat, 9>& rot, const boost::shared_ptr<MeshAnimation>& mesh_anim, bool set_geom);
+		MeshGameObj(const ORE1::ObjType& obj);
 };
 
 #endif

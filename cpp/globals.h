@@ -27,14 +27,15 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <SDL/SDL.h>
 #include <vector>
 #include <string>
-#include <boost/ptr_container/ptr_map.hpp>
+#include <map>
+#include <boost/shared_ptr.hpp>
 #include <boost/array.hpp>
 #include <boost/scoped_ptr.hpp>
 
 class GameObj;
 class Mode;
 
-typedef boost::ptr_map<std::string, GameObj> GOMap;
+typedef std::map<std::string, boost::shared_ptr<GameObj> > GOMap;
 
 class Globals {
 	public:

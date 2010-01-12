@@ -48,7 +48,7 @@ const int ORE_CHUNK_SIZE = 4096;
 
 // How many kilobytes should be allocated for the vertices buffer and faces buffer respectively
 const int VERTICES_BUFFER_ALLOCATED_SIZE = 4096;
-const int FACES_BUFFER_ALLOCATED_SIZE = 1024;
+const int FACES_BUFFER_ALLOCATED_SIZE = 2048;
 
 // Clipping distance for gameplay objects and background objects respectively
 const float GAMEPLAY_CLIP_DIST = 50000;

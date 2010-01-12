@@ -24,6 +24,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <sstream>
 #include <boost/shared_ptr.hpp>
 
+#include "autoxsd/orepkgdesc.h"
 #include "autoxsd/oreanim-pskel.h"
 #include "cache.h"
 #include "gloo.h"
@@ -269,11 +270,10 @@ void MeshGameObj::near_draw_impl() {
 	_mesh_anim->draw();
 }
 
-MeshGameObj::MeshGameObj(const Point& pos, const::boost::array<GLfloat, 9>& rot, const boost::shared_ptr<MeshAnimation>& mesh_anim, bool set_geom) :
-	GameObj(pos, rot),
-	_mesh_anim(mesh_anim)
+GOAutoRegistration<MeshGameObj> reg; // Set MeshGameObj as the default type for unknown GameObjs
+
+MeshGameObj::MeshGameObj(const ORE1::ObjType& obj) :
+	GameObj(obj),
+	_mesh_anim(MeshAnimation::load(obj.meshName()))
 {
-	if (set_geom) {
-		// TODO Set up ODE geometry
-	}
 }

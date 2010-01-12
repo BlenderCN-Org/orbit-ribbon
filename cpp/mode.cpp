@@ -46,14 +46,13 @@ GameplayMode::GameplayMode() {
 }
 
 void GameplayMode::set_camera() {
-	GameObj* avatar;
-	try {
-		avatar = &Globals::gameobjs.at(_avatar_key);
-	} catch (const boost::bad_ptr_container_operation& e) {
+	GOMap::iterator i = Globals::gameobjs.find(_avatar_key);
+	if (i == Globals::gameobjs.end()) {
 		throw GameException(std::string("GameplayMode: LIBAvatar GameObj named ") + _avatar_key + " has disappeared unexpectedly");
 	}
 	
 	// FIXME Just testing here, really need to do this within avatar's reference frame
+	boost::shared_ptr<GameObj>& avatar = i->second;
 	gluLookAt(
 		avatar->get_pos().x, avatar->get_pos().y, avatar->get_pos().z,
 		0.0, 0.0, 0.0,

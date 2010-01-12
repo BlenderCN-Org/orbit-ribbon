@@ -28,12 +28,17 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <ode/ode.h>
 #include <boost/array.hpp>
 #include <boost/utility.hpp>
+#include <boost/shared_ptr.hpp>
+#include <map>
+#include <utility>
 
+#include "autoxsd/orepkgdesc.h"
+#include "except.h"
 #include "geometry.h"
 
 class GameObj : boost::noncopyable {
 	public:
-		GameObj(const Point& pos, const boost::array<GLfloat, 9>& rot);
+		GameObj(const ORE1::ObjType& obj);
 		virtual ~GameObj();
 		
 		const Point& get_pos() const { return _pos; }
@@ -73,6 +78,68 @@ class GameObj : boost::noncopyable {
 		
 		dBodyID _body;
 		dGeomID _geom;
+};
+
+class GOFactory {
+	public:
+		virtual boost::shared_ptr<GameObj> create(const ORE1::ObjType& obj) =0;
+};
+
+class GOFactoryRegistry {
+	private:
+		// Since we can't rely on static object ctors being called before any GOAutoRegistrations are initialized...
+		// We'll just create simple free store allocation (which we can safely not worry about deleting) on first call to register_*
+		
+		struct _Factories {
+			std::map<std::string, boost::shared_ptr<GOFactory> > _factory_map;
+			boost::shared_ptr<GOFactory> _default_factory;
+		};
+		static bool _initialized;
+		static _Factories* _factories;
+		
+		static void init() {
+			if (!_initialized) {
+				_factories = new _Factories;
+				_initialized = true;
+			}
+		}
+	
+	public:
+		static void register_factory(const std::string& name, const boost::shared_ptr<GOFactory>& factory) {
+			init();
+			std::map<std::string, boost::shared_ptr<GOFactory> >::iterator i = _factories->_factory_map.find(name);
+			if (i != _factories->_factory_map.end()) {
+				throw GameException("Attempted to register over existing GameObject factory for " + name);
+			}
+			_factories->_factory_map.insert(std::pair<const std::string, boost::shared_ptr<GOFactory> >(name, factory));
+		}
+		
+		static void register_default_factory(const boost::shared_ptr<GOFactory>& factory) { 
+			init();
+			if (_factories->_default_factory) {
+				throw GameException("Attempted to register over existing default GameObject factory");
+			}
+			_factories->_default_factory = factory; 
+		}
+		
+		static boost::shared_ptr<GameObj> create(const ORE1::ObjType& obj);
+};
+
+template<typename T> class _GOAutoFactory : public GOFactory {
+	boost::shared_ptr<GameObj> create(const ORE1::ObjType& obj) {
+		return boost::shared_ptr<GameObj>(new T(obj));
+	}
+};
+
+template<typename T> class GOAutoRegistration {
+	public:
+		GOAutoRegistration() {
+			GOFactoryRegistry::register_default_factory(boost::shared_ptr<GOFactory>(new _GOAutoFactory<T>));
+		}
+		
+		GOAutoRegistration(const std::string& name) {
+			GOFactoryRegistry::register_factory(name, boost::shared_ptr<GOFactory>(new _GOAutoFactory<T>));
+		}
 };
 
 #endif

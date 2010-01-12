@@ -60,27 +60,6 @@ void App::frame_loop() {
 		  	if (event.type == SDL_QUIT) {
 				throw GameQuitException("Closed on quit event");
 			}
-
-			// FIXME Debugging
-			if (event.type == SDL_KEYDOWN) {
-				GameObj& a = Globals::gameobjs.at("LIBAvatar.005");
-				switch (event.key.keysym.sym) {
-					case SDLK_LEFT:
-						a.set_pos(a.get_pos() + Vector(-100, 0, 0));
-						break;
-					case SDLK_RIGHT:
-						a.set_pos(a.get_pos() + Vector(100, 0, 0));
-						break;
-					case SDLK_UP:
-						a.set_pos(a.get_pos() + Vector(0, 0, 100));
-						break;
-					case SDLK_DOWN:
-						a.set_pos(a.get_pos() + Vector(0, 0, -100));
-						break;
-					default:
-						break;
-				}
-			}
 		}
 		
 		// Do simulation steps until we've no more than one frame behind the display
@@ -111,8 +90,8 @@ void App::frame_loop() {
 		if (frames_since_perf_display >= MAX_FPS) {
 			frames_since_perf_display = 0;
 			Debug::debug_msg(
-				Performance::get_perf_info() + 
-				(boost::format(" VBO:%.3f%% IBO:%.3f%%")
+				(boost::format("%s VBO:%.3f%% IBO:%.3f%%")
+				% Performance::get_perf_info()
 				% (GLOOBufferedMesh::get_vertices_usage()*100)
 				% (GLOOBufferedMesh::get_faces_usage()*100)
 			).str());
@@ -142,20 +121,6 @@ void App::run(const std::vector<std::string>& args) {
 	}
 	
 	// TODO Deinitialize as well as possible here, to reduce possibility of weird error messages on close
-}
-
-void insert_obj(const ORE1::ObjType& obj) {
-	Point pos(obj.pos()[0], obj.pos()[1], obj.pos()[2]);
-	boost::array<GLfloat, 9> rot;
-	std::copy(obj.rot().begin(), obj.rot().end(), rot.begin());
-	
-	boost::assign::ptr_map_insert<MeshGameObj>(Globals::gameobjs)(
-		obj.objName(), // ptr_map key : object name
-		pos, // First argument to MeshGameObj ctor : position
-		rot, // Second argument to MeshGameObj ctor : rotation matrix
-		MeshAnimation::load(obj.meshName()), // Third argument to MeshGameObj ctor : MeshAnimation
-		false // Fourth argument to MeshGameObj cgtor : set_geom boolean flag
-	);
 }
 
 void App::load_mission(unsigned int area_num, unsigned int mission_num) {
@@ -190,10 +155,10 @@ void App::load_mission(unsigned int area_num, unsigned int mission_num) {
 	// Okay, we're now sure we have the area and mission we want. Let's load all the objects.
 	Globals::gameobjs.clear();
 	for (ORE1::AreaType::ObjConstIterator i = area->obj().begin(); i != area->obj().end(); ++i) {
-		insert_obj(*i);
+		Globals::gameobjs.insert(GOMap::value_type(i->objName(), GOFactoryRegistry::create(*i)));
 	}
 	for (ORE1::MissionType::ObjConstIterator i = mission->obj().begin(); i != mission->obj().end(); ++i) {
-		insert_obj(*i);
+		Globals::gameobjs.insert(GOMap::value_type(i->objName(), GOFactoryRegistry::create(*i)));
 	}
 	
 	Globals::mode.reset(new GameplayMode());

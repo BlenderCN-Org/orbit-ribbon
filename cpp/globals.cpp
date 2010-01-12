@@ -22,7 +22,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <SDL/SDL.h>
-#include <boost/ptr_container/ptr_vector.hpp>
 
 #include "gameobj.h"
 #include "globals.h"
