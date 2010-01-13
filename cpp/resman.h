@@ -36,6 +36,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "except.h"
 #include "constants.h"
 
+// How many bytes to load from ORE files in each chunk
+const int ORE_CHUNK_SIZE = 4096;
+
 class OreException : public GameException {
 	public:
 		OreException(const std::string& msg) : GameException(msg) {}

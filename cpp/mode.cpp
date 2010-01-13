@@ -56,6 +56,6 @@ void GameplayMode::set_camera() {
 	gluLookAt(
 		avatar->get_pos().x, avatar->get_pos().y, avatar->get_pos().z,
 		0.0, 0.0, 0.0,
-		GAMEPLAY_CAMERA_UP_VECTOR.x, GAMEPLAY_CAMERA_UP_VECTOR.y, GAMEPLAY_CAMERA_UP_VECTOR.z
+		0.0, 1.0, 0.0
 	);
 }

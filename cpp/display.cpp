@@ -33,6 +33,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "mode.h"
 
+// Clipping distance for gameplay objects and background objects respectively
+const float GAMEPLAY_CLIP_DIST = 50000;
+const float SKY_CLIP_DIST = 1e12;
+
+// Field-of-view in degrees
+const float FOV = 45;
+
 GLfloat fade_r, fade_g, fade_b, fade_a;
 bool fade_flag = false;
 
@@ -142,9 +149,7 @@ void Display::_draw_frame() {
 	
 	// Draw every game object (FIXME Do near/far sorting)
 	for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
-		if (i->first != "LIBAvatar.005") { // FIXME Silly temporary hack to get around some kind of camera positioning bug
-			i->second->draw(true);
-		}
+		i->second->draw(true);
 	}
 	
 	// 2D drawing mode

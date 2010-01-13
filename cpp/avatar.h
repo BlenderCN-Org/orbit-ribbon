@@ -1,6 +1,6 @@
 /*
-input.cpp: Implementation of input-management classes.
-These classes are responsible for taking input from the keyboard and gamepad, and binding input to game actions.
+avatar.h: Header of the Avatar class
+Avatar is a GameObject representing the player character
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 
@@ -20,11 +20,20 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
-#include "constants.h"
-#include "input.h"
+#ifndef ORBIT_RIBBON_AVATAR_H
+#define ORBIT_RIBBON_AVATAR_H
 
-// How far from -1, 0, or 1 where we consider an input axis to just be at those exact values
-const float DEAD_ZONE = 0.001;
+#include "gameobj.h"
 
-// Space separated list of key names to ignore in the input module because they cause problems
-const char* const IGNORE_KEYS = "[-] numlock";
+namespace ORE1 { class ObjType; }
+
+class AvatarGameObj : public GameObj {
+	protected:
+		void step_impl();
+		void near_draw_impl();
+	
+	public:
+		AvatarGameObj(const ORE1::ObjType& obj);
+};
+
+#endif

@@ -11,5 +11,8 @@ Thinh's ideas:
 	- Builds the entire project at once to see if g++'s unit-at-a-time thing helps
 	- Uses g++'s profiling mechanism with some kind of demo
 
-- Split up the constants out of constants.h, since changing it means recompiling lots of files
+- Come up with a simple way to do documentation; doxygen's usual format is a pain in the ass
+- Pass boost::shared_ptr by const reference wherever possible
+- Make the naming of variables consistent (in particular, use underscore prefix for members)
 - Make sure mipmapping and texture compression are both actually working
+- Figure out how to turn off warnings on arguments I want to ignore (i.e. some of the sdl_rwops stuff in resman.cpp)

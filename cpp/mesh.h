@@ -52,10 +52,7 @@ class MeshAnimation : boost::noncopyable {
 		void draw();
 };
 
-// Forward declaration
-namespace ORE1 {
-	class ObjType;
-}
+namespace ORE1 { class ObjType; }
 
 class MeshGameObj : public GameObj {
 	private:

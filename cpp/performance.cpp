@@ -26,6 +26,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "constants.h"
 #include "performance.h"
 
+// How many frames are analyzed in calculating performance info
+const unsigned int PERF_FRAMES_WINDOW = 30;
+
 struct FrameInfo {
 	unsigned int total_ticks;
 	unsigned int idle_ticks;

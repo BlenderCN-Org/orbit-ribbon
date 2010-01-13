@@ -27,10 +27,15 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/regex.hpp>
 #include <cctype>
 
+#include "autoxsd/orepkgdesc.h"
 #include "constants.h"
 #include "gameobj.h"
 #include "geometry.h"
 #include "gloo.h"
+
+// Default coefficients for linear and angular damping on new GameObjs
+const float DEFAULT_VEL_DAMP_COEF = 0.15;
+const float DEFAULT_ANG_DAMP_COEF = 0.15;
 
 GameObj::GameObj(const ORE1::ObjType& obj) :
 	_pos(Point(obj.pos()[0], obj.pos()[1], obj.pos()[2])),

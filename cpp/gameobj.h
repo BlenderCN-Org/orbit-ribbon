@@ -32,9 +32,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <map>
 #include <utility>
 
-#include "autoxsd/orepkgdesc.h"
 #include "except.h"
 #include "geometry.h"
+
+namespace ORE1 { class ObjType; }
 
 class GameObj : boost::noncopyable {
 	public:

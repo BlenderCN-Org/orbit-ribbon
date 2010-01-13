@@ -37,6 +37,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gloo.h"
 #include "resman.h"
 
+// How many kilobytes should be allocated for the vertices buffer and faces buffer respectively
+const int VERTICES_BUFFER_ALLOCATED_SIZE = 4096;
+const int FACES_BUFFER_ALLOCATED_SIZE = 2048;
+
 GLOOPushedMatrix::GLOOPushedMatrix() {
 	glPushMatrix();
 }

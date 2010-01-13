@@ -24,7 +24,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/gl.h>
 #include <SDL/SDL.h>
 #include <boost/array.hpp>
-#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <string>
 #include <vector>
@@ -43,6 +42,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "performance.h"
 #include "sim.h"
 #include "resman.h"
+
+// How many ticks each frame must at least last
+const unsigned int MIN_TICKS_PER_FRAME = 1000/MAX_FPS;
 
 void App::frame_loop() {
 	unsigned int unsimulated_ticks = 0;
@@ -88,12 +90,7 @@ void App::frame_loop() {
 		++frames_since_perf_display;
 		if (frames_since_perf_display >= MAX_FPS) {
 			frames_since_perf_display = 0;
-			Debug::debug_msg(
-				(boost::format("%s VBO:%.3f%% IBO:%.3f%%")
-				% Performance::get_perf_info()
-				% (GLOOBufferedMesh::get_vertices_usage()*100)
-				% (GLOOBufferedMesh::get_faces_usage()*100)
-			).str());
+			Debug::debug_msg(Performance::get_perf_info() + " " + GLOOBufferedMesh::get_usage_info());
 		}
 	}
 }

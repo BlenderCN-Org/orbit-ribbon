@@ -1,5 +1,5 @@
 /*
-constants.h: Header defining game-wide constants
+constants.h: Header defining constants used in several different modules
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 
@@ -30,39 +30,5 @@ const char* const APP_VERSION = "prealpha";
 // Maximum number of frames per second, and the base number of simulated steps per second
 const unsigned int MAX_FPS = 60;
 
-// How many ticks each frame must at least last
-const unsigned int MIN_TICKS_PER_FRAME = 1000/MAX_FPS;
-
-// Default coefficients for linear and angular damping on new GameObjs
-const float DEFAULT_VEL_DAMP_COEF = 0.15;
-const float DEFAULT_ANG_DAMP_COEF = 0.15;
-
-// How far from -1, 0, or 1 where we consider an input axis to just be at those exact values
-const float DEAD_ZONE = 0.001;
-
-// Space separated list of key names to ignore in the input module because they cause problems
-const char* const IGNORE_KEYS = "[-] numlock";
-
-// How many bytes to load from ORE files in each chunk
-const int ORE_CHUNK_SIZE = 4096;
-
-// How many kilobytes should be allocated for the vertices buffer and faces buffer respectively
-const int VERTICES_BUFFER_ALLOCATED_SIZE = 4096;
-const int FACES_BUFFER_ALLOCATED_SIZE = 2048;
-
-// Clipping distance for gameplay objects and background objects respectively
-const float GAMEPLAY_CLIP_DIST = 50000;
-const float SKY_CLIP_DIST = 1e12;
-
-// Field-of-view in degrees
-const float FOV = 45;
-
-// Camera positioning relative to avatar's reference frame
-const Vector GAMEPLAY_CAMERA_POS_OFFSET(0.0, 1.1, -6.0);
-const Vector GAMEPLAY_CAMERA_TGT_OFFSET(0.0, 1.1, 0.0);
-const Vector GAMEPLAY_CAMERA_UP_VECTOR(0.0, 1.0, 0.0);
-
-// How many frames are analyzed in calculating performance info
-const unsigned int PERF_FRAMES_WINDOW = 30;
 
 #endif

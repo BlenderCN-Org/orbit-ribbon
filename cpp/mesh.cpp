@@ -270,7 +270,7 @@ void MeshGameObj::near_draw_impl() {
 	_mesh_anim->draw();
 }
 
-GOAutoRegistration<MeshGameObj> reg; // Set MeshGameObj as the default type for unknown GameObjs
+GOAutoRegistration<MeshGameObj> mesh_gameobj_reg; // Set MeshGameObj as the default type for unknown GameObjs
 
 MeshGameObj::MeshGameObj(const ORE1::ObjType& obj) :
 	GameObj(obj),
