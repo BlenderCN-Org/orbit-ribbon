@@ -26,8 +26,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "constants.h"
 #include "performance.h"
 
-// How many frames are analyzed in calculating performance info
-const unsigned int PERF_FRAMES_WINDOW = 30;
+// How many ticks into the past performance are analyzed
+const unsigned int PERF_TICKS_WINDOW = 2000;
 
 struct FrameInfo {
 	unsigned int total_ticks;
@@ -38,18 +38,25 @@ struct FrameInfo {
 std::deque<FrameInfo> frames;
 
 void Performance::record_frame(unsigned int total_ticks, unsigned int idle_ticks) {
-	
 	frames.push_back(FrameInfo(total_ticks, idle_ticks));
-	if (frames.size() > PERF_FRAMES_WINDOW) {
-		frames.pop_front();
+	
+	// Erase any FrameInfos that aren't needed to have a history PERF_TICKS_WINDOW ticks into the past
+	unsigned int sum_t = 0;
+	BOOST_FOREACH(const FrameInfo& f, frames) {
+		sum_t += f.total_ticks;
+	}
+	while (1) {
+		unsigned int front_ticks = frames.front().total_ticks;
+		if ((sum_t - front_ticks) > PERF_TICKS_WINDOW) {
+			sum_t -= front_ticks;
+			frames.pop_front();
+		} else {
+			break;
+		}
 	}
 }
 
 std::string Performance::get_perf_info() {
-	if (frames.size() < PERF_FRAMES_WINDOW) {
-		return std::string("CALCULATING FPS...   ");
-	}
-	
 	unsigned int sum_t = 0;
 	unsigned int sum_i = 0;
 	BOOST_FOREACH(const FrameInfo& f, frames) {
@@ -57,11 +64,12 @@ std::string Performance::get_perf_info() {
 		sum_i += f.idle_ticks;
 	}
 	
-	// Prevent any potential divide-by-zero nonsense
-	if (sum_t == 0) { ++sum_t; }
+	if (sum_t < PERF_TICKS_WINDOW) {
+		return std::string("CALCULATING FPS...   ");
+	}
 	
 	return (boost::format("FPS:%4.2f IDLE:%4.2f%%")
-		% (PERF_FRAMES_WINDOW*1000/float(sum_t))
+		% (frames.size()*1000/float(sum_t))
 		% (float(sum_i*100)/float(sum_t))
 	).str();
 }
