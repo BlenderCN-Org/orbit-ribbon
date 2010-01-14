@@ -187,15 +187,15 @@ void ResMan::_init(const std::string& top_ore_package_name) {
 		try {
 			top_ore_package = boost::shared_ptr<OrePackage>(new OrePackage(p));
 			loaded = true;
-			Debug::status_msg("Loaded ORE package '" + top_ore_package_name + "' from location " + p.string());
+			Debug::status_msg("Opened ORE package '" + top_ore_package_name + "' from location " + p.string());
 			break;
 		} catch (const OreException& e) {
-			Debug::status_msg("Unable to load ORE package '" + top_ore_package_name + "' from location " + p.string() + " : " + e.get_msg());
+			Debug::status_msg("Unable to open ORE package '" + top_ore_package_name + "' from location " + p.string() + " : " + e.get_msg());
 			continue;
 		}
 	}
 	
 	if (!loaded) {
-		throw OreException("Unable to load ORE package '" + top_ore_package_name + "'!");
+		throw OreException("Unable to open ORE package '" + top_ore_package_name + "'!");
 	}
 }

@@ -20,14 +20,12 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
+#include <ode/ode.h>
+
 #include "autoxsd/orepkgdesc.h"
 #include "avatar.h"
 #include "geometry.h"
-
-// Camera positioning relative to avatar's reference frame
-const Vector CAMERA_POS_OFFSET(0.0, 1.1, -6.0);
-const Vector CAMERA_TGT_OFFSET(0.0, 1.1, 0.0);
-const Vector CAMERA_UP_VECTOR(0.0, 1.0, 0.0);
+#include "sim.h"
 
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 
@@ -38,4 +36,5 @@ void AvatarGameObj::near_draw_impl() {
 }
 
 AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) : GameObj(obj) {
+	set_body(Sim::gen_sphere_body(80, 0.5));
 }

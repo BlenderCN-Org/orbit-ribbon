@@ -1,6 +1,6 @@
 /*
-avatar.h: Header of the Avatar class
-Avatar is a GameObject representing the player character
+gameplay_mode.h: Header for the GameplayMode class.
+The GameplayMode class is the active Mode during normal gameplay.
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 
@@ -20,22 +20,19 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
-#ifndef ORBIT_RIBBON_AVATAR_H
-#define ORBIT_RIBBON_AVATAR_H
+#ifndef ORBIT_RIBBON_GAMEPLAY_MODE_H
+#define ORBIT_RIBBON_GAMEPLAY_MODE_H
 
-#include <ode/ode.h>
+#include "mode.h"
 
-#include "gameobj.h"
-
-namespace ORE1 { class ObjType; }
-
-class AvatarGameObj : public GameObj {
-	protected:
-		void step_impl();
-		void near_draw_impl();
-	
+class GameplayMode : public Mode {
+	private:
+		std::string _avatar_key;
+		
 	public:
-		AvatarGameObj(const ORE1::ObjType& obj);
+		GameplayMode();
+		void set_camera();
 };
+
 
 #endif

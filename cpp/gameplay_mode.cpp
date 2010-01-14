@@ -26,9 +26,14 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "constants.h"
 #include "except.h"
-#include "mode.h"
+#include "gameplay_mode.h"
 #include "globals.h"
 #include "gameobj.h"
+
+// Camera positioning relative to avatar's reference frame
+const Vector CAMERA_POS_OFFSET(0.0, 1.1, -6.0);
+const Vector CAMERA_TGT_OFFSET(0.0, 1.1, 0.0);
+const Vector CAMERA_UP_VECTOR(0.0, 1.0, 0.0);
 
 GameplayMode::GameplayMode() {
 	// Locate the avatar object

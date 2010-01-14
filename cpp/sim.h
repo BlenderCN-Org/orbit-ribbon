@@ -32,6 +32,8 @@ class Sim {
 		static dWorldID get_ode_world();
 		static dSpaceID get_static_space();
 		static dSpaceID get_dyn_space();
+		
+		static dBodyID gen_sphere_body(float mass, float rad);
 	
 	private:
 		static void _init();

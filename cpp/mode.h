@@ -1,6 +1,6 @@
 /*
-mode.h: Header for the Mode class and its subclasses.
-GameMode classes are responsible for handling overall control of gameplay and menu behaviour
+mode.h: Header for the Mode class.
+Mode classes are responsible for handling overall control of gameplay and menu behaviour
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 
@@ -28,15 +28,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 class Mode {
 	public:
 		virtual void set_camera() {}
-};
-
-class GameplayMode : public Mode {
-	private:
-		std::string _avatar_key;
-		
-	public:
-		GameplayMode();
-		void set_camera();
 };
 
 #endif
