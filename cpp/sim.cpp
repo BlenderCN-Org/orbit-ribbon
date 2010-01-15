@@ -23,10 +23,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <ode/ode.h>
-#include <boost/lexical_cast.hpp>
 
 #include "constants.h"
-#include "debug.h"
 #include "sim.h"
 
 dWorldID ode_world;
@@ -69,12 +67,8 @@ void Sim::_sim_step() {
 
 dBodyID Sim::gen_sphere_body(float mass, float rad) {
 	dBodyID body = dBodyCreate(ode_world);
-	Debug::debug_msg("A M:" + boost::lexical_cast<std::string>(mass) + " R:" + boost::lexical_cast<std::string>(rad));
 	dMass ode_mass;
-	Debug::debug_msg("B");
 	dMassSetSphereTotal(&ode_mass, mass, rad);
-	Debug::debug_msg("C");
 	dBodySetMass(body, &ode_mass);
-	Debug::debug_msg("D");
 	return body;
 }
