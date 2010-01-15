@@ -25,6 +25,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/glu.h>
 #include <SDL/SDL.h>
 
+#include "background.h"
 #include "constants.h"
 #include "debug.h"
 #include "display.h"
@@ -97,9 +98,15 @@ void Display::_init() {
 	
 	glEnable(GL_TEXTURE_2D);
 	
+	glEnable(GL_LIGHT1); glLightfv(GL_LIGHT1, GL_DIFFUSE, T3_LIGHT_DIFFUSE);
+	// glEnable(GL_LIGHT2); glLightfv(GL_LIGHT1, GL_DIFFUSE, VOY_LIGHT_DIFFUSE); // Enable this once Voy lighting is done by Background
+	glEnable(GL_LIGHT3); glLightfv(GL_LIGHT3, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
+	glEnable(GL_LIGHT4); glLightfv(GL_LIGHT4, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
+	glEnable(GL_LIGHT5); glLightfv(GL_LIGHT5, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
+	glEnable(GL_LIGHT6); glLightfv(GL_LIGHT6, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
+	
 	glShadeModel(GL_SMOOTH);
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClearDepth(1.0f);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
@@ -125,23 +132,27 @@ void Display::_screen_resize() {
 }
 
 void Display::_draw_frame() {
+	// 3D drawing mode (projection matrix will be set below)
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	
 	// Clear the screen
+	Globals::bg->set_clear_color();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	// Set camera position and orientation
 	Globals::mode->set_camera();
 	
-	// 3D projection mode for sky objects and billboards without depth-testing
-	glDisable(GL_LIGHTING);
-	glDisable(GL_DEPTH_TEST);
+	// Projection mode for distant objects
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(FOV, screen_ratio, 0.1, SKY_CLIP_DIST);
 	glMatrixMode(GL_MODELVIEW);
 	
-	// 3D projection mode for nearby gameplay objects with depth-testing
-	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_LIGHTING);
+	// Draw all the background objects
+	Globals::bg->draw();
+	
+	// Projection mode for nearby objects
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(FOV, screen_ratio, 0.1, GAMEPLAY_CLIP_DIST);
@@ -162,7 +173,7 @@ void Display::_draw_frame() {
 	glLoadIdentity();
 	
 	// If fading is enabled, then mask what's been drawn with a big ol' translucent quad
-	// FIXME This should be the game mode's responsibility
+	// FIXME This should be the game mode's responsibility if it wants to do this
 	if (fade_flag) {
 		glColor4f(fade_r, fade_g, fade_b, fade_a);
 		glBegin(GL_QUADS);

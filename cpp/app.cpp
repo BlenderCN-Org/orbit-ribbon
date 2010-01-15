@@ -30,6 +30,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <algorithm>
 
 #include "app.h"
+#include "background.h"
 #include "constants.h"
 #include "debug.h"
 #include "display.h"
@@ -159,4 +160,5 @@ void App::load_mission(unsigned int area_num, unsigned int mission_num) {
 	}
 	
 	Globals::mode.reset(new GameplayMode());
+	Globals::bg.reset(new Background(SkySettings(area->sky())));
 }

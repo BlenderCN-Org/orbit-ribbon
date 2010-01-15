@@ -36,5 +36,5 @@ void AvatarGameObj::near_draw_impl() {
 }
 
 AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) : GameObj(obj) {
-	set_body(Sim::gen_sphere_body(80, 0.5));
+	//set_body(Sim::gen_sphere_body(80, 0.5));
 }

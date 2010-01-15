@@ -34,6 +34,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 class GameObj;
 class Mode;
+class Background;
 
 typedef std::map<std::string, boost::shared_ptr<GameObj> > GOMap;
 
@@ -43,6 +44,7 @@ class Globals {
 		static GLint total_steps;
 		static GOMap gameobjs;
 		static boost::scoped_ptr<Mode> mode;
+		static boost::scoped_ptr<Background> bg;
 };
 
 #endif

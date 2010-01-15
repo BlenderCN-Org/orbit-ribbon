@@ -50,9 +50,9 @@
 	
 	<xsd:complexType name="SkySettingsType">
 		<xsd:sequence>
-			<xsd:element name="gameAngle" type="xsd:float" />
-			<xsd:element name="yOffset" type="xsd:float" />
-			<xsd:element name="dOffset" type="xsd:float" />
+			<xsd:element name="ringAngle" type="xsd:float" />
+			<xsd:element name="ringYOffset" type="xsd:float" />
+			<xsd:element name="ringDOffset" type="xsd:float" />
 			<xsd:element name="tiltAngle" type="xsd:float" />
 			<xsd:element name="tiltX" type="xsd:float" />
 			<xsd:element name="tiltZ" type="xsd:float" />
