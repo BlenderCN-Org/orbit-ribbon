@@ -62,7 +62,7 @@ void Display::set_fade(bool flag) {
 	fade_flag = flag;
 }
 
-void Display::_init() {
+void Display::init() {
 	// Initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 	   throw GameException(std::string("Video initialization failed: ") + std::string(SDL_GetError()));
@@ -118,10 +118,10 @@ void Display::_init() {
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_INDEX_ARRAY);
 	
-	_screen_resize();
+	screen_resize();
 }
 
-void Display::_screen_resize() {
+void Display::screen_resize() {
 	screen_width = Display::get_screen_width();
 	screen_height = Display::get_screen_height();
 	screen_ratio = GLfloat(screen_width)/GLfloat(screen_height);
@@ -131,7 +131,7 @@ void Display::_screen_resize() {
 	glLoadIdentity();
 }
 
-void Display::_draw_frame() {
+void Display::draw_frame() {
 	// 3D drawing mode (projection matrix will be set below)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);

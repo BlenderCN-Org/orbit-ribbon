@@ -67,13 +67,13 @@ void App::frame_loop() {
 		
 		// Do simulation steps until we've no more than one frame behind the display
 		while (unsimulated_ticks > MIN_TICKS_PER_FRAME) {
-			Sim::_sim_step();
+			Sim::sim_step();
 			Globals::total_steps += 1;
 			unsimulated_ticks -= MIN_TICKS_PER_FRAME;
 		}
 		
 		// Re-draw the display
-		Display::_draw_frame();
+		Display::draw_frame();
 		
 		// Sleep if we're running faster than our maximum fps
 		unsigned int frame_ticks = SDL_GetTicks() - frame_start;
@@ -99,9 +99,9 @@ void App::frame_loop() {
 
 void App::run(const std::vector<std::string>& args) {
 	try {
-		Display::_init();
-		ResMan::_init("main.ore"); // TODO Allow user-selectable ORE file
-		Sim::_init();
+		Display::init();
+		ResMan::init("main.ore"); // TODO Allow user-selectable ORE file
+		Sim::init();
 		
 		// TODO Use a menu and/or command-line arguments to select mission and area
 		load_mission(1, 3);

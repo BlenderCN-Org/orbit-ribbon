@@ -25,7 +25,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/glu.h>
 
 #include "constants.h"
-#include "debug.h"
 #include "except.h"
 #include "gameplay_mode.h"
 #include "globals.h"

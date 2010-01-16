@@ -44,10 +44,10 @@ class Display {
 		static GLint get_screen_depth() { return screen_depth; }
 		
 	private:
-		static void _init();
+		static void init();
 		
-		static void _draw_frame();
-		static void _screen_resize();
+		static void draw_frame();
+		static void screen_resize();
 		
 		friend class App;
 };

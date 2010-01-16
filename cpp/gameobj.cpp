@@ -25,13 +25,11 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <ode/ode.h>
 #include <boost/array.hpp>
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 #include <cctype>
 
 #include "autoxsd/orepkgdesc.h"
 #include "constants.h"
-#include "debug.h"
 #include "gameobj.h"
 #include "geometry.h"
 #include "gloo.h"

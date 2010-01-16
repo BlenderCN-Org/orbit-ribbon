@@ -171,7 +171,7 @@ const OrePackage& ResMan::pkg() {
 
 std::vector<boost::filesystem::path> ore_pkg_std_locations; // Standard directories to look for ORE files in
 
-void ResMan::_init(const std::string& top_ore_package_name) {
+void ResMan::init(const std::string& top_ore_package_name) {
 	if (ore_pkg_std_locations.size() == 0) {
 		ore_pkg_std_locations.push_back(boost::filesystem::initial_path() / "orefiles");
 		// TODO Add more locations here, depending on OS and installation location

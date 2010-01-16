@@ -36,8 +36,8 @@ class Sim {
 		static dBodyID gen_sphere_body(float mass, float rad);
 	
 	private:
-		static void _init();
-		static void _sim_step();
+		static void init();
+		static void sim_step();
 		friend class App;
 };
 

@@ -112,7 +112,7 @@ class ResMan {
 		// Supply a full path or else a filename to look for in the standard locations
 		// Can be called again in order to switch to a different top ORE package
 		// But before doing so, make sure all OreFileHandles are closed!
-		static void _init(const std::string& top_ore_package_name);
+		static void init(const std::string& top_ore_package_name);
 		
 		friend class App;
 };

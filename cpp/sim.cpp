@@ -44,7 +44,7 @@ dSpaceID Sim::get_dyn_space() {
 	return dyn_space;
 }
 
-void Sim::_init() {	
+void Sim::init() {	
 	ode_world = dWorldCreate();
 	dWorldSetQuickStepNumIterations(ode_world, 10);
 	static_space = dHashSpaceCreate(0);
@@ -55,7 +55,7 @@ void Sim::_init() {
 void collision_callback(void* data, dGeomID o1, dGeomID o2) {
 }
 
-void Sim::_sim_step() {
+void Sim::sim_step() {
 	// Check for collisions
 	dJointGroupEmpty(contact_group);
 	dSpaceCollide(dyn_space, NULL, &collision_callback); // Collisions among dyn_space objects
