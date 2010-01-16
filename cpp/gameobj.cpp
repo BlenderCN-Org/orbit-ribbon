@@ -24,11 +24,14 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/gl.h>
 #include <ode/ode.h>
 #include <boost/array.hpp>
+#include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 #include <cctype>
 
 #include "autoxsd/orepkgdesc.h"
 #include "constants.h"
+#include "debug.h"
 #include "gameobj.h"
 #include "geometry.h"
 #include "gloo.h"
@@ -97,11 +100,11 @@ void GameObj::set_rot(const boost::array<GLfloat, 9>& rot) {
 	_rot = rot;
 	
 	if (_body != 0 || _geom != 0) {
-		// Convert column-major to row-major
+		// Convert column-major 3x3 to row-major 3x4
 		dMatrix3 matr;
-		matr[0] = rot[0]; matr[1] = rot[3]; matr[2] = rot[6];
-		matr[3] = rot[1]; matr[4] = rot[4]; matr[5] = rot[7];
-		matr[6] = rot[2]; matr[7] = rot[5]; matr[8] = rot[8];
+		matr[0]  = rot[0]; matr[1]  = rot[3]; matr[2]  = rot[6]; matr[3]  = 0;
+		matr[4]  = rot[1]; matr[5]  = rot[4]; matr[6]  = rot[7]; matr[7]  = 0;
+		matr[8]  = rot[2]; matr[9]  = rot[5]; matr[10] = rot[8]; matr[11] = 0;
 		if (_body != 0) {
 			dBodySetRotation(_body, matr);
 		} else if (_geom != 0) {
@@ -111,8 +114,18 @@ void GameObj::set_rot(const boost::array<GLfloat, 9>& rot) {
 }
 
 std::string GameObj::to_str() const {
-	// TODO Implement
-	return std::string("");
+	return (boost::format("(P:%s) (R:%.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f)")
+		% get_pos().to_str()
+		% _rot[0]
+		% _rot[1]
+		% _rot[2]
+		% _rot[3]
+		% _rot[4]
+		% _rot[5]
+		% _rot[6]
+		% _rot[7]
+		% _rot[8]
+	).str();
 }
 
 void GameObj::draw(bool near) {
@@ -123,7 +136,7 @@ void GameObj::draw(bool near) {
 		_rot[0], _rot[1], _rot[2], 0,
 		_rot[3], _rot[4], _rot[5], 0,
 		_rot[6], _rot[7], _rot[8], 0,
-		     0,      0,      0, 1
+		     0,      0,      0,    1
 	};
 	glMultMatrixf(rotMatr);
 	
@@ -139,26 +152,24 @@ void GameObj::step() {
 	
 	// Load position, rotation, and velocity from ODE if there are dynamics for this GameObj
 	if (_body != 0) {
-		p = dBodyGetPosition(_body);
-		_pos.x = *p; ++p;
-		_pos.y = *p; ++p;
-		_pos.z = *p;
+		const dReal* p;
 		
+		p = dBodyGetPosition(_body);
+		_pos.x = p[0];
+		_pos.y = p[1];
+		_pos.z = p[2];
+		
+		// For some reason, dMatrix3 has 12 elements, not 9
+		// We have to watch out for that here in addition to flipping between column-major and row-major
 		p = dBodyGetRotation(_body);
-		_rot[0] = *p; ++p;
-		_rot[3] = *p; ++p;
-		_rot[6] = *p; ++p;
-		_rot[1] = *p; ++p;
-		_rot[4] = *p; ++p;
-		_rot[7] = *p; ++p;
-		_rot[2] = *p; ++p;
-		_rot[5] = *p; ++p;
-		_rot[8] = *p;
+		_rot[0] = p[0]; _rot[1] = p[4]; _rot[2] = p[8];
+		_rot[3] = p[1]; _rot[4] = p[5]; _rot[5] = p[9];
+		_rot[6] = p[2]; _rot[7] = p[6]; _rot[8] = p[10];
 		
 		p = dBodyGetLinearVel(_body);
-		_vel.x = *p; ++p;
-		_vel.y = *p; ++p;
-		_vel.z = *p;
+		_vel.x = p[0];
+		_vel.y = p[1];
+		_vel.z = p[2];
 	}
 	
 	step_impl();

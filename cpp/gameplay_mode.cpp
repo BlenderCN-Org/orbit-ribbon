@@ -25,6 +25,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/glu.h>
 
 #include "constants.h"
+#include "debug.h"
 #include "except.h"
 #include "gameplay_mode.h"
 #include "globals.h"
@@ -63,6 +64,6 @@ void GameplayMode::set_camera() {
 	gluLookAt(
 		cam_pos.x, cam_pos.y, cam_pos.z,
 		cam_tgt.x, cam_tgt.y, cam_tgt.z,
-		up_vec.x,  up_vec.y,  up_vec.z
+		 up_vec.x,  up_vec.y,  up_vec.z
 	);
 }
