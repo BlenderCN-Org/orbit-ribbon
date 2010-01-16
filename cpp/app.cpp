@@ -39,6 +39,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "geometry.h"
 #include "globals.h"
 #include "gameobj.h"
+#include "input.h"
 #include "mesh.h"
 #include "mode.h"
 #include "performance.h"
@@ -54,6 +55,9 @@ void App::frame_loop() {
 	
 	while (1) {
 		GLint frame_start = SDL_GetTicks();
+		
+		// Fetch the latest state of the input devices
+		Input::update();
 		
 		// Add all new events to the events list for this frame, and quit on QUIT events
 		Globals::frame_events.clear();
@@ -102,6 +106,7 @@ void App::run(const std::vector<std::string>& args) {
 		Display::init();
 		ResMan::init("main.ore"); // TODO Allow user-selectable ORE file
 		Sim::init();
+		Input::init();
 		
 		// TODO Use a menu and/or command-line arguments to select mission and area
 		load_mission(1, 3);

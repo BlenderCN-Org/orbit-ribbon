@@ -20,14 +20,15 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
+#include <boost/foreach.hpp>
+#include <boost/format.hpp>
+#include <cmath>
+
 #include "constants.h"
 #include "input.h"
 
 // How far from -1, 0, or 1 where we consider an input axis to just be at those exact values
 const float DEAD_ZONE = 0.001;
-
-// Space separated list of key names to ignore in the input module because they cause problems
-const char* const IGNORE_KEYS = "[-] numlock";
 
 bool Channel::is_partially_on() const {
 	return is_on();
@@ -37,31 +38,73 @@ void Channel::set_neutral() {
 	// Do nothing by default.
 }
 
+bool Channel::is_null() const {
+	return false;
+}
+
+void ChannelSource::set_neutral() {
+	BOOST_FOREACH(Channel& ch, _channels) {
+		ch.set_neutral();
+	}
+}
+
 Keyboard::Keyboard() {
+	update();
+	for (unsigned int i = (const unsigned int)SDLK_FIRST; i < (const unsigned int)SDLK_LAST; ++i) {
+		_channels.push_back(new KeyChannel(this, SDLKey(i)));
+	}
 }
 
 void Keyboard::update() {
+	_sdl_key_state = SDL_GetKeyState(NULL);
 }
 
-void Keyboard::set_neutral() {
-}
-
-const Channel* Keyboard::key_channel(SDLKey key) const {
+const Channel& Keyboard::key_channel(SDLKey key) const {
+	return _channels[(unsigned int)key];
 }
 
 GamepadManager::GamepadManager() {
+	for (Uint8 i = 0; i < SDL_NumJoysticks(); ++i) {
+		SDL_Joystick* gp = SDL_JoystickOpen(i);
+		_gamepads.push_back(gp);
+		for (Uint8 a = 0; a < SDL_JoystickNumAxes(gp); ++a) {
+			_gamepad_axis_map[i][a] = _channels.size();
+			_channels.push_back(new GamepadAxisChannel(this, i, a));
+		}
+		for (Uint8 b = 0; b < SDL_JoystickNumButtons(gp); ++b) {
+			_gamepad_button_map[i][b] = _channels.size();
+			_channels.push_back(new GamepadButtonChannel(this, i, b));
+		}
+	}
+	update();
 }
 
 void GamepadManager::update() {
+	SDL_JoystickUpdate();
 }
 
-void GamepadManager::set_neutral() {
+const Channel& GamepadManager::axis_channel(Uint8 gamepad_num, Uint8 axis_num) const {
+	std::map<Uint8, std::map<Uint8, unsigned int> >::const_iterator i = _gamepad_axis_map.find(gamepad_num);
+	if (i == _gamepad_axis_map.end()) {
+		return Input::null_channel;
+	}
+	std::map<Uint8, unsigned int>::const_iterator j = i->second.find(axis_num);
+	if (j == i->second.end()) {
+		return Input::null_channel;
+	}
+	return _channels[j->second];
 }
 
-const Channel* GamepadManager::axis_channel(Uint8 gamepad_num, Uint8 axis_num) const {
-}
-
-const Channel* GamepadManager::button_channel(Uint8 gamepad_num, Uint8 button_num) const {
+const Channel& GamepadManager::button_channel(Uint8 gamepad_num, Uint8 button_num) const {
+	std::map<Uint8, std::map<Uint8, unsigned int> >::const_iterator i = _gamepad_button_map.find(gamepad_num);
+	if (i == _gamepad_button_map.end()) {
+		return Input::null_channel;
+	}
+	std::map<Uint8, unsigned int>::const_iterator j = i->second.find(button_num);
+	if (j == i->second.end()) {
+		return Input::null_channel;
+	}
+	return _channels[j->second];
 }
 
 bool NullChannel::is_on() const {
@@ -72,8 +115,8 @@ float NullChannel::get_value() const {
 	return 0.0;
 }
 
-bool NullChannel::matches_events(const std::vector<SDL_Event>& events) const {
-	return false;
+bool NullChannel::is_null() const {
+	return true;
 }
 
 std::string NullChannel::desc() const {
@@ -84,124 +127,246 @@ KeyChannel::KeyChannel(Keyboard* kbd, SDLKey key) :
 	_kbd(kbd),
 	_key(key)
 {
+	set_neutral();
 }
 
 bool KeyChannel::is_on() const {
+	return _kbd->_sdl_key_state[_key] != _neutral_state;
 }
 
 float KeyChannel::get_value() const {
+	if (is_on()) {
+		return 1.0;
+	}
+	return 0.0;
 }
 
-bool KeyChannel::matches_events(const std::vector<SDL_Event>& events) const {
+void KeyChannel::set_neutral() {
+	_neutral_state = _kbd->_sdl_key_state[_key];
 }
 
 std::string KeyChannel::desc() const {
+	return std::string("Key:") + SDL_GetKeyName(_key);
 }
 
-GamepadAxisChannel::GamepadAxisChannel(GamepadManager* gamepad_man, Uint8 axis) :
+GamepadAxisChannel::GamepadAxisChannel(GamepadManager* gamepad_man, Uint8 gamepad, Uint8 axis) :
 	_gamepad_man(gamepad_man),
+	_gamepad(gamepad),
 	_axis(axis)
 {
+	set_neutral();
+}
+
+float sint16_to_axis_float(Sint16 val) {
+	float v = float(val)/32768.0;
+	if (v > 1.0) {
+		return 1.0;
+	} else if (v < -1.0) {
+		return -1.0;
+	} else {
+		return v;
+	}
 }
 
 bool GamepadAxisChannel::is_on() const {
+	if (std::fabs(_neutral_value - sint16_to_axis_float(SDL_JoystickGetAxis(_gamepad_man->_gamepads[_gamepad], _axis))) > DEAD_ZONE) {
+		return true;
+	}
+	return false;
 }
 
 float GamepadAxisChannel::get_value() const {
-}
-
-bool GamepadAxisChannel::matches_events(const std::vector<SDL_Event>& events) const {
+	float v = sint16_to_axis_float(SDL_JoystickGetAxis(_gamepad_man->_gamepads[_gamepad], _axis));
+	// Treat _neutral_value as though it were 0 on a scale to -1 or to 1 (if v < _neutral_value or v > _neutral_value respectively)
+	if (v < _neutral_value) {
+		return -((-v) + _neutral_value)/(1 + _neutral_value);
+	} else {
+		return (v - _neutral_value)/(1 - _neutral_value);
+	}
 }
 
 void GamepadAxisChannel::set_neutral() {
+	_neutral_value = sint16_to_axis_float(SDL_JoystickGetAxis(_gamepad_man->_gamepads[_gamepad], _axis));
 }
 
 std::string GamepadAxisChannel::desc() const {
+	// TODO Allow use of human-readable joystick axis names
+	return (boost::format("Gamepad(%u)Axis:%u") % (_gamepad+1) % (_axis+1)).str();
 }
 
-GamepadButtonChannel::GamepadButtonChannel(GamepadManager* gamepad_man, Uint8 btn) :
+GamepadButtonChannel::GamepadButtonChannel(GamepadManager* gamepad_man, Uint8 gamepad,  Uint8 button) :
 	_gamepad_man(gamepad_man),
-	_btn(btn)
+	_gamepad(gamepad),
+	_button(button)
 {
+	set_neutral();
 }
 
 bool GamepadButtonChannel::is_on() const {
+	return SDL_JoystickGetButton(_gamepad_man->_gamepads[_gamepad], _button) != _neutral_state;
 }
 
 float GamepadButtonChannel::get_value() const {
+	if (is_on()) {
+		return 1.0;
+	}
+	return 0.0;
 }
 
-bool GamepadButtonChannel::matches_events(const std::vector<SDL_Event>& events) const {
+void GamepadButtonChannel::set_neutral() {
+	_neutral_state = SDL_JoystickGetButton(_gamepad_man->_gamepads[_gamepad], _button);
 }
 
 std::string GamepadButtonChannel::desc() const {
+	// TODO Allow use of human-readable joystick button names
+	return (boost::format("Gamepad(%u)Btn:%u") % (_gamepad+1) % (_button+1)).str();
 }
 
-PseudoAxisChannel::PseudoAxisChannel(Channel* neg, Channel* pos) {
-}
+PseudoAxisChannel::PseudoAxisChannel(Channel* neg, Channel* pos) :
+	_neg(neg),
+	_pos(pos)
+{}
 
 bool PseudoAxisChannel::is_on() const {
+	return _neg->is_on() != _pos->is_on();
 }
 
 float PseudoAxisChannel::get_value() const {
-}
-
-bool PseudoAxisChannel::matches_events(const std::vector<SDL_Event>& events) const {
+	bool neg_on = _neg->is_on();
+	bool pos_on = _pos->is_on();
+	if (pos_on != neg_on) {
+		if (pos_on) {
+			return _pos->get_value();
+		} else {
+			return -_neg->get_value();
+		}			
+	}
+	return 0;
 }
 
 void PseudoAxisChannel::set_neutral() {
+	_neg->set_neutral();
+	_pos->set_neutral();
 }
 
 std::string PseudoAxisChannel::desc() const {
+	return _neg->desc() + "-" + _pos->desc();
 }
 
 void MultiChannel::set_neutral() {
+	BOOST_FOREACH(Channel* ch, _channels) {
+		ch->set_neutral();
+	}
 }
 
 bool MultiOrChannel::is_on() const {
+	BOOST_FOREACH(Channel* ch, _channels) {
+		if (ch->is_on()) {
+			return true;
+		}
+	}
+	return false;
 }
 
 bool MultiOrChannel::is_partially_on() const {
+	BOOST_FOREACH(Channel* ch, _channels) {
+		if (ch->is_partially_on()) {
+			return true;
+		}
+	}
+	return false;
 }
 
 float MultiOrChannel::get_value() const {
-}
-
-bool MultiOrChannel::matches_events(const std::vector<SDL_Event>& events) const {
+	float v;
+	BOOST_FOREACH(Channel* ch, _channels) {
+		float cand = ch->get_value();
+		if (std::fabs(cand) > std::fabs(v)) {
+			v = cand;
+		}
+	}
+	return v;
 }
 
 std::string MultiOrChannel::desc() const {
+	std::string ret;
+	BOOST_FOREACH(Channel* ch, _channels) {
+		if (ret.size() > 0) {
+			ret += "/";
+		}
+		ret += ch->desc();
+	}
+	return ret;
 }
 
 bool MultiAndChannel::is_on() const {
+	BOOST_FOREACH(Channel* ch, _channels) {
+		if (!ch->is_on()) {
+			return false;
+		}
+	}
+	return true;
 }
 
 bool MultiAndChannel::is_partially_on() const {
+	BOOST_FOREACH(Channel* ch, _channels) {
+		if (ch->is_partially_on()) {
+			return true;
+		}
+	}
+	return false;
 }
 
 float MultiAndChannel::get_value() const {
-}
-
-bool MultiAndChannel::matches_events(const std::vector<SDL_Event>& events) const {
+	float v;
+	bool assigned = false;
+	BOOST_FOREACH(Channel* ch, _channels) {
+		float cand = ch->get_value();
+		if ((!assigned) or std::fabs(cand) < std::fabs(v)) {
+			assigned = true;
+			v = cand;
+		}
+	}
+	return v;
 }
 
 std::string MultiAndChannel::desc() const {
+	std::string ret;
+	BOOST_FOREACH(Channel* ch, _channels) {
+		if (ret.size() > 0) {
+			ret += "+";
+		}
+		ret += ch->desc();
+	}
+	return ret;
 }
 
-boost::scoped_ptr<Keyboard> Input::_keyboard;
-boost::scoped_ptr<GamepadManager> Input::_gamepad_man;
+boost::ptr_vector<ChannelSource> Input::_sources;
 std::map<BindAction, Channel*> Input::_action_map;
 
 void Input::init() {
+	_sources.push_back(new Keyboard);
+	_sources.push_back(new GamepadManager);
 }
 
 void Input::update() {
+	BOOST_FOREACH(ChannelSource& src, _sources) {
+		src.update();
+	}
 }
 
 void Input::set_neutral() {
+	BOOST_FOREACH(ChannelSource& src, _sources) {
+		src.set_neutral();
+	}
 }
 
 NullChannel Input::null_channel;
 
-const Channel* Input::get_channel(BindAction action) {
+const Channel& Input::get_ch(BindAction action) {
+	std::map<BindAction, Channel*>::iterator i = _action_map.find(action);
+	if (i != _action_map.end()) {
+		return *(i->second);
+	}
+	return null_channel;
 }

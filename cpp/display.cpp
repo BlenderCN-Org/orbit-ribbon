@@ -64,8 +64,8 @@ void Display::set_fade(bool flag) {
 
 void Display::init() {
 	// Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-	   throw GameException(std::string("Video initialization failed: ") + std::string(SDL_GetError()));
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
+	   throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
 	}
 	
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
