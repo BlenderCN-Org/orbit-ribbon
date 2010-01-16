@@ -25,6 +25,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "autoxsd/orepkgdesc.h"
 #include "avatar.h"
 #include "geometry.h"
+#include "mesh.h"
 #include "sim.h"
 
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
@@ -33,8 +34,12 @@ void AvatarGameObj::step_impl() {
 }
 
 void AvatarGameObj::near_draw_impl() {
+	_anim_fly_to_prerun->draw();
 }
 
-AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) : GameObj(obj) {
+AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
+	GameObj(obj),
+	_anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run"))
+{
 	set_body(Sim::gen_sphere_body(80, 0.5));
 }

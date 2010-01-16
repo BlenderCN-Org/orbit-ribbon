@@ -34,7 +34,7 @@ const float TORUS_INSIDE_DIST = 1e7; // Guessed
 const float TORUS_RADIUS = TORUS_OUTSIDE_DIST - TORUS_INSIDE_DIST; // Assuming a circular torus, which probably isn't quite right
 const float GOLD_DIST = 2.6e7; // From book; also, assuming that Gold is in precise middle of Smoke Ring
 const float GOLD_RADIUS = 5e5; // Guessed; includes the storm around Gold
-const float SMOKE_RING_RADIUS = 8e4; // Calculations yielded 1.4e7, but that looked terrible, so this is made up. FIXME Too narrow. 
+const float SMOKE_RING_RADIUS = 8e4; // Calculations yielded 1.4e7, but that looked terrible, so this is made up. FIXME Too narrow.
 const float SMOKE_RING_INSIDE_DIST = GOLD_DIST - SMOKE_RING_RADIUS;
 const float SMOKE_RING_OUTSIDE_DIST = GOLD_DIST + SMOKE_RING_RADIUS;
 

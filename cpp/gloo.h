@@ -149,7 +149,7 @@ class GLOOBufferedMesh : boost::noncopyable {
 		static float get_vertices_usage() { return _vertices_vboman ? _vertices_vboman->get_usage() : 0.0; }
 		static float get_faces_usage() { return _faces_vboman ? _faces_vboman->get_usage() : 0.0; }
 		static std::string get_usage_info() {
-			return (boost::format("VBO:%.3f%% IBO:%.3f%%") % (get_vertices_usage()*100) % (get_faces_usage()*100)).str();
+			return (boost::format("VBO:%.2f%% IBO:%.2f%%") % (get_vertices_usage()*100) % (get_faces_usage()*100)).str();
 		}
 		
 		// These functions can only be called before the finish_loading() method is called

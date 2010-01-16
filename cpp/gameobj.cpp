@@ -96,15 +96,17 @@ void recursive_geom_set_rot(dGeomID g, const dMatrix3& matr) {
 void GameObj::set_rot(const boost::array<GLfloat, 9>& rot) {
 	_rot = rot;
 	
-	// Convert column-major to row-major
-	dMatrix3 matr;
-	matr[0] = rot[0]; matr[1] = rot[3]; matr[2] = rot[6];
-	matr[3] = rot[1]; matr[4] = rot[4]; matr[5] = rot[7];
-	matr[6] = rot[2]; matr[7] = rot[5]; matr[8] = rot[8];
-	if (_body != 0) {
-		dBodySetRotation(_body, matr);
-	} else if (_geom != 0) {
-		recursive_geom_set_rot(_geom, matr);
+	if (_body != 0 || _geom != 0) {
+		// Convert column-major to row-major
+		dMatrix3 matr;
+		matr[0] = rot[0]; matr[1] = rot[3]; matr[2] = rot[6];
+		matr[3] = rot[1]; matr[4] = rot[4]; matr[5] = rot[7];
+		matr[6] = rot[2]; matr[7] = rot[5]; matr[8] = rot[8];
+		if (_body != 0) {
+			dBodySetRotation(_body, matr);
+		} else if (_geom != 0) {
+			recursive_geom_set_rot(_geom, matr);
+		}
 	}
 }
 
@@ -187,6 +189,26 @@ void GameObj::step() {
 		}
 		dBodyAddRelTorque(_body, v[0], v[1], v[2]);
 	}
+}
+
+Point GameObj::get_rel_point_pos(const Point& p) {
+	if (_body == 0) {
+		throw GameException("Attempted get_rel_point_pos on a GameObj without an ODE body");
+	}
+	
+	dVector3 res;
+	dBodyGetRelPointPos(_body, p.x, p.y, p.z, res);
+	return Point(res[0], res[1], res[2]);
+}
+
+Vector GameObj::vector_to_world(const Vector& v) {
+	if (_body == 0) {
+		throw GameException("Attempted vector_to_world on a GameObj without an ODE body");
+	}
+	
+	dVector3 res;
+	dBodyVectorToWorld(_body, v.x, v.y, v.z, res);
+	return Vector(res[0], res[1], res[2]);
 }
 
 void recursive_geom_set_body(dGeomID geom, dBodyID body) {

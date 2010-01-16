@@ -56,11 +56,13 @@ void GameplayMode::set_camera() {
 		throw GameException(std::string("GameplayMode: LIBAvatar GameObj named ") + _avatar_key + " has disappeared unexpectedly");
 	}
 	
-	// FIXME Just testing here, really need to do this within avatar's reference frame
 	boost::shared_ptr<GameObj>& avatar = i->second;
+	Point cam_pos = avatar->get_rel_point_pos(CAMERA_POS_OFFSET);
+	Point cam_tgt = avatar->get_rel_point_pos(CAMERA_TGT_OFFSET);
+	Vector up_vec = avatar->vector_to_world(CAMERA_UP_VECTOR);
 	gluLookAt(
-		avatar->get_pos().x, avatar->get_pos().y, avatar->get_pos().z,
-		0.0, 0.0, 0.0,
-		0.0, 1.0, 0.0
+		cam_pos.x, cam_pos.y, cam_pos.z,
+		cam_tgt.x, cam_tgt.y, cam_tgt.z,
+		up_vec.x,  up_vec.y,  up_vec.z
 	);
 }

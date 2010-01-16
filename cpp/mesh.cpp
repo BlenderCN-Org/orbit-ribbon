@@ -244,7 +244,7 @@ _MeshParsingRig parsing_rig;
 
 class MeshAnimationCache : public CacheBase<MeshAnimation> {
 	boost::shared_ptr<MeshAnimation> generate(const std::string& id) {
-		boost::shared_ptr<OreFileHandle> fh = ResMan::pkg().get_fh(std::string("mesh-") + id);
+		boost::shared_ptr<OreFileHandle> fh = ResMan::pkg().get_fh(id);
 		try {
 			return parsing_rig.parse(*fh);
 		} catch (const xml_schema::parsing& e) {
@@ -274,6 +274,6 @@ GOAutoRegistration<MeshGameObj> mesh_gameobj_reg; // Set MeshGameObj as the defa
 
 MeshGameObj::MeshGameObj(const ORE1::ObjType& obj) :
 	GameObj(obj),
-	_mesh_anim(MeshAnimation::load(obj.meshName()))
+	_mesh_anim(MeshAnimation::load(std::string("mesh-") + obj.meshName()))
 {
 }

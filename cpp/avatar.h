@@ -24,12 +24,17 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_AVATAR_H
 
 #include <ode/ode.h>
+#include <boost/shared_ptr.hpp>
 
 #include "gameobj.h"
 
+class MeshAnimation;
 namespace ORE1 { class ObjType; }
 
 class AvatarGameObj : public GameObj {
+	private:
+		boost::shared_ptr<MeshAnimation> _anim_fly_to_prerun;
+		
 	protected:
 		void step_impl();
 		void near_draw_impl();

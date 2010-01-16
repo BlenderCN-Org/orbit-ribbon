@@ -54,6 +54,9 @@ class GameObj : boost::noncopyable {
 		
 		void draw(bool near);
 		void step();
+		
+		Point get_rel_point_pos(const Point& p);
+		Vector vector_to_world(const Vector& v);
 	
 	protected:
 		dBodyID get_body() const { return _body; }
