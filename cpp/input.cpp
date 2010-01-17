@@ -239,7 +239,7 @@ float PseudoAxisChannel::get_value() const {
 			return _pos->get_value();
 		} else {
 			return -_neg->get_value();
-		}			
+		}
 	}
 	return 0;
 }

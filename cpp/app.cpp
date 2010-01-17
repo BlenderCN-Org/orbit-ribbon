@@ -51,7 +51,6 @@ const unsigned int MIN_TICKS_PER_FRAME = 1000/MAX_FPS;
 
 void App::frame_loop() {
 	unsigned int unsimulated_ticks = 0;
-	unsigned int frames_since_perf_display = 0;
 	
 	while (1) {
 		GLint frame_start = SDL_GetTicks();
@@ -91,22 +90,23 @@ void App::frame_loop() {
 		
 		// Put this frame into the FPS calculations
 		Performance::record_frame(total_ticks, total_ticks - frame_ticks);
-		
-		//FIXME Should output to display instead of console, and should be possible to turn this on and off
-		++frames_since_perf_display;
-		if (frames_since_perf_display >= MAX_FPS) {
-			frames_since_perf_display = 0;
-			Debug::debug_msg(Performance::get_perf_info() + " " + GLOOBufferedMesh::get_usage_info());
-		}
 	}
 }
 
 void App::run(const std::vector<std::string>& args) {
 	try {
+		// Initialize SDL
+		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
+			throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
+		}
+	
 		Display::init();
 		ResMan::init("main.ore"); // TODO Allow user-selectable ORE file
 		Sim::init();
 		Input::init();
+		
+		// TODO Find an appropriate font based on the environment we're running in
+		Globals::sys_font.reset(new GLOOFont("/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf", 15));
 		
 		// TODO Use a menu and/or command-line arguments to select mission and area
 		load_mission(1, 3);

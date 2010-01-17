@@ -26,6 +26,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "background.h"
 #include "gameobj.h"
 #include "globals.h"
+#include "gloo.h"
 #include "mode.h"
 
 std::vector<SDL_Event> Globals::frame_events;
@@ -33,3 +34,4 @@ GLint Globals::total_steps = 0;
 GOMap Globals::gameobjs;
 boost::scoped_ptr<Mode> Globals::mode;
 boost::scoped_ptr<Background> Globals::bg;
+boost::scoped_ptr<GLOOFont> Globals::sys_font;

@@ -31,6 +31,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <SDL/SDL.h>
 #include <GL/glew.h>
 #include <GL/gl.h>
+#include <FTGL/ftgl.h>
 
 #include "cache.h"
 
@@ -163,6 +164,19 @@ class GLOOBufferedMesh : boost::noncopyable {
 		void draw();
 		
 		virtual ~GLOOBufferedMesh();
+};
+
+class FTFont;
+class Point;
+class GLOOFont {
+	private:
+		boost::scoped_ptr<FTFont> _font;
+		unsigned int _native_size;
+	
+	public:
+		GLOOFont(const std::string& path, unsigned int native_size);
+		float get_width(float height, const std::string& str);
+		void draw(const Point& upper_left, float height, const std::string& str);
 };
 
 #endif

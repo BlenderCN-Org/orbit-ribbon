@@ -50,11 +50,16 @@ int sdl_rwops_read(SDL_RWops* context, void* ptr, int size, int maxnum) {
 	return zzip_file_read((ZZIP_FILE*)context->hidden.unknown.data1, ptr, size*maxnum);
 }
 
-int sdl_rwops_write(SDL_RWops* context, const void* ptr, int size, int num) {
+int sdl_rwops_write(
+	SDL_RWops* context __attribute__ ((unused)),
+	const void* ptr __attribute__ ((unused)),
+	int size __attribute__ ((unused)),
+	int num __attribute__ ((unused)))
+{
 	throw OreException("Attempted to write to ORE filehandle via SDL RWops");
 }
 
-int sdl_rwops_close(SDL_RWops* context) {
+int sdl_rwops_close(SDL_RWops* context __attribute__ ((unused))) {
 	// Do nothing; de-initialization will occur in OreFileHandle dtor
 	return 0;
 }

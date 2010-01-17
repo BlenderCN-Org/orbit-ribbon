@@ -33,6 +33,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gameobj.h"
 #include "globals.h"
 #include "mode.h"
+#include "performance.h"
+#include "gloo.h"
 
 // Clipping distance for gameplay objects and background objects respectively
 const float GAMEPLAY_CLIP_DIST = 50000;
@@ -40,6 +42,9 @@ const float SKY_CLIP_DIST = 1e12;
 
 // Field-of-view in degrees
 const float FOV = 45;
+
+// How often in ticks to update the performance info string
+const unsigned int MAX_PERF_INFO_AGE = 2000;
 
 GLfloat fade_r, fade_g, fade_b, fade_a;
 bool fade_flag = false;
@@ -63,11 +68,6 @@ void Display::set_fade(bool flag) {
 }
 
 void Display::init() {
-	// Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
-	   throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
-	}
-	
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	std::string win_title = std::string("Orbit Ribbon (") + APP_VERSION + std::string(")");
 	SDL_WM_SetCaption(win_title.c_str(), win_title.c_str());
@@ -132,6 +132,9 @@ void Display::screen_resize() {
 }
 
 void Display::draw_frame() {
+	static std::string perf_info;
+	static unsigned int last_perf_info = 0; // Tick time at which we last updated perf_info
+	
 	// 3D drawing mode (projection matrix will be set below)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
@@ -183,6 +186,13 @@ void Display::draw_frame() {
 			glVertex2f(0, screen_height);
 		glEnd();
 	}
+	
+	//FIXME Should be possible to turn this on and off
+	if (SDL_GetTicks() - last_perf_info >= MAX_PERF_INFO_AGE) {
+		last_perf_info = SDL_GetTicks();
+		perf_info = Performance::get_perf_info() + " " + GLOOBufferedMesh::get_usage_info();
+	}
+	Globals::sys_font->draw(Point(20, 20), 15, perf_info);
 	
 	// Output and flip buffers
 	SDL_GL_SwapBuffers();
