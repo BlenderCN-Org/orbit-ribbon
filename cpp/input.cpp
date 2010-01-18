@@ -342,7 +342,7 @@ std::string MultiAndChannel::desc() const {
 }
 
 boost::ptr_vector<ChannelSource> Input::_sources;
-std::map<BindAction, Channel*> Input::_action_map;
+std::map<ORSave::BoundAction::Value, Channel*> Input::_action_map;
 
 void Input::init() {
 	_sources.push_back(new Keyboard);
@@ -363,8 +363,8 @@ void Input::set_neutral() {
 
 NullChannel Input::null_channel;
 
-const Channel& Input::get_ch(BindAction action) {
-	std::map<BindAction, Channel*>::iterator i = _action_map.find(action);
+const Channel& Input::get_ch(ORSave::BoundAction::Value action) {
+	std::map<ORSave::BoundAction::Value, Channel*>::iterator i = _action_map.find(action);
 	if (i != _action_map.end()) {
 		return *(i->second);
 	}

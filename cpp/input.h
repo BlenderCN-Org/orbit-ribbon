@@ -30,15 +30,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <string>
 #include <vector>
 
-class Input;
+#include "autoxsd/save.h"
 
-enum BindAction {
-	BA_TRANS_X, BA_TRANS_Y, BA_TRANS_Z,
-	BA_ROTATE_X, BA_ROTATE_Y, BA_ROTATE_Z,
-	BA_RUN_STANCE,
-	BA_PAUSE, BA_FORCE_QUIT, BA_RESET_NEUTRAL,
-	BA_UI_CONFIRM, BA_UI_BACK, BA_UI_X, BA_UI_Y
-};
+class Input;
 
 class Channel : boost::noncopyable {
 	public:
@@ -215,7 +209,7 @@ class App;
 class Input {
 	private:
 		static boost::ptr_vector<ChannelSource> _sources;
-		static std::map<BindAction, Channel*> _action_map;
+		static std::map<ORSave::BoundAction::Value, Channel*> _action_map;
 		
 		static void init();
 		static void update();
@@ -226,7 +220,7 @@ class Input {
 	public:
 		static NullChannel null_channel;
 		
-		static const Channel& get_ch(BindAction action);
+		static const Channel& get_ch(ORSave::BoundAction::Value action);
 		
 		// TODO Add functions here to (de)serialize the action map, and to bind an action
 };
