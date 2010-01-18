@@ -31,6 +31,7 @@ def build_xsd(mode, source, target, env):
 		args.extend(["--type-naming", "ucc"])
 		args.extend(["--generate-doxygen"])
 		args.extend(["--generate-serialization"])
+		args.extend(["--generate-polymorphic"])
 	elif mode == 'cxx-parser':
 		args.extend(["--type-map", "xml/types.map"])
 	else:
@@ -107,7 +108,7 @@ env['BUILDERS']['XSDParser'] = Builder(
 	emitter = xsd_emitter
 )
 
-tree_xsds = ['orepkgdesc']
+tree_xsds = ['orepkgdesc', 'save']
 parser_xsds = ['oreanim']
 xsd_cpp_dir = 'cpp/autoxsd/'
 
