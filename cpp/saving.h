@@ -1,5 +1,5 @@
 /*
-globals.cpp: Translation unit for game-wide globals
+saving.h: Header for classes managing saving/loading the config.
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 
@@ -19,20 +19,24 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <SDL/SDL.h>
+#ifndef ORBIT_RIBBON_SAVING_H
+#define ORBIT_RIBBON_SAVING_H
 
-#include "background.h"
-#include "gameobj.h"
-#include "globals.h"
-#include "gloo.h"
-#include "mode.h"
+#include <boost/filesystem.hpp>
+#include <boost/scoped_ptr.hpp>
+
 #include "autoxsd/save.h"
 
-std::vector<SDL_Event> Globals::frame_events;
-GLint Globals::total_steps = 0;
-GOMap Globals::gameobjs;
-boost::scoped_ptr<Mode> Globals::mode;
-boost::scoped_ptr<Background> Globals::bg;
-boost::scoped_ptr<GLOOFont> Globals::sys_font;
+class Saving {
+	private:
+		static boost::scoped_ptr<boost::filesystem::path> _save_path;
+		static boost::scoped_ptr<ORSave::SaveType> _save;
+		
+	public:
+		static ORSave::SaveType& get();
+		
+		static void load();
+		static void save();
+};
+
+#endif

@@ -43,6 +43,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "mesh.h"
 #include "mode.h"
 #include "performance.h"
+#include "saving.h"
 #include "sim.h"
 #include "resman.h"
 
@@ -101,6 +102,7 @@ void App::run(const std::vector<std::string>& args) {
 		}
 	
 		Display::init();
+		Saving::load();
 		ResMan::init("main.ore"); // TODO Allow user-selectable ORE file
 		Sim::init();
 		Input::init();
@@ -122,6 +124,8 @@ void App::run(const std::vector<std::string>& args) {
 	} catch (const std::exception& e) {
 		Debug::error_msg(std::string("Uncaught exception during run: ") + e.what());
 	}
+	
+	Saving::save();
 	
 	// TODO Deinitialize as well as possible here, to reduce possibility of weird error messages on close
 }

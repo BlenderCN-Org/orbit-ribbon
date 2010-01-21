@@ -36,7 +36,7 @@
 	
 	<xsd:complexType name="SaveType">
 		<xsd:sequence>
-			<xsd:element name="config" type="ConfigType" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="config" type="ConfigType" />
 			<xsd:element name="progress" type="ProgressType" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
 	</xsd:complexType>

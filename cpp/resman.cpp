@@ -174,11 +174,10 @@ const OrePackage& ResMan::pkg() {
 	return *top_ore_package;
 }
 
-std::vector<boost::filesystem::path> ore_pkg_std_locations; // Standard directories to look for ORE files in
-
 void ResMan::init(const std::string& top_ore_package_name) {
-	if (ore_pkg_std_locations.size() == 0) {
-		ore_pkg_std_locations.push_back(boost::filesystem::initial_path() / "orefiles");
+	static std::vector<boost::filesystem::path> std_locations; // Standard directories to look for ORE files in
+	if (std_locations.size() == 0) {
+		std_locations.push_back(boost::filesystem::initial_path() / "orefiles");
 		// TODO Add more locations here, depending on OS and installation location
 	}
 	
@@ -187,7 +186,7 @@ void ResMan::init(const std::string& top_ore_package_name) {
 	
 	// TODO Check if top_ore_package_name is a fully qualified path instead of just a filename
 	bool loaded = false;
-	BOOST_FOREACH(boost::filesystem::path loc, ore_pkg_std_locations) {
+	BOOST_FOREACH(boost::filesystem::path loc, std_locations) {
 		boost::filesystem::path p = loc / top_ore_package_name;
 		try {
 			top_ore_package = boost::shared_ptr<OrePackage>(new OrePackage(p));
