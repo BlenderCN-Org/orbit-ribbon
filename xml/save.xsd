@@ -27,8 +27,12 @@
 	</xsd:annotation>
 	
 	<!-- TODO Enforce uniqueness among ore file names in ProgressType and actions in BindingMapType -->
+	<!-- TODO Enforce that KeyInputTypes can only appear under Keyboard, and Gamepad*InputType under Gamepad -->
+	<!-- TODO Disallow UIX, UIY, Confirm, Cancel from appearing under Keyboard input device types, their kbd mappings are fixed -->
+	<!-- TODO Disallow ForceQuit from appearing anywhere, it's mapping is fixed to be only F4 -->
 	
 	<xsd:element name="save" type="SaveType" />
+	<xsd:element name="presets" type="PresetListType" />
 	
 	<xsd:complexType name="SaveType">
 		<xsd:sequence>
@@ -37,25 +41,40 @@
 		</xsd:sequence>
 	</xsd:complexType>
 	
-	<xsd:complexType name="ConfigType">
+	<xsd:complexType name="PresetListType">
 		<xsd:sequence>
-			<xsd:element name="lastOre" type="xsd:string" default="no-shortage-of-sky.ore" />
-			<xsd:element name="invertRotY" type="xsd:boolean" default="false" />
-			<xsd:element name="bindingMap" type="BindingMapType" />
+			<xsd:element name="preset" type="PresetType" maxOccurs="unbounded" />
 		</xsd:sequence>
 	</xsd:complexType>
 	
-	<xsd:complexType name="BindingMapType">
+	<xsd:complexType name="PresetType">
+		<xsd:sequence>
+			<xsd:element name="presetName" type="xsd:string" />
+			<xsd:element name="deviceMatchString" type="xsd:string" minOccurs="0" />
+			<xsd:element name="inputDevice" type="InputDeviceType" />
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="ConfigType">
+		<xsd:sequence>
+			<xsd:element name="lastOre" type="xsd:string" default="no-lack-of-sky.ore" />
+			<xsd:element name="invertRotY" type="xsd:boolean" default="false" />
+			<xsd:element name="inputDevice" type="InputDeviceType" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="InputDeviceType">
 		<xsd:sequence>
 			<xsd:element name="bind" type="BindType" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
+		<xsd:attribute name="device" type="InputDeviceName" />
 	</xsd:complexType>
 	
 	<xsd:complexType name="BindType">
 		<xsd:sequence>
-			<xsd:element name="action" type="BoundAction" />
-			<xsd:element name="input" type="BoundInput" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="input" type="BoundInput" />
 		</xsd:sequence>
+		<xsd:attribute name="action" type="BoundAction" />
 	</xsd:complexType>
 	
 	<xsd:simpleType name="BoundAction">
@@ -82,16 +101,10 @@
 	<xsd:complexType name="KeyInputType">
 		<xsd:complexContent>
 			<xsd:extension base="BoundInput">
-				<xsd:attribute name="key" type="CharType" />
+				<xsd:attribute name="key" type="xsd:unsignedInt" />
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
-	
-	<xsd:simpleType name="CharType">
-		<xsd:restriction base="xsd:string">
-			<xsd:length value='1' />
-		</xsd:restriction>
-	</xsd:simpleType>
 	
 	<xsd:complexType name="GamepadAxisInputType">
 		<xsd:complexContent>
@@ -131,6 +144,13 @@
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
+	
+	<xsd:simpleType name="InputDeviceName">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Keyboard" />
+			<xsd:enumeration value="Gamepad" />
+		</xsd:restriction>
+	</xsd:simpleType>
 	
 	<xsd:complexType name="ProgressType">
 		<xsd:sequence>

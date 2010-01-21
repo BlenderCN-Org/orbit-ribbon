@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='ASCII'?>
+
+<orsave:presets xmlns:orsave="http://www.orbit-ribbon.org/ORSave" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+<preset>
+	<presetName>Default Keyboard Mapping</presetName>
+	<inputDevice device="Keyboard">
+		<bind action="TranslateX">
+			<input xsi:type="orsave:PseudoAxisInputType">
+				<negative xsi:type="orsave:KeyInputType" key="97" />
+				<positive xsi:type="orsave:KeyInputType" key="100" />
+			</input>
+		</bind>
+		<bind action="TranslateY">
+			<input xsi:type="orsave:PseudoAxisInputType">
+				<negative xsi:type="orsave:KeyInputType" key="119" />
+				<positive xsi:type="orsave:KeyInputType" key="115" />
+			</input>
+		</bind>
+		<bind action="TranslateZ">
+			<input xsi:type="orsave:PseudoAxisInputType">
+				<negative xsi:type="orsave:KeyInputType" key="113" />
+				<positive xsi:type="orsave:KeyInputType" key="101" />
+			</input>
+		</bind>
+		<bind action="RotateX">
+			<input xsi:type="orsave:PseudoAxisInputType">
+				<negative xsi:type="orsave:KeyInputType" key="105" />
+				<positive xsi:type="orsave:KeyInputType" key="107" />
+			</input>
+		</bind>
+		<bind action="RotateY">
+			<input xsi:type="orsave:PseudoAxisInputType">
+				<negative xsi:type="orsave:KeyInputType" key="106" />
+				<positive xsi:type="orsave:KeyInputType" key="108" />
+			</input>
+		</bind>
+		<bind action="RotateZ">
+			<input xsi:type="orsave:PseudoAxisInputType">
+				<negative xsi:type="orsave:KeyInputType" key="117" />
+				<positive xsi:type="orsave:KeyInputType" key="111" />
+			</input>
+		</bind>
+		<bind action="RunningStance">
+			<input xsi:type="orsave:KeyInputType" key="32" />
+		</bind>
+		<bind action="Pause">
+			<input xsi:type="orsave:KeyInputType" key="27" />
+		</bind>
+		<bind action="ResetNeutral">
+			<input xsi:type="orsave:KeyInputType" key="293" />
+		</bind>
+	</inputDevice>
+</preset>
+
+<preset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:orsave="http://www.orbit-ribbon.org/ORSave">
+	<presetName>PS3 Controller</presetName>
+	<deviceMatchString>PLAYSTATION(R)3</deviceMatchString>
+	<inputDevice device="Gamepad">
+		<bind action="TranslateX">
+			<input xsi:type="orsave:GamepadAxisInputType" gamepadNum="0" axisNum="0" />
+		</bind>
+		<bind action="TranslateY">
+			<input xsi:type="orsave:GamepadAxisInputType" gamepadNum="0" axisNum="1" />
+		</bind>
+		<bind action="TranslateZ">
+			<input xsi:type="orsave:PseudoAxisInputType">
+				<negative xsi:type="orsave:GamepadAxisInputType" gamepadNum="0" axisNum="12" />
+				<positive xsi:type="orsave:GamepadAxisInputType" gamepadNum="0" axisNum="13" />
+			</input>
+		</bind>
+		<bind action="RotateX">
+			<input xsi:type="orsave:GamepadAxisInputType" gamepadNum="0" axisNum="3" />
+		</bind>
+		<bind action="RotateY">
+			<input xsi:type="orsave:GamepadAxisInputType" gamepadNum="0" axisNum="2" />
+		</bind>
+		<bind action="RotateZ">
+			<input xsi:type="orsave:PseudoAxisInputType">
+				<negative xsi:type="orsave:GamepadAxisInputType" gamepadNum="0" axisNum="14" />
+				<positive xsi:type="orsave:GamepadAxisInputType" gamepadNum="0" axisNum="15" />
+			</input>
+		</bind>
+		<bind action="RunningStance">
+			<input xsi:type="orsave:LogicalAndInputType">
+				<input xsi:type="orsave:GamepadAxisInputType" gamepadNum="0" axisNum="14" />
+				<input xsi:type="orsave:GamepadAxisInputType" gamepadNum="0" axisNum="15" />
+			</input>
+		</bind>
+		<bind action="Pause">
+			<input xsi:type="orsave:GamepadButtonInputType" gamepadNum="0" buttonNum="3" />
+		</bind>
+		<bind action="ResetNeutral">
+			<input xsi:type="orsave:GamepadButtonInputType" gamepadNum="0" buttonNum="3" />
+		</bind>
+		<bind action="Confirm">
+			<input xsi:type="orsave:GamepadButtonInputType" gamepadNum="0" buttonNum="13" />
+		</bind>
+		<bind action="Cancel">
+			<input xsi:type="orsave:GamepadButtonInputType" gamepadNum="0" buttonNum="14" />
+		</bind>
+		<bind action="UIX">
+			<input xsi:type="orsave:PseudoAxisInputType">
+				<negative xsi:type="orsave:GamepadButtonInputType" gamepadNum="0" buttonNum="7" />
+				<positive xsi:type="orsave:GamepadButtonInputType" gamepadNum="0" buttonNum="5" />
+			</input>
+		</bind>
+		<bind action="UIY">
+			<input xsi:type="orsave:PseudoAxisInputType">
+				<negative xsi:type="orsave:GamepadButtonInputType" gamepadNum="0" buttonNum="4" />
+				<positive xsi:type="orsave:GamepadButtonInputType" gamepadNum="0" buttonNum="6" />
+			</input>
+		</bind>
+	</inputDevice>
+</preset>
+
+</orsave:presets>
