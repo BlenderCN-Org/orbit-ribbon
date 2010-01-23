@@ -28,6 +28,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "gloo.h"
 #include "mode.h"
+#include "ore.h"
 #include "autoxsd/save.h"
 
 std::vector<SDL_Event> Globals::frame_events;
@@ -36,3 +37,4 @@ GOMap Globals::gameobjs;
 boost::scoped_ptr<Mode> Globals::mode;
 boost::scoped_ptr<Background> Globals::bg;
 boost::scoped_ptr<GLOOFont> Globals::sys_font;
+boost::scoped_ptr<OrePackage> Globals::ore;

@@ -45,7 +45,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "performance.h"
 #include "saving.h"
 #include "sim.h"
-#include "resman.h"
+#include "ore.h"
 
 // How many ticks each frame must at least last
 const unsigned int MIN_TICKS_PER_FRAME = 1000/MAX_FPS;
@@ -100,10 +100,12 @@ void App::run(const std::vector<std::string>& args) {
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
 			throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
 		}
-	
-		Display::init();
+		
 		Saving::load();
-		ResMan::init("main.ore"); // TODO Allow user-selectable ORE file
+		Display::init();
+		
+		Globals::ore.reset(new OrePackage("orefiles/main.ore")); // TODO Allow user-selectable ORE file and status_msg it
+		
 		Sim::init();
 		Input::init();
 		
@@ -131,7 +133,7 @@ void App::run(const std::vector<std::string>& args) {
 }
 
 void App::load_mission(unsigned int area_num, unsigned int mission_num) {
-	const ORE1::PkgDescType* desc = &ResMan::pkg().get_pkg_desc();
+	const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
 	
 	const ORE1::AreaType* area = NULL;
 	for (ORE1::PkgDescType::AreaConstIterator i = desc->area().begin(); i != desc->area().end(); ++i) {

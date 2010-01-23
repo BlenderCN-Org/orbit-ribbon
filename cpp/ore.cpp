@@ -1,5 +1,5 @@
 /*
-resman.cpp: Implementation of resource management classes.
+ore.cpp: Implementation of resource management classes.
 These classes are responsible for loading and interpreting game resources from ORE files.
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
@@ -34,11 +34,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "constants.h"
 #include "debug.h"
 #include "except.h"
-#include "resman.h"
+#include "ore.h"
 #include "autoxsd/orepkgdesc.h"
-
-std::vector<boost::filesystem::path> loaded_ore_package_paths;
-boost::shared_ptr<OrePackage> top_ore_package;
 
 // Functions to allow OreFileHandle to work with SDL_RWops
 int sdl_rwops_seek(SDL_RWops* context, int offset, int whence) {
@@ -121,12 +118,6 @@ OreFileHandle::~OreFileHandle() {
 }
 
 OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
-	BOOST_FOREACH(boost::filesystem::path loaded_path, loaded_ore_package_paths) {
-		if (boost::filesystem::equivalent(p, loaded_path)) {
-			throw OreException("Attempted to double-load ORE package " + boost::filesystem::complete(p).string());
-		}
-	}
-	
 	zzip_h = zzip_dir_open(p.string().c_str(), 0);
 	if (!zzip_h) {
 		throw OreException("Unable to open ORE package " + p.string() + " with libzzip");
@@ -146,8 +137,6 @@ OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
 		
 		OreFileHandle pdesc_fh(*this, "ore-desc");
 		pkg_desc = boost::shared_ptr<ORE1::PkgDescType>(ORE1::pkgDesc(pdesc_fh, "ore-desc", xsd::cxx::tree::flags::dont_validate));
-		
-		loaded_ore_package_paths.push_back(p);
 	} catch (const std::exception& e) {
 		zzip_dir_close(zzip_h);
 		throw OreException(std::string("Error while opening ORE package : ") + e.what());
@@ -158,48 +147,9 @@ OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
 
 OrePackage::~OrePackage() {
 	zzip_dir_close(zzip_h);
-	loaded_ore_package_paths.erase(std::find(loaded_ore_package_paths.begin(), loaded_ore_package_paths.end(), path));
 }
 
 boost::shared_ptr<OreFileHandle> OrePackage::get_fh(const std::string& name) const {
 	// TODO Implement looking in other OrePackages for files not found in this one ("base packages")
 	return boost::shared_ptr<OreFileHandle>(new OreFileHandle(*this, name));
-}
-
-const OrePackage& ResMan::pkg() {
-	if (!top_ore_package) {
-		throw OreException("Attempted to get pkg from uninitialized ResMan");
-	}
-	
-	return *top_ore_package;
-}
-
-void ResMan::init(const std::string& top_ore_package_name) {
-	static std::vector<boost::filesystem::path> std_locations; // Standard directories to look for ORE files in
-	if (std_locations.size() == 0) {
-		std_locations.push_back(boost::filesystem::initial_path() / "orefiles");
-		// TODO Add more locations here, depending on OS and installation location
-	}
-	
-	// Unload the current package, if any
-	top_ore_package.reset();
-	
-	// TODO Check if top_ore_package_name is a fully qualified path instead of just a filename
-	bool loaded = false;
-	BOOST_FOREACH(boost::filesystem::path loc, std_locations) {
-		boost::filesystem::path p = loc / top_ore_package_name;
-		try {
-			top_ore_package = boost::shared_ptr<OrePackage>(new OrePackage(p));
-			loaded = true;
-			Debug::status_msg("Opened ORE package '" + top_ore_package_name + "' from location " + p.string());
-			break;
-		} catch (const OreException& e) {
-			Debug::status_msg("Unable to open ORE package '" + top_ore_package_name + "' from location " + p.string() + " : " + e.get_msg());
-			continue;
-		}
-	}
-	
-	if (!loaded) {
-		throw OreException("Unable to open ORE package '" + top_ore_package_name + "'!");
-	}
 }

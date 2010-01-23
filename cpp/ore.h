@@ -1,5 +1,5 @@
 /*
-resman.h: Header for resource management classes.
+ore.h: Header for resource management classes.
 These classes are responsible for loading and interpreting game resources from ORE files.
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
@@ -25,6 +25,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/utility.hpp>
 #include <istream>
 #include <string>
@@ -89,32 +90,13 @@ class OrePackage : boost::noncopyable {
 		ZZIP_DIR* zzip_h;
 		boost::shared_ptr<ORE1::PkgDescType> pkg_desc;
 		
-		OrePackage(const boost::filesystem::path& p);
-		
 		friend class OreFileHandle;
-		friend class ResMan; // Only ResMan can construct OrePackages, since all OrePackages must be owned by shared_ptrs
 	public:
+		OrePackage(const boost::filesystem::path& p);
 		~OrePackage();
 		
 		boost::shared_ptr<OreFileHandle> get_fh(const std::string& name) const;
 		const ORE1::PkgDescType& get_pkg_desc() const { return *pkg_desc; }
-};
-
-class App;
-
-// Resource management
-class ResMan {
-	public:
-		static const OrePackage& pkg();
-		
-	private:
-		// Initializes the resource manager with the given ORE package
-		// Supply a full path or else a filename to look for in the standard locations
-		// Can be called again in order to switch to a different top ORE package
-		// But before doing so, make sure all OreFileHandles are closed!
-		static void init(const std::string& top_ore_package_name);
-		
-		friend class App;
 };
 
 #endif

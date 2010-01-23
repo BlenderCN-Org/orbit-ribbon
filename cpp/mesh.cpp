@@ -27,9 +27,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "autoxsd/orepkgdesc.h"
 #include "autoxsd/oreanim-pskel.h"
 #include "cache.h"
+#include "globals.h"
 #include "gloo.h"
 #include "mesh.h"
-#include "resman.h"
+#include "ore.h"
 
 class _MeshAnimationParser : public ORE1::AnimationType_pskel {
 	private:
@@ -244,7 +245,7 @@ _MeshParsingRig parsing_rig;
 
 class MeshAnimationCache : public CacheBase<MeshAnimation> {
 	boost::shared_ptr<MeshAnimation> generate(const std::string& id) {
-		boost::shared_ptr<OreFileHandle> fh = ResMan::pkg().get_fh(id);
+		boost::shared_ptr<OreFileHandle> fh = Globals::ore->get_fh(id);
 		try {
 			return parsing_rig.parse(*fh);
 		} catch (const xml_schema::parsing& e) {

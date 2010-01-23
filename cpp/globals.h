@@ -36,6 +36,7 @@ class GameObj;
 class Mode;
 class Background;
 class GLOOFont;
+class OrePackage;
 
 typedef std::map<std::string, boost::shared_ptr<GameObj> > GOMap;
 
@@ -47,6 +48,7 @@ class Globals {
 		static boost::scoped_ptr<Mode> mode;
 		static boost::scoped_ptr<Background> bg;
 		static boost::scoped_ptr<GLOOFont> sys_font;
+		static boost::scoped_ptr<OrePackage> ore;
 };
 
 #endif

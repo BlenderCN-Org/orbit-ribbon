@@ -58,7 +58,7 @@ void Saving::load() {
 		// Load the save data from this file
 		Debug::status_msg("Loading save data from " + _save_path->string());
 		try {
-			// TODO Turn on validation (doesn't seem to work even for valid files, though, maybe need to supply XSD...)
+			// TODO Turn on validation (need to compile in the XSD...)
 			_save.reset(ORSave::save(ifs, xsd::cxx::tree::flags::dont_validate).release());
 		} catch (const xml_schema::Exception& e) {
 			std::stringstream ss;
@@ -75,6 +75,7 @@ void Saving::load() {
 	
 	// Load default config values for anything unspecified
 	ORSave::ConfigType* conf = &(_save->config());
+	conf_dflt(conf->lastOre(), "no-lack-of-sky.ore");
 	conf_dflt(conf->invertRotY(), false);
 	conf_dflt(conf->soundEffectVolume(), 0.8);
 	conf_dflt(conf->musicVolume(), 0.5);
@@ -85,7 +86,7 @@ void Saving::save() {
 		throw GameException("Attempted to save when no save data was available");
 	}
 	
-	Debug::status_msg("Writing save tree to " + _save_path->string());
+	Debug::status_msg("Writing save data to " + _save_path->string());
 	xml_schema::NamespaceInfomap map;
 	map["orsave"].name = "http://www.orbit-ribbon.org/ORSave";
 	std::ofstream ofs(_save_path->string().c_str());
