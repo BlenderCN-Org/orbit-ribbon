@@ -37,6 +37,12 @@ ORSave::SaveType& Saving::get() {
 	throw GameException("Attempted to get save data before it had been loaded.");
 }
 
+template<typename AT, typename VT> void conf_dflt(AT& optional_attr, const VT& default_value) {
+	if (!optional_attr.present()) {
+		optional_attr.set(default_value);
+	}
+}
+
 void Saving::load() {
 	if (!_save_path) {
 		// TODO Choose different locations on other OSes
@@ -50,21 +56,28 @@ void Saving::load() {
 	std::ifstream ifs(_save_path->string().c_str());
 	if (ifs) {
 		// Load the save data from this file
-		Debug::status_msg("Loading save tree from " + _save_path->string());
+		Debug::status_msg("Loading save data from " + _save_path->string());
 		try {
+			// TODO Turn on validation (doesn't seem to work even for valid files, though, maybe need to supply XSD...)
 			_save.reset(ORSave::save(ifs, xsd::cxx::tree::flags::dont_validate).release());
 		} catch (const xml_schema::Exception& e) {
 			std::stringstream ss;
 			ss << e;
-			throw GameException(std::string("XML error while loading save tree : ") + ss.str());
+			throw GameException(std::string("XML error while loading save data : ") + ss.str());
 		} catch (const std::exception& e) {
-			throw GameException(std::string("Error while loading save tree : ") + e.what());
-		}
+			throw GameException(std::string("Error while loading save data : ") + e.what());
+		}	
 	} else {
 		// Create a new, empty save
-		Debug::status_msg("Creating a new save tree");
-		_save.reset(new ORSave::SaveType());
+		Debug::status_msg("Creating new save data");
+		_save.reset(new ORSave::SaveType(ORSave::ConfigType()));
 	}
+	
+	// Load default config values for anything unspecified
+	ORSave::ConfigType* conf = &(_save->config());
+	conf_dflt(conf->invertRotY(), false);
+	conf_dflt(conf->soundEffectVolume(), 0.8);
+	conf_dflt(conf->musicVolume(), 0.5);
 }
 
 void Saving::save() {

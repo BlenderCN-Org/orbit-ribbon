@@ -57,8 +57,10 @@
 	
 	<xsd:complexType name="ConfigType">
 		<xsd:sequence>
-			<xsd:element name="lastOre" type="xsd:string" default="no-lack-of-sky.ore" />
-			<xsd:element name="invertRotY" type="xsd:boolean" default="false" />
+			<xsd:element name="lastOre" type="xsd:string" minOccurs="0" />
+			<xsd:element name="invertRotY" type="xsd:boolean" minOccurs="0" />
+			<xsd:element name="soundEffectVolume" type="xsd:float" minOccurs="0" />
+			<xsd:element name="musicVolume" type="xsd:float" minOccurs="0" />
 			<xsd:element name="inputDevice" type="InputDeviceType" minOccurs="0" maxOccurs="unbounded"/>
 		</xsd:sequence>
 	</xsd:complexType>
