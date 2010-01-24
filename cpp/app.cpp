@@ -104,24 +104,31 @@ void App::run(const std::vector<std::string>& args) {
 		visible_opt_desc.add_options()
 			("help,h", "display help message, then exit")
 			("version,V", "display version and author information, then exit")
-			("area,a", boost::program_options::value<int>(), "preselect numbered area to play")
-			("mission,m", boost::program_options::value<int>(), "preselect numbered mission to play, you must also specify --area")
-		
+			("area,a", boost::program_options::value<unsigned int>(), "preselect numbered area to play")
+			("mission,m", boost::program_options::value<unsigned int>(), "preselect numbered mission to play, you must also specify --area")
 		;
 		boost::program_options::options_description hidden_opt_desc;
 		hidden_opt_desc.add_options()
 			("ore", boost::program_options::value<std::string>(), "path to an ore file containing the game data and scenario to use")
 		;
-		boost::program_options::options_description sum_opt_desc;
-		sum_opt_desc.add(visible_opt_desc).add(hidden_opt_desc);
+		boost::program_options::options_description opt_desc;
+		opt_desc.add(visible_opt_desc).add(hidden_opt_desc);
 		boost::program_options::positional_options_description pos_desc;
-		pos_desc.add("ore", -1);
+		pos_desc.add("ore", 1);
 		
 		boost::program_options::variables_map vm;
-		boost::program_options::store(boost::program_options::command_line_parser(args).options(sum_opt_desc).positional(pos_desc).run(), vm);
-		boost::program_options::notify(vm);
+		try {
+			boost::program_options::store(boost::program_options::command_line_parser(args).options(opt_desc).positional(pos_desc).run(), vm);
+			boost::program_options::notify(vm);
+			if (vm.count("mission") and not vm.count("area")) {
+				throw GameException("mission specified but no area specified");
+			}
+		} catch (const std::exception& e) {
+			Debug::error_msg(std::string("Invalid arguments: ") + e.what());
+			return;
+		}
 		
-		// Deal with command-line arguments
+		// Deal with command-line arguments that cause the program to end right away
 		if (vm.count("help") or vm.count("version")) {
 			Debug::status_msg("");
 			Debug::status_msg(std::string("Orbit Ribbon version ") + APP_VERSION);
@@ -131,14 +138,19 @@ void App::run(const std::vector<std::string>& args) {
 				visible_opt_desc.print(ss);
 				Debug::status_msg(ss.str());
 			} else {
-				Debug::status_msg("Copyright 2009 David Simon, who can be reached at <david.mike.simon@gmail.com>");
+				Debug::status_msg("Copyright 2009 David Simon, who can be reached at <david.mike.simon@gmail.com>.");
 				Debug::status_msg("License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.");
 				Debug::status_msg("This is free software: you are free to change and redistribute it.");
-				Debug::status_msg("There is NO WARRANTY, to the extent permitted by law.");
+				Debug::status_msg("");
+				Debug::status_msg("Orbit Ribbon is distributed in the hope that it will be awesome,");
+				Debug::status_msg("but WITHOUT ANY WARRANTY; without even the implied warranty of");
+				Debug::status_msg("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
+				Debug::status_msg("GNU General Public License for more details.");
+				Debug::status_msg("");
 			}
 			return;
 		}
-		
+
 		// Initialize SDL
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
 			throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
@@ -147,7 +159,28 @@ void App::run(const std::vector<std::string>& args) {
 		Saving::load();
 		Display::init();
 		
-		Globals::ore.reset(new OrePackage("orefiles/main.ore")); // TODO Allow user-selectable ORE file and status_msg it
+		boost::filesystem::path orePath;
+		if (vm.count("ore")) {
+			orePath = boost::filesystem::system_complete(vm["ore"].as<std::string>());
+		} else {
+			orePath = boost::filesystem::path(Saving::get().config().lastOre().get());
+		}
+		try {
+			if (orePath.file_string().size() == 0) {
+				// TODO: If there's only one ORE file in the usual place where ORE files are, just pick it automatically
+				throw OreException("ORE file has not yet been selected");
+			}
+			Debug::status_msg("Loading ORE package '" + orePath.file_string() + "'");
+			Globals::ore.reset(new OrePackage(orePath));
+		} catch (const OreException& e) {
+			// TODO: Display a dialog to the user that lets them pick a different ORE file
+			throw;
+		}
+		if (vm.count("ore")) {
+			//If an ORE file specified on the command line was successfully loaded, save that path to the config
+			Saving::get().config().lastOre().set(orePath.file_string());
+			Saving::save();
+		}
 		
 		Sim::init();
 		Input::init();
@@ -155,8 +188,18 @@ void App::run(const std::vector<std::string>& args) {
 		// TODO Find an appropriate font based on the environment we're running in
 		Globals::sys_font.reset(new GLOOFont("/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf", 15));
 		
-		// TODO Use a menu and/or command-line arguments to select mission and area
-		load_mission(1, 3);
+		if (vm.count("area") and vm.count("mission")) {
+			unsigned int area = vm["area"].as<unsigned int>();
+			unsigned int mission = vm["mission"].as<unsigned int>();
+			Debug::status_msg("Starting area " + boost::lexical_cast<std::string>(area) + ", mission " + boost::lexical_cast<std::string>(mission));
+			load_mission(area, mission);
+		} else if (vm.count("area")) {
+			// TODO Go straight to this area's menu
+			throw GameException("Area menu jumping not yet implemented");
+		} else {
+			// TODO Go to the main menu
+			throw GameException("Main menu not yet implemented");
+		}
 	} catch (const std::exception& e) {
 		Debug::error_msg(std::string("Uncaught exception during init: ") + e.what());
 		return;

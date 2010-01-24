@@ -99,7 +99,7 @@ OreFileHandle::OreFileHandle(const OrePackage& pkg, const std::string& name) :
 	
 	fp = zzip_file_open(pkg.zzip_h, name.c_str(), 0);
 	if (!fp) {
-		throw OreException("Unable to open file " + name + " from ORE package");
+		throw OreException("Unable to open file '" + name + "' from ORE package");
 	}
 }
 
@@ -120,7 +120,7 @@ OreFileHandle::~OreFileHandle() {
 OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
 	zzip_h = zzip_dir_open(p.string().c_str(), 0);
 	if (!zzip_h) {
-		throw OreException("Unable to open ORE package " + p.string() + " with libzzip");
+		throw OreException("Unable to open ORE package '" + p.string() + "' with libzzip");
 	}
 	
 	try {
