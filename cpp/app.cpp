@@ -25,7 +25,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <SDL/SDL.h>
 #include <boost/array.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/program_options.hpp>
 #include <string>
+#include <iostream>
+#include <sstream>
 #include <vector>
 #include <algorithm>
 
@@ -96,6 +99,46 @@ void App::frame_loop() {
 
 void App::run(const std::vector<std::string>& args) {
 	try {
+		// Parse command-line arguments
+		boost::program_options::options_description visible_opt_desc("Command-line options");
+		visible_opt_desc.add_options()
+			("help,h", "display help message, then exit")
+			("version,V", "display version and author information, then exit")
+			("area,a", boost::program_options::value<int>(), "preselect numbered area to play")
+			("mission,m", boost::program_options::value<int>(), "preselect numbered mission to play, you must also specify --area")
+		
+		;
+		boost::program_options::options_description hidden_opt_desc;
+		hidden_opt_desc.add_options()
+			("ore", boost::program_options::value<std::string>(), "path to an ore file containing the game data and scenario to use")
+		;
+		boost::program_options::options_description sum_opt_desc;
+		sum_opt_desc.add(visible_opt_desc).add(hidden_opt_desc);
+		boost::program_options::positional_options_description pos_desc;
+		pos_desc.add("ore", -1);
+		
+		boost::program_options::variables_map vm;
+		boost::program_options::store(boost::program_options::command_line_parser(args).options(sum_opt_desc).positional(pos_desc).run(), vm);
+		boost::program_options::notify(vm);
+		
+		// Deal with command-line arguments
+		if (vm.count("help") or vm.count("version")) {
+			Debug::status_msg("");
+			Debug::status_msg(std::string("Orbit Ribbon version ") + APP_VERSION);
+			Debug::status_msg("");
+			if (vm.count("help")) {
+				std::stringstream ss;
+				visible_opt_desc.print(ss);
+				Debug::status_msg(ss.str());
+			} else {
+				Debug::status_msg("Copyright 2009 David Simon, who can be reached at <david.mike.simon@gmail.com>");
+				Debug::status_msg("License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.");
+				Debug::status_msg("This is free software: you are free to change and redistribute it.");
+				Debug::status_msg("There is NO WARRANTY, to the extent permitted by law.");
+			}
+			return;
+		}
+		
 		// Initialize SDL
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
 			throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));

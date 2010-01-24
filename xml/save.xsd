@@ -164,7 +164,7 @@
 	<xsd:complexType name="CompletionType">
 		<xsd:attribute name="area" type="xsd:unsignedInt" />
 		<xsd:attribute name="mission" type="xsd:unsignedInt" />
-		<xsd:attribute name="high_score" type="xsd:unsignedInt" />
+		<xsd:attribute name="highScore" type="xsd:unsignedInt" />
 	</xsd:complexType>
 
 </xsd:schema>
