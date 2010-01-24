@@ -160,7 +160,9 @@ void App::run(const std::vector<std::string>& args) {
 		Display::init();
 		
 		boost::filesystem::path orePath;
+		bool oreArg = false;
 		if (vm.count("ore")) {
+			oreArg = true;
 			orePath = boost::filesystem::system_complete(vm["ore"].as<std::string>());
 		} else {
 			orePath = boost::filesystem::path(Saving::get().config().lastOre().get());
@@ -176,7 +178,7 @@ void App::run(const std::vector<std::string>& args) {
 			// TODO: Display a dialog to the user that lets them pick a different ORE file
 			throw;
 		}
-		if (vm.count("ore")) {
+		if (oreArg) {
 			//If an ORE file specified on the command line was successfully loaded, save that path to the config
 			Saving::get().config().lastOre().set(orePath.file_string());
 			Saving::save();
@@ -189,6 +191,7 @@ void App::run(const std::vector<std::string>& args) {
 		Globals::sys_font.reset(new GLOOFont("/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf", 15));
 		
 		if (vm.count("area") and vm.count("mission")) {
+			// TODO Check if this area and mission have been unlocked yet
 			unsigned int area = vm["area"].as<unsigned int>();
 			unsigned int mission = vm["mission"].as<unsigned int>();
 			Debug::status_msg("Starting area " + boost::lexical_cast<std::string>(area) + ", mission " + boost::lexical_cast<std::string>(mission));
