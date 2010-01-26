@@ -168,10 +168,6 @@ void App::run(const std::vector<std::string>& args) {
 			orePath = boost::filesystem::path(Saving::get().config().lastOre().get());
 		}
 		try {
-			if (orePath.file_string().size() == 0) {
-				// TODO: If there's only one ORE file in the usual place where ORE files are, just pick it automatically
-				throw OreException("ORE file has not yet been selected");
-			}
 			Debug::status_msg("Loading ORE package '" + orePath.file_string() + "'");
 			Globals::ore.reset(new OrePackage(orePath));
 		} catch (const OreException& e) {

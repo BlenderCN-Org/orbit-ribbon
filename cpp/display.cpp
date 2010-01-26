@@ -32,6 +32,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "except.h"
 #include "gameobj.h"
 #include "globals.h"
+#include "saving.h"
 #include "mode.h"
 #include "performance.h"
 #include "gloo.h"
@@ -187,8 +188,7 @@ void Display::draw_frame() {
 		glEnd();
 	}
 	
-	//FIXME Should be possible to turn this on and off
-	if (SDL_GetTicks() - last_perf_info >= MAX_PERF_INFO_AGE) {
+	if (Saving::get().config().showFps().get() && SDL_GetTicks() - last_perf_info >= MAX_PERF_INFO_AGE) {
 		last_perf_info = SDL_GetTicks();
 		perf_info = Performance::get_perf_info() + " " + GLOOBufferedMesh::get_usage_info();
 	}
