@@ -23,6 +23,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_INPUT_H
 #define ORBIT_RIBBON_INPUT_H
 
+#include <boost/scoped_ptr.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/utility.hpp>
 #include <map>
@@ -210,6 +211,7 @@ class Input {
 	private:
 		static boost::ptr_vector<ChannelSource> _sources;
 		static std::map<ORSave::BoundAction::Value, Channel*> _action_map;
+		static boost::scoped_ptr<ORSave::PresetListType> _preset_list;
 		
 		static void init();
 		static void update();
@@ -219,6 +221,8 @@ class Input {
 	
 	public:
 		static NullChannel null_channel;
+		
+		static const ORSave::PresetListType& get_preset_list() { return *_preset_list; }
 		
 		static const Channel& get_ch(ORSave::BoundAction::Value action);
 		

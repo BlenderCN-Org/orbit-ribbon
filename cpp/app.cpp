@@ -160,9 +160,9 @@ void App::run(const std::vector<std::string>& args) {
 		Display::init();
 		
 		boost::filesystem::path orePath;
-		bool oreArg = false;
+		bool orePathSave = false;
 		if (vm.count("ore")) {
-			oreArg = true;
+			orePathSave = true;
 			orePath = boost::filesystem::system_complete(vm["ore"].as<std::string>());
 		} else {
 			orePath = boost::filesystem::path(Saving::get().config().lastOre().get());
@@ -174,8 +174,8 @@ void App::run(const std::vector<std::string>& args) {
 			// TODO: Display a dialog to the user that lets them pick a different ORE file
 			throw;
 		}
-		if (oreArg) {
-			//If an ORE file specified on the command line was successfully loaded, save that path to the config
+		if (orePathSave) {
+			//If a different ORE file was successfully loaded, save that path to the config
 			Saving::get().config().lastOre().set(orePath.file_string());
 			Saving::save();
 		}

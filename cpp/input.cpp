@@ -23,9 +23,12 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <cmath>
+#include <sstream>
 
+#include "autoxsd/presets.xml.h"
 #include "constants.h"
 #include "input.h"
+#include "saving.h"
 
 // How far from -1, 0, or 1 where we consider an input axis to just be at those exact values
 const float DEAD_ZONE = 0.001;
@@ -159,10 +162,12 @@ GamepadAxisChannel::GamepadAxisChannel(GamepadManager* gamepad_man, Uint8 gamepa
 
 float sint16_to_axis_float(Sint16 val) {
 	float v = float(val)/32768.0;
-	if (v > 1.0) {
+	if (v > 1.0 - DEAD_ZONE) {
 		return 1.0;
-	} else if (v < -1.0) {
+	} else if (v < -1.0 + DEAD_ZONE) {
 		return -1.0;
+	} else if (v > -DEAD_ZONE && v < DEAD_ZONE) {
+		return 0.0;
 	} else {
 		return v;
 	}
@@ -341,12 +346,22 @@ std::string MultiAndChannel::desc() const {
 	return ret;
 }
 
-boost::ptr_vector<ChannelSource> Input::_sources;
 std::map<ORSave::BoundAction::Value, Channel*> Input::_action_map;
+boost::ptr_vector<ChannelSource> Input::_sources;
+boost::scoped_ptr<ORSave::PresetListType> Input::_preset_list;
+NullChannel Input::null_channel;
 
 void Input::init() {
+	// Load the encapsulated presets list
+	std::stringstream ss(CAPSULE_PRESETS_XML);
+	_preset_list.reset(ORSave::presets(ss, xsd::cxx::tree::flags::dont_validate).release());
+	
+	// Set up the keyboard input source. If no keyboard input config exists, create one from the default preset.
 	_sources.push_back(new Keyboard);
-	_sources.push_back(new GamepadManager);
+	
+	// Set up any gamepads. TODO: If any gamepads were detected, but no gamepad input config exists, try to find an appropriate preset
+	GamepadManager* gp_man = new GamepadManager;
+	_sources.push_back(gp_man);
 }
 
 void Input::update() {
@@ -360,8 +375,6 @@ void Input::set_neutral() {
 		src.set_neutral();
 	}
 }
-
-NullChannel Input::null_channel;
 
 const Channel& Input::get_ch(ORSave::BoundAction::Value action) {
 	std::map<ORSave::BoundAction::Value, Channel*>::iterator i = _action_map.find(action);

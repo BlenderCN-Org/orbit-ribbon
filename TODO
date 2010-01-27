@@ -15,4 +15,11 @@ Thinh's ideas:
 - Pass boost::shared_ptr by const reference wherever possible
 - Make the naming of variables consistent (in particular, use underscore prefix for members)
 - Make sure mipmapping and texture compression are both actually working
-- Figure out how to turn off warnings on arguments I want to ignore (i.e. some of the sdl_rwops stuff in resman.cpp)
+- Use a test texture instead of a test color for untextured faces
+- Consider using texture packing
+- Consider using three VBOs: one for very static geometry, one for rigid but movable geometry, and one for dynamic geometry
+	- If using above: have the ORE file pre-transform static geometry
+- Have the ORE file include pre-calculated information about how much memory must be allocated for the VBOs
+- Show the loading animation
+- Include all resources in the ORE file (including loading anim, title screen image, sounds, etc)
+- Separate out the ORE file into its own repository

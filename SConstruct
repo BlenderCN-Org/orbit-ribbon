@@ -19,7 +19,94 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 """
 
+capsule_header_pattern = """
+/*
+%s: Automatically generated header from source file %s.
+
+Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+
+This file is part of Orbit Ribbon.
+
+Orbit Ribbon is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Orbit Ribbon is distributed in the hope that it will be awesome,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
+*/
+
+#ifndef %s
+#define %s
+
+const char* %s =
+""" 
+
 import os
+
+def build_capsulate(source, target, env):
+	src_list = []
+	if isinstance(source, list):
+		src_list = [str(s) for s in source]
+	else:
+		src_list = [str(source)]
+	
+	tgt_list = []
+	if isinstance(target, list):
+		tgt_list = [str(t) for t in target]
+	else:
+		tgt_list = [str(target)]
+	
+	matches = {}
+	reverse_matches = {}
+	for s in src_list:
+		if not os.path.isfile(s):
+			raise RuntimeError("build_capsulate: Unable to find source file at %s" % s)
+		tgt = os.path.basename(s) + ".h"
+		
+		found_match = False
+		for t in tgt_list:
+			if os.path.basename(t) == os.path.basename(s) + ".h":
+				matches[s] = t
+				reverse_matches[t] = s
+				found_match = True
+				break
+		
+		if not found_match:
+			raise RuntimeError("build_capsulate: Source file %s has no matching header in the target list" % s)
+	
+	if len(matches) != len(reverse_matches):
+		raise RuntimeError("build_capsulate: Not a one-to-one correspondence between source and target files")
+	
+	def capsulize(src, tgt):
+		sym_name = "CAPSULE_" + os.path.basename(src).replace(".", "_").upper()
+		guard_name = "ORBIT_RIBBON_" + sym_name + "_H";
+		
+		input_fh = open(src)
+		fh = open(tgt, "w")
+		fh.write(capsule_header_pattern % (os.path.basename(tgt), os.path.basename(src), guard_name, guard_name, sym_name))
+		first_line = True
+		for line in input_fh:
+			if first_line:
+				first_line = False
+			else:
+				fh.write("\n");
+			fh.write('"' + line.replace('\\', '\\\\').replace('"', '\\"').replace("\n", "") + '\\n"')
+		fh.write(";\n\n#endif\n")
+		
+		input_fh.close()
+		fh.close()
+		return 0
+		
+	for s in src_list:
+		if Execute(Action(lambda target, source, env: capsulize(s, matches[s]))):
+			raise RuntimeError("build_capsulate: construction failed")
+
 
 def build_xsd(mode, source, target, env):
 	args = [mode]
@@ -108,18 +195,27 @@ env['BUILDERS']['XSDParser'] = Builder(
 	suffix = {'.xsd' : '-pskel.cpp'},
 	emitter = xsd_emitter
 )
+env['BUILDERS']['Capsulate'] = Builder(
+	action = build_capsulate,
+	suffix = {'.xsd' : '.h', '.xml' : '.h'}
+)
 
 tree_xsds = ['orepkgdesc', 'save']
 parser_xsds = ['oreanim']
-xsd_cpp_dir = 'cpp/autoxsd/'
+capsulated_files = Glob('xml/*.xsd', strings = True) + Glob('xml/*.xml', strings = True)
+cpp_gen_dir = 'cpp/autoxsd/'
 
 tree_built = env.XSDTree(
-	['%s/%s.cpp' % (xsd_cpp_dir, n) for n in tree_xsds],
+	['%s/%s.cpp' % (cpp_gen_dir, n) for n in tree_xsds],
 	['xml/%s.xsd' % n for n in tree_xsds]
 )
 parser_built = env.XSDParser(
-	['%s/%s-pskel.cpp' % (xsd_cpp_dir, n) for n in parser_xsds],
+	['%s/%s-pskel.cpp' % (cpp_gen_dir, n) for n in parser_xsds],
 	['xml/%s.xsd' % n for n in parser_xsds]
+)
+capsulate_built = env.Capsulate(
+	['%s/%s.h' % (cpp_gen_dir, os.path.basename(str(n))) for n in capsulated_files],
+	capsulated_files
 )
 env.Program(
 	'orbit-ribbon',
