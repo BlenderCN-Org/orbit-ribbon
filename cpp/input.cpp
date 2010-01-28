@@ -346,7 +346,8 @@ std::string MultiAndChannel::desc() const {
 	return ret;
 }
 
-std::map<ORSave::BoundAction::Value, Channel*> Input::_action_map;
+std::map<ORSave::AxisBoundAction::Value, Channel*> Input::_axis_action_map;
+std::map<ORSave::ButtonBoundAction::Value, Channel*> Input::_button_action_map;
 boost::ptr_vector<ChannelSource> Input::_sources;
 boost::scoped_ptr<ORSave::PresetListType> Input::_preset_list;
 NullChannel Input::null_channel;
@@ -376,9 +377,17 @@ void Input::set_neutral() {
 	}
 }
 
-const Channel& Input::get_ch(ORSave::BoundAction::Value action) {
-	std::map<ORSave::BoundAction::Value, Channel*>::iterator i = _action_map.find(action);
-	if (i != _action_map.end()) {
+const Channel& Input::get_axis_ch(ORSave::AxisBoundAction::Value action) {
+	std::map<ORSave::AxisBoundAction::Value, Channel*>::iterator i = _axis_action_map.find(action);
+	if (i != _axis_action_map.end()) {
+		return *(i->second);
+	}
+	return null_channel;
+}
+
+const Channel& Input::get_button_ch(ORSave::ButtonBoundAction::Value action) {
+	std::map<ORSave::ButtonBoundAction::Value, Channel*>::iterator i = _button_action_map.find(action);
+	if (i != _button_action_map.end()) {
 		return *(i->second);
 	}
 	return null_channel;

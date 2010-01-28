@@ -210,7 +210,8 @@ class App;
 class Input {
 	private:
 		static boost::ptr_vector<ChannelSource> _sources;
-		static std::map<ORSave::BoundAction::Value, Channel*> _action_map;
+		static std::map<ORSave::AxisBoundAction::Value, Channel*> _axis_action_map;
+		static std::map<ORSave::ButtonBoundAction::Value, Channel*> _button_action_map;
 		static boost::scoped_ptr<ORSave::PresetListType> _preset_list;
 		
 		static void init();
@@ -224,7 +225,8 @@ class Input {
 		
 		static const ORSave::PresetListType& get_preset_list() { return *_preset_list; }
 		
-		static const Channel& get_ch(ORSave::BoundAction::Value action);
+		static const Channel& get_axis_ch(ORSave::AxisBoundAction::Value action);
+		static const Channel& get_button_ch(ORSave::ButtonBoundAction::Value action);
 		
 		// TODO Add functions here to (de)serialize the action map, and to bind an action
 };
