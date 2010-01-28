@@ -165,9 +165,23 @@ class PseudoAxisChannel : public Channel {
 	private:
 		Channel* _neg;
 		Channel* _pos;
+		bool _neg_invert, _pos_invert;
 	
 	public:
-		PseudoAxisChannel(Channel* neg, Channel* pos);
+		PseudoAxisChannel(Channel* neg, Channel* pos, bool neg_invert, bool pos_invert);
+		
+		bool is_on() const;
+		float get_value() const;
+		void set_neutral();
+		std::string desc() const;
+};
+
+class PseudoButtonChannel : public Channel {
+	private:
+		Channel* _chn;
+	
+	public:
+		PseudoButtonChannel(Channel* chn);
 		
 		bool is_on() const;
 		float get_value() const;

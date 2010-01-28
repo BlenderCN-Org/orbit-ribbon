@@ -227,9 +227,11 @@ std::string GamepadButtonChannel::desc() const {
 	return (boost::format("Gamepad(%u)Btn:%u") % (_gamepad+1) % (_button+1)).str();
 }
 
-PseudoAxisChannel::PseudoAxisChannel(Channel* neg, Channel* pos) :
+PseudoAxisChannel::PseudoAxisChannel(Channel* neg, Channel* pos, bool neg_invert, bool pos_invert) :
 	_neg(neg),
-	_pos(pos)
+	_pos(pos),
+	_neg_invert(neg_invert),
+	_pos_invert(pos_invert)
 {}
 
 bool PseudoAxisChannel::is_on() const {
@@ -241,9 +243,9 @@ float PseudoAxisChannel::get_value() const {
 	bool pos_on = _pos->is_on();
 	if (pos_on != neg_on) {
 		if (pos_on) {
-			return _pos->get_value();
+			return _pos->get_value() * (_pos_invert ? -1 : 1);
 		} else {
-			return -_neg->get_value();
+			return _neg->get_value() * (_neg_invert ? -1 : 1);
 		}
 	}
 	return 0;
@@ -256,6 +258,26 @@ void PseudoAxisChannel::set_neutral() {
 
 std::string PseudoAxisChannel::desc() const {
 	return _neg->desc() + "-" + _pos->desc();
+}
+
+PseudoButtonChannel::PseudoButtonChannel(Channel* chn) :
+	_chn(chn)
+{}
+
+bool PseudoButtonChannel::is_on() const {
+	return _chn->is_on();
+}
+
+float PseudoButtonChannel::get_value() const {
+	return std::fabs(_chn->get_value());
+}
+
+void PseudoButtonChannel::set_neutral() {
+	_chn->set_neutral();
+}
+
+std::string PseudoButtonChannel::desc() const {
+	return _chn->desc();
 }
 
 void MultiChannel::set_neutral() {
