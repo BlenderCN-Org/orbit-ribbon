@@ -25,6 +25,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <ode/ode.h>
 
 #include "constants.h"
+#include "gameobj.h"
+#include "globals.h"
 #include "sim.h"
 
 dWorldID ode_world;
@@ -63,6 +65,11 @@ void Sim::sim_step() {
 	
 	// Run the simulation
 	dWorldQuickStep(ode_world, 1.0f/MAX_FPS);
+	
+	// Have each GameObj do whatever it needs to do each step
+	for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
+		i->second->step();
+	}
 }
 
 dBodyID Sim::gen_sphere_body(float mass, float rad) {

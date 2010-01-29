@@ -70,16 +70,16 @@
 			<xsd:element name="axis_bind" type="AxisBindType" minOccurs="0" maxOccurs="unbounded" />
 			<xsd:element name="button_bind" type="ButtonBindType" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
-		<xsd:attribute name="device" type="InputDeviceName" />
+		<xsd:attribute name="device" type="InputDeviceNameType" use="required" />
 	</xsd:complexType>
 	
-	<xsd:complexType name="BoundInput" />
+	<xsd:complexType name="BoundInputType" />
 	
 	<xsd:complexType name="AxisBindType">
 		<xsd:sequence>
-			<xsd:element name="input" type="AxisBoundInput" />
+			<xsd:element name="input" type="AxisBoundInputType" />
 		</xsd:sequence>
-		<xsd:attribute name="action" type="AxisBoundAction" />
+		<xsd:attribute name="action" type="AxisBoundAction" use="required" />
 	</xsd:complexType>
 	
 	<xsd:simpleType name="AxisBoundAction">
@@ -95,17 +95,17 @@
 		</xsd:restriction>
 	</xsd:simpleType>
 	
-	<xsd:complexType name="AxisBoundInput">
+	<xsd:complexType name="AxisBoundInputType">
 		<xsd:complexContent>
-			<xsd:extension base="BoundInput" />
+			<xsd:extension base="BoundInputType" />
 		</xsd:complexContent>
 	</xsd:complexType>
 	
 	<xsd:complexType name="ButtonBindType">
 		<xsd:sequence>
-			<xsd:element name="input" type="ButtonBoundInput" />
+			<xsd:element name="input" type="ButtonBoundInputType" />
 		</xsd:sequence>
-		<xsd:attribute name="action" type="ButtonBoundAction" />
+		<xsd:attribute name="action" type="ButtonBoundAction" use="required" />
 	</xsd:complexType>
 	
 	<xsd:simpleType name="ButtonBoundAction">
@@ -119,44 +119,44 @@
 		</xsd:restriction>
 	</xsd:simpleType>
 	
-	<xsd:complexType name="ButtonBoundInput">
+	<xsd:complexType name="ButtonBoundInputType">
 		<xsd:complexContent>
-			<xsd:extension base="BoundInput" />
+			<xsd:extension base="BoundInputType" />
 		</xsd:complexContent>
 	</xsd:complexType>
 	
 	<xsd:complexType name="KeyInputType">
 		<xsd:complexContent>
-			<xsd:extension base="ButtonBoundInput">
-				<xsd:attribute name="key" type="xsd:unsignedInt" />
+			<xsd:extension base="ButtonBoundInputType">
+				<xsd:attribute name="key" type="xsd:unsignedInt" use="required" />
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
 	
 	<xsd:complexType name="GamepadAxisInputType">
 		<xsd:complexContent>
-			<xsd:extension base="AxisBoundInput">
-				<xsd:attribute name="gamepadNum" type="xsd:unsignedInt" />
-				<xsd:attribute name="axisNum" type="xsd:unsignedInt" />
+			<xsd:extension base="AxisBoundInputType">
+				<xsd:attribute name="gamepadNum" type="xsd:unsignedInt" use="required" />
+				<xsd:attribute name="axisNum" type="xsd:unsignedInt" use="required" />
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
 	
 	<xsd:complexType name="GamepadButtonInputType">
 		<xsd:complexContent>
-			<xsd:extension base="ButtonBoundInput">
-				<xsd:attribute name="gamepadNum" type="xsd:unsignedInt" />
-				<xsd:attribute name="buttonNum" type="xsd:unsignedInt" />
+			<xsd:extension base="ButtonBoundInputType">
+				<xsd:attribute name="gamepadNum" type="xsd:unsignedInt" use="required" />
+				<xsd:attribute name="buttonNum" type="xsd:unsignedInt" use="required" />
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
 	
 	<xsd:complexType name="PseudoAxisInputType">
 		<xsd:complexContent>
-			<xsd:extension base="AxisBoundInput">
+			<xsd:extension base="AxisBoundInputType">
 				<xsd:sequence>
-					<xsd:element name="negative" type="BoundInput" />
-					<xsd:element name="positive" type="BoundInput" />
+					<xsd:element name="negative" type="BoundInputType" />
+					<xsd:element name="positive" type="BoundInputType" />
 				</xsd:sequence>
 				<xsd:attribute name="posInvert" type="xsd:boolean" use="required" />
 				<xsd:attribute name="negInvert" type="xsd:boolean" use="required" />
@@ -166,9 +166,9 @@
 	
 	<xsd:complexType name="PseudoButtonInputType">
 		<xsd:complexContent>
-			<xsd:extension base="ButtonBoundInput">
+			<xsd:extension base="ButtonBoundInputType">
 				<xsd:sequence>
-					<xsd:element name="axis" type="AxisBoundInput" />
+					<xsd:element name="axis" type="AxisBoundInputType" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
@@ -176,15 +176,15 @@
 	
 	<xsd:complexType name="LogicalAndInputType">
 		<xsd:complexContent>
-			<xsd:extension base="ButtonBoundInput">
+			<xsd:extension base="ButtonBoundInputType">
 				<xsd:sequence>
-					<xsd:element name="input" type="BoundInput" minOccurs="1" maxOccurs="unbounded" />
+					<xsd:element name="input" type="BoundInputType" minOccurs="1" maxOccurs="unbounded" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
 	
-	<xsd:simpleType name="InputDeviceName">
+	<xsd:simpleType name="InputDeviceNameType">
 		<xsd:restriction base="xsd:string">
 			<xsd:enumeration value="Keyboard" />
 			<xsd:enumeration value="Gamepad" />
@@ -195,13 +195,13 @@
 		<xsd:sequence>
 			<xsd:element name="completion" type="CompletionType" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
-		<xsd:attribute name="ore" type="xsd:string" />
+		<xsd:attribute name="ore" type="xsd:string" use="required" />
 	</xsd:complexType>
 	
 	<xsd:complexType name="CompletionType">
-		<xsd:attribute name="area" type="xsd:unsignedInt" />
-		<xsd:attribute name="mission" type="xsd:unsignedInt" />
-		<xsd:attribute name="highScore" type="xsd:unsignedInt" />
+		<xsd:attribute name="area" type="xsd:unsignedInt" use="required" />
+		<xsd:attribute name="mission" type="xsd:unsignedInt" use="required" />
+		<xsd:attribute name="highScore" type="xsd:unsignedInt" use="required" />
 	</xsd:complexType>
 
 </xsd:schema>

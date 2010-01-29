@@ -24,7 +24,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_INPUT_H
 
 #include <boost/scoped_ptr.hpp>
-#include <boost/ptr_container/ptr_vector.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 #include <map>
 #include <SDL/SDL.h>
@@ -60,14 +60,14 @@ class NullChannel : public Channel {
 
 class ChannelSource : boost::noncopyable {
 	protected:
-		boost::ptr_vector<Channel> _channels;
+		std::vector<boost::shared_ptr<Channel> > _channels;
 		
 	public:
 		virtual void update() =0;
 		virtual void set_neutral();
 		
-		boost::ptr_vector<Channel>& channels() { return _channels; }
-		const boost::ptr_vector<Channel>& channels() const { return _channels; }
+		std::vector<boost::shared_ptr<Channel> >& channels() { return _channels; }
+		const std::vector<boost::shared_ptr<Channel> >& channels() const { return _channels; }
 };
 
 class KeyChannel;
@@ -82,7 +82,7 @@ class Keyboard : public ChannelSource {
 	
 	public:
 		void update();
-		const Channel& key_channel(SDLKey key) const;
+		const boost::shared_ptr<Channel> key_channel(SDLKey key) const;
 };
 
 class KeyChannel : public Channel {
@@ -121,8 +121,8 @@ class GamepadManager : public ChannelSource {
 	
 	public:
 		void update();
-		const Channel& axis_channel(Uint8 gamepad_num, Uint8 axis_num) const;
-		const Channel& button_channel(Uint8 gamepad_num, Uint8 button_num) const;
+		const boost::shared_ptr<Channel> axis_channel(Uint8 gamepad_num, Uint8 axis_num) const;
+		const boost::shared_ptr<Channel> button_channel(Uint8 gamepad_num, Uint8 button_num) const;
 };
 
 class GamepadAxisChannel : public Channel {
@@ -163,12 +163,12 @@ class GamepadButtonChannel : public Channel {
 
 class PseudoAxisChannel : public Channel {
 	private:
-		Channel* _neg;
-		Channel* _pos;
+		boost::shared_ptr<Channel> _neg;
+		boost::shared_ptr<Channel> _pos;
 		bool _neg_invert, _pos_invert;
 	
 	public:
-		PseudoAxisChannel(Channel* neg, Channel* pos, bool neg_invert, bool pos_invert);
+		PseudoAxisChannel(const boost::shared_ptr<Channel>& neg, const boost::shared_ptr<Channel>& pos, bool neg_invert, bool pos_invert);
 		
 		bool is_on() const;
 		float get_value() const;
@@ -178,10 +178,10 @@ class PseudoAxisChannel : public Channel {
 
 class PseudoButtonChannel : public Channel {
 	private:
-		Channel* _chn;
+		boost::shared_ptr<Channel> _chn;
 	
 	public:
-		PseudoButtonChannel(Channel* chn);
+		PseudoButtonChannel(const boost::shared_ptr<Channel>& chn);
 		
 		bool is_on() const;
 		float get_value() const;
@@ -191,10 +191,10 @@ class PseudoButtonChannel : public Channel {
 
 class MultiChannel : public Channel {
 	protected:
-		std::vector<Channel*> _channels;
+		std::vector<boost::shared_ptr<Channel> > _channels;
 	
 	public:
-		void add_channel(Channel* ch) { _channels.push_back(ch); }
+		void add_channel(const boost::shared_ptr<Channel>& ch) { _channels.push_back(ch); }
 		
 		bool is_on() const =0;
 		bool is_partially_on() const =0;
@@ -223,22 +223,30 @@ class App;
 
 class Input {
 	private:
-		static boost::ptr_vector<ChannelSource> _sources;
-		static std::map<ORSave::AxisBoundAction::Value, Channel*> _axis_action_map;
-		static std::map<ORSave::ButtonBoundAction::Value, Channel*> _button_action_map;
+		static boost::shared_ptr<Channel> _null_channel;
+		
+		static boost::shared_ptr<Keyboard> _kbd;
+		static boost::shared_ptr<GamepadManager> _gp_man;
+		static std::vector<ChannelSource*> _sources;
+		
+		static std::map<ORSave::AxisBoundAction::Value, boost::shared_ptr<Channel> > _axis_action_map;
+		static std::map<ORSave::ButtonBoundAction::Value, boost::shared_ptr<Channel> > _button_action_map;
 		static boost::scoped_ptr<ORSave::PresetListType> _preset_list;
 		
 		static void init();
 		static void update();
 		static void set_neutral();
+		static boost::shared_ptr<Channel> xml_to_channel(const ORSave::BoundInputType& i);
 		
 		friend class App;
 	
 	public:
-		static NullChannel null_channel;
+		static boost::shared_ptr<Channel> get_null_channel() { return _null_channel; }
 		
+		static const ORSave::PresetType& get_preset(const std::string& name);
 		static const ORSave::PresetListType& get_preset_list() { return *_preset_list; }
 		
+		static void set_channels_from_config();
 		static const Channel& get_axis_ch(ORSave::AxisBoundAction::Value action);
 		static const Channel& get_button_ch(ORSave::ButtonBoundAction::Value action);
 		

@@ -37,6 +37,15 @@ ORSave::SaveType& Saving::get() {
 	throw GameException("Attempted to get save data before it had been loaded.");
 }
 
+ORSave::InputDeviceType& Saving::get_input_device(ORSave::InputDeviceNameType::Value dev_type) {
+	BOOST_FOREACH(ORSave::InputDeviceType& idev, get().config().inputDevice()) {
+		if (idev.device() == dev_type) {
+			return idev;
+		}
+	}
+	throw GameException("Unable to locate input device config in save file matching requested type");
+}
+
 template<typename AT, typename VT> void conf_dflt(AT& optional_attr, const VT& default_value) {
 	if (!optional_attr.present()) {
 		optional_attr.set(default_value);

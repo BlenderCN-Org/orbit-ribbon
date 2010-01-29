@@ -24,9 +24,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/format.hpp>
 #include <cmath>
 #include <sstream>
+#include <typeinfo>
 
 #include "autoxsd/presets.xml.h"
+#include "autoxsd/save.h"
 #include "constants.h"
+#include "debug.h"
+#include "except.h"
 #include "input.h"
 #include "saving.h"
 
@@ -46,15 +50,15 @@ bool Channel::is_null() const {
 }
 
 void ChannelSource::set_neutral() {
-	BOOST_FOREACH(Channel& ch, _channels) {
-		ch.set_neutral();
+	BOOST_FOREACH(boost::shared_ptr<Channel> ch, _channels) {
+		ch->set_neutral();
 	}
 }
 
 Keyboard::Keyboard() {
 	update();
 	for (unsigned int i = (const unsigned int)SDLK_FIRST; i < (const unsigned int)SDLK_LAST; ++i) {
-		_channels.push_back(new KeyChannel(this, SDLKey(i)));
+		_channels.push_back(boost::shared_ptr<Channel>(new KeyChannel(this, SDLKey(i))));
 	}
 }
 
@@ -62,7 +66,7 @@ void Keyboard::update() {
 	_sdl_key_state = SDL_GetKeyState(NULL);
 }
 
-const Channel& Keyboard::key_channel(SDLKey key) const {
+const boost::shared_ptr<Channel> Keyboard::key_channel(SDLKey key) const {
 	return _channels[(unsigned int)key];
 }
 
@@ -72,11 +76,11 @@ GamepadManager::GamepadManager() {
 		_gamepads.push_back(gp);
 		for (Uint8 a = 0; a < SDL_JoystickNumAxes(gp); ++a) {
 			_gamepad_axis_map[i][a] = _channels.size();
-			_channels.push_back(new GamepadAxisChannel(this, i, a));
+			_channels.push_back(boost::shared_ptr<Channel>(new GamepadAxisChannel(this, i, a)));
 		}
 		for (Uint8 b = 0; b < SDL_JoystickNumButtons(gp); ++b) {
 			_gamepad_button_map[i][b] = _channels.size();
-			_channels.push_back(new GamepadButtonChannel(this, i, b));
+			_channels.push_back(boost::shared_ptr<Channel>(new GamepadButtonChannel(this, i, b)));
 		}
 	}
 	update();
@@ -86,26 +90,26 @@ void GamepadManager::update() {
 	SDL_JoystickUpdate();
 }
 
-const Channel& GamepadManager::axis_channel(Uint8 gamepad_num, Uint8 axis_num) const {
+const boost::shared_ptr<Channel> GamepadManager::axis_channel(Uint8 gamepad_num, Uint8 axis_num) const {
 	std::map<Uint8, std::map<Uint8, unsigned int> >::const_iterator i = _gamepad_axis_map.find(gamepad_num);
 	if (i == _gamepad_axis_map.end()) {
-		return Input::null_channel;
+		return Input::get_null_channel();
 	}
 	std::map<Uint8, unsigned int>::const_iterator j = i->second.find(axis_num);
 	if (j == i->second.end()) {
-		return Input::null_channel;
+		return Input::get_null_channel();
 	}
 	return _channels[j->second];
 }
 
-const Channel& GamepadManager::button_channel(Uint8 gamepad_num, Uint8 button_num) const {
+const boost::shared_ptr<Channel> GamepadManager::button_channel(Uint8 gamepad_num, Uint8 button_num) const {
 	std::map<Uint8, std::map<Uint8, unsigned int> >::const_iterator i = _gamepad_button_map.find(gamepad_num);
 	if (i == _gamepad_button_map.end()) {
-		return Input::null_channel;
+		return Input::get_null_channel();
 	}
 	std::map<Uint8, unsigned int>::const_iterator j = i->second.find(button_num);
 	if (j == i->second.end()) {
-		return Input::null_channel;
+		return Input::get_null_channel();
 	}
 	return _channels[j->second];
 }
@@ -227,7 +231,7 @@ std::string GamepadButtonChannel::desc() const {
 	return (boost::format("Gamepad(%u)Btn:%u") % (_gamepad+1) % (_button+1)).str();
 }
 
-PseudoAxisChannel::PseudoAxisChannel(Channel* neg, Channel* pos, bool neg_invert, bool pos_invert) :
+PseudoAxisChannel::PseudoAxisChannel(const boost::shared_ptr<Channel>& neg, const boost::shared_ptr<Channel>& pos, bool neg_invert, bool pos_invert) :
 	_neg(neg),
 	_pos(pos),
 	_neg_invert(neg_invert),
@@ -260,7 +264,7 @@ std::string PseudoAxisChannel::desc() const {
 	return _neg->desc() + "-" + _pos->desc();
 }
 
-PseudoButtonChannel::PseudoButtonChannel(Channel* chn) :
+PseudoButtonChannel::PseudoButtonChannel(const boost::shared_ptr<Channel>& chn) :
 	_chn(chn)
 {}
 
@@ -281,13 +285,13 @@ std::string PseudoButtonChannel::desc() const {
 }
 
 void MultiChannel::set_neutral() {
-	BOOST_FOREACH(Channel* ch, _channels) {
+	BOOST_FOREACH(boost::shared_ptr<Channel>& ch, _channels) {
 		ch->set_neutral();
 	}
 }
 
 bool MultiOrChannel::is_on() const {
-	BOOST_FOREACH(Channel* ch, _channels) {
+	BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
 		if (ch->is_on()) {
 			return true;
 		}
@@ -296,7 +300,7 @@ bool MultiOrChannel::is_on() const {
 }
 
 bool MultiOrChannel::is_partially_on() const {
-	BOOST_FOREACH(Channel* ch, _channels) {
+	BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
 		if (ch->is_partially_on()) {
 			return true;
 		}
@@ -306,7 +310,7 @@ bool MultiOrChannel::is_partially_on() const {
 
 float MultiOrChannel::get_value() const {
 	float v;
-	BOOST_FOREACH(Channel* ch, _channels) {
+	BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
 		float cand = ch->get_value();
 		if (std::fabs(cand) > std::fabs(v)) {
 			v = cand;
@@ -317,7 +321,7 @@ float MultiOrChannel::get_value() const {
 
 std::string MultiOrChannel::desc() const {
 	std::string ret;
-	BOOST_FOREACH(Channel* ch, _channels) {
+	BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
 		if (ret.size() > 0) {
 			ret += "/";
 		}
@@ -327,7 +331,7 @@ std::string MultiOrChannel::desc() const {
 }
 
 bool MultiAndChannel::is_on() const {
-	BOOST_FOREACH(Channel* ch, _channels) {
+	BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
 		if (!ch->is_on()) {
 			return false;
 		}
@@ -336,7 +340,7 @@ bool MultiAndChannel::is_on() const {
 }
 
 bool MultiAndChannel::is_partially_on() const {
-	BOOST_FOREACH(Channel* ch, _channels) {
+	BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
 		if (ch->is_partially_on()) {
 			return true;
 		}
@@ -347,7 +351,7 @@ bool MultiAndChannel::is_partially_on() const {
 float MultiAndChannel::get_value() const {
 	float v;
 	bool assigned = false;
-	BOOST_FOREACH(Channel* ch, _channels) {
+	BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
 		float cand = ch->get_value();
 		if ((!assigned) or std::fabs(cand) < std::fabs(v)) {
 			assigned = true;
@@ -359,7 +363,7 @@ float MultiAndChannel::get_value() const {
 
 std::string MultiAndChannel::desc() const {
 	std::string ret;
-	BOOST_FOREACH(Channel* ch, _channels) {
+	BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
 		if (ret.size() > 0) {
 			ret += "+";
 		}
@@ -368,49 +372,142 @@ std::string MultiAndChannel::desc() const {
 	return ret;
 }
 
-std::map<ORSave::AxisBoundAction::Value, Channel*> Input::_axis_action_map;
-std::map<ORSave::ButtonBoundAction::Value, Channel*> Input::_button_action_map;
-boost::ptr_vector<ChannelSource> Input::_sources;
+boost::shared_ptr<Channel> Input::_null_channel;
+
+boost::shared_ptr<Keyboard> Input::_kbd;
+boost::shared_ptr<GamepadManager> Input::_gp_man;
+std::vector<ChannelSource*> Input::_sources;
+
+std::map<ORSave::AxisBoundAction::Value, boost::shared_ptr<Channel> > Input::_axis_action_map;
+std::map<ORSave::ButtonBoundAction::Value, boost::shared_ptr<Channel> > Input::_button_action_map;
 boost::scoped_ptr<ORSave::PresetListType> Input::_preset_list;
-NullChannel Input::null_channel;
+
 
 void Input::init() {
+	_null_channel = boost::shared_ptr<Channel>(new NullChannel);
+	
 	// Load the encapsulated presets list
 	std::stringstream ss(CAPSULE_PRESETS_XML);
 	_preset_list.reset(ORSave::presets(ss, xsd::cxx::tree::flags::dont_validate).release());
 	
+	bool config_dirty = false;
+	
 	// Set up the keyboard input source. If no keyboard input config exists, create one from the default preset.
-	_sources.push_back(new Keyboard);
+	_kbd = boost::shared_ptr<Keyboard>(new Keyboard);
+	_sources.push_back(&*_kbd);
+	try {
+		Saving::get_input_device(ORSave::InputDeviceNameType::Keyboard);
+	} catch (const GameException& e) {
+		Debug::status_msg("Loading default input configuration for keyboard");
+		Saving::get().config().inputDevice().push_back(get_preset("Default Keyboard Mapping").inputDevice());
+		config_dirty = true;
+	}
 	
 	// Set up any gamepads. TODO: If any gamepads were detected, but no gamepad input config exists, try to find an appropriate preset
-	GamepadManager* gp_man = new GamepadManager;
-	_sources.push_back(gp_man);
+	_gp_man = boost::shared_ptr<GamepadManager>(new GamepadManager);
+	_sources.push_back(&*_gp_man);
+	
+	// Create Channel instances to match the configs
+	set_channels_from_config();
+	
+	if (config_dirty) {
+		Saving::save();
+	}
 }
 
 void Input::update() {
-	BOOST_FOREACH(ChannelSource& src, _sources) {
-		src.update();
+	BOOST_FOREACH(ChannelSource* src, _sources) {
+		src->update();
 	}
 }
 
 void Input::set_neutral() {
-	BOOST_FOREACH(ChannelSource& src, _sources) {
-		src.set_neutral();
+	BOOST_FOREACH(ChannelSource* src, _sources) {
+		src->set_neutral();
 	}
+}
+
+boost::shared_ptr<Channel> Input::xml_to_channel(const ORSave::BoundInputType& i) {
+	boost::shared_ptr<Channel> chn;
+	
+	// Oi, this is bad use of polymorphism, but there's no other good way I can see to do it
+	if (typeid(i) == typeid(ORSave::KeyInputType)) {
+		chn = _kbd->key_channel(
+			SDLKey(static_cast<const ORSave::KeyInputType*>(&i)->key())
+		);
+	} else if (typeid(i) == typeid(ORSave::GamepadButtonInputType)) {
+		chn = _gp_man->button_channel(
+			static_cast<const ORSave::GamepadButtonInputType*>(&i)->gamepadNum(),
+			static_cast<const ORSave::GamepadButtonInputType*>(&i)->buttonNum()
+		);
+	} else if (typeid(i) == typeid(ORSave::GamepadAxisInputType)) {
+		chn = _gp_man->axis_channel(
+			static_cast<const ORSave::GamepadAxisInputType*>(&i)->gamepadNum(),
+			static_cast<const ORSave::GamepadAxisInputType*>(&i)->axisNum()
+		);
+	} else if (typeid(i) == typeid(ORSave::PseudoButtonInputType)) {
+		chn = boost::shared_ptr<Channel>(new PseudoButtonChannel(
+			xml_to_channel(static_cast<const ORSave::PseudoButtonInputType*>(&i)->axis())
+		));
+	} else if (typeid(i) == typeid(ORSave::PseudoAxisInputType)) {
+		chn = boost::shared_ptr<Channel>(new PseudoAxisChannel(
+			xml_to_channel(static_cast<const ORSave::PseudoAxisInputType*>(&i)->negative()),
+			xml_to_channel(static_cast<const ORSave::PseudoAxisInputType*>(&i)->positive()),
+			static_cast<const ORSave::PseudoAxisInputType*>(&i)->negInvert(),
+			static_cast<const ORSave::PseudoAxisInputType*>(&i)->posInvert()
+		));
+	} else if (typeid(i) == typeid(ORSave::LogicalAndInputType)) {
+		chn = boost::shared_ptr<Channel>(new MultiAndChannel());
+		BOOST_FOREACH(ORSave::BoundInputType& i, static_cast<const ORSave::LogicalAndInputType*>(&i)->input()) {
+			static_cast<MultiAndChannel*>(&*chn)->add_channel(xml_to_channel(i));
+		}
+	} else {
+		throw GameException(std::string("Got unexpected BoundInputType in bindings config: ") + typeid(i).name());
+	}
+	
+	return chn;
+}
+
+void Input::set_channels_from_config() {
+	_axis_action_map.clear();
+	_button_action_map.clear();
+	
+	// Create all the channels specified by the config file
+	// TODO Merge new channels with existing channels using MultiOrChannel
+	// TODO In fact, make that merging process part of a templated function so that we can be DRY
+	BOOST_FOREACH(const ORSave::InputDeviceType& idev, Saving::get().config().inputDevice()) {
+		BOOST_FOREACH(const ORSave::AxisBindType& abind, idev.axis_bind()) {
+			_axis_action_map[abind.action()] = xml_to_channel(abind.input());
+		}
+		BOOST_FOREACH(const ORSave::ButtonBindType& bbind, idev.button_bind()) {
+			_button_action_map[bbind.action()] = xml_to_channel(bbind.input());
+		}
+	}
+	
+	// TODO Set the fixed default keyboard mappings
+}
+
+const ORSave::PresetType& Input::get_preset(const std::string& name) {
+	BOOST_FOREACH(const ORSave::PresetType& preset, _preset_list->preset()) {
+		if (preset.presetName() == name) {
+			return preset;
+		}
+	}
+	throw GameException("Unable to load preset named '" + name + "'");
 }
 
 const Channel& Input::get_axis_ch(ORSave::AxisBoundAction::Value action) {
-	std::map<ORSave::AxisBoundAction::Value, Channel*>::iterator i = _axis_action_map.find(action);
+	std::map<ORSave::AxisBoundAction::Value, boost::shared_ptr<Channel> >::iterator i = _axis_action_map.find(action);
 	if (i != _axis_action_map.end()) {
 		return *(i->second);
 	}
-	return null_channel;
+	return *_null_channel;
 }
 
 const Channel& Input::get_button_ch(ORSave::ButtonBoundAction::Value action) {
-	std::map<ORSave::ButtonBoundAction::Value, Channel*>::iterator i = _button_action_map.find(action);
+	std::map<ORSave::ButtonBoundAction::Value, boost::shared_ptr<Channel> >::iterator i = _button_action_map.find(action);
 	if (i != _button_action_map.end()) {
 		return *(i->second);
 	}
-	return null_channel;
+	return *_null_channel;
 }

@@ -24,13 +24,44 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "autoxsd/orepkgdesc.h"
 #include "avatar.h"
+#include "constants.h"
 #include "geometry.h"
+#include "input.h"
 #include "mesh.h"
 #include "sim.h"
+
+// Maximum amount of Newtons per second applied by various maneuvers
+const float MAX_STRAFE = 5000;
+const float MAX_ACCEL = 15000;
+const float MAX_TURN = 1000;
+const float MAX_ROLL = 800;
+
+// Counter-turn and counter-roll coefficients
+// These act like damping coefficients, but are only turned on when the axis's controls are released
+const float CTURN_COEF = 700;
+const float CROLL_COEF = 700;
 
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 
 void AvatarGameObj::step_impl() {
+	// TODO: Consider adding linear and angular velocity caps
+	// TODO: Set a maximum total acceleration, then force accel vector to be no longer than that magnitude
+	
+	float v;
+	
+	v = Input::get_axis_ch(ORSave::AxisBoundAction::RotateY).get_value();
+	if (v != 0.0) {
+		dBodyAddRelTorque(get_body(), 0.0, -v*(MAX_TURN/MAX_FPS), 0.0);
+	} else {
+		// Counter-turn
+	}
+	
+	v = Input::get_axis_ch(ORSave::AxisBoundAction::RotateX).get_value();
+	if (v != 0.0) {
+		dBodyAddRelTorque(get_body(), v*(MAX_TURN/MAX_FPS), 0.0, 0.0);
+	} else {
+		// Counter-turn
+	}
 }
 
 void AvatarGameObj::near_draw_impl() {
