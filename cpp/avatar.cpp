@@ -46,21 +46,50 @@ GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 void AvatarGameObj::step_impl() {
 	// TODO: Consider adding linear and angular velocity caps
 	// TODO: Set a maximum total acceleration, then force accel vector to be no longer than that magnitude
-	
+		
 	float v;
 	
+	v = Input::get_axis_ch(ORSave::AxisBoundAction::TranslateX).get_value();
+	if (v != 0.0) {
+		dBodyAddRelForce(get_body(), -v*(MAX_STRAFE/MAX_FPS), 0.0, 0.0);
+	}
+	
+	v = Input::get_axis_ch(ORSave::AxisBoundAction::TranslateY).get_value();
+	if (v != 0.0) {
+		dBodyAddRelForce(get_body(), 0.0, -v*(MAX_STRAFE/MAX_FPS), 0.0);
+	}
+	
+	v = Input::get_axis_ch(ORSave::AxisBoundAction::TranslateZ).get_value();
+	if (v != 0.0) {
+		dBodyAddRelForce(get_body(), 0.0, 0.0, v*(MAX_ACCEL/MAX_FPS));
+	}
+	
+	const dReal* avel = dBodyGetAngularVel(get_body());
+	dVector3 rel_avel;
+	dBodyVectorFromWorld(get_body(), avel[0], avel[1], avel[2], rel_avel);
+	
+	// X-turn and x-counterturn
 	v = Input::get_axis_ch(ORSave::AxisBoundAction::RotateY).get_value();
 	if (v != 0.0) {
 		dBodyAddRelTorque(get_body(), 0.0, -v*(MAX_TURN/MAX_FPS), 0.0);
 	} else {
-		// Counter-turn
+		dBodyAddRelTorque(get_body(), 0.0, rel_avel[1]*-CTURN_COEF/MAX_FPS, 0.0);
 	}
 	
+	// Y-turn and y-counterturn
 	v = Input::get_axis_ch(ORSave::AxisBoundAction::RotateX).get_value();
 	if (v != 0.0) {
 		dBodyAddRelTorque(get_body(), v*(MAX_TURN/MAX_FPS), 0.0, 0.0);
 	} else {
-		// Counter-turn
+		dBodyAddRelTorque(get_body(), rel_avel[0]*-CTURN_COEF/MAX_FPS, 0.0, 0.0);
+	}
+	
+	// Roll
+	v = Input::get_axis_ch(ORSave::AxisBoundAction::RotateZ).get_value();
+	if (v != 0.0) {
+		dBodyAddRelTorque(get_body(), 0.0, 0.0, v*(MAX_ROLL/MAX_FPS));
+	} else {
+		dBodyAddRelTorque(get_body(), 0.0, 0.0, rel_avel[2]*(-CROLL_COEF/MAX_FPS));
 	}
 }
 
