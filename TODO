@@ -24,3 +24,5 @@ Thinh's ideas:
 - Include all resources in the ORE file (including loading anim, title screen image, sounds, etc)
 - Separate out the ORE file into its own repository
 - Figure out why SDL won't restore the original screen resolution! (Grumble, mumble)
+- Why doesn't vsync work?
+- Allow video mode to be reinitialized without having to reinit the entire display module

@@ -22,6 +22,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
+#include <cctype>
 #include <cmath>
 #include <sstream>
 #include <typeinfo>
@@ -153,7 +155,11 @@ void KeyChannel::set_neutral() {
 }
 
 std::string KeyChannel::desc() const {
-	return std::string("Key:") + SDL_GetKeyName(_key);
+	std::string upper_name;
+	BOOST_FOREACH(char n, SDL_GetKeyName(_key)) {
+		upper_name.push_back(std::toupper(int(n)));
+	}
+	return std::string("[") + upper_name + std::string("]");
 }
 
 GamepadAxisChannel::GamepadAxisChannel(GamepadManager* gamepad_man, Uint8 gamepad, Uint8 axis) :
@@ -252,7 +258,7 @@ float PseudoAxisChannel::get_value() const {
 			return _neg->get_value() * (_neg_invert ? -1 : 1);
 		}
 	}
-	return 0;
+	return 0.0;
 }
 
 void PseudoAxisChannel::set_neutral() {

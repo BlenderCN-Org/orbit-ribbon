@@ -86,6 +86,8 @@ void Display::init() {
 	}
 	
 	if (screen_width == 0 || screen_height == 0 || !SDL_VideoModeOK(screen_width, screen_height, vid_info->vfmt->BitsPerPixel, videoFlags)) {
+		Debug::status_msg("Resolution not specified validly in save file, choosing new resolution...");
+		
 		// Need to come up with default values
 		if (full_screen) {
 			SDL_Rect** modes;
@@ -109,13 +111,6 @@ void Display::init() {
 			screen_height = 600;
 		}
 		
-		Debug::status_msg(
-			"Resolution not specified validly in save file, choosing default resolution of " +
-			boost::lexical_cast<std::string>(screen_width) +
-			"x" +
-			boost::lexical_cast<std::string>(screen_height) +
-			(full_screen ? " fullscreen" : " windowed")
-		);
 		Saving::get().config().screenWidth().set(screen_width);
 		Saving::get().config().screenHeight().set(screen_height);
 		Saving::get().config().fullScreen().set(full_screen);
