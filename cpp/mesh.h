@@ -27,6 +27,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <vector>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
+#include <ode/ode.h>
 
 #include "gloo.h"
 #include "gameobj.h"
@@ -48,6 +49,7 @@ class MeshAnimation : boost::noncopyable {
 	public:
 		static boost::shared_ptr<MeshAnimation> load(const std::string& name);
 		
+		dTriMeshDataID get_trimesh_data(unsigned int frame) { return _frames[frame]->get_trimesh_data(); }
 		const std::string& get_name() { return _name; }
 		void draw();
 };

@@ -31,6 +31,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gloo.h"
 #include "mesh.h"
 #include "ore.h"
+#include "sim.h"
 
 class _MeshAnimationParser : public ORE1::AnimationType_pskel {
 	private:
@@ -71,7 +72,8 @@ class _MeshParser : public ORE1::MeshType_pskel {
 				if (_tex_name.size() > 0) {
 					_tex = GLOOTexture::load(_tex_name);
 				}
-				_mesh = GLOOBufferedMesh::create(_verts, _faces, _tex);
+				// FIXME Don't always have trimesh data creaed; it's not necessary for all models
+				_mesh = GLOOBufferedMesh::create(_verts, _faces, _tex, true);
 			}
 		}
 	
@@ -277,5 +279,5 @@ MeshGameObj::MeshGameObj(const ORE1::ObjType& obj) :
 	GameObj(obj),
 	_mesh_anim(MeshAnimation::load(std::string("mesh-") + obj.meshName()))
 {
-	set_geom();
+	set_geom(dCreateTriMesh(Sim::get_static_space(), _mesh_anim->get_trimesh_data(0), 0, 0, 0));
 }

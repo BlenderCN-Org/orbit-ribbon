@@ -48,7 +48,8 @@ dSpaceID Sim::get_dyn_space() {
 	return dyn_space;
 }
 
-void Sim::init() {	
+void Sim::init() {
+	dInitODE();
 	ode_world = dWorldCreate();
 	dWorldSetQuickStepNumIterations(ode_world, 10);
 	static_space = dHashSpaceCreate(0);

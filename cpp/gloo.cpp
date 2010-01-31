@@ -31,6 +31,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 #include <FTGL/ftgl.h>
+#include <ode/ode.h>
 
 #include "cache.h"
 #include "constants.h"
@@ -194,7 +195,8 @@ float _VBOManager::get_usage() {
 bool GLOOBufferedMesh::_initialized = false;
 boost::scoped_ptr<_VBOManager> GLOOBufferedMesh::_vertices_vboman, GLOOBufferedMesh::_faces_vboman;
 
-GLOOBufferedMesh::GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_count, boost::shared_ptr<GLOOTexture> tex) :
+GLOOBufferedMesh::GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_count, boost::shared_ptr<GLOOTexture> tex, bool gen_trimesh_data) :
+	_trimesh_id(0),
 	_tex(tex),
 	_vertices_added(0),
 	_total_vertices(vertex_count),
@@ -206,6 +208,12 @@ GLOOBufferedMesh::GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_
 		_faces_vboman.reset(new _VBOManager(GL_ELEMENT_ARRAY_BUFFER, FACES_BUFFER_ALLOCATED_SIZE*1024));
 		GLOOVertex::set_gl_pointers();
 		_initialized = true;
+	}
+	
+	if (gen_trimesh_data) {
+		_trimesh_vertices.reserve(3*vertex_count);
+		_trimesh_normals.reserve(3*vertex_count);
+		_trimesh_indices.reserve(3*face_count);
 	}
 	
 	_vertices_alloc = _vertices_vboman->allocate(_total_vertices*sizeof(GLOOVertex));
@@ -222,6 +230,14 @@ void GLOOBufferedMesh::load_vertex(const GLOOVertex& v) {
 	if (!_next_vertex) {
 		throw OreException("Attempted to load a vertex while unmapped");
 	}
+	if (_trimesh_vertices.capacity() > 0) {
+		_trimesh_vertices.push_back(v.x);
+		_trimesh_vertices.push_back(v.y);
+		_trimesh_vertices.push_back(v.z);
+		_trimesh_normals.push_back(v.nx);
+		_trimesh_normals.push_back(v.ny);
+		_trimesh_normals.push_back(v.nz);
+	}
 	*_next_vertex = v;
 	++_next_vertex;
 	++_vertices_added;
@@ -233,6 +249,11 @@ void GLOOBufferedMesh::load_face(const GLOOFace& f) {
 	}
 	if (!_next_face) {
 		throw OreException("Attempted to load a face while unmapped");
+	}
+	if (_trimesh_indices.capacity() > 0) {
+		_trimesh_indices.push_back(f.a);
+		_trimesh_indices.push_back(f.b);
+		_trimesh_indices.push_back(f.c);
 	}
 	unsigned int vtx_offset = (_vertices_alloc->offset()/sizeof(GLOOVertex));
 	_next_face->a = f.a + vtx_offset;
@@ -253,6 +274,14 @@ void GLOOBufferedMesh::finish_loading() {
 	
 	if (_faces_added != _total_faces) {
 		throw OreException((boost::format("Allocated space for %1% faces, but only loaded %2%") % _total_faces % _faces_added).str());
+	}
+	
+	if (_trimesh_vertices.capacity() > 0) {
+		_trimesh_id = dGeomTriMeshDataCreate();
+		dGeomTriMeshDataBuildDouble1(_trimesh_id,
+			&*(_trimesh_vertices.begin()), 3*sizeof(dReal), _total_vertices,
+			&*(_trimesh_indices.begin()), _total_faces, 3*sizeof(unsigned int),
+			&*(_trimesh_normals.begin()));
 	}
 	
 	_vertices_alloc->unmap();
@@ -288,7 +317,17 @@ void GLOOBufferedMesh::draw() {
 	}
 }
 
+dTriMeshDataID GLOOBufferedMesh::get_trimesh_data() {
+	if (_vertices_vboman->mapped() or _faces_vboman->mapped()) {
+		throw OreException("Attempted to get trimesh data from GLOOBufferedMesh while still mapped");
+	}
+	return _trimesh_id;
+}
+
 GLOOBufferedMesh::~GLOOBufferedMesh() {
+	if (_trimesh_id != 0) {
+		dGeomTriMeshDataDestroy(_trimesh_id);
+	}
 	finish_loading();
 }
 

@@ -28,10 +28,12 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/utility.hpp>
 #include <string>
 #include <list>
+#include <vector>
 #include <SDL/SDL.h>
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <FTGL/ftgl.h>
+#include <ode/ode.h>
 
 #include "cache.h"
 
@@ -135,17 +137,22 @@ class GLOOBufferedMesh : boost::noncopyable {
 		static bool _initialized;
 		static boost::scoped_ptr<_VBOManager> _vertices_vboman, _faces_vboman;
 		
+		std::vector<dReal> _trimesh_vertices;
+		std::vector<dReal> _trimesh_normals;
+		std::vector<unsigned int> _trimesh_indices;
+		dTriMeshDataID _trimesh_id;
+		
 		boost::shared_ptr<GLOOTexture> _tex;
 		boost::shared_ptr<_VBOManager::Allocation> _vertices_alloc, _faces_alloc;
 		unsigned int _vertices_added, _total_vertices, _faces_added, _total_faces;
 		GLOOVertex* _next_vertex;
 		GLOOFace* _next_face;
 		
-		GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_count, boost::shared_ptr<GLOOTexture> tex);
+		GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_count, boost::shared_ptr<GLOOTexture> tex, bool gen_trimesh_data);
 	
 	public:
-		static boost::shared_ptr<GLOOBufferedMesh> create(unsigned int vertex_count, unsigned int face_count, boost::shared_ptr<GLOOTexture> tex)
-			{ return boost::shared_ptr<GLOOBufferedMesh>(new GLOOBufferedMesh(vertex_count, face_count, tex)); }
+		static boost::shared_ptr<GLOOBufferedMesh> create(unsigned int vertex_count, unsigned int face_count, boost::shared_ptr<GLOOTexture> tex, bool gen_trimesh_data)
+			{ return boost::shared_ptr<GLOOBufferedMesh>(new GLOOBufferedMesh(vertex_count, face_count, tex, gen_trimesh_data)); }
 			
 		static float get_vertices_usage() { return _vertices_vboman ? _vertices_vboman->get_usage() : 0.0; }
 		static float get_faces_usage() { return _faces_vboman ? _faces_vboman->get_usage() : 0.0; }
@@ -162,6 +169,9 @@ class GLOOBufferedMesh : boost::noncopyable {
 		
 		// Call this method to draw the mesh, after finish_loading() has been called
 		void draw();
+		
+		// Call this method after finish_loading() has been called, and only if you specified true for gen_trimesh_data
+		dTriMeshDataID get_trimesh_data();
 		
 		virtual ~GLOOBufferedMesh();
 };
