@@ -47,9 +47,6 @@
 		<button_bind action="Pause">
 			<input xsi:type="orsave:KeyInputType" key="27" />
 		</button_bind>
-		<button_bind action="ResetNeutral">
-			<input xsi:type="orsave:KeyInputType" key="293" />
-		</button_bind>
 	</inputDevice>
 </preset>
 

@@ -85,9 +85,11 @@ void Saving::load() {
 	// Load default config values for anything unspecified
 	ORSave::ConfigType* conf = &(_save->config());
 	conf_dflt(conf->lastOre(), "no-lack-of-sky.ore");
+	conf_dflt(conf->showFps(), false);
+	conf_dflt(conf->fullScreen(), true);
+	conf_dflt(conf->vSync(), true);
 	conf_dflt(conf->soundEffectVolume(), 0.8);
 	conf_dflt(conf->musicVolume(), 0.5);
-	conf_dflt(conf->showFps(), false);
 }
 
 void Saving::save() {

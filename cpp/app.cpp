@@ -68,8 +68,14 @@ void App::frame_loop() {
 		while (SDL_PollEvent(&event)) {
 			Globals::frame_events.push_back(event);
 		  	if (event.type == SDL_QUIT) {
-				throw GameQuitException("Closed on quit event");
+				throw GameQuitException("SDL quit event");
 			}
+		}
+		
+		// Check for a ForceQuit binding activation
+		const Channel& force_quit_chn = Input::get_button_ch(ORSave::ButtonBoundAction::ForceQuit);
+		if (force_quit_chn.is_on()) {
+			throw GameQuitException("ForceQuit binding (" + force_quit_chn.desc() + ") activated");
 		}
 		
 		// Do simulation steps until we've no more than one frame behind the display
@@ -207,7 +213,7 @@ void App::run(const std::vector<std::string>& args) {
 	try {
 		frame_loop();
 	} catch (const GameQuitException& e) {
-		// Do nothing.
+		Debug::status_msg(std::string("Normal quit: ") + e.what());
 	} catch (const std::exception& e) {
 		Debug::error_msg(std::string("Uncaught exception during run: ") + e.what());
 	}

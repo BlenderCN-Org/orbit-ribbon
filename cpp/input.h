@@ -249,8 +249,6 @@ class Input {
 		static void set_channels_from_config();
 		static const Channel& get_axis_ch(ORSave::AxisBoundAction::Value action);
 		static const Channel& get_button_ch(ORSave::ButtonBoundAction::Value action);
-		
-		// TODO Add functions here to (de)serialize the action map, and to bind an action
 };
 
 #endif

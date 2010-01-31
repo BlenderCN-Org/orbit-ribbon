@@ -468,23 +468,72 @@ boost::shared_ptr<Channel> Input::xml_to_channel(const ORSave::BoundInputType& i
 	return chn;
 }
 
+template<typename A, typename C, typename M> void insert_binding(A action, const C& chn, M& map) {
+	if (chn->is_null()) {
+		return;
+	}
+	
+	typename M::iterator i(map.find(action));
+	if (i == map.end()) {
+		boost::shared_ptr<MultiOrChannel> top_chn(new MultiOrChannel);
+		top_chn->add_channel(chn);
+		map.insert(typename M::value_type(action, top_chn));
+	} else {
+		(static_cast<MultiOrChannel*>(&*(i->second)))->add_channel(chn);
+	}
+}
+
 void Input::set_channels_from_config() {
 	_axis_action_map.clear();
 	_button_action_map.clear();
 	
 	// Create all the channels specified by the config file
-	// TODO Merge new channels with existing channels using MultiOrChannel
-	// TODO In fact, make that merging process part of a templated function so that we can be DRY
 	BOOST_FOREACH(const ORSave::InputDeviceType& idev, Saving::get().config().inputDevice()) {
 		BOOST_FOREACH(const ORSave::AxisBindType& abind, idev.axis_bind()) {
-			_axis_action_map[abind.action()] = xml_to_channel(abind.input());
+			insert_binding(abind.action(), xml_to_channel(abind.input()), _axis_action_map);
 		}
 		BOOST_FOREACH(const ORSave::ButtonBindType& bbind, idev.button_bind()) {
-			_button_action_map[bbind.action()] = xml_to_channel(bbind.input());
+			insert_binding(bbind.action(), xml_to_channel(bbind.input()), _button_action_map);
 		}
 	}
 	
-	// TODO Set the fixed default keyboard mappings
+	// Create channels for the fixed default keyboard mappings
+	
+	insert_binding(
+		ORSave::AxisBoundAction::UIX,
+		boost::shared_ptr<Channel>(	
+			new PseudoAxisChannel(
+				_kbd->key_channel(SDLK_LEFT),
+				_kbd->key_channel(SDLK_RIGHT),
+				true,
+				false
+			)
+		),
+		_axis_action_map
+	);
+	
+	insert_binding(
+		ORSave::AxisBoundAction::UIY,
+		boost::shared_ptr<Channel>(	
+			new PseudoAxisChannel(
+				_kbd->key_channel(SDLK_DOWN),
+				_kbd->key_channel(SDLK_UP),
+				true,
+				false
+			)
+		),
+		_axis_action_map
+	);
+	
+	insert_binding(ORSave::ButtonBoundAction::Confirm, _kbd->key_channel(SDLK_RETURN), _button_action_map);
+	insert_binding(ORSave::ButtonBoundAction::Confirm, _kbd->key_channel(SDLK_SPACE), _button_action_map);
+	insert_binding(ORSave::ButtonBoundAction::Confirm, _kbd->key_channel(SDLK_KP_ENTER), _button_action_map);
+	
+	insert_binding(ORSave::ButtonBoundAction::Cancel, _kbd->key_channel(SDLK_ESCAPE), _button_action_map);
+	
+	insert_binding(ORSave::ButtonBoundAction::ResetNeutral, _kbd->key_channel(SDLK_F10), _button_action_map);
+	
+	insert_binding(ORSave::ButtonBoundAction::ForceQuit, _kbd->key_channel(SDLK_F4), _button_action_map);
 }
 
 const ORSave::PresetType& Input::get_preset(const std::string& name) {

@@ -52,8 +52,8 @@ bool fade_flag = false;
 
 SDL_Surface* screen;
 
-GLsizei Display::screen_width = 800;
-GLsizei Display::screen_height = 600;
+GLsizei Display::screen_width = 1280;
+GLsizei Display::screen_height = 800;
 GLint Display::screen_depth = 16;
 GLfloat Display::screen_ratio;
 
@@ -70,6 +70,9 @@ void Display::set_fade(bool flag) {
 
 void Display::init() {
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	if (Saving::get().config().vSync().get()) {
+		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
+	}
 	std::string win_title = std::string("Orbit Ribbon (") + APP_VERSION + std::string(")");
 	SDL_WM_SetCaption(win_title.c_str(), win_title.c_str());
 	//FIXME : Set window icon here
@@ -79,10 +82,13 @@ void Display::init() {
 	videoFlags |= SDL_GL_DOUBLEBUFFER;
 	videoFlags |= SDL_HWPALETTE;
 	videoFlags |= SDL_SWSURFACE;
+	videoFlags |= (Saving::get().config().fullScreen().get() ? SDL_FULLSCREEN : 0);
 	screen = SDL_SetVideoMode(get_screen_width(), get_screen_height(), get_screen_depth(), videoFlags);
 	if (!screen) {
 		throw GameException(std::string("Video mode set failed: ") + std::string(SDL_GetError()));
 	}
+	
+	SDL_ShowCursor(SDL_DISABLE);
 	
 	GLenum glew_err = glewInit();
 	if (glew_err != GLEW_OK) {

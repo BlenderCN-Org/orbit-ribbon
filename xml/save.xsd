@@ -28,7 +28,7 @@
 	
 	<!-- TODO Enforce uniqueness among ore file names in ProgressType and actions in BindingMapType -->
 	<!-- TODO Enforce that KeyInputTypes can only appear under Keyboard, and Gamepad*InputType under Gamepad -->
-	<!-- TODO Disallow UIX, UIY, Confirm, Cancel from appearing under Keyboard input device types, their kbd mappings are fixed -->
+	<!-- TODO Disallow UIX, UIY, Confirm, Cancel, ResetNeutral from appearing under Keyboard input device types, their kbd mappings are fixed -->
 	<!-- TODO Disallow ForceQuit from appearing anywhere, it's mapping is fixed to be only F4 -->
 	
 	<xsd:element name="save" type="SaveType" />
@@ -59,6 +59,8 @@
 		<xsd:sequence>
 			<xsd:element name="lastOre" type="xsd:string" minOccurs="0" />
 			<xsd:element name="showFps" type="xsd:boolean" minOccurs="0" />
+			<xsd:element name="fullScreen" type="xsd:boolean" minOccurs="0" />
+			<xsd:element name="vSync" type="xsd:boolean" minOccurs="0" />
 			<xsd:element name="soundEffectVolume" type="xsd:float" minOccurs="0" />
 			<xsd:element name="musicVolume" type="xsd:float" minOccurs="0" />
 			<xsd:element name="inputDevice" type="InputDeviceType" minOccurs="0" maxOccurs="unbounded"/>
