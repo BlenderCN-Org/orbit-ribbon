@@ -23,3 +23,4 @@ Thinh's ideas:
 - Show the loading animation
 - Include all resources in the ORE file (including loading anim, title screen image, sounds, etc)
 - Separate out the ORE file into its own repository
+- Figure out why SDL won't restore the original screen resolution! (Grumble, mumble)

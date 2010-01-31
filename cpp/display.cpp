@@ -20,6 +20,7 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
+#include <boost/lexical_cast.hpp>
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -52,10 +53,9 @@ bool fade_flag = false;
 
 SDL_Surface* screen;
 
-GLsizei Display::screen_width = 1280;
-GLsizei Display::screen_height = 800;
-GLint Display::screen_depth = 16;
-GLfloat Display::screen_ratio;
+GLsizei Display::screen_width = 0;
+GLsizei Display::screen_height = 0;
+GLfloat Display::screen_ratio = 0;
 
 void Display::set_fade_color(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
 	fade_r = r;
@@ -69,6 +69,61 @@ void Display::set_fade(bool flag) {
 }
 
 void Display::init() {
+	bool full_screen = Saving::get().config().fullScreen().get();
+	
+	const SDL_VideoInfo* vid_info = SDL_GetVideoInfo();
+	if (!vid_info) {
+		throw GameException("Unable to query video info: " + std::string(SDL_GetError()));
+	}
+	
+	GLint videoFlags;
+	videoFlags  = SDL_OPENGL;
+	videoFlags |= SDL_GL_DOUBLEBUFFER;
+	
+	if (Saving::get().config().screenWidth().present() && Saving::get().config().screenHeight().present()) {
+		screen_width = Saving::get().config().screenWidth().get();
+		screen_height = Saving::get().config().screenHeight().get();
+	}
+	
+	if (screen_width == 0 || screen_height == 0 || !SDL_VideoModeOK(screen_width, screen_height, vid_info->vfmt->BitsPerPixel, videoFlags)) {
+		// Need to come up with default values
+		if (full_screen) {
+			SDL_Rect** modes;
+			modes = SDL_ListModes(vid_info->vfmt, videoFlags | SDL_FULLSCREEN );
+			if (modes == (SDL_Rect**)0) {
+				Debug::status_msg("No fullscreen video modes available, disabling fullscreen mode for this run");
+				full_screen = false;
+				screen_width = 800;
+				screen_height = 600;
+			} else if (modes == (SDL_Rect**)-1) {
+				Debug::status_msg("Fullscreen video modes are unrestricted (?)");
+				screen_width = 800;
+				screen_height = 600;
+			} else {
+				screen_width = modes[0]->w;
+				screen_height = modes[0]->h;
+			}
+		} else {
+			// If we're not fullscreen, just go with 800x600
+			screen_width = 800;
+			screen_height = 600;
+		}
+		
+		Debug::status_msg(
+			"Resolution not specified validly in save file, choosing default resolution of " +
+			boost::lexical_cast<std::string>(screen_width) +
+			"x" +
+			boost::lexical_cast<std::string>(screen_height) +
+			(full_screen ? " fullscreen" : " windowed")
+		);
+		Saving::get().config().screenWidth().set(screen_width);
+		Saving::get().config().screenHeight().set(screen_height);
+		Saving::get().config().fullScreen().set(full_screen);
+		Saving::save();
+	}
+	
+	screen_ratio = screen_width/screen_height;
+	
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	if (Saving::get().config().vSync().get()) {
 		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
@@ -77,13 +132,15 @@ void Display::init() {
 	SDL_WM_SetCaption(win_title.c_str(), win_title.c_str());
 	//FIXME : Set window icon here
 	
-	GLint videoFlags;
-	videoFlags  = SDL_OPENGL;
-	videoFlags |= SDL_GL_DOUBLEBUFFER;
-	videoFlags |= SDL_HWPALETTE;
-	videoFlags |= SDL_SWSURFACE;
-	videoFlags |= (Saving::get().config().fullScreen().get() ? SDL_FULLSCREEN : 0);
-	screen = SDL_SetVideoMode(get_screen_width(), get_screen_height(), get_screen_depth(), videoFlags);
+	Debug::status_msg(
+		"Setting display mode to " +
+		boost::lexical_cast<std::string>(screen_width) +
+		"x" +
+		boost::lexical_cast<std::string>(screen_height) +
+		(full_screen ? " fullscreen" : " windowed")
+	);
+	
+	screen = SDL_SetVideoMode(get_screen_width(), get_screen_height(), vid_info->vfmt->BitsPerPixel, videoFlags | (full_screen ? SDL_FULLSCREEN : 0));
 	if (!screen) {
 		throw GameException(std::string("Video mode set failed: ") + std::string(SDL_GetError()));
 	}

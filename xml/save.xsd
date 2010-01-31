@@ -58,6 +58,8 @@
 	<xsd:complexType name="ConfigType">
 		<xsd:sequence>
 			<xsd:element name="lastOre" type="xsd:string" minOccurs="0" />
+			<xsd:element name="screenWidth" type="xsd:unsignedInt" minOccurs="0" />
+			<xsd:element name="screenHeight" type="xsd:unsignedInt" minOccurs="0" />
 			<xsd:element name="showFps" type="xsd:boolean" minOccurs="0" />
 			<xsd:element name="fullScreen" type="xsd:boolean" minOccurs="0" />
 			<xsd:element name="vSync" type="xsd:boolean" minOccurs="0" />
