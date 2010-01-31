@@ -28,14 +28,28 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <ode/ode.h>
 #include <boost/array.hpp>
 #include <boost/utility.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <utility>
 
 #include "except.h"
 #include "geometry.h"
+#include "sim.h"
 
 namespace ORE1 { class ObjType; }
+
+class GameObjCollisionHandler : public CollisionHandler {
+	private:
+		GameObj* _gameobj;
+		
+	public:
+		GameObjCollisionHandler(GameObj* gameobj) : _gameobj(gameobj) {}
+		
+		const GameObj* get_gameobj() const { return _gameobj; }
+		bool should_contact(dGeomID other __attribute__ ((unused))) const { return true; }
+		void handle_collision(dGeomID other, const GameObj* other_gameobj, const dContactGeom* contacts, unsigned int contacts_len);
+};
 
 class GameObj : boost::noncopyable {
 	public:
@@ -65,6 +79,8 @@ class GameObj : boost::noncopyable {
 		dGeomID get_geom() const { return _geom; }
 		void set_geom(dGeomID geom);
 		
+		void set_new_collision_handler(CollisionHandler* ch) { _coll_handler.reset(ch); }
+		
 		virtual void near_draw_impl() {}
 		virtual void far_draw_impl() { near_draw_impl(); }
 		virtual void step_impl() {}
@@ -73,6 +89,7 @@ class GameObj : boost::noncopyable {
 		Point _pos;
 		boost::array<GLfloat, 9> _rot; // 3x3 column-major
 		Vector _vel;
+		boost::scoped_ptr<CollisionHandler> _coll_handler;
 		
 		// Damping coefficients for linear and angular velocity along each body axis
 		// For example, vel_damp_coef[0] is the linear damping coefficient along relative x axis

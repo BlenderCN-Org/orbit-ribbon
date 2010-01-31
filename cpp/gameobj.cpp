@@ -38,9 +38,18 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 const float DEFAULT_VEL_DAMP_COEF = 0.15;
 const float DEFAULT_ANG_DAMP_COEF = 0.15;
 
+void GameObjCollisionHandler::handle_collision(
+	dGeomID other __attribute__ ((unused)),
+	const GameObj* other_gameobj __attribute__ ((unused)),
+	const dContactGeom* contacts __attribute__ ((unused)),
+	unsigned int contacts_len __attribute__ ((unused))
+) {
+}
+
 GameObj::GameObj(const ORE1::ObjType& obj) :
 	_pos(Point(obj.pos()[0], obj.pos()[1], obj.pos()[2])),
 	_vel(Vector()),
+	_coll_handler(new GameObjCollisionHandler(this)),
 	_body(0),
 	_geom(0)
 {
@@ -224,11 +233,23 @@ void recursive_geom_set_body(dGeomID geom, dBodyID body) {
 	if (dGeomIsSpace(geom)) {
 		dSpaceID s = dSpaceID(geom);
 		GLint end = dSpaceGetNumGeoms(s);
-		for (int i = 0; i < end; ++i) {
+		for (GLint i = 0; i < end; ++i) {
 			recursive_geom_set_body(dSpaceGetGeom(s, i), body);
 		}
 	} else {
 		dGeomSetBody(geom, body);
+	}
+}
+
+void recursive_geom_set_data(dGeomID geom, CollisionHandler* ch) {
+	if (dGeomIsSpace(geom)) {
+		dSpaceID s = dSpaceID(geom);
+		GLint end = dSpaceGetNumGeoms(s);
+		for (GLint i = 0; i < end; ++i) {
+			recursive_geom_set_data(dSpaceGetGeom(s, i), ch);
+		}
+	} else {
+		dGeomSetData(geom, (void*)ch);
 	}
 }
 
@@ -252,6 +273,9 @@ void GameObj::set_geom(dGeomID geom) {
 		dGeomDestroy(_geom);
 	}
 	_geom = geom;
+	if (_geom != 0) {
+		recursive_geom_set_data(_geom, &*_coll_handler);
+	}
 	if (_body != 0) {
 		recursive_geom_set_body(_geom, _body);
 	}

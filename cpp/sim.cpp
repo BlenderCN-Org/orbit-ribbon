@@ -34,6 +34,8 @@ dSpaceID static_space;
 dSpaceID dyn_space;
 dJointGroupID contact_group;
 
+const unsigned int MAXIMUM_CONTACT_POINTS = 16;
+
 dWorldID Sim::get_ode_world() {
 	return ode_world;
 }
@@ -54,7 +56,30 @@ void Sim::init() {
 	contact_group = dJointGroupCreate(0);
 }
 
-void collision_callback(void* data, dGeomID o1, dGeomID o2) {
+void collision_callback(void* data __attribute__ ((unused)), dGeomID o1, dGeomID o2) {
+	static dContactGeom contacts[MAXIMUM_CONTACT_POINTS];
+	if (dGeomIsSpace(o1) or dGeomIsSpace(o2)) {
+		dSpaceCollide2(o1, o2, NULL, &collision_callback);
+	} else {
+		int len = dCollide(o1, o2, MAXIMUM_CONTACT_POINTS, &(contacts[0]), sizeof(dContactGeom));
+		if (len > 0) {
+			CollisionHandler* o1h = static_cast<CollisionHandler*>(dGeomGetData(o1));
+			CollisionHandler* o2h = static_cast<CollisionHandler*>(dGeomGetData(o2));
+			o1h->handle_collision(o2, o2h->get_gameobj(), &(contacts[0]), len);
+			o2h->handle_collision(o1, o1h->get_gameobj(), &(contacts[0]), len);
+			if (o1h->should_contact(o2) && o2h->should_contact(o1)) {
+				dContact contact;
+				contact.surface.mode = dContactApprox1 | dContactBounce;
+				contact.surface.bounce = 0.5;
+				contact.surface.mu = 5000;
+				for (int ci = 0; ci < len; ++ci) {
+					contact.geom = contacts[ci];
+					dJointID joint = dJointCreateContact(ode_world, contact_group, &contact);
+					dJointAttach(joint, dGeomGetBody(o1), dGeomGetBody(o2));
+				}
+ 			}
+		}
+	}
 }
 
 void Sim::sim_step() {
@@ -66,7 +91,7 @@ void Sim::sim_step() {
 	// Run the simulation
 	dWorldQuickStep(ode_world, 1.0f/MAX_FPS);
 	
-	// Have each GameObj do whatever it needs to do each step
+	// Have each GameObj do whatever it needs to do each step (including damping)
 	for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
 		i->second->step();
 	}

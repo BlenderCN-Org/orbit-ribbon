@@ -115,4 +115,5 @@ AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 	_anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run"))
 {
 	set_body(Sim::gen_sphere_body(80, 0.5));
+	set_geom(dCreateCCylinder(Sim::get_dyn_space(), 0.25, 2.0));
 }

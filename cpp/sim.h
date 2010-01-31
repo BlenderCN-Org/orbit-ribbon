@@ -25,7 +25,17 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <ode/ode.h>
 
+#include "geometry.h"
+
 class App;
+
+class GameObj;
+class CollisionHandler {
+	public:
+		virtual const GameObj* get_gameobj() const { return (GameObj*)0; }
+		virtual bool should_contact(dGeomID other) const =0;
+		virtual void handle_collision(dGeomID other, const GameObj* other_gameobj, const dContactGeom* contacts, unsigned int contacts_len) =0;
+};
 
 class Sim {
 	public:

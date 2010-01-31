@@ -277,4 +277,5 @@ MeshGameObj::MeshGameObj(const ORE1::ObjType& obj) :
 	GameObj(obj),
 	_mesh_anim(MeshAnimation::load(std::string("mesh-") + obj.meshName()))
 {
+	set_geom();
 }

@@ -27,6 +27,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/shared_ptr.hpp>
 
 #include "gameobj.h"
+#include "sim.h"
 
 class MeshAnimation;
 namespace ORE1 { class ObjType; }

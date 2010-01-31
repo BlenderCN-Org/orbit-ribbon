@@ -31,6 +31,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/shared_ptr.hpp>
 #include <boost/array.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <ode/ode.h>
 
 class GameObj;
 class Mode;
@@ -43,7 +44,7 @@ typedef std::map<std::string, boost::shared_ptr<GameObj> > GOMap;
 class Globals {
 	public:
 		static std::vector<SDL_Event> frame_events;
-		static GLint total_steps;
+		static GLuint total_steps;
 		static GOMap gameobjs;
 		static boost::scoped_ptr<Mode> mode;
 		static boost::scoped_ptr<Background> bg;
