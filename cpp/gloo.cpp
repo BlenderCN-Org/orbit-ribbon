@@ -280,7 +280,7 @@ void GLOOBufferedMesh::finish_loading() {
 		_trimesh_id = dGeomTriMeshDataCreate();
 		dGeomTriMeshDataBuildDouble1(_trimesh_id,
 			&*(_trimesh_vertices.begin()), 3*sizeof(dReal), _total_vertices,
-			&*(_trimesh_indices.begin()), _total_faces, 3*sizeof(unsigned int),
+			&*(_trimesh_indices.begin()), _total_faces*3, 3*sizeof(unsigned int),
 			&*(_trimesh_normals.begin()));
 	}
 	
