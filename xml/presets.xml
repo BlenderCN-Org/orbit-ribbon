@@ -100,7 +100,7 @@
 			<input xsi:type="orsave:GamepadButtonInputType" gamepadNum="0" buttonNum="3" />
 		</button_bind>
 		<button_bind action="ResetNeutral">
-			<input xsi:type="orsave:GamepadButtonInputType" gamepadNum="0" buttonNum="3" />
+			<input xsi:type="orsave:GamepadButtonInputType" gamepadNum="0" buttonNum="16" />
 		</button_bind>
 		<button_bind action="Confirm">
 			<input xsi:type="orsave:GamepadButtonInputType" gamepadNum="0" buttonNum="13" />

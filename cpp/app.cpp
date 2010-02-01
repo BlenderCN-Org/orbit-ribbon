@@ -78,6 +78,13 @@ void App::frame_loop() {
 			throw GameQuitException("ForceQuit binding " + force_quit_chn.desc() + " activated");
 		}
 		
+		// Check for a ResetNeutral binding activation
+		const Channel& reset_neutral_chn = Input::get_button_ch(ORSave::ButtonBoundAction::ResetNeutral);
+		if (reset_neutral_chn.is_on()) {
+			Debug::status_msg("ResetNeutral binding " + reset_neutral_chn.desc() + " activated");
+			Input::set_neutral();
+		}
+		
 		// Do simulation steps until we've no more than one frame behind the display
 		while (unsimulated_ticks > MIN_TICKS_PER_FRAME) {
 			Sim::sim_step();

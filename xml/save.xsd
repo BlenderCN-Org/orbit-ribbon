@@ -50,7 +50,7 @@
 	<xsd:complexType name="PresetType">
 		<xsd:sequence>
 			<xsd:element name="presetName" type="xsd:string" />
-			<xsd:element name="deviceMatchString" type="xsd:string" minOccurs="0" />
+			<xsd:element name="deviceMatchString" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
 			<xsd:element name="inputDevice" type="InputDeviceType" />
 		</xsd:sequence>
 	</xsd:complexType>

@@ -135,9 +135,7 @@ std::string NullChannel::desc() const {
 KeyChannel::KeyChannel(Keyboard* kbd, SDLKey key) :
 	_kbd(kbd),
 	_key(key)
-{
-	set_neutral();
-}
+{}
 
 bool KeyChannel::is_on() const {
 	return _kbd->_sdl_key_state[_key] != _neutral_state;
@@ -166,9 +164,7 @@ GamepadAxisChannel::GamepadAxisChannel(GamepadManager* gamepad_man, Uint8 gamepa
 	_gamepad_man(gamepad_man),
 	_gamepad(gamepad),
 	_axis(axis)
-{
-	set_neutral();
-}
+{}
 
 float sint16_to_axis_float(Sint16 val) {
 	float v = float(val)/32768.0;
@@ -213,9 +209,7 @@ GamepadButtonChannel::GamepadButtonChannel(GamepadManager* gamepad_man, Uint8 ga
 	_gamepad_man(gamepad_man),
 	_gamepad(gamepad),
 	_button(button)
-{
-	set_neutral();
-}
+{}
 
 bool GamepadButtonChannel::is_on() const {
 	return SDL_JoystickGetButton(_gamepad_man->_gamepads[_gamepad], _button) != _neutral_state;
@@ -388,7 +382,6 @@ std::map<ORSave::AxisBoundAction::Value, boost::shared_ptr<Channel> > Input::_ax
 std::map<ORSave::ButtonBoundAction::Value, boost::shared_ptr<Channel> > Input::_button_action_map;
 boost::scoped_ptr<ORSave::PresetListType> Input::_preset_list;
 
-
 void Input::init() {
 	_null_channel = boost::shared_ptr<Channel>(new NullChannel);
 	
@@ -409,16 +402,48 @@ void Input::init() {
 		config_dirty = true;
 	}
 	
-	// Set up any gamepads. TODO: If any gamepads were detected, but no gamepad input config exists, try to find an appropriate preset
+	// Set up any gamepads.
 	_gp_man = boost::shared_ptr<GamepadManager>(new GamepadManager);
 	_sources.push_back(&*_gp_man);
+	if (_gp_man->get_num_gamepads() > 0) {
+		try {
+			ORSave::InputDeviceType& gp_input = Saving::get_input_device(ORSave::InputDeviceNameType::Gamepad);
+			if (gp_input.axis_bind().size() == 0 && gp_input.button_bind().size() == 0) {
+				throw GameException("It's empty"); // If a input config exists but is empty, act like we couldn't find an input config at all
+			}
+		} catch (const GameException& e) {
+			std::string gp_name = _gp_man->get_first_gamepad_name();
+			Debug::status_msg("Attempting to find an appropriate input configuration for gamepad: '" + gp_name + "'");
+			bool found = false;
+			BOOST_FOREACH(const ORSave::PresetType& preset, _preset_list->preset()) {
+				BOOST_FOREACH(const std::string& match_name, preset.deviceMatchString()) {
+					if (gp_name.find(match_name) != std::string::npos) {
+						Debug::status_msg("Loaded gamepad input configuration: '" + preset.presetName() + "'");
+						Saving::get().config().inputDevice().push_back(preset.inputDevice());
+						found = true;
+						config_dirty = true;
+						break;
+					}
+				}
+				if (found) {
+					break;
+				}
+			}
+			if (!found) {
+				Debug::status_msg("Unable to find an appropriate gamepad input configuration");
+			}
+		}
+	}
 	
-	// Create Channel instances to match the configs
+	// Create Channel instances to match the configs, and also create Channels for default mappings (i.e. ForceQuit)
 	set_channels_from_config();
 	
 	if (config_dirty) {
 		Saving::save();
 	}
+	
+	SDL_Delay(100); // Without this delay we don't always seem to get useful joystick values
+	set_neutral();
 }
 
 void Input::update() {
@@ -428,6 +453,7 @@ void Input::update() {
 }
 
 void Input::set_neutral() {
+	update();
 	BOOST_FOREACH(ChannelSource* src, _sources) {
 		src->set_neutral();
 	}
@@ -504,7 +530,6 @@ void Input::set_channels_from_config() {
 	}
 	
 	// Create channels for the fixed default keyboard mappings
-	
 	insert_binding(
 		ORSave::AxisBoundAction::UIX,
 		boost::shared_ptr<Channel>(	

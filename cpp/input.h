@@ -121,6 +121,8 @@ class GamepadManager : public ChannelSource {
 	
 	public:
 		void update();
+		unsigned int get_num_gamepads() const { return _gamepads.size(); }
+		std::string get_first_gamepad_name() const { return std::string(SDL_JoystickName(0)); }
 		const boost::shared_ptr<Channel> axis_channel(Uint8 gamepad_num, Uint8 axis_num) const;
 		const boost::shared_ptr<Channel> button_channel(Uint8 gamepad_num, Uint8 button_num) const;
 };

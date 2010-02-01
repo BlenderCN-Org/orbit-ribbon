@@ -299,7 +299,6 @@ void GLOOBufferedMesh::draw() {
 		_tex->bind();
 	} else {
 		glDisable(GL_TEXTURE_2D);
-		// FIXME: Once lighting is enabled, set material color to purple here
 	}
 	
 	const char* offset = 0;
