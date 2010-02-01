@@ -25,6 +25,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <ode/ode.h>
 
 #include "constants.h"
+#include "debug.h"
 #include "gameobj.h"
 #include "globals.h"
 #include "sim.h"

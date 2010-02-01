@@ -166,7 +166,7 @@ void GameObj::step() {
 		_pos.y = p[1];
 		_pos.z = p[2];
 		
-		// For some reason, dMatrix3 has 12 elements, not 9
+		// For some reason, dMatrix3 has 12 elements, not 9, where the extra column has no useful information for us
 		// We have to watch out for that here in addition to flipping between column-major and row-major
 		p = dBodyGetRotation(_body);
 		_rot[0] = p[0]; _rot[1] = p[4]; _rot[2] = p[8];
@@ -278,6 +278,10 @@ void GameObj::set_geom(dGeomID geom) {
 	}
 	if (_body != 0) {
 		recursive_geom_set_body(_geom, _body);
+	} else if (_geom != 0) {
+		// Loads our current position and orientation into the geom
+		set_pos(_pos);
+		set_rot(_rot);
 	}
 }
 
