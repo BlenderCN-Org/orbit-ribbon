@@ -33,13 +33,9 @@ class MeshAnimation;
 namespace ORE1 { class ObjType; }
 
 class AvatarGameObj : public GameObj {
-	public:
-		enum Mode {Superman, SupermanToUpright, Upright, UprightToSuperman, Attached};
-		
 	private:
 		boost::shared_ptr<MeshAnimation> _anim_fly_to_prerun;
-		Mode _mode;
-		float _stance;
+		float _uprightness;
 		
 	protected:
 		void step_impl();

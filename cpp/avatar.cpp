@@ -46,8 +46,8 @@ const float CTURN_COEF = 700.0;
 const float CROLL_COEF = 700.0;
 
 // How many seconds it takes to move between the Superman and Upright modes, and how much _stance can therefore change each step
-const float RUN_STANCE_ENTRY_TIME = 0.5;
-const float RUN_STANCE_STEP_SIZE = 1.0f/(RUN_STANCE_ENTRY_TIME*MAX_FPS);
+const float UPRIGHTNESS_ENTRY_TIME = 0.5;
+const float UPRIGHTNESS_STEP_DIFF = 1.0f/(UPRIGHTNESS_ENTRY_TIME*MAX_FPS);
 
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 
@@ -111,67 +111,24 @@ void AvatarGameObj::step_impl() {
 		dBodyAddRelTorque(get_body(), 0.0, 0.0, cv);
 	}
 	
-	// Changing mode between Superman and Upright
-	chn = &Input::get_button_ch(ORSave::ButtonBoundAction::RunningStance);
-	// Once we are entering or are in running mode, do not assume player wants to leave it unless UprightStance bind is entirely off
-	if (chn->is_on() or (chn->is_partially_on() and (_mode == SupermanToUpright or _mode == Upright))) {
-		switch (_mode) {
-			case Superman:
-			case UprightToSuperman:
-				_mode = SupermanToUpright;
-				break;
-			case SupermanToUpright:
-				if (similar(_stance, 1.0)) {
-					_mode = Upright;
-				}
-				break;
-			default:
-				// Do nothing
-				break;
-		}
+	// Changing stance between superman-style and upright
+	chn = &Input::get_button_ch(ORSave::ButtonBoundAction::UprightStance);
+	// Once we are entering or are in upright mode, do not assume player wants to leave it unless UprightStance bind is entirely off
+	if (chn->is_on() or (chn->is_partially_on() and !similar(_uprightness, 0.0))) {
+		_uprightness += UPRIGHTNESS_STEP_DIFF;
 	} else {
-		switch (_mode) {
-			case Upright:
-			case SupermanToUpright:
-				_mode = UprightToSuperman;
-				break;
-			case UprightToSuperman:
-				if (similar(_stance, 0.0)) {
-					_mode = Superman;
-				}
-				break;
-			default:
-				// Do nothing
-				break;
-		}
+		_uprightness -= UPRIGHTNESS_STEP_DIFF;
 	}
-	
-	// Update _stance to match the current mode
-	switch (_mode) {
-		case Superman:
-			_stance = 0.0;
-			break;
-		case Upright:
-		case Attached:
-			_stance = 1.0;
-			break;
-		case SupermanToUpright:
-			_stance += RUN_STANCE_STEP_SIZE;
-			break;
-		case UprightToSuperman:
-			_stance -= RUN_STANCE_STEP_SIZE;
-			break;
-	}
-	if (_stance > 1.0) { _stance = 1.0; } else if (_stance < 0.0) { _stance = 0.0; }
+	if (_uprightness > 1.0) { _uprightness = 1.0; } else if (_uprightness < 0.0) { _uprightness = 0.0; }
 	
 	// Update the geom's offset to match _stance
 	dMatrix3 grot;
-	dRFromAxisAndAngle(grot, 1, 0, 0, _stance*M_PI_2);
+	dRFromAxisAndAngle(grot, 1, 0, 0, _uprightness*M_PI_2);
 	dGeomSetOffsetRotation(get_geom(), grot);
 }
 
 void AvatarGameObj::near_draw_impl() {
-	glRotatef(-_stance*90, 1, 0, 0);
+	glRotatef(-_uprightness*90, 1, 0, 0);
 	_anim_fly_to_prerun->draw();
 }
 
@@ -183,7 +140,6 @@ AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 	set_body(Sim::gen_sphere_body(80, 0.5));
 	set_geom(dCreateCCylinder(Sim::get_dyn_space(), 0.25, 2.0));
 	
-	// TODO Maybe some missions start off in Attached mode?
-	_mode = Superman;
-	_stance = 0.0;
+	// TODO Maybe some missions start off in upright mode?
+	_uprightness = 0.0;
 }

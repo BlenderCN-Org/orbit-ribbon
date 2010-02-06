@@ -114,7 +114,7 @@
 	
 	<xsd:simpleType name="ButtonBoundAction">
 		<xsd:restriction base="xsd:string">
-			<xsd:enumeration value="RunningStance" />
+			<xsd:enumeration value="UprightStance" />
 			<xsd:enumeration value="Pause" />
 			<xsd:enumeration value="ForceQuit" />
 			<xsd:enumeration value="ResetNeutral" />
