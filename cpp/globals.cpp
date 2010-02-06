@@ -19,8 +19,6 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
-#include <GL/glew.h>
-#include <GL/gl.h>
 #include <SDL/SDL.h>
 
 #include "background.h"
@@ -32,7 +30,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "autoxsd/save.h"
 
 std::vector<SDL_Event> Globals::frame_events;
-GLuint Globals::total_steps = 0;
+unsigned int Globals::total_steps = 0;
 GOMap Globals::gameobjs;
 boost::scoped_ptr<Mode> Globals::mode;
 boost::scoped_ptr<Background> Globals::bg;

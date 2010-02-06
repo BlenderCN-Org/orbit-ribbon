@@ -54,6 +54,10 @@ GLfloat deg2rad(GLfloat ang) {
 	return (ang/360.0)*2*M_PI;
 }
 
+bool similar(float a, float b) {
+	return std::fabs(a - b) < 0.0001;
+}
+
 Point& Point::operator=(const Point& other) {
 	x = other.x;
 	y = other.y;

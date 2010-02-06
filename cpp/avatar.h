@@ -33,8 +33,16 @@ class MeshAnimation;
 namespace ORE1 { class ObjType; }
 
 class AvatarGameObj : public GameObj {
+	public:
+		enum Mode {Superman, SupermanToUpright, Upright, UprightToSuperman, Attached};
+		
 	private:
 		boost::shared_ptr<MeshAnimation> _anim_fly_to_prerun;
+		Mode _mode;
+		unsigned int _mode_entry_time;
+		
+		float get_stance(); // If 0.0, body is oriented along z axis. If 1.0, body is oriented along y axis.
+		void set_mode(Mode mode);
 		
 	protected:
 		void step_impl();

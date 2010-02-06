@@ -33,6 +33,8 @@ GLfloat deg2rev(GLfloat ang);
 GLfloat rad2deg(GLfloat ang);
 GLfloat deg2rad(GLfloat ang);
 
+bool similar(float a, float b);
+
 class Point {
 	public:
 		GLfloat x;

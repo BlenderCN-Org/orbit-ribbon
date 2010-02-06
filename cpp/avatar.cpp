@@ -22,12 +22,14 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <boost/lexical_cast.hpp>
 #include <ode/ode.h>
+#include <cmath>
 
 #include "autoxsd/orepkgdesc.h"
 #include "avatar.h"
 #include "constants.h"
 #include "debug.h"
 #include "geometry.h"
+#include "globals.h"
 #include "input.h"
 #include "mesh.h"
 #include "sim.h"
@@ -43,7 +45,34 @@ const float MAX_ROLL = 800.0;
 const float CTURN_COEF = 700.0;
 const float CROLL_COEF = 700.0;
 
+// How many seconds it takes to move between the Superman and Upright modes
+const float RUN_STANCE_ENTRY_TIME = 0.5;
+
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
+
+float AvatarGameObj::get_stance() {
+	switch (_mode) {
+		case Superman:
+			return 0.0;
+			break;
+		case SupermanToUpright:
+			return std::min(1.0f, (Globals::total_steps - _mode_entry_time)/(RUN_STANCE_ENTRY_TIME*MAX_FPS));
+			break;
+		case Upright:
+		case Attached:
+			return 1.0;
+			break;
+		case UprightToSuperman:
+			return std::max(0.0f, 1.0f - (Globals::total_steps - _mode_entry_time)/(RUN_STANCE_ENTRY_TIME*MAX_FPS));
+			break;
+	}
+	return 0.0; // Control should never reach here, but putting this in prevents a silly warning
+}
+
+void AvatarGameObj::set_mode(Mode mode) {
+	_mode = mode;
+	_mode_entry_time = Globals::total_steps;
+}
 
 void AvatarGameObj::step_impl() {
 	// TODO: Consider adding linear and angular velocity caps
@@ -104,9 +133,45 @@ void AvatarGameObj::step_impl() {
 	} else {
 		dBodyAddRelTorque(get_body(), 0.0, 0.0, cv);
 	}
+	
+	// Changing stance between flying and running
+	chn = &Input::get_button_ch(ORSave::ButtonBoundAction::RunningStance);
+	// Once we are entering or are in running mode, do not assume player wants to leave it unless UprightStance bind is entirely off
+	if (chn->is_on() or (chn->is_partially_on() and (_mode == SupermanToUpright or _mode == Upright))) {
+		switch (_mode) {
+			case Superman:
+			case UprightToSuperman:
+				set_mode(SupermanToUpright);
+				break;
+			case SupermanToUpright:
+				if (similar(get_stance(), 1.0)) {
+					set_mode(Upright);
+				}
+				break;
+			default:
+				// Do nothing
+				break;
+		}
+	} else {
+		switch (_mode) {
+			case Upright:
+			case SupermanToUpright:
+				set_mode(UprightToSuperman);
+				break;
+			case UprightToSuperman:
+				if (similar(get_stance(), 0.0)) {
+					set_mode(Superman);
+				}
+				break;
+			default:
+				// Do nothing
+				break;
+		}
+	}
 }
 
 void AvatarGameObj::near_draw_impl() {
+	glRotatef(-get_stance()*90, 1, 0, 0);
 	_anim_fly_to_prerun->draw();
 }
 
@@ -114,6 +179,10 @@ AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 	GameObj(obj),
 	_anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run"))
 {
+	// TODO Load this information from the ORE mission description
 	set_body(Sim::gen_sphere_body(80, 0.5));
 	set_geom(dCreateCCylinder(Sim::get_dyn_space(), 0.25, 2.0));
+	
+	// TODO Maybe some missions start off in Attached mode?
+	set_mode(Superman);
 }

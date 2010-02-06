@@ -22,8 +22,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_GLOBALS_H
 #define ORBIT_RIBBON_GLOBALS_H
 
-#include <GL/glew.h>
-#include <GL/gl.h>
 #include <SDL/SDL.h>
 #include <vector>
 #include <string>
@@ -44,7 +42,7 @@ typedef std::map<std::string, boost::shared_ptr<GameObj> > GOMap;
 class Globals {
 	public:
 		static std::vector<SDL_Event> frame_events;
-		static GLuint total_steps;
+		static unsigned int total_steps;
 		static GOMap gameobjs;
 		static boost::scoped_ptr<Mode> mode;
 		static boost::scoped_ptr<Background> bg;
