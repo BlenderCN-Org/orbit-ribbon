@@ -146,7 +146,7 @@ void AvatarGameObj::step_impl() {
 		}
 	}
 	
-	// Update _stance and the GeomOffset to match the current mode
+	// Update _stance to match the current mode
 	switch (_mode) {
 		case Superman:
 			_stance = 0.0;
@@ -163,6 +163,11 @@ void AvatarGameObj::step_impl() {
 			break;
 	}
 	if (_stance > 1.0) { _stance = 1.0; } else if (_stance < 0.0) { _stance = 0.0; }
+	
+	// Update the geom's offset to match _stance
+	dMatrix3 grot;
+	dRFromAxisAndAngle(grot, 1, 0, 0, _stance*M_PI_2);
+	dGeomSetOffsetRotation(get_geom(), grot);
 }
 
 void AvatarGameObj::near_draw_impl() {
