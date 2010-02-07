@@ -279,5 +279,5 @@ MeshGameObj::MeshGameObj(const ORE1::ObjType& obj) :
 	GameObj(obj),
 	_mesh_anim(MeshAnimation::load(std::string("mesh-") + obj.meshName()))
 {
-	set_geom(dCreateTriMesh(Sim::get_static_space(), _mesh_anim->get_trimesh_data(0), 0, 0, 0));
+	set_geom("physical", dCreateTriMesh(Sim::get_static_space(), _mesh_anim->get_trimesh_data(0), 0, 0, 0));
 }

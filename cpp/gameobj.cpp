@@ -24,12 +24,15 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/gl.h>
 #include <ode/ode.h>
 #include <boost/array.hpp>
+#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/regex.hpp>
 #include <cctype>
+#include <vector>
 
 #include "autoxsd/orepkgdesc.h"
 #include "constants.h"
+#include "except.h"
 #include "gameobj.h"
 #include "geometry.h"
 #include "gloo.h"
@@ -50,8 +53,7 @@ GameObj::GameObj(const ORE1::ObjType& obj) :
 	_pos(Point(obj.pos()[0], obj.pos()[1], obj.pos()[2])),
 	_vel(Vector()),
 	_coll_handler(new GameObjCollisionHandler(this)),
-	_body(0),
-	_geom(0)
+	_body(0)
 {
 	std::copy(obj.rot().begin(), obj.rot().end(), _rot.begin());
 	
@@ -66,18 +68,14 @@ GameObj::GameObj(const ORE1::ObjType& obj) :
 
 GameObj::~GameObj() {
 	set_body(0);
-	set_geom(0);
-}
-
-void recursive_geom_set_pos(dGeomID g, const Point& pos) {
-	if (dGeomIsSpace(g)) {
-		dSpaceID s = dSpaceID(g);
-		GLint end = dSpaceGetNumGeoms(s);
-		for (int i = 0; i < end; ++i) {
-			recursive_geom_set_pos(dSpaceGetGeom(s, i),pos);
-		}
-	} else {
-		dGeomSetPosition(g, pos.x, pos.y, pos.z);
+	
+	std::vector<std::string> keys;
+	keys.reserve(_geoms.size());
+	BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
+		keys.push_back(p.first);
+	}
+	BOOST_FOREACH(std::string& gname, keys) {
+		set_geom(gname, 0);
 	}
 }
 
@@ -86,27 +84,17 @@ void GameObj::set_pos(const Point& pos) {
 	
 	if (_body != 0) {
 		dBodySetPosition(_body, pos.x, pos.y, pos.z);
-	} else if (_geom != 0) {
-		recursive_geom_set_pos(_geom, pos);
-	}
-}
-
-void recursive_geom_set_rot(dGeomID g, const dMatrix3& matr) {
-	if (dGeomIsSpace(g)) {
-		dSpaceID s = dSpaceID(g);
-		GLint end = dSpaceGetNumGeoms(s);
-		for (int i = 0; i < end; ++i) {
-			recursive_geom_set_rot(dSpaceGetGeom(s, i), matr);
-		}
 	} else {
-		dGeomSetRotation(g, matr);
+		BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
+			dGeomSetPosition(p.second, pos.x, pos.y, pos.z);
+		}
 	}
 }
 
 void GameObj::set_rot(const boost::array<GLfloat, 9>& rot) {
 	_rot = rot;
 	
-	if (_body != 0 || _geom != 0) {
+	if (_body != 0 || _geoms.size() > 0) {
 		// Convert column-major 3x3 to row-major 3x4
 		dMatrix3 matr;
 		matr[0]  = rot[0]; matr[1]  = rot[3]; matr[2]  = rot[6]; matr[3]  = 0;
@@ -114,8 +102,10 @@ void GameObj::set_rot(const boost::array<GLfloat, 9>& rot) {
 		matr[8]  = rot[2]; matr[9]  = rot[5]; matr[10] = rot[8]; matr[11] = 0;
 		if (_body != 0) {
 			dBodySetRotation(_body, matr);
-		} else if (_geom != 0) {
-			recursive_geom_set_rot(_geom, matr);
+		} else {
+			BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
+				dGeomSetRotation(p.second, matr);
+			}
 		}
 	}
 }
@@ -229,18 +219,6 @@ Vector GameObj::vector_to_world(const Vector& v) {
 	return Vector(res[0], res[1], res[2]);
 }
 
-void recursive_geom_set_body(dGeomID geom, dBodyID body) {
-	if (dGeomIsSpace(geom)) {
-		dSpaceID s = dSpaceID(geom);
-		GLint end = dSpaceGetNumGeoms(s);
-		for (GLint i = 0; i < end; ++i) {
-			recursive_geom_set_body(dSpaceGetGeom(s, i), body);
-		}
-	} else {
-		dGeomSetBody(geom, body);
-	}
-}
-
 void recursive_geom_set_data(dGeomID geom, CollisionHandler* ch) {
 	if (dGeomIsSpace(geom)) {
 		dSpaceID s = dSpaceID(geom);
@@ -259,8 +237,8 @@ void GameObj::set_body(dBodyID body) {
 	}
 	_body = body;
 		
-	if (_geom != 0) {
-		recursive_geom_set_body(_geom, _body);
+	BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
+		dGeomSetBody(p.second, _body);
 	}
 	
 	// This will load our current position and velocity into the body
@@ -268,20 +246,45 @@ void GameObj::set_body(dBodyID body) {
 	set_rot(_rot);
 }
 
-void GameObj::set_geom(dGeomID geom) {
-	if (_geom != 0) {
-		dGeomDestroy(_geom);
+dGeomID GameObj::get_geom(const std::string& gname) const {
+	std::map<std::string, dGeomID>::const_iterator i = _geoms.find(gname);
+	if (i == _geoms.end()) {
+		throw GameException("Unable to retrieve GameObj geom named " + gname);
+	} else {
+		return i->second;
 	}
-	_geom = geom;
-	if (_geom != 0) {
-		recursive_geom_set_data(_geom, &*_coll_handler);
+}
+
+void GameObj::set_geom(const std::string& gname, dGeomID geom) {
+	// TODO possible optimization : to automatically use a space if a body has more than one geom
+	// This could be done without changing the external set_geom/get_geom interface
+	std::map<std::string, dGeomID>::iterator i = _geoms.find(gname);
+	if (i != _geoms.end()) {
+		dGeomDestroy(i->second);
 	}
-	if (_body != 0) {
-		recursive_geom_set_body(_geom, _body);
-	} else if (_geom != 0) {
-		// Loads our current position and orientation into the geom
-		set_pos(_pos);
-		set_rot(_rot);
+	
+	if (geom == 0) {
+		if (i != _geoms.end()) {
+			_geoms.erase(i);
+		}
+	} else {
+		if (i != _geoms.end()) {
+			i->second = geom;
+		} else {
+			_geoms[gname] = geom;
+		}
+		if (dGeomGetData(geom) == 0) {
+			// If the geom doesn't already have a collision handler, give it the GameObj's default collision handler
+			dGeomSetData(geom, (void*)(&*_coll_handler));
+		}
+		
+		if (_body != 0) {
+			dGeomSetBody(geom, _body);
+		} else {
+			// Loads our current position and orientation into the geom
+			set_pos(_pos);
+			set_rot(_rot);
+		}
 	}
 }
 

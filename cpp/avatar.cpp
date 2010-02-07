@@ -60,15 +60,15 @@ void AvatarGameObj::step_impl() {
 	float cv;
 	
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::TranslateX);
-	v = -(chn->get_value())*(MAX_STRAFE/MAX_FPS);
+	v = (chn->get_value())*(MAX_STRAFE/MAX_FPS);
 	if (chn->is_on()) {
-		dBodyAddRelForce(get_body(), v, 0.0, 0.0);
+		dBodyAddRelForce(get_body(), -v, 0.0, 0.0);
 	}
 	
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::TranslateY);
-	v = -(chn->get_value())*(MAX_STRAFE/MAX_FPS);
+	v = (chn->get_value())*(MAX_STRAFE/MAX_FPS);
 	if (chn->is_on()) {
-		dBodyAddRelForce(get_body(), 0.0, v, 0.0);
+		dBodyAddRelForce(get_body(), 0.0, -v, 0.0);
 	}
 	
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::TranslateZ);
@@ -124,7 +124,7 @@ void AvatarGameObj::step_impl() {
 	// Update the geom's offset to match _stance
 	dMatrix3 grot;
 	dRFromAxisAndAngle(grot, 1, 0, 0, _uprightness*M_PI_2);
-	dGeomSetOffsetRotation(get_geom(), grot);
+	dGeomSetOffsetRotation(get_geom("physical"), grot);
 }
 
 void AvatarGameObj::near_draw_impl() {
@@ -136,9 +136,9 @@ AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 	GameObj(obj),
 	_anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run"))
 {
-	// TODO Load this information from the ORE mission description
+	// TODO Load mass and volume information from the ORE mission description
 	set_body(Sim::gen_sphere_body(80, 0.5));
-	set_geom(dCreateCCylinder(Sim::get_dyn_space(), 0.25, 2.0));
+	set_geom("physical", dCreateCCylinder(Sim::get_dyn_space(), 0.25, 2.0));
 	
 	// TODO Maybe some missions start off in upright mode?
 	_uprightness = 0.0;

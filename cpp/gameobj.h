@@ -76,8 +76,8 @@ class GameObj : boost::noncopyable {
 		dBodyID get_body() const { return _body; }
 		void set_body(dBodyID body);
 		
-		dGeomID get_geom() const { return _geom; }
-		void set_geom(dGeomID geom);
+		dGeomID get_geom(const std::string& gname) const;
+		void set_geom(const std::string& gname, dGeomID geom);
 		
 		void set_new_collision_handler(CollisionHandler* ch) { _coll_handler.reset(ch); }
 		
@@ -97,8 +97,10 @@ class GameObj : boost::noncopyable {
 		GLfloat _vel_damp_coef[3];
 		GLfloat _ang_damp_coef[3];
 		
+		typedef std::map<std::string, dGeomID> GeomMap;
+		
 		dBodyID _body;
-		dGeomID _geom;
+		GeomMap _geoms;
 };
 
 class GOFactory {
