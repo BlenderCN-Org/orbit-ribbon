@@ -51,6 +51,10 @@ const float UPRIGHTNESS_STEP_DIFF = 1.0f/(UPRIGHTNESS_ENTRY_TIME*MAX_FPS);
 
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 
+void AvatarGameObj::RunningCollisionHandler::handle_collision(dGeomID other, const GameObj* other_gameobj, const dContactGeom* contacts, unsigned int contacts_len __attribute__ ((unused))) {
+	Debug::debug_msg("C " + boost::lexical_cast<std::string>(other) + " " + other_gameobj->to_str() + " " + boost::lexical_cast<std::string>(contacts->pos[0]));
+}
+
 void AvatarGameObj::step_impl() {
 	// TODO: Consider adding linear and angular velocity caps
 	// TODO: Set a maximum total acceleration, then force accel vector to be no longer than that magnitude
@@ -121,7 +125,8 @@ void AvatarGameObj::step_impl() {
 	}
 	if (_uprightness > 1.0) { _uprightness = 1.0; } else if (_uprightness < 0.0) { _uprightness = 0.0; }
 	
-	// Update the geom's offset to match _stance
+	// Update the offsets of our geoms to match _stance
+	dGeomSetOffsetPosition(get_geom("run"), 0, std::sin(-_uprightness*M_PI_2)*1.25, 0); // FIXME Figure out avatar height dynamically
 	dMatrix3 grot;
 	dRFromAxisAndAngle(grot, 1, 0, 0, _uprightness*M_PI_2);
 	dGeomSetOffsetRotation(get_geom("physical"), grot);
@@ -134,11 +139,17 @@ void AvatarGameObj::near_draw_impl() {
 
 AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 	GameObj(obj),
-	_anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run"))
+	_anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run")),
+	_run_coll_handler(this)
 {
 	// TODO Load mass and volume information from the ORE mission description
 	set_body(Sim::gen_sphere_body(80, 0.5));
 	set_geom("physical", dCreateCCylinder(Sim::get_dyn_space(), 0.25, 2.0));
+	
+	// Set up a geom at our feet to detect when we can run on a surface
+	dGeomID run_geom = dCreateSphere(Sim::get_dyn_space(), 0.3);
+	dGeomSetData(run_geom, (void*)&_run_coll_handler);
+	set_geom("run", run_geom);
 	
 	// TODO Maybe some missions start off in upright mode?
 	_uprightness = 0.0;

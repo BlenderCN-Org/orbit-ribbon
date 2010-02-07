@@ -37,6 +37,19 @@ class AvatarGameObj : public GameObj {
 		boost::shared_ptr<MeshAnimation> _anim_fly_to_prerun;
 		float _uprightness;
 		
+		class RunningCollisionHandler : public CollisionHandler {
+			private:
+				AvatarGameObj* _avatar;
+			
+			public:
+				RunningCollisionHandler(AvatarGameObj* avatar) : _avatar(avatar) {}
+				
+				const GameObj* get_gameobj() const { return _avatar; }
+				bool should_contact(dGeomID other __attribute__ ((unused))) const { return false; }
+				void handle_collision(dGeomID other, const GameObj* other_gameobj, const dContactGeom* contacts, unsigned int contacts_len);
+		};
+		RunningCollisionHandler _run_coll_handler;
+		
 	protected:
 		void step_impl();
 		void near_draw_impl();
