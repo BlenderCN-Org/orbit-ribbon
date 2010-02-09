@@ -219,6 +219,16 @@ Vector GameObj::vector_to_world(const Vector& v) {
 	return Vector(res[0], res[1], res[2]);
 }
 
+Vector GameObj::vector_from_world(const Vector& v) {
+	if (_body == 0) {
+		throw GameException("Attempted vector_to_rel on a GameObj without an ODE body");
+	}
+	
+	dVector3 res;
+	dBodyVectorFromWorld(_body, v.x, v.y, v.z, res);
+	return Vector(res[0], res[1], res[2]);
+}
+
 void recursive_geom_set_data(dGeomID geom, CollisionHandler* ch) {
 	if (dGeomIsSpace(geom)) {
 		dSpaceID s = dSpaceID(geom);

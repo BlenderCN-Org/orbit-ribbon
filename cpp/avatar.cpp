@@ -45,14 +45,31 @@ const float MAX_ROLL = 800.0;
 const float CTURN_COEF = 700.0;
 const float CROLL_COEF = 700.0;
 
-// How many seconds it takes to move between the Superman and Upright modes, and how much _stance can therefore change each step
+// How many seconds it takes to move between 0.0 and 1.0 uprightness, and therefore how much _uprightness change each step
 const float UPRIGHTNESS_ENTRY_TIME = 0.5;
 const float UPRIGHTNESS_STEP_DIFF = 1.0f/(UPRIGHTNESS_ENTRY_TIME*MAX_FPS);
+
+// Maximum absolute x (roll offset) and z (pitch offset) values in running_coll contact vector to begin running
+// The larger these numbers, the worse the player's approach to a running surface can be
+const float RUNNING_MAX_X = 0.2;
+const float RUNNING_MAX_Z = 0.4;
 
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 
 void AvatarGameObj::RunningCollisionHandler::handle_collision(dGeomID other, const GameObj* other_gameobj, const dContactGeom* contacts, unsigned int contacts_len __attribute__ ((unused))) {
-	Debug::debug_msg("C " + boost::lexical_cast<std::string>(other) + " " + other_gameobj->to_str() + " " + boost::lexical_cast<std::string>(contacts->pos[0]));
+	// TODO Check if the other object is runnable/attachable
+	// TODO Should I not just assume that the first contact is the most appropriate one to use?
+	_normal = Vector(contacts[0].normal[0], contacts[0].normal[1], contacts[0].normal[2]);
+	_depth = contacts[0].depth;
+	_dirty = true;
+}
+
+bool AvatarGameObj::RunningCollisionHandler::check_dirty() {
+	if (_dirty) {
+		_dirty = false; return true;
+	} else {
+		return false;
+	}
 }
 
 void AvatarGameObj::step_impl() {
@@ -130,6 +147,17 @@ void AvatarGameObj::step_impl() {
 	dMatrix3 grot;
 	dRFromAxisAndAngle(grot, 1, 0, 0, _uprightness*M_PI_2);
 	dGeomSetOffsetRotation(get_geom("physical"), grot);
+	
+	// Check if we are contacting a surface in a way that allows attaching
+	if (_run_coll_handler.check_dirty()) {
+		Vector c = vector_from_world(_run_coll_handler.get_contact_normal());
+		float d = _run_coll_handler.get_depth();
+		if (c.y > 0 && std::fabs(c.x) < RUNNING_MAX_X && std::fabs(c.z) < RUNNING_MAX_Z) {
+			// Attach feet to this surface, and stay aligned to it
+			//dBodyAddRelForce(get_body(), 0.0, -200.0, 0.0);
+			dBodyAddRelTorque(get_body(), c.z*1000, 0.0, 0.0);
+		}
+	}
 }
 
 void AvatarGameObj::near_draw_impl() {

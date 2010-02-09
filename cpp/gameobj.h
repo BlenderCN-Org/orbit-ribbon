@@ -71,6 +71,7 @@ class GameObj : boost::noncopyable {
 		
 		Point get_rel_point_pos(const Point& p);
 		Vector vector_to_world(const Vector& v);
+		Vector vector_from_world(const Vector& v);
 	
 	protected:
 		dBodyID get_body() const { return _body; }

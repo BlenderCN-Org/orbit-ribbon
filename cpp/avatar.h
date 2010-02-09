@@ -27,6 +27,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/shared_ptr.hpp>
 
 #include "gameobj.h"
+#include "geometry.h"
 #include "sim.h"
 
 class MeshAnimation;
@@ -40,13 +41,20 @@ class AvatarGameObj : public GameObj {
 		class RunningCollisionHandler : public CollisionHandler {
 			private:
 				AvatarGameObj* _avatar;
+				bool _dirty;
+				Vector _normal;
+				float _depth;
 			
 			public:
-				RunningCollisionHandler(AvatarGameObj* avatar) : _avatar(avatar) {}
+				RunningCollisionHandler(AvatarGameObj* avatar) : _avatar(avatar), _dirty(false) {}
 				
 				const GameObj* get_gameobj() const { return _avatar; }
 				bool should_contact(dGeomID other __attribute__ ((unused))) const { return false; }
 				void handle_collision(dGeomID other, const GameObj* other_gameobj, const dContactGeom* contacts, unsigned int contacts_len);
+				
+				bool check_dirty();
+				Vector get_contact_normal() { return _normal; }
+				float get_depth() { return _depth; }
 		};
 		RunningCollisionHandler _run_coll_handler;
 		
