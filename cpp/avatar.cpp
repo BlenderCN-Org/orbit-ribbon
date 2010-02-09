@@ -23,6 +23,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/lexical_cast.hpp>
 #include <ode/ode.h>
 #include <cmath>
+#include <GL/glew.h>
+#include <GL/glu.h>
+#include <GL/gl.h>
 
 #include "autoxsd/orepkgdesc.h"
 #include "avatar.h"
@@ -32,6 +35,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "input.h"
 #include "mesh.h"
+#include "saving.h"
 #include "sim.h"
 
 // Maximum amount of Newtons per second applied by various maneuvers
@@ -51,7 +55,7 @@ const float UPRIGHTNESS_STEP_DIFF = 1.0f/(UPRIGHTNESS_ENTRY_TIME*MAX_FPS);
 
 // Maximum absolute x (roll offset) and z (pitch offset) values in running_coll contact vector to begin running
 // The larger these numbers, the worse the player's approach to a running surface can be
-const float RUNNING_MAX_X = 0.2;
+const float RUNNING_MAX_X = 0.4;
 const float RUNNING_MAX_Z = 0.4;
 
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
@@ -143,7 +147,7 @@ void AvatarGameObj::step_impl() {
 	if (_uprightness > 1.0) { _uprightness = 1.0; } else if (_uprightness < 0.0) { _uprightness = 0.0; }
 	
 	// Update the offsets of our geoms to match _stance
-	dGeomSetOffsetPosition(get_geom("run"), 0, std::sin(-_uprightness*M_PI_2)*1.25, 0); // FIXME Figure out avatar height dynamically
+	dGeomSetOffsetPosition(get_geom("run"), 0, std::sin(-_uprightness*M_PI_2)*1.10, 0); // FIXME Figure out avatar height dynamically
 	dMatrix3 grot;
 	dRFromAxisAndAngle(grot, 1, 0, 0, _uprightness*M_PI_2);
 	dGeomSetOffsetRotation(get_geom("physical"), grot);
@@ -153,7 +157,8 @@ void AvatarGameObj::step_impl() {
 		Vector c = vector_from_world(_run_coll_handler.get_contact_normal());
 		float d = _run_coll_handler.get_depth();
 		if (c.y > 0 && std::fabs(c.x) < RUNNING_MAX_X && std::fabs(c.z) < RUNNING_MAX_Z) {
-			// Attach feet to this surface, and stay aligned to it
+			_coll_occurred = true;
+			// Keep our feet attached to this surface, and stay aligned to it
 			//dBodyAddRelForce(get_body(), 0.0, -200.0, 0.0);
 			dBodyAddRelTorque(get_body(), c.z*1000, 0.0, 0.0);
 		}
@@ -163,6 +168,30 @@ void AvatarGameObj::step_impl() {
 void AvatarGameObj::near_draw_impl() {
 	glRotatef(-_uprightness*90, 1, 0, 0);
 	_anim_fly_to_prerun->draw();
+	
+	if (Saving::get().config().debugPhysics().get()) {
+		glDisable(GL_TEXTURE_2D);
+		glDisable(GL_LIGHTING);
+		GLUquadric* q = gluNewQuadric();
+		
+		if (_coll_occurred) {
+			glColor4f(1.0, 0.0, 0.0, 0.6);
+		} else {
+			glColor4f(0.0, 1.0, 0.0, 0.6);
+		}
+		GLOOPushedMatrix pm;
+		glRotatef(_uprightness*90, 1, 0, 0);
+		glTranslatef(0.0, std::sin(-_uprightness*M_PI_2)*1.10, 0.0); // FIXME : Not DRY
+		gluSphere(q, 0.3, 20, 10); // FIXME : Also not DRY
+		
+		gluDeleteQuadric(q);
+		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_LIGHTING);
+	}
+	
+	if (_coll_occurred) {
+		_coll_occurred = false;
+	}
 }
 
 AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :

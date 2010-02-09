@@ -58,6 +58,8 @@ class AvatarGameObj : public GameObj {
 		};
 		RunningCollisionHandler _run_coll_handler;
 		
+		bool _coll_occurred;
+		
 	protected:
 		void step_impl();
 		void near_draw_impl();

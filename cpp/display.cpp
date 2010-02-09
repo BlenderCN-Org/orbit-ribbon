@@ -247,11 +247,14 @@ void Display::draw_frame() {
 		glEnd();
 	}
 	
-	if (Saving::get().config().showFps().get() && SDL_GetTicks() - last_perf_info >= MAX_PERF_INFO_AGE) {
-		last_perf_info = SDL_GetTicks();
-		perf_info = Performance::get_perf_info() + " " + GLOOBufferedMesh::get_usage_info();
+	if (Saving::get().config().showFps().get()) {
+		if (SDL_GetTicks() - last_perf_info >= MAX_PERF_INFO_AGE) {
+			last_perf_info = SDL_GetTicks();
+			perf_info = Performance::get_perf_info() + " " + GLOOBufferedMesh::get_usage_info();
+		}
+		glColor3f(1.0, 1.0, 1.0);
+		Globals::sys_font->draw(Point(20, 20), 15, perf_info);
 	}
-	Globals::sys_font->draw(Point(20, 20), 15, perf_info);
 	
 	// Output and flip buffers
 	SDL_GL_SwapBuffers();
