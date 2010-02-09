@@ -58,6 +58,9 @@ const float UPRIGHTNESS_STEP_DIFF = 1.0f/(UPRIGHTNESS_ENTRY_TIME*MAX_FPS);
 const float RUNNING_MAX_X = 0.4;
 const float RUNNING_MAX_Z = 0.4;
 
+// Radius of the sphere used to detect when feet are near a running surface
+const float RUNNING_SPHERE_RAD = 0.25;
+
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 
 void AvatarGameObj::RunningCollisionHandler::handle_collision(dGeomID other, const GameObj* other_gameobj, const dContactGeom* contacts, unsigned int contacts_len __attribute__ ((unused))) {
@@ -147,7 +150,7 @@ void AvatarGameObj::step_impl() {
 	if (_uprightness > 1.0) { _uprightness = 1.0; } else if (_uprightness < 0.0) { _uprightness = 0.0; }
 	
 	// Update the offsets of our geoms to match _stance
-	dGeomSetOffsetPosition(get_geom("run"), 0, std::sin(-_uprightness*M_PI_2)*1.10, 0); // FIXME Figure out avatar height dynamically
+	dGeomSetOffsetPosition(get_geom("run_detect"), 0, std::sin(-_uprightness*M_PI_2)*1.10, 0); // FIXME Figure out avatar height dynamically
 	dMatrix3 grot;
 	dRFromAxisAndAngle(grot, 1, 0, 0, _uprightness*M_PI_2);
 	dGeomSetOffsetRotation(get_geom("physical"), grot);
@@ -159,8 +162,7 @@ void AvatarGameObj::step_impl() {
 		if (c.y > 0 && std::fabs(c.x) < RUNNING_MAX_X && std::fabs(c.z) < RUNNING_MAX_Z) {
 			_coll_occurred = true;
 			// Keep our feet attached to this surface, and stay aligned to it
-			//dBodyAddRelForce(get_body(), 0.0, -200.0, 0.0);
-			dBodyAddRelTorque(get_body(), c.z*1000, 0.0, 0.0);
+			dBodyAddRelForce(get_body(), 0.0, -200.0, 0.0);
 		}
 	}
 }
@@ -181,8 +183,9 @@ void AvatarGameObj::near_draw_impl() {
 		}
 		GLOOPushedMatrix pm;
 		glRotatef(_uprightness*90, 1, 0, 0);
-		glTranslatef(0.0, std::sin(-_uprightness*M_PI_2)*1.10, 0.0); // FIXME : Not DRY
-		gluSphere(q, 0.3, 20, 10); // FIXME : Also not DRY
+		const dReal* p = dGeomGetOffsetPosition(get_geom("run_detect"));
+		glTranslatef(p[0], p[1], p[2]);
+		gluSphere(q, RUNNING_SPHERE_RAD, 20, 10);
 		
 		gluDeleteQuadric(q);
 		glEnable(GL_TEXTURE_2D);
@@ -195,18 +198,18 @@ void AvatarGameObj::near_draw_impl() {
 }
 
 AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
-	GameObj(obj),
+	GameObj(obj, Sim::gen_sphere_body(80, 0.5)), // TODO Load mass information from the ORE mission description
 	_anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run")),
 	_run_coll_handler(this)
 {
-	// TODO Load mass and volume information from the ORE mission description
-	set_body(Sim::gen_sphere_body(80, 0.5));
+	// Set up a geom for detecting regular collisions
+	// TODO Load volume information from the ORE mission description
 	set_geom("physical", dCreateCCylinder(Sim::get_dyn_space(), 0.25, 2.0));
 	
 	// Set up a geom at our feet to detect when we can run on a surface
-	dGeomID run_geom = dCreateSphere(Sim::get_dyn_space(), 0.3);
+	dGeomID run_geom = dCreateSphere(Sim::get_dyn_space(), RUNNING_SPHERE_RAD);
 	dGeomSetData(run_geom, (void*)&_run_coll_handler);
-	set_geom("run", run_geom);
+	set_geom("run_detect", run_geom);
 	
 	// TODO Maybe some missions start off in upright mode?
 	_uprightness = 0.0;

@@ -49,11 +49,11 @@ void GameObjCollisionHandler::handle_collision(
 ) {
 }
 
-GameObj::GameObj(const ORE1::ObjType& obj) :
+GameObj::GameObj(const ORE1::ObjType& obj, const boost::shared_ptr<Body>& body) :
 	_pos(Point(obj.pos()[0], obj.pos()[1], obj.pos()[2])),
 	_vel(Vector()),
 	_coll_handler(new GameObjCollisionHandler(this)),
-	_body(0)
+	_body(body)
 {
 	std::copy(obj.rot().begin(), obj.rot().end(), _rot.begin());
 	
@@ -64,11 +64,15 @@ GameObj::GameObj(const ORE1::ObjType& obj) :
 	_ang_damp_coef[0] = DEFAULT_ANG_DAMP_COEF;
 	_ang_damp_coef[1] = DEFAULT_ANG_DAMP_COEF;
 	_ang_damp_coef[2] = DEFAULT_ANG_DAMP_COEF;
+		
+	// This will load our current position and velocity into the body
+	if (_body) {
+		update_ode_pos();
+		update_ode_rot();
+	}
 }
 
 GameObj::~GameObj() {
-	set_body(0);
-	
 	std::vector<std::string> keys;
 	keys.reserve(_geoms.size());
 	BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
@@ -81,33 +85,12 @@ GameObj::~GameObj() {
 
 void GameObj::set_pos(const Point& pos) {
 	_pos = pos;
-	
-	if (_body != 0) {
-		dBodySetPosition(_body, pos.x, pos.y, pos.z);
-	} else {
-		BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
-			dGeomSetPosition(p.second, pos.x, pos.y, pos.z);
-		}
-	}
+	update_ode_pos();
 }
 
 void GameObj::set_rot(const boost::array<GLfloat, 9>& rot) {
 	_rot = rot;
-	
-	if (_body != 0 || _geoms.size() > 0) {
-		// Convert column-major 3x3 to row-major 3x4
-		dMatrix3 matr;
-		matr[0]  = rot[0]; matr[1]  = rot[3]; matr[2]  = rot[6]; matr[3]  = 0;
-		matr[4]  = rot[1]; matr[5]  = rot[4]; matr[6]  = rot[7]; matr[7]  = 0;
-		matr[8]  = rot[2]; matr[9]  = rot[5]; matr[10] = rot[8]; matr[11] = 0;
-		if (_body != 0) {
-			dBodySetRotation(_body, matr);
-		} else {
-			BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
-				dGeomSetRotation(p.second, matr);
-			}
-		}
-	}
+	update_ode_rot();
 }
 
 std::string GameObj::to_str() const {
@@ -146,24 +129,28 @@ void GameObj::draw(bool near) {
 
 void GameObj::step() {
 	const dReal* p;
+	dBodyID b = 0;
+	if (_body) {
+		b = _body->get_id();
+	}
 	
 	// Load position, rotation, and velocity from ODE if there are dynamics for this GameObj
-	if (_body != 0) {
+	if (b != 0) {
 		const dReal* p;
 		
-		p = dBodyGetPosition(_body);
+		p = dBodyGetPosition(b);
 		_pos.x = p[0];
 		_pos.y = p[1];
 		_pos.z = p[2];
 		
 		// For some reason, dMatrix3 has 12 elements, not 9, where the extra column has no useful information for us
 		// We have to watch out for that here in addition to flipping between column-major and row-major
-		p = dBodyGetRotation(_body);
+		p = dBodyGetRotation(b);
 		_rot[0] = p[0]; _rot[1] = p[4]; _rot[2] = p[8];
 		_rot[3] = p[1]; _rot[4] = p[5]; _rot[5] = p[9];
 		_rot[6] = p[2]; _rot[7] = p[6]; _rot[8] = p[10];
 		
-		p = dBodyGetLinearVel(_body);
+		p = dBodyGetLinearVel(b);
 		_vel.x = p[0];
 		_vel.y = p[1];
 		_vel.z = p[2];
@@ -172,60 +159,60 @@ void GameObj::step() {
 	step_impl();
 	
 	// Apply damping
-	if (_body != 0) {
+	if (b != 0) {
 		GLint i;
 		dReal x, y, z;
 		dVector3 v;
 		
-		p = dBodyGetLinearVel(_body);
+		p = dBodyGetLinearVel(b);
 		x = *p; ++p;
 		y = *p; ++p;
 		z = *p;
-		dBodyVectorFromWorld(_body, x, y, z, v);
+		dBodyVectorFromWorld(b, x, y, z, v);
 		for (i = 0; i < 3; ++i) {
 			v[i] *= -_vel_damp_coef[i]/MAX_FPS;
 		}
-		dBodyAddRelForce(_body, v[0], v[1], v[2]);
+		dBodyAddRelForce(b, v[0], v[1], v[2]);
 		
-		p = dBodyGetAngularVel(_body);
+		p = dBodyGetAngularVel(b);
 		x = *p; ++p;
 		y = *p; ++p;
 		z = *p;
-		dBodyVectorFromWorld(_body, x, y, z, v);
+		dBodyVectorFromWorld(b, x, y, z, v);
 		for (i = 0; i < 3; ++i) {
 			v[i] *= -_ang_damp_coef[i]/MAX_FPS;
 		}
-		dBodyAddRelTorque(_body, v[0], v[1], v[2]);
+		dBodyAddRelTorque(b, v[0], v[1], v[2]);
 	}
 }
 
 Point GameObj::get_rel_point_pos(const Point& p) {
-	if (_body == 0) {
+	if (!_body) {
 		throw GameException("Attempted get_rel_point_pos on a GameObj without an ODE body");
 	}
 	
 	dVector3 res;
-	dBodyGetRelPointPos(_body, p.x, p.y, p.z, res);
+	dBodyGetRelPointPos(_body->get_id(), p.x, p.y, p.z, res);
 	return Point(res[0], res[1], res[2]);
 }
 
 Vector GameObj::vector_to_world(const Vector& v) {
-	if (_body == 0) {
+	if (!_body) {
 		throw GameException("Attempted vector_to_world on a GameObj without an ODE body");
 	}
 	
 	dVector3 res;
-	dBodyVectorToWorld(_body, v.x, v.y, v.z, res);
+	dBodyVectorToWorld(_body->get_id(), v.x, v.y, v.z, res);
 	return Vector(res[0], res[1], res[2]);
 }
 
 Vector GameObj::vector_from_world(const Vector& v) {
-	if (_body == 0) {
+	if (!_body) {
 		throw GameException("Attempted vector_to_rel on a GameObj without an ODE body");
 	}
 	
 	dVector3 res;
-	dBodyVectorFromWorld(_body, v.x, v.y, v.z, res);
+	dBodyVectorFromWorld(_body->get_id(), v.x, v.y, v.z, res);
 	return Vector(res[0], res[1], res[2]);
 }
 
@@ -241,19 +228,12 @@ void recursive_geom_set_data(dGeomID geom, CollisionHandler* ch) {
 	}
 }
 
-void GameObj::set_body(dBodyID body) {
-	if (_body != 0) {
-		dBodyDestroy(_body);
+dBodyID GameObj::get_body() const {
+	if (_body) {
+		return _body->get_id();
+	} else {
+		throw GameException("Attempted to retrieve ODE body from bodyless GameObj");
 	}
-	_body = body;
-		
-	BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
-		dGeomSetBody(p.second, _body);
-	}
-	
-	// This will load our current position and velocity into the body
-	set_pos(_pos);
-	set_rot(_rot);
 }
 
 dGeomID GameObj::get_geom(const std::string& gname) const {
@@ -288,12 +268,39 @@ void GameObj::set_geom(const std::string& gname, dGeomID geom) {
 			dGeomSetData(geom, (void*)(&*_coll_handler));
 		}
 		
-		if (_body != 0) {
-			dGeomSetBody(geom, _body);
+		if (_body) {
+			dGeomSetBody(geom, _body->get_id());
 		} else {
-			// Loads our current position and orientation into the geom
-			set_pos(_pos);
-			set_rot(_rot);
+			// Loads our current position and orientation into the geoms
+			update_ode_pos();
+			update_ode_rot();
+		}
+	}
+}
+
+void GameObj::update_ode_pos() {
+	if (_body) {
+		dBodySetPosition(_body->get_id(), _pos.x, _pos.y, _pos.z);
+	} else {
+		BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
+			dGeomSetPosition(p.second, _pos.x, _pos.y, _pos.z);
+		}
+	}
+}
+
+void GameObj::update_ode_rot() {
+	if (_body || _geoms.size() > 0) {
+		// Convert column-major 3x3 to row-major 3x4
+		dMatrix3 matr;
+		matr[0]  = _rot[0]; matr[1]  = _rot[3]; matr[2]  = _rot[6]; matr[3]  = 0;
+		matr[4]  = _rot[1]; matr[5]  = _rot[4]; matr[6]  = _rot[7]; matr[7]  = 0;
+		matr[8]  = _rot[2]; matr[9]  = _rot[5]; matr[10] = _rot[8]; matr[11] = 0;
+		if (_body) {
+			dBodySetRotation(_body->get_id(), matr);
+		} else {
+			BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
+				dGeomSetRotation(p.second, matr);
+			}
 		}
 	}
 }

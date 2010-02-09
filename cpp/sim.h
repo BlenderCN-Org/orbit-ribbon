@@ -23,6 +23,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_SIM_H
 #define ORBIT_RIBBON_SIM_H
 
+#include <boost/shared_ptr.hpp>
+#include <boost/utility.hpp>
 #include <ode/ode.h>
 
 #include "geometry.h"
@@ -37,18 +39,33 @@ class CollisionHandler {
 		virtual void handle_collision(dGeomID other, const GameObj* other_gameobj, const dContactGeom* contacts, unsigned int contacts_len) =0;
 };
 
+class Body;
 class Sim {
 	public:
 		static dWorldID get_ode_world();
 		static dSpaceID get_static_space();
 		static dSpaceID get_dyn_space();
 		
-		static dBodyID gen_sphere_body(float mass, float rad);
+		static boost::shared_ptr<Body> gen_sphere_body(float mass, float rad);
 	
 	private:
 		static void init();
 		static void sim_step();
 		friend class App;
+};
+
+class Body : boost::noncopyable {
+	private:
+		friend class Sim;
+		
+		dBodyID _id;
+		
+		Body(dBodyID id) : _id(id) {}
+	
+	public:
+		dBodyID get_id() { return _id; }
+		
+		~Body() { dBodyDestroy(_id); }
 };
 
 #endif

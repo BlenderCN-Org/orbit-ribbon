@@ -53,7 +53,7 @@ class GameObjCollisionHandler : public CollisionHandler {
 
 class GameObj : boost::noncopyable {
 	public:
-		GameObj(const ORE1::ObjType& obj);
+		GameObj(const ORE1::ObjType& obj, const boost::shared_ptr<Body>& body = boost::shared_ptr<Body>());
 		virtual ~GameObj();
 		
 		const Point& get_pos() const { return _pos; }
@@ -74,8 +74,7 @@ class GameObj : boost::noncopyable {
 		Vector vector_from_world(const Vector& v);
 	
 	protected:
-		dBodyID get_body() const { return _body; }
-		void set_body(dBodyID body);
+		dBodyID get_body() const;
 		
 		dGeomID get_geom(const std::string& gname) const;
 		void set_geom(const std::string& gname, dGeomID geom);
@@ -92,6 +91,9 @@ class GameObj : boost::noncopyable {
 		Vector _vel;
 		boost::scoped_ptr<CollisionHandler> _coll_handler;
 		
+		void update_ode_pos();
+		void update_ode_rot();
+		
 		// Damping coefficients for linear and angular velocity along each body axis
 		// For example, vel_damp_coef[0] is the linear damping coefficient along relative x axis
 		// Each step, vel_damp_coef[0]/MAX_FPS * relative x velocity is removed
@@ -100,7 +102,7 @@ class GameObj : boost::noncopyable {
 		
 		typedef std::map<std::string, dGeomID> GeomMap;
 		
-		dBodyID _body;
+		boost::shared_ptr<Body> _body;
 		GeomMap _geoms;
 };
 

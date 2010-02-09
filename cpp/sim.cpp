@@ -99,10 +99,10 @@ void Sim::sim_step() {
 	}
 }
 
-dBodyID Sim::gen_sphere_body(float mass, float rad) {
+boost::shared_ptr<Body> Sim::gen_sphere_body(float mass, float rad) {
 	dBodyID body = dBodyCreate(ode_world);
 	dMass ode_mass;
 	dMassSetSphereTotal(&ode_mass, mass, rad);
 	dBodySetMass(body, &ode_mass);
-	return body;
+	return boost::shared_ptr<Body>(new Body(body));
 }
