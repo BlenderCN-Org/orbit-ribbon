@@ -31,6 +31,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <map>
+#include <memory>
 #include <utility>
 
 #include "except.h"
@@ -53,14 +54,13 @@ class GameObjCollisionHandler : public CollisionHandler {
 
 class GameObj : boost::noncopyable {
 	public:
-		GameObj(const ORE1::ObjType& obj, const boost::shared_ptr<Body>& body = boost::shared_ptr<Body>());
-		virtual ~GameObj();
+		GameObj(const ORE1::ObjType& obj, std::auto_ptr<OdeEntity> entity = Sim::gen_empty_body());
 		
 		const Point& get_pos() const { return _pos; }
 		void set_pos(const Point& pos);
 		
-		const boost::array<GLfloat, 9>& get_rot() const { return _rot; }
-		void set_rot(const boost::array<GLfloat, 9>& rot);
+		const boost::array<float, 9>& get_rot() const { return _rot; }
+		void set_rot(const boost::array<float, 9>& rot);
 		
 		const Vector& get_vel() const { return _vel; }
 		
@@ -74,9 +74,9 @@ class GameObj : boost::noncopyable {
 		Vector vector_from_world(const Vector& v);
 	
 	protected:
-		dBodyID get_body() const;
-		
-		dGeomID get_geom(const std::string& gname) const;
+		const OdeEntity& get_entity() const { return *_entity; }
+		dBodyID get_body() { return _entity->get_id(); }
+		dGeomID get_geom(const std::string& gname) { return _entity->get_geom(gname); }
 		void set_geom(const std::string& gname, dGeomID geom);
 		
 		void set_new_collision_handler(CollisionHandler* ch) { _coll_handler.reset(ch); }
@@ -87,23 +87,17 @@ class GameObj : boost::noncopyable {
 	
 	private:
 		Point _pos;
-		boost::array<GLfloat, 9> _rot; // 3x3 column-major
+		boost::array<float, 9> _rot; // 3x3 column-major
 		Vector _vel;
 		boost::scoped_ptr<CollisionHandler> _coll_handler;
-		
-		void update_ode_pos();
-		void update_ode_rot();
 		
 		// Damping coefficients for linear and angular velocity along each body axis
 		// For example, vel_damp_coef[0] is the linear damping coefficient along relative x axis
 		// Each step, vel_damp_coef[0]/MAX_FPS * relative x velocity is removed
-		GLfloat _vel_damp_coef[3];
-		GLfloat _ang_damp_coef[3];
+		float _vel_damp_coef[3];
+		float _ang_damp_coef[3];
 		
-		typedef std::map<std::string, dGeomID> GeomMap;
-		
-		boost::shared_ptr<Body> _body;
-		GeomMap _geoms;
+		std::auto_ptr<OdeEntity> _entity;
 };
 
 class GOFactory {

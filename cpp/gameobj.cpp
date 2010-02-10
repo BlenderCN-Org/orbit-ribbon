@@ -32,6 +32,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "autoxsd/orepkgdesc.h"
 #include "constants.h"
+#include "debug.h"
 #include "except.h"
 #include "gameobj.h"
 #include "geometry.h"
@@ -49,13 +50,20 @@ void GameObjCollisionHandler::handle_collision(
 ) {
 }
 
-GameObj::GameObj(const ORE1::ObjType& obj, const boost::shared_ptr<Body>& body) :
+GameObj::GameObj(const ORE1::ObjType& obj, std::auto_ptr<OdeEntity> entity) :
 	_pos(Point(obj.pos()[0], obj.pos()[1], obj.pos()[2])),
 	_vel(Vector()),
 	_coll_handler(new GameObjCollisionHandler(this)),
-	_body(body)
+	_entity(entity)
 {
+	if (_entity.get() == 0) {
+		throw GameException("Cannot pass null OdeEntity pointer to GameObj. You probably want Sim::gen_empty_body()");
+	}
+	
 	std::copy(obj.rot().begin(), obj.rot().end(), _rot.begin());
+	
+	_entity->set_pos(_pos);
+	_entity->set_rot(_rot);
 	
 	_vel_damp_coef[0] = DEFAULT_VEL_DAMP_COEF;
 	_vel_damp_coef[1] = DEFAULT_VEL_DAMP_COEF;
@@ -64,33 +72,16 @@ GameObj::GameObj(const ORE1::ObjType& obj, const boost::shared_ptr<Body>& body) 
 	_ang_damp_coef[0] = DEFAULT_ANG_DAMP_COEF;
 	_ang_damp_coef[1] = DEFAULT_ANG_DAMP_COEF;
 	_ang_damp_coef[2] = DEFAULT_ANG_DAMP_COEF;
-		
-	// This will load our current position and velocity into the body
-	if (_body) {
-		update_ode_pos();
-		update_ode_rot();
-	}
-}
-
-GameObj::~GameObj() {
-	std::vector<std::string> keys;
-	keys.reserve(_geoms.size());
-	BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
-		keys.push_back(p.first);
-	}
-	BOOST_FOREACH(std::string& gname, keys) {
-		set_geom(gname, 0);
-	}
 }
 
 void GameObj::set_pos(const Point& pos) {
 	_pos = pos;
-	update_ode_pos();
+	_entity->set_pos(pos);
 }
 
-void GameObj::set_rot(const boost::array<GLfloat, 9>& rot) {
+void GameObj::set_rot(const boost::array<float, 9>& rot) {
 	_rot = rot;
-	update_ode_rot();
+	_entity->set_rot(rot);
 }
 
 std::string GameObj::to_str() const {
@@ -112,7 +103,7 @@ void GameObj::draw(bool near) {
 	GLOOPushedMatrix pm;
 	
 	glTranslatef(_pos.x, _pos.y, _pos.z);
-	GLfloat rotMatr[16] = {  // Pad out with 4th row and column for OpenGL
+	float rotMatr[16] = {  // Pad out with 4th row and column for OpenGL
 		_rot[0], _rot[1], _rot[2], 0,
 		_rot[3], _rot[4], _rot[5], 0,
 		_rot[6], _rot[7], _rot[8], 0,
@@ -130,8 +121,8 @@ void GameObj::draw(bool near) {
 void GameObj::step() {
 	const dReal* p;
 	dBodyID b = 0;
-	if (_body) {
-		b = _body->get_id();
+	if (_entity->has_id()) {
+		b = _entity->get_id();
 	}
 	
 	// Load position, rotation, and velocity from ODE if there are dynamics for this GameObj
@@ -187,122 +178,29 @@ void GameObj::step() {
 }
 
 Point GameObj::get_rel_point_pos(const Point& p) {
-	if (!_body) {
-		throw GameException("Attempted get_rel_point_pos on a GameObj without an ODE body");
-	}
-	
 	dVector3 res;
-	dBodyGetRelPointPos(_body->get_id(), p.x, p.y, p.z, res);
+	dBodyGetRelPointPos(_entity->get_id(), p.x, p.y, p.z, res);
 	return Point(res[0], res[1], res[2]);
 }
 
 Vector GameObj::vector_to_world(const Vector& v) {
-	if (!_body) {
-		throw GameException("Attempted vector_to_world on a GameObj without an ODE body");
-	}
-	
 	dVector3 res;
-	dBodyVectorToWorld(_body->get_id(), v.x, v.y, v.z, res);
+	dBodyVectorToWorld(_entity->get_id(), v.x, v.y, v.z, res);
 	return Vector(res[0], res[1], res[2]);
 }
 
 Vector GameObj::vector_from_world(const Vector& v) {
-	if (!_body) {
-		throw GameException("Attempted vector_to_rel on a GameObj without an ODE body");
-	}
-	
 	dVector3 res;
-	dBodyVectorFromWorld(_body->get_id(), v.x, v.y, v.z, res);
+	dBodyVectorFromWorld(_entity->get_id(), v.x, v.y, v.z, res);
 	return Vector(res[0], res[1], res[2]);
 }
 
-void recursive_geom_set_data(dGeomID geom, CollisionHandler* ch) {
-	if (dGeomIsSpace(geom)) {
-		dSpaceID s = dSpaceID(geom);
-		GLint end = dSpaceGetNumGeoms(s);
-		for (GLint i = 0; i < end; ++i) {
-			recursive_geom_set_data(dSpaceGetGeom(s, i), ch);
-		}
-	} else {
-		dGeomSetData(geom, (void*)ch);
-	}
-}
-
-dBodyID GameObj::get_body() const {
-	if (_body) {
-		return _body->get_id();
-	} else {
-		throw GameException("Attempted to retrieve ODE body from bodyless GameObj");
-	}
-}
-
-dGeomID GameObj::get_geom(const std::string& gname) const {
-	std::map<std::string, dGeomID>::const_iterator i = _geoms.find(gname);
-	if (i == _geoms.end()) {
-		throw GameException("Unable to retrieve GameObj geom named " + gname);
-	} else {
-		return i->second;
-	}
-}
-
 void GameObj::set_geom(const std::string& gname, dGeomID geom) {
-	// TODO possible optimization : to automatically use a space if a body has more than one geom
-	// This could be done without changing the external set_geom/get_geom interface
-	std::map<std::string, dGeomID>::iterator i = _geoms.find(gname);
-	if (i != _geoms.end()) {
-		dGeomDestroy(i->second);
+	if (dGeomGetData(geom) == 0) {
+		// If the geom doesn't already have a collision handler, give it the GameObj's default collision handler
+		dGeomSetData(geom, (void*)(&*_coll_handler));
 	}
-	
-	if (geom == 0) {
-		if (i != _geoms.end()) {
-			_geoms.erase(i);
-		}
-	} else {
-		if (i != _geoms.end()) {
-			i->second = geom;
-		} else {
-			_geoms[gname] = geom;
-		}
-		if (dGeomGetData(geom) == 0) {
-			// If the geom doesn't already have a collision handler, give it the GameObj's default collision handler
-			dGeomSetData(geom, (void*)(&*_coll_handler));
-		}
-		
-		if (_body) {
-			dGeomSetBody(geom, _body->get_id());
-		} else {
-			// Loads our current position and orientation into the geoms
-			update_ode_pos();
-			update_ode_rot();
-		}
-	}
-}
-
-void GameObj::update_ode_pos() {
-	if (_body) {
-		dBodySetPosition(_body->get_id(), _pos.x, _pos.y, _pos.z);
-	} else {
-		BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
-			dGeomSetPosition(p.second, _pos.x, _pos.y, _pos.z);
-		}
-	}
-}
-
-void GameObj::update_ode_rot() {
-	if (_body || _geoms.size() > 0) {
-		// Convert column-major 3x3 to row-major 3x4
-		dMatrix3 matr;
-		matr[0]  = _rot[0]; matr[1]  = _rot[3]; matr[2]  = _rot[6]; matr[3]  = 0;
-		matr[4]  = _rot[1]; matr[5]  = _rot[4]; matr[6]  = _rot[7]; matr[7]  = 0;
-		matr[8]  = _rot[2]; matr[9]  = _rot[5]; matr[10] = _rot[8]; matr[11] = 0;
-		if (_body) {
-			dBodySetRotation(_body->get_id(), matr);
-		} else {
-			BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
-				dGeomSetRotation(p.second, matr);
-			}
-		}
-	}
+	_entity->set_geom(gname, geom);
 }
 
 bool GOFactoryRegistry::_initialized;

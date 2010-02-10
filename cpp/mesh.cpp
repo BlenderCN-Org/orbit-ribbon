@@ -22,11 +22,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <string>
 #include <sstream>
+#include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "autoxsd/orepkgdesc.h"
 #include "autoxsd/oreanim-pskel.h"
 #include "cache.h"
+#include "debug.h"
 #include "globals.h"
 #include "gloo.h"
 #include "mesh.h"

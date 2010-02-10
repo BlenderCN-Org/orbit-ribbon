@@ -23,8 +23,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_SIM_H
 #define ORBIT_RIBBON_SIM_H
 
-#include <boost/shared_ptr.hpp>
+#include <boost/array.hpp>
 #include <boost/utility.hpp>
+#include <memory>
 #include <ode/ode.h>
 
 #include "geometry.h"
@@ -39,14 +40,15 @@ class CollisionHandler {
 		virtual void handle_collision(dGeomID other, const GameObj* other_gameobj, const dContactGeom* contacts, unsigned int contacts_len) =0;
 };
 
-class Body;
+class OdeEntity;
 class Sim {
 	public:
 		static dWorldID get_ode_world();
 		static dSpaceID get_static_space();
 		static dSpaceID get_dyn_space();
 		
-		static boost::shared_ptr<Body> gen_sphere_body(float mass, float rad);
+		static std::auto_ptr<OdeEntity> gen_empty_body();
+		static std::auto_ptr<OdeEntity> gen_sphere_body(float mass, float rad);
 	
 	private:
 		static void init();
@@ -54,18 +56,33 @@ class Sim {
 		friend class App;
 };
 
-class Body : boost::noncopyable {
+class OdeEntity : boost::noncopyable {
 	private:
 		friend class Sim;
 		
+		typedef std::map<std::string, dGeomID> GeomMap;
+		
+		// These are used when _id isn't set to fill in starting position of newly inserted geoms
+		Point _last_pos;
+		boost::array<float, 9> _last_rot;
+		
 		dBodyID _id;
+		GeomMap _geoms;
 		
-		Body(dBodyID id) : _id(id) {}
-	
+		OdeEntity() : _id(0) {}
+		OdeEntity(dBodyID id) : _id(id) {}
+		
 	public:
-		dBodyID get_id() { return _id; }
+		bool has_id() const { return _id != 0; }
+		dBodyID get_id();
 		
-		~Body() { dBodyDestroy(_id); }
+		dGeomID get_geom(const std::string& gname);
+		void set_geom(const std::string& gname, dGeomID geom);
+		
+		void set_pos(const Point& pos);
+		void set_rot(const boost::array<float, 9>& rot);
+		
+		~OdeEntity();
 };
 
 #endif
