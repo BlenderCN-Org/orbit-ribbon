@@ -27,4 +27,4 @@ Thinh's ideas:
 - Why doesn't vsync work?
 - Allow video mode to be reinitialized without having to reinit the entire display module
 
-Here's an idea for running alignment: move along the surface with three or four wheels, each of which is attached via a spring to the main body. Then, all we have to do is press down, and we can use all the same ideas that already exist for wheeled vehicles in a gravitational situation. When running is disabled, all we have to do is disable the geoms of the wheels and the connecting joints.
+Here's an idea for running alignment: move along the surface with three or four wheels, each of which is attached via a spring to the main body. Then, all we have to do is press down, and we can use all the same ideas that already exist for wheeled vehicles in a gravitational situation. When running is disabled, all we have to do is disable the geoms of the wheels and the connecting joints. If balance problems occur, try attaching the joints higher up along the main body.

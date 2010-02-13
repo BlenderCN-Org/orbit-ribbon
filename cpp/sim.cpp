@@ -65,16 +65,13 @@ void collision_callback(void* data __attribute__ ((unused)), dGeomID o1, dGeomID
 	if (dGeomIsSpace(o1) or dGeomIsSpace(o2)) {
 		dSpaceCollide2(o1, o2, NULL, &collision_callback);
 	} else {
-		Debug::debug_msg("A");
 		int len = dCollide(o1, o2, MAXIMUM_CONTACT_POINTS, &(contacts[0]), sizeof(dContactGeom));
 		if (len > 0) {
-			Debug::debug_msg("B");
 			CollisionHandler* o1h = static_cast<CollisionHandler*>(dGeomGetData(o1));
 			CollisionHandler* o2h = static_cast<CollisionHandler*>(dGeomGetData(o2));
 			o1h->handle_collision(o2, o2h->get_gameobj(), &(contacts[0]), len);
 			o2h->handle_collision(o1, o1h->get_gameobj(), &(contacts[0]), len);
 			if (o1h->should_contact(o2) && o2h->should_contact(o1)) {
-				Debug::debug_msg("C");
 				dContact contact;
 				contact.surface.mode = dContactApprox1 | dContactBounce;
 				contact.surface.bounce = 0.5;
@@ -92,11 +89,8 @@ void collision_callback(void* data __attribute__ ((unused)), dGeomID o1, dGeomID
 void Sim::sim_step() {
 	// Check for collisions
 	dJointGroupEmpty(contact_group);
-	Debug::debug_msg("DYN -----");
 	dSpaceCollide(dyn_space, NULL, &collision_callback); // Collisions among dyn_space objects
-	Debug::debug_msg("STATIC -----");
 	dSpaceCollide2(dGeomID(dyn_space), dGeomID(static_space), NULL, &collision_callback); // Collisions between dyn_space objects and static_space objects
-	Debug::debug_msg("");
 	
 	// Run the simulation
 	dWorldQuickStep(ode_world, 1.0f/MAX_FPS);
@@ -166,10 +160,11 @@ void OdeEntity::set_geom(const std::string& gname, dGeomID geom) {
 }
 
 void OdeEntity::set_pos(const Point& pos) {
+	_last_pos = pos;
+	
 	if (_id != 0) {
 		dBodySetPosition(_id, pos.x, pos.y, pos.z);
 	} else {
-		_last_pos = pos;
 		BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
 			dGeomSetPosition(p.second, pos.x, pos.y, pos.z);
 		}
@@ -177,17 +172,16 @@ void OdeEntity::set_pos(const Point& pos) {
 }
 
 void OdeEntity::set_rot(const boost::array<float, 9>& rot) {
-	if (_id != 0 || _geoms.size() > 0) {
-		// Convert column-major 3x3 to row-major 3x4
-		dMatrix3 matr;
-		gen_ode_rot_matr(rot, matr);
-		if (_id != 0) {
-			dBodySetRotation(_id, matr);
-		} else {
-			_last_rot = rot;
-			BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
-				dGeomSetRotation(p.second, matr);
-			}
+	_last_rot = rot;
+	
+	// Convert column-major 3x3 to row-major 3x4
+	dMatrix3 matr;
+	gen_ode_rot_matr(rot, matr);
+	if (_id != 0) {
+		dBodySetRotation(_id, matr);
+	} else {
+		BOOST_FOREACH(GeomMap::value_type& p, _geoms) {
+			dGeomSetRotation(p.second, matr);
 		}
 	}
 }
