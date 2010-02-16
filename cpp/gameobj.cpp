@@ -42,18 +42,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 const float DEFAULT_VEL_DAMP_COEF = 0.15;
 const float DEFAULT_ANG_DAMP_COEF = 0.15;
 
-void GameObjCollisionHandler::handle_collision(
-	dGeomID other __attribute__ ((unused)),
-	const GameObj* other_gameobj __attribute__ ((unused)),
-	const dContactGeom* contacts __attribute__ ((unused)),
-	unsigned int contacts_len __attribute__ ((unused))
-) {
-}
-
 GameObj::GameObj(const ORE1::ObjType& obj, std::auto_ptr<OdeEntity> entity) :
 	_pos(Point(obj.pos()[0], obj.pos()[1], obj.pos()[2])),
 	_vel(Vector()),
-	_coll_handler(new GameObjCollisionHandler(this)),
 	_entity(entity)
 {
 	if (_entity.get() == 0) {
@@ -193,14 +184,6 @@ Vector GameObj::vector_from_world(const Vector& v) {
 	dVector3 res;
 	dBodyVectorFromWorld(_entity->get_id(), v.x, v.y, v.z, res);
 	return Vector(res[0], res[1], res[2]);
-}
-
-void GameObj::set_geom(const std::string& gname, dGeomID geom) {
-	if (dGeomGetData(geom) == 0) {
-		// If the geom doesn't already have a collision handler, give it the GameObj's default collision handler
-		dGeomSetData(geom, (void*)(&*_coll_handler));
-	}
-	_entity->set_geom(gname, geom);
 }
 
 bool GOFactoryRegistry::_initialized;

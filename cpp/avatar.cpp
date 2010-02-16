@@ -63,25 +63,11 @@ const float RUNNING_SPHERE_RAD = 0.25;
 
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 
-void AvatarGameObj::RunningCollisionHandler::handle_collision(dGeomID other, const GameObj* other_gameobj, const dContactGeom* contacts, unsigned int contacts_len __attribute__ ((unused))) {
-	// TODO Check if the other object is runnable/attachable
-	// TODO Should I not just assume that the first contact is the most appropriate one to use?
-	_normal = Vector(contacts[0].normal[0], contacts[0].normal[1], contacts[0].normal[2]);
-	_depth = contacts[0].depth;
-	_dirty = true;
-}
-
-bool AvatarGameObj::RunningCollisionHandler::check_dirty() {
-	if (_dirty) {
-		_dirty = false; return true;
-	} else {
-		return false;
-	}
-}
-
 void AvatarGameObj::step_impl() {
 	// TODO: Consider adding linear and angular velocity caps
 	// TODO: Set a maximum total acceleration, then force accel vector to be no longer than that magnitude
+	
+	dBodyID body = get_entity().get_id();
 	
 	const Channel* chn;
 	float v;
@@ -90,33 +76,33 @@ void AvatarGameObj::step_impl() {
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::TranslateX);
 	v = (chn->get_value())*(MAX_STRAFE/MAX_FPS);
 	if (chn->is_on()) {
-		dBodyAddRelForce(get_body(), -v, 0.0, 0.0);
+		dBodyAddRelForce(body, -v, 0.0, 0.0);
 	}
 	
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::TranslateY);
 	v = (chn->get_value())*(MAX_STRAFE/MAX_FPS);
 	if (chn->is_on()) {
-		dBodyAddRelForce(get_body(), 0.0, -v, 0.0);
+		dBodyAddRelForce(body, 0.0, -v, 0.0);
 	}
 	
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::TranslateZ);
 	v = (chn->get_value())*(MAX_ACCEL/MAX_FPS);
 	if (chn->is_on()) {
-		dBodyAddRelForce(get_body(), 0.0, 0.0, v);
+		dBodyAddRelForce(body, 0.0, 0.0, v);
 	}
 	
-	const dReal* avel = dBodyGetAngularVel(get_body());
+	const dReal* avel = dBodyGetAngularVel(body);
 	dVector3 rel_avel;
-	dBodyVectorFromWorld(get_body(), avel[0], avel[1], avel[2], rel_avel);
+	dBodyVectorFromWorld(body, avel[0], avel[1], avel[2], rel_avel);
 	
 	// X-turn and x-counterturn
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::RotateY);
 	v = -(chn->get_value())*(MAX_TURN/MAX_FPS);
 	cv = rel_avel[1]*-CTURN_COEF/MAX_FPS;
 	if (chn->is_on()) {
-		dBodyAddRelTorque(get_body(), 0.0, v, 0.0);
+		dBodyAddRelTorque(body, 0.0, v, 0.0);
 	} else {
-		dBodyAddRelTorque(get_body(), 0.0, cv, 0.0);
+		dBodyAddRelTorque(body, 0.0, cv, 0.0);
 	}
 	
 	// Y-turn and y-counterturn
@@ -124,9 +110,9 @@ void AvatarGameObj::step_impl() {
 	v = (chn->get_value())*(MAX_TURN/MAX_FPS);
 	cv = rel_avel[0]*-CTURN_COEF/MAX_FPS;
 	if (chn->is_on()) {
-		dBodyAddRelTorque(get_body(), v, 0.0, 0.0);
+		dBodyAddRelTorque(body, v, 0.0, 0.0);
 	} else {
-		dBodyAddRelTorque(get_body(), cv, 0.0, 0.0);
+		dBodyAddRelTorque(body, cv, 0.0, 0.0);
 	}
 	
 	// Roll and counter-roll
@@ -134,9 +120,9 @@ void AvatarGameObj::step_impl() {
 	v = (chn->get_value())*(MAX_ROLL/MAX_FPS);
 	cv = rel_avel[2]*(-CROLL_COEF/MAX_FPS);
 	if (chn->is_on()) {
-		dBodyAddRelTorque(get_body(), 0.0, 0.0, v);
+		dBodyAddRelTorque(body, 0.0, 0.0, v);
 	} else {
-		dBodyAddRelTorque(get_body(), 0.0, 0.0, cv);
+		dBodyAddRelTorque(body, 0.0, 0.0, cv);
 	}
 	
 	// Changing stance between superman-style and upright
@@ -150,19 +136,29 @@ void AvatarGameObj::step_impl() {
 	if (_uprightness > 1.0) { _uprightness = 1.0; } else if (_uprightness < 0.0) { _uprightness = 0.0; }
 	
 	// Update the offsets of our geoms to match _stance
-	dGeomSetOffsetPosition(get_geom("run_detect"), 0, std::sin(-_uprightness*M_PI_2)*1.10, 0); // FIXME Figure out avatar height dynamically
+	dGeomSetOffsetPosition(get_entity().get_geom("run_detect"), 0, std::sin(-_uprightness*M_PI_2)*1.10, 0); // FIXME Figure out avatar height dynamically
 	dMatrix3 grot;
 	dRFromAxisAndAngle(grot, 1, 0, 0, _uprightness*M_PI_2);
-	dGeomSetOffsetRotation(get_geom("physical"), grot);
+	dGeomSetOffsetRotation(get_entity().get_geom("physical"), grot);
 	
 	// Check if we are contacting a surface in a way that allows attaching
-	if (_run_coll_handler.check_dirty()) {
-		Vector c = vector_from_world(_run_coll_handler.get_contact_normal());
-		float d = _run_coll_handler.get_depth();
+	RunCollisionTracker* rct = static_cast<RunCollisionTracker*>(get_entity().get_geom_ch("run_detect"));
+	if (rct->has_collisions()) {
+		std::auto_ptr<std::vector<CollisionTracker::Collision> > colls = rct->get_collisions();
+		
+		// TODO Check if the other object is runnable/attachable
+		// TODO Shouldn't just assume that first contact of last collision is the best one to use
+		
+		Vector c = vector_from_world(Vector(
+			colls->back().contacts[0].normal[0],
+			colls->back().contacts[0].normal[1],
+			colls->back().contacts[0].normal[2]
+		));
+		float d = colls->back().contacts[0].depth;
 		if (c.y > 0 && std::fabs(c.x) < RUNNING_MAX_X && std::fabs(c.z) < RUNNING_MAX_Z) {
 			_coll_occurred = true;
 			// Keep our feet attached to this surface, and stay aligned to it
-			dBodyAddRelForce(get_body(), 0.0, -200.0, 0.0);
+			dBodyAddRelForce(body, 0.0, -500.0, 0.0);
 		}
 	}
 }
@@ -183,7 +179,7 @@ void AvatarGameObj::near_draw_impl() {
 		}
 		GLOOPushedMatrix pm;
 		glRotatef(_uprightness*90, 1, 0, 0);
-		const dReal* p = dGeomGetOffsetPosition(get_geom("run_detect"));
+		const dReal* p = dGeomGetOffsetPosition(get_entity().get_geom("run_detect"));
 		glTranslatef(p[0], p[1], p[2]);
 		gluSphere(q, RUNNING_SPHERE_RAD, 20, 10);
 		
@@ -199,17 +195,22 @@ void AvatarGameObj::near_draw_impl() {
 
 AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 	GameObj(obj, Sim::gen_sphere_body(80, 0.5)), // TODO Load mass information from the ORE mission description
-	_anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run")),
-	_run_coll_handler(this)
+	_anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run"))
 {
 	// Set up a geom for detecting regular collisions
 	// TODO Load volume information from the ORE mission description
-	set_geom("physical", dCreateCCylinder(Sim::get_dyn_space(), 0.25, 2.0));
+	get_entity().set_geom(
+		"physical",
+		dCreateCCylinder(Sim::get_dyn_space(), 0.25, 2.0),
+		std::auto_ptr<CollisionHandler>(new SimpleContactHandler)
+	);
 	
 	// Set up a geom at our feet to detect when we can run on a surface
-	dGeomID run_geom = dCreateSphere(Sim::get_dyn_space(), RUNNING_SPHERE_RAD);
-	dGeomSetData(run_geom, (void*)&_run_coll_handler);
-	set_geom("run_detect", run_geom);
+	get_entity().set_geom(
+		"run_detect",
+		dCreateSphere(Sim::get_dyn_space(), RUNNING_SPHERE_RAD),
+		std::auto_ptr<CollisionHandler>(new RunCollisionTracker)
+	);
 	
 	// TODO Maybe some missions start off in upright mode?
 	_uprightness = 0.0;

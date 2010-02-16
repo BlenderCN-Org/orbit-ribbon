@@ -38,25 +38,9 @@ class AvatarGameObj : public GameObj {
 		boost::shared_ptr<MeshAnimation> _anim_fly_to_prerun;
 		float _uprightness;
 		
-		class RunningCollisionHandler : public CollisionHandler {
-			private:
-				AvatarGameObj* _avatar;
-				bool _dirty;
-				Vector _normal;
-				float _depth;
-			
-			public:
-				RunningCollisionHandler(AvatarGameObj* avatar) : _avatar(avatar), _dirty(false) {}
-				
-				const GameObj* get_gameobj() const { return _avatar; }
-				bool should_contact(dGeomID other __attribute__ ((unused))) const { return false; }
-				void handle_collision(dGeomID other, const GameObj* other_gameobj, const dContactGeom* contacts, unsigned int contacts_len);
-				
-				bool check_dirty();
-				Vector get_contact_normal() { return _normal; }
-				float get_depth() { return _depth; }
+		class RunCollisionTracker : public CollisionTracker {
+			bool should_contact(dGeomID other __attribute__ ((unused)) ) const { return false; }
 		};
-		RunningCollisionHandler _run_coll_handler;
 		
 		bool _coll_occurred;
 		

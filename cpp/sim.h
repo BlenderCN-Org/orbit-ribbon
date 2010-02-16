@@ -26,19 +26,55 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/array.hpp>
 #include <boost/utility.hpp>
 #include <memory>
+#include <vector>
 #include <ode/ode.h>
 
 #include "geometry.h"
 
+class Sim;
 class App;
-
 class GameObj;
+class CollisionTracker;
+
 class CollisionHandler {
 	public:
-		virtual const GameObj* get_gameobj() const { return (GameObj*)0; }
 		virtual bool should_contact(dGeomID other) const =0;
-		virtual void handle_collision(dGeomID other, const GameObj* other_gameobj, const dContactGeom* contacts, unsigned int contacts_len) =0;
+		virtual void handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) =0;
 };
+
+class SimpleContactHandler : public CollisionHandler {
+	public:
+		SimpleContactHandler() {}
+		
+		bool should_contact(dGeomID other __attribute__ ((unused))) const { return true; }
+		void handle_collision(float t __attribute__ ((unused)), dGeomID other __attribute__ ((unused)), const dContactGeom* contacts __attribute__ ((unused)), unsigned int contacts_len __attribute__ ((unused))) {}
+};
+
+class CollisionTracker : public CollisionHandler {
+	public:
+		class Collision {
+			public:
+				float step_time;
+				dGeomID other;
+				const GameObj* other_gameobj;
+				std::vector<dContactGeom> contacts;
+			
+			private:
+				friend class CollisionTracker;
+			
+				Collision() {}
+				void init(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
+		};
+		
+		CollisionTracker();
+		virtual void handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
+		bool has_collisions() const { return _collisions->size() > 0; }
+		std::auto_ptr<std::vector<Collision> > get_collisions();
+	
+	private:
+		std::auto_ptr<std::vector<Collision> > _collisions;
+};
+
 
 class OdeEntity;
 class Sim {
@@ -77,7 +113,8 @@ class OdeEntity : boost::noncopyable {
 		dBodyID get_id();
 		
 		dGeomID get_geom(const std::string& gname);
-		void set_geom(const std::string& gname, dGeomID geom);
+		CollisionHandler* get_geom_ch(const std::string& gname);
+		void set_geom(const std::string& gname, dGeomID geom, std::auto_ptr<CollisionHandler> ch);
 		
 		void set_pos(const Point& pos);
 		void set_rot(const boost::array<float, 9>& rot);

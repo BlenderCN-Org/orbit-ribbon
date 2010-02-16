@@ -40,18 +40,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 namespace ORE1 { class ObjType; }
 
-class GameObjCollisionHandler : public CollisionHandler {
-	private:
-		GameObj* _gameobj;
-		
-	public:
-		GameObjCollisionHandler(GameObj* gameobj) : _gameobj(gameobj) {}
-		
-		const GameObj* get_gameobj() const { return _gameobj; }
-		bool should_contact(dGeomID other __attribute__ ((unused))) const { return true; }
-		void handle_collision(dGeomID other, const GameObj* other_gameobj, const dContactGeom* contacts, unsigned int contacts_len);
-};
-
 class GameObj : boost::noncopyable {
 	public:
 		GameObj(const ORE1::ObjType& obj, std::auto_ptr<OdeEntity> entity = Sim::gen_empty_body());
@@ -74,12 +62,8 @@ class GameObj : boost::noncopyable {
 		Vector vector_from_world(const Vector& v);
 	
 	protected:
+		OdeEntity& get_entity() { return *_entity; }
 		const OdeEntity& get_entity() const { return *_entity; }
-		dBodyID get_body() { return _entity->get_id(); }
-		dGeomID get_geom(const std::string& gname) { return _entity->get_geom(gname); }
-		void set_geom(const std::string& gname, dGeomID geom);
-		
-		void set_new_collision_handler(CollisionHandler* ch) { _coll_handler.reset(ch); }
 		
 		virtual void near_draw_impl() {}
 		virtual void far_draw_impl() { near_draw_impl(); }
