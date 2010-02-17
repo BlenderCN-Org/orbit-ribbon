@@ -61,6 +61,9 @@ const float RUNNING_MAX_Z = 0.4;
 // Radius of the sphere used to detect when feet are near a running surface
 const float RUNNING_SPHERE_RAD = 0.25;
 
+// When attached, how deep the running detection geom should stay embedded in the surface
+const float RUN_DETECT_TARGET_DEPTH = 0.05;
+
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 
 void AvatarGameObj::step_impl() {
@@ -130,7 +133,7 @@ void AvatarGameObj::step_impl() {
 	// Once we are entering or are in upright mode, do not assume player wants to leave it unless UprightStance bind is entirely off
 	if (chn->is_on() or (chn->is_partially_on() and !similar(_uprightness, 0.0))) {
 		_uprightness += UPRIGHTNESS_STEP_DIFF;
-	} else {
+	} else if (!_attached) {
 		_uprightness -= UPRIGHTNESS_STEP_DIFF;
 	}
 	if (_uprightness > 1.0) { _uprightness = 1.0; } else if (_uprightness < 0.0) { _uprightness = 0.0; }
@@ -143,22 +146,35 @@ void AvatarGameObj::step_impl() {
 	
 	// Check if we are contacting a surface in a way that allows attaching
 	RunCollisionTracker* rct = static_cast<RunCollisionTracker*>(get_entity().get_geom_ch("run_detect"));
+	_attached = false;
 	if (rct->has_collisions()) {
 		std::auto_ptr<std::vector<CollisionTracker::Collision> > colls = rct->get_collisions();
 		
 		// TODO Check if the other object is runnable/attachable
 		// TODO Shouldn't just assume that first contact of last collision is the best one to use
 		
-		Vector c = vector_from_world(Vector(
+		Vector c = Vector(
 			colls->back().contacts[0].normal[0],
 			colls->back().contacts[0].normal[1],
 			colls->back().contacts[0].normal[2]
-		));
+		);
+		Vector c_rel = vector_from_world(c);
 		float d = colls->back().contacts[0].depth;
-		if (c.y > 0 && std::fabs(c.x) < RUNNING_MAX_X && std::fabs(c.z) < RUNNING_MAX_Z) {
-			_coll_occurred = true;
-			// Keep our feet attached to this surface, and stay aligned to it
-			dBodyAddRelForce(body, 0.0, -500.0, 0.0);
+		float delta = d - RUN_DETECT_TARGET_DEPTH;
+		if (c_rel.y > 0 && std::fabs(c_rel.x) < RUNNING_MAX_X && std::fabs(c_rel.z) < RUNNING_MAX_Z) {
+			_run_coll_occurred = true;
+			_attached = true;
+			
+			// Keep us the right distance from the surface
+			Point p = get_pos();
+			dBodySetPosition(body, p.x + c.x*delta, p.y + c.y*delta, p.z + c.z*delta);
+			
+			// Keep us oriented perpindicularly to the surface without rotating about the y axis
+			// FIXME Translate body so that the contact point stays in the same spot through rotation
+			Vector body_x = vector_to_world(Vector(1, 0, 0)); // TODO Project this onto the plane defined by the c vector
+			dMatrix3 matr;
+			dRFrom2Axes(matr, body_x.x, body_x.y, body_x.z, c.x, c.y, c.z);
+			dBodySetRotation(body, matr);
 		}
 	}
 }
@@ -172,7 +188,7 @@ void AvatarGameObj::near_draw_impl() {
 		glDisable(GL_LIGHTING);
 		GLUquadric* q = gluNewQuadric();
 		
-		if (_coll_occurred) {
+		if (_run_coll_occurred) {
 			glColor4f(1.0, 0.0, 0.0, 0.6);
 		} else {
 			glColor4f(0.0, 1.0, 0.0, 0.6);
@@ -188,14 +204,16 @@ void AvatarGameObj::near_draw_impl() {
 		glEnable(GL_LIGHTING);
 	}
 	
-	if (_coll_occurred) {
-		_coll_occurred = false;
+	if (_run_coll_occurred) {
+		_run_coll_occurred = false;
 	}
 }
 
 AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 	GameObj(obj, Sim::gen_sphere_body(80, 0.5)), // TODO Load mass information from the ORE mission description
-	_anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run"))
+	_anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run")),
+	_run_coll_occurred(false),
+	_attached(false)
 {
 	// Set up a geom for detecting regular collisions
 	// TODO Load volume information from the ORE mission description

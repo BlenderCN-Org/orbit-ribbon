@@ -42,7 +42,8 @@ class AvatarGameObj : public GameObj {
 			bool should_contact(dGeomID other __attribute__ ((unused)) ) const { return false; }
 		};
 		
-		bool _coll_occurred;
+		bool _run_coll_occurred;
+		bool _attached;
 		
 	protected:
 		void step_impl();

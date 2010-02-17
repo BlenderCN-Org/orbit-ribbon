@@ -28,7 +28,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "geometry.h"
 
-const GLfloat near_to_delta = 0.0001;
+const float SIMILARITY_DELTA = 0.0001;
 
 GLfloat rev2rad(GLfloat ang) {
 	return 2.0*ang*M_PI;
@@ -55,7 +55,7 @@ GLfloat deg2rad(GLfloat ang) {
 }
 
 bool similar(float a, float b) {
-	return std::fabs(a - b) < 0.0001;
+	return std::fabs(a - b) < SIMILARITY_DELTA;
 }
 
 Point& Point::operator=(const Point& other) {
@@ -139,9 +139,9 @@ Point Point::operator-() const {
 
 bool Point::near_to(const Point& other) const {
 	return (
-		std::abs(x - other.x) < near_to_delta &&
-		std::abs(y - other.y) < near_to_delta &&
-		std::abs(z - other.z) < near_to_delta
+		similar(x, other.x) &&
+		similar(y, other.y) &&
+		similar(z, other.z)
 	);
 }
 
