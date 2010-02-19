@@ -36,6 +36,8 @@ GLfloat deg2rad(GLfloat ang);
 
 bool similar(float a, float b);
 
+float limit_abs(float x, float max);
+
 class Point {
 	public:
 		GLfloat x;

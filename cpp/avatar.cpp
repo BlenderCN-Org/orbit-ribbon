@@ -53,36 +53,43 @@ const float CROLL_COEF = 700.0;
 const float UPRIGHTNESS_ENTRY_TIME = 0.5;
 const float UPRIGHTNESS_STEP_DIFF = 1.0f/(UPRIGHTNESS_ENTRY_TIME*MAX_FPS);
 
-// Maximum absolute x (roll offset) and z (pitch offset) values in running_coll contact vector to begin running
-// The larger these numbers, the worse the player's approach to a running surface can be
-const float RUNNING_MAX_X = 0.4;
-const float RUNNING_MAX_Z = 0.4;
+// Maximum amount per second that each of these avatar-relative values can be changed for aligning with a running surface
+const float RUNNING_ADJ_RATE_X_ROT = 0.8; // Radians
+const float RUNNING_ADJ_RATE_Z_ROT = 0.8; // Radians
+const float RUNNING_ADJ_RATE_Y_POS = 0.2; // Meters
+const float RUNNING_ADJ_RATE_Y_LVEL = 5.0; // Meters per second
+const float RUNNING_ADJ_RATE_X_AVEL = 5.0; // Radians per second
+const float RUNNING_ADJ_RATE_Z_AVEL = 5.0; // Radians per second
+
+// If it would take longer than this number of seconds to fully adjust one of the above values, don't attach to the running surface
+const float RUNNING_MAX_ADJUST_TIME = 1.3;
+
+// If our uprightness is not at least at this value, do not run
+const float RUNNING_MIN_UPRIGHTNESS = 0.9;
 
 // Radius of the sphere used to detect when feet are near a running surface
 const float RUNNING_SPHERE_RAD = 0.25;
 
-// When attached, how deep the running detection geom should stay embedded in the surface
-const float RUN_DETECT_TARGET_DEPTH = 0.05;
-
-// Radius of the sphere used to ignore contact with the running surface around our feet
-const float RUNNING_NOCOLL_SPHERE_RAD = 1.0;
+// Radius of the sphere used to ignore contacts around our feet when we run
+const float RUNNING_NOCOLL_SPHERE_RAD = 0.35;
 
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 
 bool AvatarGameObj::AvatarContactHandler::handle_collision(float t __attribute__ ((unused)), dGeomID o __attribute__ ((unused)), const dContactGeom* c, unsigned int c_len)  {
-	const dReal* ptr = dGeomGetOffsetPosition(_avatar->get_entity().get_geom("run_detect"));
-	Point p(ptr[0], ptr[1], ptr[2]);
-	p = _avatar->get_rel_point_pos(p);
+	Point p = _avatar->get_rel_point_pos(Point(dGeomGetOffsetPosition(_avatar->get_entity().get_geom("run_detect"))));
 	
 	if (_avatar->_attached) {
 		for (unsigned int i = 0; i < c_len; ++i) {
 			Point x(c[i].pos[0], c[i].pos[1], c[i].pos[2]);
 			if (p.dist_to(x) > RUNNING_NOCOLL_SPHERE_RAD) {
+				Debug::debug_msg("C ACCEPT");
 				return true;
 			}
 		}
+		Debug::debug_msg("C REJECT");
 		return false;
 	} else {
+		Debug::debug_msg("C STD");
 		return true;
 	}
 }
@@ -170,51 +177,94 @@ void AvatarGameObj::step_impl() {
 	dGeomSetOffsetRotation(get_entity().get_geom("physical"), grot);
 	
 	// Check if we are contacting a surface in a way that allows attaching
-	RunCollisionTracker* rct = static_cast<RunCollisionTracker*>(get_entity().get_geom_ch("run_detect"));
 	_attached = false;
+	RunCollisionTracker* rct = static_cast<RunCollisionTracker*>(get_entity().get_geom_ch("run_detect"));
 	if (rct->has_collisions()) {
 		std::auto_ptr<std::vector<CollisionTracker::Collision> > colls = rct->get_collisions();
 		
+		// TODO Consider using two contact points, one for each foot, then averaging out the plane normal
 		// TODO Check if the other object is runnable/attachable
-		// TODO Shouldn't just assume that first contact of last collision is the best one to use
+		// TODO Shouldn't just assume that first contact of first collision is the best one to use
+		Vector sn = Vector(colls->back().contacts[0].normal); // Surface normal
+		Vector sn_rel = vector_from_world(sn);
+		float depth = colls->back().contacts[0].depth;
 		
-		Vector c = Vector(
-			colls->back().contacts[0].normal[0],
-			colls->back().contacts[0].normal[1],
-			colls->back().contacts[0].normal[2]
-		);
-		Vector c_rel = vector_from_world(c);
-		float d = colls->back().contacts[0].depth;
-		float delta = d - RUN_DETECT_TARGET_DEPTH;
-		if (c_rel.y > 0 && std::fabs(c_rel.x) < RUNNING_MAX_X && std::fabs(c_rel.z) < RUNNING_MAX_Z) {
-			_run_coll_occurred = true;
-			_attached = true;
+		// TODO Maybe allow a special "walking" or "crawling" attachment when relative velocity to surface is very low
+		// TODO Detach (or fail to attach) when relative velocity is non-trivial and too different from facing direction
+		// TODO Treat linear velocity projected onto XZ as another one of these limited variables, to simulate friction and limit max run speed
+		if (_uprightness >= RUNNING_MIN_UPRIGHTNESS) {
+			Vector lvel = Vector(dBodyGetLinearVel(body));
+			Vector lvel_rel = vector_from_world(lvel);
+			Vector avel = Vector(dBodyGetAngularVel(body));
+			Vector avel_rel = vector_from_world(avel);
 			
-			// Keep us the right distance from the surface
-			Point p = get_pos();
-			dBodySetPosition(body, p.x + c.x*delta, p.y + c.y*delta, p.z + c.z*delta);
+			// Offsets to various values that we'd like to apply for optimal running state
+			float xrot_delta = -std::asin(sn_rel.x);
+			float zrot_delta = -std::asin(sn_rel.z);
+			float ypos_delta = depth - RUNNING_SPHERE_RAD;
+			float ylvel_delta = -lvel_rel.y;
+			float xavel_delta = -avel_rel.x;
+			float zavel_delta = -avel_rel.z;
 			
-			// Keep us oriented perpindicularly to the surface without rotating about the y axis
-			// TODO Maybe should translate body so that the contact point stays in the same spot through rotation
-			Vector body_x = vector_to_world(Vector(1, 0, 0));
-			// Project our body_x onto the plane of contact; that way, we correctly rotate with the surface about our z axis
-			body_x -= body_x.project_onto(c);
-			dMatrix3 matr;
-			dRFrom2Axes(matr, body_x.x, body_x.y, body_x.z, c.x, c.y, c.z);
-			dBodySetRotation(body, matr);
+			Debug::debug_msg(std::string("D:") +
+				" XROT:" + boost::lexical_cast<std::string>(xrot_delta) +
+				" ZROT:" + boost::lexical_cast<std::string>(zrot_delta) +
+				" YPOS:" + boost::lexical_cast<std::string>(ypos_delta) +
+				" YLVL:" + boost::lexical_cast<std::string>(ylvel_delta) +
+				" XAVL:" + boost::lexical_cast<std::string>(xavel_delta) +
+				" ZAVL:" + boost::lexical_cast<std::string>(zavel_delta)
+			);
 			
-			// Kill our y-velocity; it tends to build up unchecked since it's not actually being stopped by a force
-			Point lin_vel = vector_from_world(dBodyGetLinearVel(body));
-			lin_vel.y = 0.0;
-			lin_vel = vector_to_world(lin_vel);
-			dBodySetLinearVel(body, lin_vel.x, lin_vel.y, lin_vel.z);
-			
-			// TODO: Simulate friction manually
-			// TODO: Consider using two contact points, one for each foot, then averaging out the plane normal
-			// TODO: Smooth transition between connected planes; as it is now, transitions are really jumpy
+			// If the difference between current state and ideal running state is not too severe, attach to surface
+			if (
+				std::fabs(xrot_delta) <= RUNNING_ADJ_RATE_X_ROT*RUNNING_MAX_ADJUST_TIME &&
+				std::fabs(zrot_delta) <= RUNNING_ADJ_RATE_Z_ROT*RUNNING_MAX_ADJUST_TIME &&
+				std::fabs(ypos_delta) <= RUNNING_ADJ_RATE_Y_POS*RUNNING_MAX_ADJUST_TIME &&
+				std::fabs(ylvel_delta) <= RUNNING_ADJ_RATE_Y_LVEL*RUNNING_MAX_ADJUST_TIME &&
+				std::fabs(xavel_delta) <= RUNNING_ADJ_RATE_X_AVEL*RUNNING_MAX_ADJUST_TIME &&
+				std::fabs(zavel_delta) <= RUNNING_ADJ_RATE_Z_AVEL*RUNNING_MAX_ADJUST_TIME
+			) {
+				_attached = true;
+				
+				// Okay, apply as much of each delta as we can
+				
+				// X and Z orientation delta
+				// TODO Maybe should translate body so that the contact point stays in the same spot through rotation
+				//body_x -= body_x.project_onto(c);
+				//dMatrix3 matr;
+				//dRFrom2Axes(matr, body_x.x, body_x.y, body_x.z, sn.x, sn.y, sn.z);
+				//dBodySetRotation(body, matr);
+				dQuaternion qrot;
+				dQuaternion r;
+				Vector rot_axis = vector_to_world(Vector(1, 0, 0));
+				dQFromAxisAndAngle(r, rot_axis.x, rot_axis.y, rot_axis.z, limit_abs(xrot_delta, RUNNING_ADJ_RATE_X_ROT/MAX_FPS));
+				dQMultiply0(qrot, r, dBodyGetQuaternion(body));
+				rot_axis = vector_to_world(Vector(0, 0, 1));
+				dQFromAxisAndAngle(r, rot_axis.x, rot_axis.y, rot_axis.z, limit_abs(zrot_delta, RUNNING_ADJ_RATE_Z_ROT/MAX_FPS));
+				dQMultiply0(qrot, r, qrot);
+				//dBodySetQuaternion(body, qrot);
+				
+				// Y position delta
+				//set_pos(get_pos() + vector_to_world(Vector(0, limit_abs(ypos_delta, RUNNING_ADJ_RATE_Y_POS/MAX_FPS), 0)));
+				
+				// Y linear velocity delta
+				lvel_rel.y += limit_abs(ylvel_delta, RUNNING_ADJ_RATE_Y_LVEL/MAX_FPS);
+				lvel = vector_to_world(lvel_rel);
+				//dBodySetLinearVel(body, lvel.x, lvel.y, lvel.z);
+				
+				// X and Z angular velocity delta
+				avel_rel.x += limit_abs(xavel_delta, RUNNING_ADJ_RATE_X_AVEL/MAX_FPS);
+				avel_rel.z += limit_abs(zavel_delta, RUNNING_ADJ_RATE_Z_AVEL/MAX_FPS);
+				avel = vector_to_world(avel_rel);
+				//dBodySetAngularVel(body, avel.x, avel.y, avel.z);
+			} else {
+				Debug::debug_msg("^ DELTA FAIL");
+			}
 		} else {
-			Debug::debug_msg("ATTACH FAILURE: " + c_rel.to_str());
+			Debug::debug_msg("^ UPRIGHTNESS FAIL");
 		}
+	} else {
+		Debug::debug_msg("^ RCT FAIL");
 	}
 }
 
@@ -227,7 +277,7 @@ void AvatarGameObj::near_draw_impl() {
 		glDisable(GL_LIGHTING);
 		GLUquadric* q = gluNewQuadric();
 		
-		if (_run_coll_occurred) {
+		if (_attached) {
 			glColor4f(1.0, 0.0, 0.0, 0.6);
 		} else {
 			glColor4f(0.0, 1.0, 0.0, 0.6);
@@ -242,16 +292,11 @@ void AvatarGameObj::near_draw_impl() {
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_LIGHTING);
 	}
-	
-	if (_run_coll_occurred) {
-		_run_coll_occurred = false;
-	}
 }
 
 AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 	GameObj(obj, Sim::gen_sphere_body(80, 0.5)), // TODO Load mass information from the ORE mission description
 	_anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run")),
-	_run_coll_occurred(false),
 	_attached(false)
 {
 	// Set up a geom for detecting regular collisions

@@ -26,3 +26,6 @@ Thinh's ideas:
 - Figure out why SDL won't restore the original screen resolution! (Grumble, mumble)
 - Why doesn't vsync work?
 - Allow video mode to be reinitialized without having to reinit the entire display module
+
+- Maybe when it is necessary to tilt about z axis while running, I should add some x linear force to simulate banking
+	Banking would actually occur, since one foot would be pushing sideways to adjust orientation

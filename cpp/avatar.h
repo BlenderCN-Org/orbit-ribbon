@@ -55,7 +55,6 @@ class AvatarGameObj : public GameObj {
 				bool should_contact(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) const;
 		};
 		
-		bool _run_coll_occurred;
 		bool _attached;
 		
 	protected:

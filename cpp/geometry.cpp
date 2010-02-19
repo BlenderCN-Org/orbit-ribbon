@@ -58,6 +58,16 @@ bool similar(float a, float b) {
 	return std::fabs(a - b) < SIMILARITY_DELTA;
 }
 
+float limit_abs(float x, float max) {
+	if (x > max) {
+		return max;
+	} else if (x < -max) {
+		return -max;
+	} else {
+		return x;
+	}
+}
+
 Point& Point::operator=(const Point& other) {
 	x = other.x;
 	y = other.y;
