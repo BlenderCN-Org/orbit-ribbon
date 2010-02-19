@@ -25,6 +25,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <string>
+#include <ode/ode.h>
 
 GLfloat rev2rad(GLfloat ang); // FIXME: In old version, this also converted cw to ccw. Make sure everything that needed that does it itself!
 GLfloat rad2rev(GLfloat ang);
@@ -41,6 +42,7 @@ class Point {
 		GLfloat y;
 		GLfloat z;
 		
+		Point(const dReal* s) : x(s[0]), y(s[1]), z(s[2]) {}
 		Point(GLfloat nx = 0.0, GLfloat ny = 0.0, GLfloat nz = 0.0) : x(nx), y(ny), z(nz) {}
 		Point(const Point& other) : x(other.x), y(other.y), z(other.z) {}
 		

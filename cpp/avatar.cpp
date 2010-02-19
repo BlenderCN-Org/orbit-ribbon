@@ -195,7 +195,7 @@ void AvatarGameObj::step_impl() {
 			dBodySetPosition(body, p.x + c.x*delta, p.y + c.y*delta, p.z + c.z*delta);
 			
 			// Keep us oriented perpindicularly to the surface without rotating about the y axis
-			// FIXME Translate body so that the contact point stays in the same spot through rotation
+			// TODO Maybe should translate body so that the contact point stays in the same spot through rotation
 			Vector body_x = vector_to_world(Vector(1, 0, 0));
 			// Project our body_x onto the plane of contact; that way, we correctly rotate with the surface about our z axis
 			body_x -= body_x.project_onto(c);
@@ -203,10 +203,17 @@ void AvatarGameObj::step_impl() {
 			dRFrom2Axes(matr, body_x.x, body_x.y, body_x.z, c.x, c.y, c.z);
 			dBodySetRotation(body, matr);
 			
-			// TODO: Damp out undesired accelerations; they build up since the body isn't actually being stopped by a force
+			// Kill our y-velocity; it tends to build up unchecked since it's not actually being stopped by a force
+			Point lin_vel = vector_from_world(dBodyGetLinearVel(body));
+			lin_vel.y = 0.0;
+			lin_vel = vector_to_world(lin_vel);
+			dBodySetLinearVel(body, lin_vel.x, lin_vel.y, lin_vel.z);
+			
 			// TODO: Simulate friction manually
 			// TODO: Consider using two contact points, one for each foot, then averaging out the plane normal
 			// TODO: Smooth transition between connected planes; as it is now, transitions are really jumpy
+		} else {
+			Debug::debug_msg("ATTACH FAILURE: " + c_rel.to_str());
 		}
 	}
 }
