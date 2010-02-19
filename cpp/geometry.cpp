@@ -161,11 +161,15 @@ GLfloat Point::ang_to(const Point& other) const {
 	return rad2rev(std::acos((dot_prod(other))/(mag()*other.mag())));
 }
 
-Point Point::to_length(GLfloat len) const {
+Point Point::to_length(float len) const {
 	GLfloat old_len = mag();
 	if (old_len != 0.0) {
 		return (*this) * (len/old_len);
 	} else {
 		return *this;
 	}
+}
+
+Point Point::project_onto(const Point& other) const {
+	return other*(this->dot_prod(other));
 }

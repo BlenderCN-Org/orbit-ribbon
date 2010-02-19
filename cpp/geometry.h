@@ -72,7 +72,8 @@ class Point {
 		GLfloat mag() const;
 		GLfloat dist_to(const Point& other) const;
 		GLfloat ang_to(const Point& other) const;
-		Point to_length(GLfloat len) const;
+		Point to_length(float len) const;
+		Point project_onto(const Point& other) const;
 		
 		std::string to_str() const;
 };
