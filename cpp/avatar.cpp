@@ -64,7 +64,32 @@ const float RUNNING_SPHERE_RAD = 0.25;
 // When attached, how deep the running detection geom should stay embedded in the surface
 const float RUN_DETECT_TARGET_DEPTH = 0.05;
 
+// Radius of the sphere used to ignore contact with the running surface around our feet
+const float RUNNING_NOCOLL_SPHERE_RAD = 1.0;
+
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
+
+bool AvatarGameObj::AvatarContactHandler::handle_collision(float t __attribute__ ((unused)), dGeomID o __attribute__ ((unused)), const dContactGeom* c, unsigned int c_len)  {
+	const dReal* ptr = dGeomGetOffsetPosition(_avatar->get_entity().get_geom("run_detect"));
+	Point p(ptr[0], ptr[1], ptr[2]);
+	p = _avatar->get_rel_point_pos(p);
+	
+	if (_avatar->_attached) {
+		for (unsigned int i = 0; i < c_len; ++i) {
+			Point x(c[i].pos[0], c[i].pos[1], c[i].pos[2]);
+			if (p.dist_to(x) > RUNNING_NOCOLL_SPHERE_RAD) {
+				return true;
+			}
+		}
+		return false;
+	} else {
+		return true;
+	}
+}
+
+bool AvatarGameObj::RunCollisionTracker::should_contact(float t __attribute__ ((unused)), dGeomID o __attribute__ ((unused)), const dContactGeom* c __attribute__ ((unused)), unsigned int c_len __attribute__ ((unused))) const {
+	return false;
+}
 
 void AvatarGameObj::step_impl() {
 	// TODO: Consider adding linear and angular velocity caps
@@ -179,7 +204,7 @@ void AvatarGameObj::step_impl() {
 			dBodySetRotation(body, matr);
 			
 			// TODO: Damp out undesired accelerations; they build up since the body isn't actually being stopped by a force
-			// TODO: Prevent contact between our feet and the object we are running on; simulate friction and such manually
+			// TODO: Simulate friction manually
 			// TODO: Consider using two contact points, one for each foot, then averaging out the plane normal
 			// TODO: Smooth transition between connected planes; as it is now, transitions are really jumpy
 		}
@@ -227,7 +252,7 @@ AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 	get_entity().set_geom(
 		"physical",
 		dCreateCCylinder(Sim::get_dyn_space(), 0.25, 2.0),
-		std::auto_ptr<CollisionHandler>(new SimpleContactHandler)
+		std::auto_ptr<CollisionHandler>(new AvatarContactHandler(this))
 	);
 	
 	// Set up a geom at our feet to detect when we can run on a surface

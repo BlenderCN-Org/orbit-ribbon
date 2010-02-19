@@ -39,6 +39,10 @@ dJointGroupID contact_group;
 
 const unsigned int MAXIMUM_CONTACT_POINTS = 16;
 
+bool SimpleContactHandler::handle_collision(float t __attribute__ ((unused)), dGeomID other __attribute__ ((unused)), const dContactGeom* contacts __attribute__ ((unused)), unsigned int contacts_len __attribute__ ((unused))) {
+	return true;
+}
+
 void CollisionTracker::Collision::init(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) {
 	step_time = t;
 	other = o;
@@ -55,9 +59,10 @@ CollisionTracker::CollisionTracker() {
 	_collisions.reset(new std::vector<CollisionTracker::Collision>);
 }
 
-void CollisionTracker::handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) {
+bool CollisionTracker::handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) {
 	_collisions->push_back(Collision());
 	_collisions->back().init(t, o, c, c_len);
+	return should_contact(t, o, c, c_len);
 }
 
 std::auto_ptr<std::vector<CollisionTracker::Collision> > CollisionTracker::get_collisions() {
@@ -98,9 +103,9 @@ void collision_callback(void* data, dGeomID o1, dGeomID o2) {
 		if (len > 0) {
 			CollisionHandler* o1h = static_cast<CollisionHandler*>(dGeomGetData(o1));
 			CollisionHandler* o2h = static_cast<CollisionHandler*>(dGeomGetData(o2));
-			o1h->handle_collision(step_time, o2, &(contacts[0]), len);
-			o2h->handle_collision(step_time, o1, &(contacts[0]), len);
-			if (o1h->should_contact(o2) && o2h->should_contact(o1)) {
+			bool contact1 = o1h->handle_collision(step_time, o2, &(contacts[0]), len);
+			bool contact2 = o2h->handle_collision(step_time, o1, &(contacts[0]), len);
+			if (contact1 && contact2) {
 				dContact contact;
 				contact.surface.mode = dContactApprox1 | dContactBounce;
 				contact.surface.bounce = 0.5;

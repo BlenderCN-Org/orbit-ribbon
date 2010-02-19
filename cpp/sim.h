@@ -38,16 +38,15 @@ class CollisionTracker;
 
 class CollisionHandler {
 	public:
-		virtual bool should_contact(dGeomID other) const =0;
-		virtual void handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) =0;
+		// Returns true if a contact joint should be created (a joint is actually created only if both geoms' handlers agree that one should be)
+		virtual bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) =0;
 };
 
 class SimpleContactHandler : public CollisionHandler {
 	public:
 		SimpleContactHandler() {}
 		
-		bool should_contact(dGeomID other __attribute__ ((unused))) const { return true; }
-		void handle_collision(float t __attribute__ ((unused)), dGeomID other __attribute__ ((unused)), const dContactGeom* contacts __attribute__ ((unused)), unsigned int contacts_len __attribute__ ((unused))) {}
+		bool handle_collision(float t, dGeomID other, const dContactGeom* contacts, unsigned int contacts_len);
 };
 
 class CollisionTracker : public CollisionHandler {
@@ -67,9 +66,11 @@ class CollisionTracker : public CollisionHandler {
 		};
 		
 		CollisionTracker();
-		virtual void handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
+		bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
 		bool has_collisions() const { return _collisions->size() > 0; }
 		std::auto_ptr<std::vector<Collision> > get_collisions();
+		
+		virtual bool should_contact(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) const =0;
 	
 	private:
 		std::auto_ptr<std::vector<Collision> > _collisions;

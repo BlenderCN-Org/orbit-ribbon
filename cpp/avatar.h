@@ -33,13 +33,26 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 class MeshAnimation;
 namespace ORE1 { class ObjType; }
 
+class AvatarGameObj;
 class AvatarGameObj : public GameObj {
 	private:
 		boost::shared_ptr<MeshAnimation> _anim_fly_to_prerun;
 		float _uprightness;
 		
+		class AvatarContactHandler;
+		friend class AvatarContactHandler;
+		class AvatarContactHandler : public SimpleContactHandler {
+			private:
+				AvatarGameObj* _avatar;
+				
+			public:
+				AvatarContactHandler(AvatarGameObj* avatar) : _avatar(avatar) {}
+				bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
+		};
+		
 		class RunCollisionTracker : public CollisionTracker {
-			bool should_contact(dGeomID other __attribute__ ((unused)) ) const { return false; }
+			public:
+				bool should_contact(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) const;
 		};
 		
 		bool _run_coll_occurred;
