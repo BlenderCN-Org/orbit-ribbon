@@ -39,7 +39,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "sim.h"
 
 // Maximum amount of Newtons per second applied by various maneuvers
-const float MAX_STRAFE = 5000.0;
+const float MAX_STRAFE = 15000.0;
 const float MAX_ACCEL = 15000.0;
 const float MAX_TURN = 1000.0;
 const float MAX_ROLL = 800.0;
@@ -67,9 +67,6 @@ const float RUNNING_MAX_ADJUST_TIME = 1.3;
 // If our uprightness is not at least at this value, do not run
 const float RUNNING_MIN_UPRIGHTNESS = 0.9;
 
-// Radius of the sphere used to detect when feet are near a running surface
-const float RUNNING_SPHERE_RAD = 0.25;
-
 // Radius of the sphere used to ignore contacts around our feet when we run
 const float RUNNING_NOCOLL_SPHERE_RAD = 0.35;
 
@@ -80,8 +77,7 @@ bool AvatarGameObj::AvatarContactHandler::handle_collision(float t __attribute__
 	
 	if (_avatar->_attached) {
 		for (unsigned int i = 0; i < c_len; ++i) {
-			Point x(c[i].pos[0], c[i].pos[1], c[i].pos[2]);
-			if (p.dist_to(x) > RUNNING_NOCOLL_SPHERE_RAD) {
+			if (p.dist_to(Point(c[i].pos)) > RUNNING_NOCOLL_SPHERE_RAD) {
 				Debug::debug_msg("C ACCEPT");
 				return true;
 			}
@@ -170,8 +166,7 @@ void AvatarGameObj::step_impl() {
 	}
 	if (_uprightness > 1.0) { _uprightness = 1.0; } else if (_uprightness < 0.0) { _uprightness = 0.0; }
 	
-	// Update the offsets of our geoms to match _stance
-	dGeomSetOffsetPosition(get_entity().get_geom("run_detect"), 0, std::sin(-_uprightness*M_PI_2)*1.10, 0); // FIXME Figure out avatar height dynamically
+	// Update the orientation of our physical geom to match _uprightness
 	dMatrix3 grot;
 	dRFromAxisAndAngle(grot, 1, 0, 0, _uprightness*M_PI_2);
 	dGeomSetOffsetRotation(get_entity().get_geom("physical"), grot);
@@ -201,7 +196,7 @@ void AvatarGameObj::step_impl() {
 			// Offsets to various values that we'd like to apply for optimal running state
 			float xrot_delta = -std::asin(sn_rel.x);
 			float zrot_delta = -std::asin(sn_rel.z);
-			float ypos_delta = depth - RUNNING_SPHERE_RAD;
+			float ypos_delta = depth - RUNNING_ADJ_RATE_Y_POS * RUNNING_MAX_ADJUST_TIME;
 			float ylvel_delta = -lvel_rel.y;
 			float xavel_delta = -avel_rel.x;
 			float zavel_delta = -avel_rel.z;
@@ -257,14 +252,8 @@ void AvatarGameObj::step_impl() {
 				avel_rel.z += limit_abs(zavel_delta, RUNNING_ADJ_RATE_Z_AVEL/MAX_FPS);
 				avel = vector_to_world(avel_rel);
 				//dBodySetAngularVel(body, avel.x, avel.y, avel.z);
-			} else {
-				Debug::debug_msg("^ DELTA FAIL");
 			}
-		} else {
-			Debug::debug_msg("^ UPRIGHTNESS FAIL");
 		}
-	} else {
-		Debug::debug_msg("^ RCT FAIL");
 	}
 }
 
@@ -277,16 +266,16 @@ void AvatarGameObj::near_draw_impl() {
 		glDisable(GL_LIGHTING);
 		GLUquadric* q = gluNewQuadric();
 		
-		if (_attached) {
-			glColor4f(1.0, 0.0, 0.0, 0.6);
-		} else {
-			glColor4f(0.0, 1.0, 0.0, 0.6);
+		if (_uprightness >= RUNNING_MIN_UPRIGHTNESS) { 
+			if (_attached) {
+				glColor4f(1.0, 0.0, 0.0, 0.6);
+			} else {
+				glColor4f(0.0, 1.0, 0.0, 0.6);
+			}
+			GLOOPushedMatrix pm;
+			glTranslatef(0, 0, -_height/2 - (RUNNING_ADJ_RATE_Y_POS*RUNNING_MAX_ADJUST_TIME));
+			gluCylinder(q, 0.05, 0.05, (RUNNING_ADJ_RATE_Y_POS * RUNNING_MAX_ADJUST_TIME * 2), 10, 10);
 		}
-		GLOOPushedMatrix pm;
-		glRotatef(_uprightness*90, 1, 0, 0);
-		const dReal* p = dGeomGetOffsetPosition(get_entity().get_geom("run_detect"));
-		glTranslatef(p[0], p[1], p[2]);
-		gluSphere(q, RUNNING_SPHERE_RAD, 20, 10);
 		
 		gluDeleteQuadric(q);
 		glEnable(GL_TEXTURE_2D);
@@ -299,20 +288,27 @@ AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 	_anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run")),
 	_attached(false)
 {
-	// Set up a geom for detecting regular collisions
 	// TODO Load volume information from the ORE mission description
+	_height = 2.25;
+	_coll_rad = 0.25;
+	
+	// Set up a geom for detecting regular collisions
 	get_entity().set_geom(
 		"physical",
-		dCreateCCylinder(Sim::get_dyn_space(), 0.25, 2.0),
+		dCreateCapsule(Sim::get_dyn_space(), _coll_rad, _height - 2*_coll_rad),
 		std::auto_ptr<CollisionHandler>(new AvatarContactHandler(this))
 	);
 	
 	// Set up a geom at our feet to detect when we can run on a surface
 	get_entity().set_geom(
 		"run_detect",
-		dCreateSphere(Sim::get_dyn_space(), RUNNING_SPHERE_RAD),
+		dCreateRay(Sim::get_dyn_space(), RUNNING_ADJ_RATE_Y_POS * RUNNING_MAX_ADJUST_TIME * 2),
 		std::auto_ptr<CollisionHandler>(new RunCollisionTracker)
 	);
+	dQuaternion rdq;
+	dQFromAxisAndAngle(rdq, 1, 0, 0, M_PI_2);
+	dGeomSetOffsetQuaternion(get_entity().get_geom("run_detect"), rdq);
+	dGeomSetOffsetPosition(get_entity().get_geom("run_detect"), 0, -_height/2 + (RUNNING_ADJ_RATE_Y_POS*RUNNING_MAX_ADJUST_TIME), 0);
 	
 	// TODO Maybe some missions start off in upright mode?
 	_uprightness = 0.0;

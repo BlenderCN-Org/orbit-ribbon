@@ -31,7 +31,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gameobj.h"
 
 // Camera positioning relative to avatar's reference frame
-const Vector CAMERA_POS_OFFSET(0.0, 1.1, -6.0);
+const Vector CAMERA_POS_OFFSET(0.0, 1.1, -7.0);
 const Vector CAMERA_TGT_OFFSET(0.0, 1.1, 0.0);
 const Vector CAMERA_UP_VECTOR(0.0, 1.0, 0.0);
 

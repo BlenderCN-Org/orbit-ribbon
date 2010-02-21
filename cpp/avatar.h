@@ -55,6 +55,8 @@ class AvatarGameObj : public GameObj {
 				bool should_contact(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) const;
 		};
 		
+		float _height; // Distance from top of head to bottom of feet
+		float _coll_rad; // Radius of the collision capsule
 		bool _attached;
 		
 	protected:
