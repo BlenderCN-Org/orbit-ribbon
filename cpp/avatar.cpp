@@ -54,8 +54,8 @@ const float UPRIGHTNESS_ENTRY_TIME = 0.5;
 const float UPRIGHTNESS_STEP_DIFF = 1.0f/(UPRIGHTNESS_ENTRY_TIME*MAX_FPS);
 
 // Maximum amount per second that each of these avatar-relative values can be changed for aligning with a running surface
-const float RUNNING_ADJ_RATE_X_ROT = 0.8; // Radians
-const float RUNNING_ADJ_RATE_Z_ROT = 0.8; // Radians
+const float RUNNING_ADJ_RATE_X_ROT = 0.3; // Radians
+const float RUNNING_ADJ_RATE_Z_ROT = 0.3; // Radians
 const float RUNNING_ADJ_RATE_Y_POS = 0.2; // Meters
 const float RUNNING_ADJ_RATE_Y_LVEL = 5.0; // Meters per second
 const float RUNNING_ADJ_RATE_X_AVEL = 5.0; // Radians per second
@@ -194,13 +194,14 @@ void AvatarGameObj::step_impl() {
 			Vector avel_rel = vector_from_world(avel);
 			
 			// Offsets to various values that we'd like to apply for optimal running state
-			float xrot_delta = -std::asin(sn_rel.x);
-			float zrot_delta = -std::asin(sn_rel.z);
-			float ypos_delta = depth - RUNNING_ADJ_RATE_Y_POS * RUNNING_MAX_ADJUST_TIME;
+			float xrot_delta = -std::asin(sn_rel.z); // Rotate about x axis to reduce z to 0
+			float zrot_delta = -std::asin(sn_rel.x); // Rotate about z axis to reduce x to 0
+			float ypos_delta = -depth + RUNNING_ADJ_RATE_Y_POS * RUNNING_MAX_ADJUST_TIME;
 			float ylvel_delta = -lvel_rel.y;
 			float xavel_delta = -avel_rel.x;
 			float zavel_delta = -avel_rel.z;
 			
+			/*
 			Debug::debug_msg(std::string("D:") +
 				" XROT:" + boost::lexical_cast<std::string>(xrot_delta) +
 				" ZROT:" + boost::lexical_cast<std::string>(zrot_delta) +
@@ -209,8 +210,9 @@ void AvatarGameObj::step_impl() {
 				" XAVL:" + boost::lexical_cast<std::string>(xavel_delta) +
 				" ZAVL:" + boost::lexical_cast<std::string>(zavel_delta)
 			);
+			*/
 			
-			// If the difference between current state and ideal running state is not too severe, attach to surface
+			// If the difference between current and ideal state is not too severe, attach to surface
 			if (
 				std::fabs(xrot_delta) <= RUNNING_ADJ_RATE_X_ROT*RUNNING_MAX_ADJUST_TIME &&
 				std::fabs(zrot_delta) <= RUNNING_ADJ_RATE_Z_ROT*RUNNING_MAX_ADJUST_TIME &&
@@ -225,33 +227,27 @@ void AvatarGameObj::step_impl() {
 				
 				// X and Z orientation delta
 				// TODO Maybe should translate body so that the contact point stays in the same spot through rotation
-				//body_x -= body_x.project_onto(c);
-				//dMatrix3 matr;
-				//dRFrom2Axes(matr, body_x.x, body_x.y, body_x.z, sn.x, sn.y, sn.z);
-				//dBodySetRotation(body, matr);
-				dQuaternion qrot;
-				dQuaternion r;
-				Vector rot_axis = vector_to_world(Vector(1, 0, 0));
-				dQFromAxisAndAngle(r, rot_axis.x, rot_axis.y, rot_axis.z, limit_abs(xrot_delta, RUNNING_ADJ_RATE_X_ROT/MAX_FPS));
-				dQMultiply0(qrot, r, dBodyGetQuaternion(body));
-				rot_axis = vector_to_world(Vector(0, 0, 1));
-				dQFromAxisAndAngle(r, rot_axis.x, rot_axis.y, rot_axis.z, limit_abs(zrot_delta, RUNNING_ADJ_RATE_Z_ROT/MAX_FPS));
-				dQMultiply0(qrot, r, qrot);
-				//dBodySetQuaternion(body, qrot);
+				float a = limit_abs(zrot_delta, RUNNING_ADJ_RATE_Z_ROT/MAX_FPS);
+				Vector body_x(vector_to_world(Vector(cos(a), sin(a), 0)));
+				a = limit_abs(-xrot_delta, RUNNING_ADJ_RATE_X_ROT/MAX_FPS);
+				Vector body_y(vector_to_world(Vector(0, cos(a), sin(a))));
+				dMatrix3 matr;
+				dRFrom2Axes(matr, body_x.x, body_x.y, body_x.z, body_y.x, body_y.y, body_y.z);
+				dBodySetRotation(body, matr);
 				
 				// Y position delta
-				//set_pos(get_pos() + vector_to_world(Vector(0, limit_abs(ypos_delta, RUNNING_ADJ_RATE_Y_POS/MAX_FPS), 0)));
+				set_pos(get_pos() + sn*limit_abs(ypos_delta, RUNNING_ADJ_RATE_Y_POS/MAX_FPS));
 				
 				// Y linear velocity delta
 				lvel_rel.y += limit_abs(ylvel_delta, RUNNING_ADJ_RATE_Y_LVEL/MAX_FPS);
 				lvel = vector_to_world(lvel_rel);
-				//dBodySetLinearVel(body, lvel.x, lvel.y, lvel.z);
+				dBodySetLinearVel(body, lvel.x, lvel.y, lvel.z);
 				
 				// X and Z angular velocity delta
 				avel_rel.x += limit_abs(xavel_delta, RUNNING_ADJ_RATE_X_AVEL/MAX_FPS);
 				avel_rel.z += limit_abs(zavel_delta, RUNNING_ADJ_RATE_Z_AVEL/MAX_FPS);
 				avel = vector_to_world(avel_rel);
-				//dBodySetAngularVel(body, avel.x, avel.y, avel.z);
+				dBodySetAngularVel(body, avel.x, avel.y, avel.z);
 			}
 		}
 	}
