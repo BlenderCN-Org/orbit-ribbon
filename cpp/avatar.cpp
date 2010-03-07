@@ -49,26 +49,24 @@ const float MAX_ROLL = 800.0;
 const float CTURN_COEF = 700.0;
 const float CROLL_COEF = 700.0;
 
-// How many seconds it takes to move between 0.0 and 1.0 uprightness, and therefore how much _uprightness change each step
+// How many seconds it takes to move between 0.0 and 1.0 uprightness, and therefore how much _uprightness can change each step
 const float UPRIGHTNESS_ENTRY_TIME = 0.5;
 const float UPRIGHTNESS_STEP_DIFF = 1.0f/(UPRIGHTNESS_ENTRY_TIME*MAX_FPS);
 
-// Maximum amount per second that each of these avatar-relative values can be changed for aligning with a running surface
-const float RUNNING_ADJ_RATE_X_ROT = 0.3; // Radians
-const float RUNNING_ADJ_RATE_Z_ROT = 0.3; // Radians
-const float RUNNING_ADJ_RATE_Y_POS = 0.2; // Meters
-const float RUNNING_ADJ_RATE_Y_LVEL = 5.0; // Meters per second
-const float RUNNING_ADJ_RATE_X_AVEL = 5.0; // Radians per second
-const float RUNNING_ADJ_RATE_Z_AVEL = 5.0; // Radians per second
-
-// If it would take longer than this number of seconds to fully adjust one of the above values, don't attach to the running surface
-const float RUNNING_MAX_ADJUST_TIME = 1.3;
+// Maximum amount per second that each of these avatar-relative values can be changed for
+// aligning with a running surface, and maximum delta for attachment
+const float RUNNING_ADJ_RATE_X_ROT = 0.3;   const float RUNNING_MAX_DELTA_X_ROT = 0.8; // Radians
+const float RUNNING_ADJ_RATE_Z_ROT = 0.3;   const float RUNNING_MAX_DELTA_Z_ROT = 0.6; // Radians
+const float RUNNING_ADJ_RATE_Y_POS = 0.2;   const float RUNNING_MAX_DELTA_Y_POS = 0.4;  // Meters
+const float RUNNING_ADJ_RATE_Y_LVEL = 5.0;  const float RUNNING_MAX_DELTA_Y_LVEL = 7.0; // Meters per second
+const float RUNNING_ADJ_RATE_X_AVEL = 5.0;  const float RUNNING_MAX_DELTA_X_AVEL = 7.0; // Radians per second
+const float RUNNING_ADJ_RATE_Z_AVEL = 5.0;  const float RUNNING_MAX_DELTA_Z_AVEL = 7.0; // Radians per second
 
 // If our uprightness is not at least at this value, do not run
 const float RUNNING_MIN_UPRIGHTNESS = 0.9;
 
 // Radius of the sphere used to ignore contacts around our feet when we run
-const float RUNNING_NOCOLL_SPHERE_RAD = 0.35;
+const float RUNNING_NOCOLL_SPHERE_RAD = RUNNING_MAX_DELTA_Y_POS * 1.2;
 
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 
@@ -196,7 +194,7 @@ void AvatarGameObj::step_impl() {
 			// Offsets to various values that we'd like to apply for optimal running state
 			float xrot_delta = -std::asin(sn_rel.z); // Rotate about x axis to reduce z to 0
 			float zrot_delta = -std::asin(sn_rel.x); // Rotate about z axis to reduce x to 0
-			float ypos_delta = -depth + RUNNING_ADJ_RATE_Y_POS * RUNNING_MAX_ADJUST_TIME;
+			float ypos_delta = -depth + RUNNING_MAX_DELTA_Y_POS;
 			float ylvel_delta = -lvel_rel.y;
 			float xavel_delta = -avel_rel.x;
 			float zavel_delta = -avel_rel.z;
@@ -214,12 +212,12 @@ void AvatarGameObj::step_impl() {
 			
 			// If the difference between current and ideal state is not too severe, attach to surface
 			if (
-				std::fabs(xrot_delta) <= RUNNING_ADJ_RATE_X_ROT*RUNNING_MAX_ADJUST_TIME &&
-				std::fabs(zrot_delta) <= RUNNING_ADJ_RATE_Z_ROT*RUNNING_MAX_ADJUST_TIME &&
-				std::fabs(ypos_delta) <= RUNNING_ADJ_RATE_Y_POS*RUNNING_MAX_ADJUST_TIME &&
-				std::fabs(ylvel_delta) <= RUNNING_ADJ_RATE_Y_LVEL*RUNNING_MAX_ADJUST_TIME &&
-				std::fabs(xavel_delta) <= RUNNING_ADJ_RATE_X_AVEL*RUNNING_MAX_ADJUST_TIME &&
-				std::fabs(zavel_delta) <= RUNNING_ADJ_RATE_Z_AVEL*RUNNING_MAX_ADJUST_TIME
+				std::fabs(xrot_delta) <= RUNNING_MAX_DELTA_X_ROT &&
+				std::fabs(zrot_delta) <= RUNNING_MAX_DELTA_Z_ROT &&
+				std::fabs(ypos_delta) <= RUNNING_MAX_DELTA_Y_POS &&
+				std::fabs(ylvel_delta) <= RUNNING_MAX_DELTA_Y_LVEL &&
+				std::fabs(xavel_delta) <= RUNNING_MAX_DELTA_X_AVEL &&
+				std::fabs(zavel_delta) <= RUNNING_MAX_DELTA_Z_AVEL
 			) {
 				_attached = true;
 				
@@ -269,8 +267,8 @@ void AvatarGameObj::near_draw_impl() {
 				glColor4f(0.0, 1.0, 0.0, 0.6);
 			}
 			GLOOPushedMatrix pm;
-			glTranslatef(0, 0, -_height/2 - (RUNNING_ADJ_RATE_Y_POS*RUNNING_MAX_ADJUST_TIME));
-			gluCylinder(q, 0.05, 0.05, (RUNNING_ADJ_RATE_Y_POS * RUNNING_MAX_ADJUST_TIME * 2), 10, 10);
+			glTranslatef(0, 0, -_height/2 - RUNNING_MAX_DELTA_Y_POS);
+			gluCylinder(q, 0.05, 0.05, RUNNING_MAX_DELTA_Y_POS*2, 10, 10);
 		}
 		
 		gluDeleteQuadric(q);
@@ -298,13 +296,13 @@ AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 	// Set up a geom at our feet to detect when we can run on a surface
 	get_entity().set_geom(
 		"run_detect",
-		dCreateRay(Sim::get_dyn_space(), RUNNING_ADJ_RATE_Y_POS * RUNNING_MAX_ADJUST_TIME * 2),
+		dCreateRay(Sim::get_dyn_space(), RUNNING_MAX_DELTA_Y_POS*2),
 		std::auto_ptr<CollisionHandler>(new RunCollisionTracker)
 	);
 	dQuaternion rdq;
 	dQFromAxisAndAngle(rdq, 1, 0, 0, M_PI_2);
 	dGeomSetOffsetQuaternion(get_entity().get_geom("run_detect"), rdq);
-	dGeomSetOffsetPosition(get_entity().get_geom("run_detect"), 0, -_height/2 + (RUNNING_ADJ_RATE_Y_POS*RUNNING_MAX_ADJUST_TIME), 0);
+	dGeomSetOffsetPosition(get_entity().get_geom("run_detect"), 0, -_height/2 + RUNNING_MAX_DELTA_Y_POS, 0);
 	
 	// TODO Maybe some missions start off in upright mode?
 	_uprightness = 0.0;
