@@ -55,9 +55,9 @@ const float UPRIGHTNESS_STEP_DIFF = 1.0f/(UPRIGHTNESS_ENTRY_TIME*MAX_FPS);
 
 // Maximum amount per second that each of these avatar-relative values can be changed for
 // aligning with a running surface, and maximum delta for attachment
-const float RUNNING_ADJ_RATE_X_ROT = 0.3;   const float RUNNING_MAX_DELTA_X_ROT = 0.8; // Radians
+const float RUNNING_ADJ_RATE_X_ROT = 0.5;   const float RUNNING_MAX_DELTA_X_ROT = 0.8; // Radians
 const float RUNNING_ADJ_RATE_Z_ROT = 0.3;   const float RUNNING_MAX_DELTA_Z_ROT = 0.6; // Radians
-const float RUNNING_ADJ_RATE_Y_POS = 0.2;   const float RUNNING_MAX_DELTA_Y_POS = 0.4;  // Meters
+const float RUNNING_ADJ_RATE_Y_POS = 8.0;   const float RUNNING_MAX_DELTA_Y_POS = 0.4;  // Meters
 const float RUNNING_ADJ_RATE_Y_LVEL = 5.0;  const float RUNNING_MAX_DELTA_Y_LVEL = 7.0; // Meters per second
 const float RUNNING_ADJ_RATE_X_AVEL = 5.0;  const float RUNNING_MAX_DELTA_X_AVEL = 7.0; // Radians per second
 const float RUNNING_ADJ_RATE_Z_AVEL = 5.0;  const float RUNNING_MAX_DELTA_Z_AVEL = 7.0; // Radians per second
