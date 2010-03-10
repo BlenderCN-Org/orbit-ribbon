@@ -87,9 +87,9 @@ class AvatarGameObj : public GameObj {
 		float get_last_coll_xrot() { return _xrot_delta; }
 		float get_last_coll_zrot() { return _zrot_delta; }
 		float get_last_coll_ypos() { return _ypos_delta; }
-		float get_last_coll_xavl() { return _xavel_delta; }
-		float get_last_coll_zavl() { return _zavel_delta; }
-		float get_last_coll_ylvl() { return _ylvel_delta; }
+		float get_last_coll_xavel() { return _xavel_delta; }
+		float get_last_coll_zavel() { return _zavel_delta; }
+		float get_last_coll_ylvel() { return _ylvel_delta; }
 		bool get_attached() { return _attached; }
 };
 

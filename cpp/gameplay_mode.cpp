@@ -107,14 +107,14 @@ void GameplayMode::draw_2d() {
 		Gui::draw_box(p, PHYS_DEBUG_BOX_SIZE + GUI_BOX_BORDER*2);
 		p += GUI_BOX_BORDER;
 		
-		static const char* labels[6] = { "XROT", "ZROT", "YPOS", "XAVL", "ZAVL", "YLVL"};
+		static const char* labels[6] = { "XROT", "ZROT", "YPOS", "XAVEL", "ZAVEL", "YLVEL"};
 		float cur_vals[6] = {
 			av->get_last_coll_xrot(),
 			av->get_last_coll_zrot(),
 			av->get_last_coll_ypos(),
-			av->get_last_coll_xavl(),
-			av->get_last_coll_zavl(),
-			av->get_last_coll_ylvl()
+			av->get_last_coll_xavel(),
+			av->get_last_coll_zavel(),
+			av->get_last_coll_ylvel()
 		};
 		float max_vals[6] = {
 			RUNNING_MAX_DELTA_X_ROT,
