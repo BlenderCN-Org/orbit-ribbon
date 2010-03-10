@@ -23,6 +23,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <boost/format.hpp>
+#include <cmath>
 
 #include "avatar.h"
 #include "background.h"
@@ -41,11 +43,11 @@ const Vector CAMERA_POS_OFFSET(0.0, 1.1, -7.0);
 const Vector CAMERA_TGT_OFFSET(0.0, 1.1, 0.0);
 const Vector CAMERA_UP_VECTOR(0.0, 1.0, 0.0);
 
-// Where to draw the center of the physics debugging info box relative to the center of the screen
+// Where and how to draw the physics debugging info box
 const float PHYS_DEBUG_BOX_Y = -100;
-
-// How big the physics debugging box should be
-const Size PHYS_DEBUG_BOX_SIZE(200, 80);
+const Size PHYS_DEBUG_BOX_SIZE(400, 80);
+const std::string PHYS_DEBUG_BOX_NUMFMT("%+5.3f");
+const float PHYS_DEBUG_BOX_FONTSIZE = 15;
 
 GameplayMode::GameplayMode() {
 	// Locate the avatar object
@@ -62,13 +64,16 @@ GameplayMode::GameplayMode() {
 	}
 }
 
-void GameplayMode::pre_3d() {
+AvatarGameObj* GameplayMode::find_avatar() {
 	GOMap::iterator i = Globals::gameobjs.find(_avatar_key);
 	if (i == Globals::gameobjs.end()) {
 		throw GameException(std::string("GameplayMode: LIBAvatar GameObj named ") + _avatar_key + " has disappeared unexpectedly");
 	}
-	
-	boost::shared_ptr<GameObj>& avatar = i->second;
+	return static_cast<AvatarGameObj*>(&(*(i->second)));
+}
+
+void GameplayMode::pre_3d() {
+	AvatarGameObj* avatar = find_avatar();
 	Point cam_pos = avatar->get_rel_point_pos(CAMERA_POS_OFFSET);
 	Point cam_tgt = avatar->get_rel_point_pos(CAMERA_TGT_OFFSET);
 	Vector up_vec = avatar->vector_to_world(CAMERA_UP_VECTOR);
@@ -92,11 +97,45 @@ void GameplayMode::draw_3d_near() {
 }
 
 void GameplayMode::draw_2d() {
+	AvatarGameObj* av = find_avatar();
+	
 	if (Saving::get().config().debugPhysics().get()) {
 		Point p(
 			Display::get_screen_width()/2 - PHYS_DEBUG_BOX_SIZE.x/2,
 			Display::get_screen_height()/2 - PHYS_DEBUG_BOX_SIZE.y/2 + PHYS_DEBUG_BOX_Y
 		);
-		Gui::draw_box(p, PHYS_DEBUG_BOX_SIZE);
+		Gui::draw_box(p, PHYS_DEBUG_BOX_SIZE + GUI_BOX_BORDER*2);
+		p += GUI_BOX_BORDER;
+		
+		static const char* labels[6] = { "XROT", "ZROT", "YPOS", "XAVL", "ZAVL", "YLVL"};
+		float cur_vals[6] = {
+			av->get_last_coll_xrot(),
+			av->get_last_coll_zrot(),
+			av->get_last_coll_ypos(),
+			av->get_last_coll_xavl(),
+			av->get_last_coll_zavl(),
+			av->get_last_coll_ylvl()
+		};
+		float max_vals[6] = {
+			RUNNING_MAX_DELTA_X_ROT,
+			RUNNING_MAX_DELTA_Z_ROT,
+			RUNNING_MAX_DELTA_Y_POS,
+			RUNNING_MAX_DELTA_Y_LVEL,
+			RUNNING_MAX_DELTA_X_AVEL,
+			RUNNING_MAX_DELTA_Z_AVEL
+		};
+		
+		
+		boost::format f(PHYS_DEBUG_BOX_NUMFMT);
+		for (int i = 0; i < 6; ++i) {
+			float x = (PHYS_DEBUG_BOX_SIZE.x/6) * i;
+			glColor3f(1.0, 1.0, 1.0);
+			Globals::sys_font->draw(p + Vector(x, 0), PHYS_DEBUG_BOX_FONTSIZE, labels[i]);
+			Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*2), PHYS_DEBUG_BOX_FONTSIZE, (f % max_vals[i]).str());
+			
+			float r = std::fabs(cur_vals[i])/(max_vals[i]*1.2);
+			glColor3f(1.0, 1.0 - r, 1.0 - r);
+			Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE), PHYS_DEBUG_BOX_FONTSIZE, (f % cur_vals[i]).str());
+		}
 	}
 }

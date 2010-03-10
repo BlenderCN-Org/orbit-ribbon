@@ -25,9 +25,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "mode.h"
 
+class AvatarGameObj;
+
 class GameplayMode : public Mode {
 	private:
 		std::string _avatar_key;
+		
+		AvatarGameObj* find_avatar();
 		
 	public:
 		GameplayMode();

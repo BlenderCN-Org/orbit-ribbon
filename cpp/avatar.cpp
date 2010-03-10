@@ -35,7 +35,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "input.h"
 #include "mesh.h"
-#include "saving.h"
 #include "sim.h"
 
 // Maximum amount of Newtons per second applied by various maneuvers
@@ -52,15 +51,6 @@ const float CROLL_COEF = 700.0;
 // How many seconds it takes to move between 0.0 and 1.0 uprightness, and therefore how much _uprightness can change each step
 const float UPRIGHTNESS_ENTRY_TIME = 0.5;
 const float UPRIGHTNESS_STEP_DIFF = 1.0f/(UPRIGHTNESS_ENTRY_TIME*MAX_FPS);
-
-// Maximum amount per second that each of these avatar-relative values can be changed for
-// aligning with a running surface, and maximum delta for attachment
-const float RUNNING_ADJ_RATE_X_ROT = 0.5;   const float RUNNING_MAX_DELTA_X_ROT = 0.8; // Radians
-const float RUNNING_ADJ_RATE_Z_ROT = 0.3;   const float RUNNING_MAX_DELTA_Z_ROT = 0.6; // Radians
-const float RUNNING_ADJ_RATE_Y_POS = 8.0;   const float RUNNING_MAX_DELTA_Y_POS = 0.4;  // Meters
-const float RUNNING_ADJ_RATE_Y_LVEL = 5.0;  const float RUNNING_MAX_DELTA_Y_LVEL = 7.0; // Meters per second
-const float RUNNING_ADJ_RATE_X_AVEL = 5.0;  const float RUNNING_MAX_DELTA_X_AVEL = 7.0; // Radians per second
-const float RUNNING_ADJ_RATE_Z_AVEL = 5.0;  const float RUNNING_MAX_DELTA_Z_AVEL = 7.0; // Radians per second
 
 // If our uprightness is not at least at this value, do not run
 const float RUNNING_MIN_UPRIGHTNESS = 0.9;
@@ -192,32 +182,21 @@ void AvatarGameObj::step_impl() {
 			Vector avel_rel = vector_from_world(avel);
 			
 			// Offsets to various values that we'd like to apply for optimal running state
-			float xrot_delta = -std::asin(sn_rel.z); // Rotate about x axis to reduce z to 0
-			float zrot_delta = -std::asin(sn_rel.x); // Rotate about z axis to reduce x to 0
-			float ypos_delta = -depth + RUNNING_MAX_DELTA_Y_POS;
-			float ylvel_delta = -lvel_rel.y;
-			float xavel_delta = -avel_rel.x;
-			float zavel_delta = -avel_rel.z;
-			
-			/*
-			Debug::debug_msg(std::string("D:") +
-				" XROT:" + boost::lexical_cast<std::string>(xrot_delta) +
-				" ZROT:" + boost::lexical_cast<std::string>(zrot_delta) +
-				" YPOS:" + boost::lexical_cast<std::string>(ypos_delta) +
-				" YLVL:" + boost::lexical_cast<std::string>(ylvel_delta) +
-				" XAVL:" + boost::lexical_cast<std::string>(xavel_delta) +
-				" ZAVL:" + boost::lexical_cast<std::string>(zavel_delta)
-			);
-			*/
+			_xrot_delta = -std::asin(sn_rel.z); // Rotate about x axis to reduce z to 0
+			_zrot_delta = -std::asin(sn_rel.x); // Rotate about z axis to reduce x to 0
+			_ypos_delta = -depth + RUNNING_MAX_DELTA_Y_POS;
+			_ylvel_delta = -lvel_rel.y;
+			_xavel_delta = -avel_rel.x;
+			_zavel_delta = -avel_rel.z;
 			
 			// If the difference between current and ideal state is not too severe, attach to surface
 			if (
-				std::fabs(xrot_delta) <= RUNNING_MAX_DELTA_X_ROT &&
-				std::fabs(zrot_delta) <= RUNNING_MAX_DELTA_Z_ROT &&
-				std::fabs(ypos_delta) <= RUNNING_MAX_DELTA_Y_POS &&
-				std::fabs(ylvel_delta) <= RUNNING_MAX_DELTA_Y_LVEL &&
-				std::fabs(xavel_delta) <= RUNNING_MAX_DELTA_X_AVEL &&
-				std::fabs(zavel_delta) <= RUNNING_MAX_DELTA_Z_AVEL
+				std::fabs(_xrot_delta) <= RUNNING_MAX_DELTA_X_ROT &&
+				std::fabs(_zrot_delta) <= RUNNING_MAX_DELTA_Z_ROT &&
+				std::fabs(_ypos_delta) <= RUNNING_MAX_DELTA_Y_POS &&
+				std::fabs(_ylvel_delta) <= RUNNING_MAX_DELTA_Y_LVEL &&
+				std::fabs(_xavel_delta) <= RUNNING_MAX_DELTA_X_AVEL &&
+				std::fabs(_zavel_delta) <= RUNNING_MAX_DELTA_Z_AVEL
 			) {
 				_attached = true;
 				
@@ -225,25 +204,25 @@ void AvatarGameObj::step_impl() {
 				
 				// X and Z orientation delta
 				// TODO Maybe should translate body so that the contact point stays in the same spot through rotation
-				float a = limit_abs(zrot_delta, RUNNING_ADJ_RATE_Z_ROT/MAX_FPS);
+				float a = limit_abs(_zrot_delta, RUNNING_ADJ_RATE_Z_ROT/MAX_FPS);
 				Vector body_x(vector_to_world(Vector(cos(a), sin(a), 0)));
-				a = limit_abs(-xrot_delta, RUNNING_ADJ_RATE_X_ROT/MAX_FPS);
+				a = limit_abs(-_xrot_delta, RUNNING_ADJ_RATE_X_ROT/MAX_FPS);
 				Vector body_y(vector_to_world(Vector(0, cos(a), sin(a))));
 				dMatrix3 matr;
 				dRFrom2Axes(matr, body_x.x, body_x.y, body_x.z, body_y.x, body_y.y, body_y.z);
 				dBodySetRotation(body, matr);
 				
 				// Y position delta
-				set_pos(get_pos() + sn*limit_abs(ypos_delta, RUNNING_ADJ_RATE_Y_POS/MAX_FPS));
+				set_pos(get_pos() + sn*limit_abs(_ypos_delta, RUNNING_ADJ_RATE_Y_POS/MAX_FPS));
 				
 				// Y linear velocity delta
-				lvel_rel.y += limit_abs(ylvel_delta, RUNNING_ADJ_RATE_Y_LVEL/MAX_FPS);
+				lvel_rel.y += limit_abs(_ylvel_delta, RUNNING_ADJ_RATE_Y_LVEL/MAX_FPS);
 				lvel = vector_to_world(lvel_rel);
 				dBodySetLinearVel(body, lvel.x, lvel.y, lvel.z);
 				
 				// X and Z angular velocity delta
-				avel_rel.x += limit_abs(xavel_delta, RUNNING_ADJ_RATE_X_AVEL/MAX_FPS);
-				avel_rel.z += limit_abs(zavel_delta, RUNNING_ADJ_RATE_Z_AVEL/MAX_FPS);
+				avel_rel.x += limit_abs(_xavel_delta, RUNNING_ADJ_RATE_X_AVEL/MAX_FPS);
+				avel_rel.z += limit_abs(_zavel_delta, RUNNING_ADJ_RATE_Z_AVEL/MAX_FPS);
 				avel = vector_to_world(avel_rel);
 				dBodySetAngularVel(body, avel.x, avel.y, avel.z);
 			}
@@ -253,28 +232,7 @@ void AvatarGameObj::step_impl() {
 
 void AvatarGameObj::near_draw_impl() {
 	glRotatef(-_uprightness*90, 1, 0, 0);
-	_anim_fly_to_prerun->draw();
-	
-	if (Saving::get().config().debugPhysics().get()) {
-		glDisable(GL_TEXTURE_2D);
-		glDisable(GL_LIGHTING);
-		GLUquadric* q = gluNewQuadric();
-		
-		if (_uprightness >= RUNNING_MIN_UPRIGHTNESS) { 
-			if (_attached) {
-				glColor4f(1.0, 0.0, 0.0, 0.6);
-			} else {
-				glColor4f(0.0, 1.0, 0.0, 0.6);
-			}
-			GLOOPushedMatrix pm;
-			glTranslatef(0, 0, -_height/2 - RUNNING_MAX_DELTA_Y_POS);
-			gluCylinder(q, 0.05, 0.05, RUNNING_MAX_DELTA_Y_POS*2, 10, 10);
-		}
-		
-		gluDeleteQuadric(q);
-		glEnable(GL_TEXTURE_2D);
-		glEnable(GL_LIGHTING);
-	}
+	_anim_fly_to_prerun->draw();	
 }
 
 AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :

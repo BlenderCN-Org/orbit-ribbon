@@ -225,7 +225,7 @@ void Display::draw_frame() {
 		}
 		const static Point pos(15, 15);
 		const static float height = 15;
-		Gui::draw_box(pos, Size(Globals::sys_font->get_width(height, perf_info) + GUI_BOX_BORDER.x*2, height + GUI_BOX_BORDER.y*2));
+		Gui::draw_box(pos, Size(Globals::sys_font->get_width(height, perf_info), height) + GUI_BOX_BORDER*2);
 		glColor3f(1.0, 1.0, 1.0);
 		Globals::sys_font->draw(pos + GUI_BOX_BORDER, height, perf_info);
 	}
