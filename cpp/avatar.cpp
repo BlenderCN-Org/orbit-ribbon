@@ -30,7 +30,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "autoxsd/orepkgdesc.h"
 #include "avatar.h"
 #include "constants.h"
-#include "debug.h"
 #include "geometry.h"
 #include "globals.h"
 #include "input.h"
@@ -66,14 +65,14 @@ bool AvatarGameObj::AvatarContactHandler::handle_collision(float t __attribute__
 	if (_avatar->_attached) {
 		for (unsigned int i = 0; i < c_len; ++i) {
 			if (p.dist_to(Point(c[i].pos)) > RUNNING_NOCOLL_SPHERE_RAD) {
-				Debug::debug_msg("C ACCEPT");
+				_avatar->_run_coll_steptime = Globals::total_steps;
 				return true;
 			}
 		}
-		Debug::debug_msg("C REJECT");
+		_avatar->_ign_coll_steptime = Globals::total_steps;
 		return false;
 	} else {
-		Debug::debug_msg("C STD");
+		_avatar->_norm_coll_steptime = Globals::total_steps;
 		return true;
 	}
 }
@@ -237,6 +236,15 @@ void AvatarGameObj::near_draw_impl() {
 
 AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 	GameObj(obj, Sim::gen_sphere_body(80, 0.5)), // TODO Load mass information from the ORE mission description
+	_xrot_delta(0.0),
+	_zrot_delta(0.0),
+	_ypos_delta(0.0),
+	_ylvel_delta(0.0),
+	_xavel_delta(0.0),
+	_zavel_delta(0.0),
+	_norm_coll_steptime(0),
+	_ign_coll_steptime(0),
+	_run_coll_steptime(0),
 	_anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run")),
 	_attached(false)
 {
@@ -264,4 +272,16 @@ AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 	
 	// TODO Maybe some missions start off in upright mode?
 	_uprightness = 0.0;
+}
+
+unsigned int AvatarGameObj::get_last_norm_coll_age() {
+	return _norm_coll_steptime == 0 ? 100000 : Globals::total_steps - _norm_coll_steptime;
+}
+
+unsigned int AvatarGameObj::get_last_ign_coll_age() {
+	return _ign_coll_steptime == 0 ? 100000 : Globals::total_steps - _ign_coll_steptime;
+}
+
+unsigned int AvatarGameObj::get_last_run_coll_age() {
+	return _run_coll_steptime == 0 ? 100000 : Globals::total_steps - _run_coll_steptime;
 }

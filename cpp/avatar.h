@@ -53,9 +53,16 @@ class AvatarGameObj : public GameObj {
 		float _ylvel_delta;
 		float _xavel_delta;
 		float _zavel_delta;
-			
+		unsigned int _norm_coll_steptime;
+		unsigned int _ign_coll_steptime;
+		unsigned int _run_coll_steptime;
+		
 		boost::shared_ptr<MeshAnimation> _anim_fly_to_prerun;
 		float _uprightness;
+				
+		float _height; // Distance from top of head to bottom of feet
+		float _coll_rad; // Radius of the collision capsule
+		bool _attached;
 		
 		class AvatarContactHandler;
 		friend class AvatarContactHandler;
@@ -73,10 +80,6 @@ class AvatarGameObj : public GameObj {
 				bool should_contact(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) const;
 		};
 		
-		float _height; // Distance from top of head to bottom of feet
-		float _coll_rad; // Radius of the collision capsule
-		bool _attached;
-		
 	protected:
 		void step_impl();
 		void near_draw_impl();
@@ -84,13 +87,16 @@ class AvatarGameObj : public GameObj {
 	public:
 		AvatarGameObj(const ORE1::ObjType& obj);
 		
-		float get_last_coll_xrot() { return _xrot_delta; }
-		float get_last_coll_zrot() { return _zrot_delta; }
-		float get_last_coll_ypos() { return _ypos_delta; }
-		float get_last_coll_xavel() { return _xavel_delta; }
-		float get_last_coll_zavel() { return _zavel_delta; }
-		float get_last_coll_ylvel() { return _ylvel_delta; }
-		bool get_attached() { return _attached; }
+		float get_last_xrot() { return _xrot_delta; }
+		float get_last_zrot() { return _zrot_delta; }
+		float get_last_ypos() { return _ypos_delta; }
+		float get_last_xavel() { return _xavel_delta; }
+		float get_last_zavel() { return _zavel_delta; }
+		float get_last_ylvel() { return _ylvel_delta; }
+		bool is_attached() { return _attached; }
+		unsigned int get_last_norm_coll_age();
+		unsigned int get_last_ign_coll_age();
+		unsigned int get_last_run_coll_age();
 };
 
 #endif

@@ -48,6 +48,7 @@ const float PHYS_DEBUG_BOX_Y = -100;
 const Size PHYS_DEBUG_BOX_SIZE(400, 80);
 const std::string PHYS_DEBUG_BOX_NUMFMT("%+5.3f");
 const float PHYS_DEBUG_BOX_FONTSIZE = 15;
+const float PHYS_DEBUG_BOX_COLL_WINDOW = MAX_FPS*2;
 
 GameplayMode::GameplayMode() {
 	// Locate the avatar object
@@ -109,12 +110,12 @@ void GameplayMode::draw_2d() {
 		
 		static const char* labels[6] = { "XROT", "ZROT", "YPOS", "XAVEL", "ZAVEL", "YLVEL"};
 		float cur_vals[6] = {
-			av->get_last_coll_xrot(),
-			av->get_last_coll_zrot(),
-			av->get_last_coll_ypos(),
-			av->get_last_coll_xavel(),
-			av->get_last_coll_zavel(),
-			av->get_last_coll_ylvel()
+			av->get_last_xrot(),
+			av->get_last_zrot(),
+			av->get_last_ypos(),
+			av->get_last_xavel(),
+			av->get_last_zavel(),
+			av->get_last_ylvel()
 		};
 		float max_vals[6] = {
 			RUNNING_MAX_DELTA_X_ROT,
@@ -124,7 +125,6 @@ void GameplayMode::draw_2d() {
 			RUNNING_MAX_DELTA_X_AVEL,
 			RUNNING_MAX_DELTA_Z_AVEL
 		};
-		
 		
 		boost::format f(PHYS_DEBUG_BOX_NUMFMT);
 		for (int i = 0; i < 6; ++i) {
@@ -136,6 +136,27 @@ void GameplayMode::draw_2d() {
 			float r = std::fabs(cur_vals[i])/(max_vals[i]*1.2);
 			glColor3f(1.0, 1.0 - r, 1.0 - r);
 			Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE), PHYS_DEBUG_BOX_FONTSIZE, (f % cur_vals[i]).str());
+			
+			switch (i) {
+				case 0:
+					glColor3f(0.2, (av->is_attached() ? 1.0 : 0.0), 0.2);
+					Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*4), PHYS_DEBUG_BOX_FONTSIZE, "ATTACH");
+					break;
+				case 1:
+					glColor3f(0.2, std::max(0.0, 1.0 - av->get_last_norm_coll_age()/PHYS_DEBUG_BOX_COLL_WINDOW), 0.2);
+					Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*4), PHYS_DEBUG_BOX_FONTSIZE, "NORM-C");
+					break;
+				case 2:
+					glColor3f(0.2, std::max(0.0, 1.0 - av->get_last_ign_coll_age()/PHYS_DEBUG_BOX_COLL_WINDOW), 0.2);
+					Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*4), PHYS_DEBUG_BOX_FONTSIZE, "IGN-C");
+					break;
+				case 3:
+					glColor3f(0.2, std::max(0.0, 1.0 - av->get_last_run_coll_age()/PHYS_DEBUG_BOX_COLL_WINDOW), 0.2);
+					Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*4), PHYS_DEBUG_BOX_FONTSIZE, "RUN-C");
+					break;
+				default:
+					break;
+			}
 		}
 	}
 }
