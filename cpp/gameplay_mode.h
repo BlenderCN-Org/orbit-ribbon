@@ -31,7 +31,10 @@ class GameplayMode : public Mode {
 		
 	public:
 		GameplayMode();
-		void set_camera();
+		void pre_3d();
+		void draw_3d_far();
+		void draw_3d_near();
+		void draw_2d();
 };
 
 

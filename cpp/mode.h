@@ -28,6 +28,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 class Mode {
 	public:
 		virtual void set_camera() {}
+		virtual void pre_3d() {}
+		virtual void draw_3d_far() {}
+		virtual void draw_3d_near() {}
+		virtual void draw_2d() {}
 };
 
 #endif

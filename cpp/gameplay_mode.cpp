@@ -24,16 +24,28 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include "avatar.h"
+#include "background.h"
 #include "constants.h"
+#include "display.h"
 #include "except.h"
 #include "gameplay_mode.h"
 #include "globals.h"
 #include "gameobj.h"
+#include "geometry.h"
+#include "gui.h"
+#include "saving.h"
 
 // Camera positioning relative to avatar's reference frame
 const Vector CAMERA_POS_OFFSET(0.0, 1.1, -7.0);
 const Vector CAMERA_TGT_OFFSET(0.0, 1.1, 0.0);
 const Vector CAMERA_UP_VECTOR(0.0, 1.0, 0.0);
+
+// Where to draw the center of the physics debugging info box relative to the center of the screen
+const float PHYS_DEBUG_BOX_Y = -100;
+
+// How big the physics debugging box should be
+const Size PHYS_DEBUG_BOX_SIZE(200, 80);
 
 GameplayMode::GameplayMode() {
 	// Locate the avatar object
@@ -50,7 +62,7 @@ GameplayMode::GameplayMode() {
 	}
 }
 
-void GameplayMode::set_camera() {
+void GameplayMode::pre_3d() {
 	GOMap::iterator i = Globals::gameobjs.find(_avatar_key);
 	if (i == Globals::gameobjs.end()) {
 		throw GameException(std::string("GameplayMode: LIBAvatar GameObj named ") + _avatar_key + " has disappeared unexpectedly");
@@ -65,4 +77,26 @@ void GameplayMode::set_camera() {
 		cam_tgt.x, cam_tgt.y, cam_tgt.z,
 		 up_vec.x,  up_vec.y,  up_vec.z
 	);
+}
+
+void GameplayMode::draw_3d_far() {
+	// Draw all the background objects
+	Globals::bg->draw();
+}
+
+void GameplayMode::draw_3d_near() {
+	// Draw every game object (FIXME Do near/far sorting)
+	for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
+		i->second->draw(true);
+	}
+}
+
+void GameplayMode::draw_2d() {
+	if (Saving::get().config().debugPhysics().get()) {
+		Point p(
+			Display::get_screen_width()/2 - PHYS_DEBUG_BOX_SIZE.x/2,
+			Display::get_screen_height()/2 - PHYS_DEBUG_BOX_SIZE.y/2 + PHYS_DEBUG_BOX_Y
+		);
+		Gui::draw_box(p, PHYS_DEBUG_BOX_SIZE);
+	}
 }

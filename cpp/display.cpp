@@ -31,7 +31,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "debug.h"
 #include "display.h"
 #include "except.h"
-#include "gameobj.h"
 #include "globals.h"
 #include "gui.h"
 #include "saving.h"
@@ -49,25 +48,11 @@ const float FOV = 45;
 // How often in ticks to update the performance info string
 const unsigned int MAX_PERF_INFO_AGE = 2000;
 
-GLfloat fade_r, fade_g, fade_b, fade_a;
-bool fade_flag = false;
-
 SDL_Surface* screen;
 
 GLsizei Display::screen_width = 0;
 GLsizei Display::screen_height = 0;
 GLfloat Display::screen_ratio = 0;
-
-void Display::set_fade_color(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
-	fade_r = r;
-	fade_g = g;
-	fade_b = b;
-	fade_a = a;
-}
-
-void Display::set_fade(bool flag) {
-	fade_flag = flag;
-}
 
 void Display::init() {
 	bool full_screen = Saving::get().config().fullScreen().get();
@@ -87,7 +72,7 @@ void Display::init() {
 	}
 	
 	if (screen_width == 0 || screen_height == 0 || !SDL_VideoModeOK(screen_width, screen_height, vid_info->vfmt->BitsPerPixel, videoFlags)) {
-		Debug::status_msg("Resolution not specified validly in save file, choosing new resolution...");
+		Debug::status_msg("No acceptable resolution specified in save file, choosing new resolution...");
 		
 		// Need to come up with default values
 		if (full_screen) {
@@ -204,8 +189,7 @@ void Display::draw_frame() {
 	Globals::bg->set_clear_color();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	// Set camera position and orientation
-	Globals::mode->set_camera();
+	Globals::mode->pre_3d();
 	
 	// Projection mode for distant objects
 	glMatrixMode(GL_PROJECTION);
@@ -213,8 +197,7 @@ void Display::draw_frame() {
 	gluPerspective(FOV, screen_ratio, 0.1, SKY_CLIP_DIST);
 	glMatrixMode(GL_MODELVIEW);
 	
-	// Draw all the background objects
-	Globals::bg->draw();
+	Globals::mode->draw_3d_far();
 	
 	// Projection mode for nearby objects
 	glMatrixMode(GL_PROJECTION);
@@ -222,10 +205,7 @@ void Display::draw_frame() {
 	gluPerspective(FOV, screen_ratio, 0.1, GAMEPLAY_CLIP_DIST);
 	glMatrixMode(GL_MODELVIEW);
 	
-	// Draw every game object (FIXME Do near/far sorting)
-	for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
-		i->second->draw(true);
-	}
+	Globals::mode->draw_3d_near();
 	
 	// 2D drawing mode
 	glDisable(GL_DEPTH_TEST);
@@ -236,17 +216,7 @@ void Display::draw_frame() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
-	// If fading is enabled, then mask what's been drawn with a big ol' translucent quad
-	// FIXME This should be the game mode's responsibility if it wants to do this
-	if (fade_flag) {
-		glColor4f(fade_r, fade_g, fade_b, fade_a);
-		glBegin(GL_QUADS);
-			glVertex2f(0, 0);
-			glVertex2f(screen_width, 0);
-			glVertex2f(screen_width, screen_height);
-			glVertex2f(0, screen_height);
-		glEnd();
-	}
+	Globals::mode->draw_2d();
 	
 	if (Saving::get().config().showFps().get()) {
 		if (SDL_GetTicks() - last_perf_info >= MAX_PERF_INFO_AGE) {
