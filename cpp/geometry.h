@@ -75,6 +75,7 @@ class Point {
 		GLfloat dot_prod(const Point& other) const;
 		GLfloat mag() const;
 		GLfloat dist_to(const Point& other) const;
+		GLfloat sq_dist_to(const Point& other) const;
 		GLfloat ang_to(const Point& other) const;
 		Point to_length(float len) const;
 		Point project_onto(const Point& other) const;

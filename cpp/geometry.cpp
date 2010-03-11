@@ -164,7 +164,11 @@ GLfloat Point::dot_prod(const Point& other) const {
 }
 
 GLfloat Point::dist_to(const Point& other) const {
-	return std::sqrt(pow(std::sqrt(pow(x-other.x, 2) + pow(y-other.y, 2)), 2) + pow(z-other.z, 2));
+	return std::sqrt(sq_dist_to(other));
+}
+
+GLfloat Point::sq_dist_to(const Point& other) const {
+	return pow(std::sqrt(pow(x-other.x, 2) + pow(y-other.y, 2)), 2) + pow(z-other.z, 2);
 }
 
 GLfloat Point::ang_to(const Point& other) const {
