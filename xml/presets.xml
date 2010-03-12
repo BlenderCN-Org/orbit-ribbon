@@ -41,9 +41,6 @@
 				<positive xsi:type="orsave:KeyInputType" key="111" />
 			</input>
 		</axis_bind>
-		<button_bind action="UprightStance">
-			<input xsi:type="orsave:KeyInputType" key="32" />
-		</button_bind>
 		<button_bind action="Pause">
 			<input xsi:type="orsave:KeyInputType" key="27" />
 		</button_bind>
@@ -90,12 +87,6 @@
 				<positive xsi:type="orsave:GamepadButtonInputType" gamepadNum="0" buttonNum="6" />
 			</input>
 		</axis_bind>
-		<button_bind action="UprightStance">
-			<input xsi:type="orsave:LogicalAndInputType">
-				<input xsi:type="orsave:GamepadAxisInputType" gamepadNum="0" axisNum="14" />
-				<input xsi:type="orsave:GamepadAxisInputType" gamepadNum="0" axisNum="15" />
-			</input>
-		</button_bind>
 		<button_bind action="Pause">
 			<input xsi:type="orsave:GamepadButtonInputType" gamepadNum="0" buttonNum="3" />
 		</button_bind>

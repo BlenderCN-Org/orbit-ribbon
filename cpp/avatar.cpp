@@ -30,6 +30,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "autoxsd/orepkgdesc.h"
 #include "avatar.h"
 #include "constants.h"
+#include "debug.h"
 #include "geometry.h"
 #include "globals.h"
 #include "input.h"
@@ -51,16 +52,13 @@ const float CROLL_COEF = 700.0;
 const float UPRIGHTNESS_ENTRY_TIME = 0.5;
 const float UPRIGHTNESS_STEP_DIFF = 1.0f/(UPRIGHTNESS_ENTRY_TIME*MAX_FPS);
 
-// If our uprightness is not at least at this value, do not run
-const float RUNNING_MIN_UPRIGHTNESS = 0.9;
-
 // Radius of the sphere used to ignore contacts around our feet when we run
 const float RUNNING_NOCOLL_SPHERE_RAD = RUNNING_MAX_DELTA_Y_POS * 1.2;
 
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 
 bool AvatarGameObj::AvatarContactHandler::handle_collision(float t __attribute__ ((unused)), dGeomID o __attribute__ ((unused)), const dContactGeom* c, unsigned int c_len)  {
-	Point p = _avatar->get_rel_point_pos(Point(dGeomGetOffsetPosition(_avatar->get_entity().get_geom("run_detect"))));
+	Point p = _avatar->get_rel_point_pos(Point(0, -_avatar->_height/2, 0));
 	
 	if (_avatar->_attached) {
 		for (unsigned int i = 0; i < c_len; ++i) {
@@ -144,11 +142,9 @@ void AvatarGameObj::step_impl() {
 	}
 	
 	// Changing stance between superman-style and upright
-	chn = &Input::get_button_ch(ORSave::ButtonBoundAction::UprightStance);
-	// Once we are entering or are in upright mode, do not assume player wants to leave it unless UprightStance bind is entirely off
-	if (chn->is_on() or (chn->is_partially_on() and !similar(_uprightness, 0.0))) {
+	if (_attached) {
 		_uprightness += UPRIGHTNESS_STEP_DIFF;
-	} else if (!_attached) {
+	} else {
 		_uprightness -= UPRIGHTNESS_STEP_DIFF;
 	}
 	if (_uprightness > 1.0) { _uprightness = 1.0; } else if (_uprightness < 0.0) { _uprightness = 0.0; }
@@ -163,18 +159,20 @@ void AvatarGameObj::step_impl() {
 	RunCollisionTracker* rct = static_cast<RunCollisionTracker*>(get_entity().get_geom_ch("run_detect"));
 	if (rct->has_collisions()) {
 		std::auto_ptr<std::vector<CollisionTracker::Collision> > colls = rct->get_collisions();
+		// Distance inwards to which rct penetrates the surface below us
+		float depth = _height/2 + RUNNING_MAX_DELTA_Y_POS - colls->back().contacts[0].depth;
+		_ypos_delta = depth - (std::cos(_uprightness*M_PI_2)*_height/2 + RUNNING_MAX_DELTA_Y_POS);
 		
-		// TODO Consider using two contact points, one for each foot, then averaging out the plane normal
-		// TODO Check if the other object is runnable/attachable
-		// TODO Shouldn't just assume that first contact of first collision is the best one to use
-		Vector sn = Vector(colls->back().contacts[0].normal); // Surface normal
-		Vector sn_rel = vector_from_world(sn);
-		float depth = colls->back().contacts[0].depth;
-		
-		// TODO Maybe allow a special "walking" or "crawling" attachment when relative velocity to surface is very low
-		// TODO Detach (or fail to attach) when relative velocity is non-trivial and too different from facing direction
-		// TODO Treat linear velocity projected onto XZ as another one of these limited variables, to simulate friction and limit max run speed
-		if (_uprightness >= RUNNING_MIN_UPRIGHTNESS) {
+		if (std::fabs(_ypos_delta) <= RUNNING_MAX_DELTA_Y_POS) {
+			// TODO Consider using two contact points, one for each foot, then averaging out the plane normal
+			// TODO Check if the other object is runnable/attachable
+			// TODO Shouldn't just assume that first contact of first collision is the best one to use
+			// TODO Maybe allow a special "walking" or "crawling" attachment when relative velocity to surface is very low
+			// TODO Detach (or fail to attach) when relative velocity is non-trivial and too different from facing direction
+			// TODO Maybe treat linear velocity projected onto XZ as another one of these limited variables, to simulate friction
+			Vector sn = Vector(colls->back().contacts[0].normal); // Surface normal
+			Vector sn_rel = vector_from_world(sn);
+			
 			Vector lvel = Vector(dBodyGetLinearVel(body));
 			Vector lvel_rel = vector_from_world(lvel);
 			Vector avel = Vector(dBodyGetAngularVel(body));
@@ -183,7 +181,6 @@ void AvatarGameObj::step_impl() {
 			// Offsets to various values that we'd like to apply for optimal running state
 			_xrot_delta = -std::asin(sn_rel.z); // Rotate about x axis to reduce z to 0
 			_zrot_delta = -std::asin(sn_rel.x); // Rotate about z axis to reduce x to 0
-			_ypos_delta = -depth + RUNNING_MAX_DELTA_Y_POS;
 			_ylvel_delta = -lvel_rel.y;
 			_xavel_delta = -avel_rel.x;
 			_zavel_delta = -avel_rel.z;
@@ -192,7 +189,6 @@ void AvatarGameObj::step_impl() {
 			if (
 				std::fabs(_xrot_delta) <= RUNNING_MAX_DELTA_X_ROT &&
 				std::fabs(_zrot_delta) <= RUNNING_MAX_DELTA_Z_ROT &&
-				std::fabs(_ypos_delta) <= RUNNING_MAX_DELTA_Y_POS &&
 				std::fabs(_ylvel_delta) <= RUNNING_MAX_DELTA_Y_LVEL &&
 				std::fabs(_xavel_delta) <= RUNNING_MAX_DELTA_X_AVEL &&
 				std::fabs(_zavel_delta) <= RUNNING_MAX_DELTA_Z_AVEL
@@ -262,13 +258,12 @@ AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 	// Set up a geom at our feet to detect when we can run on a surface
 	get_entity().set_geom(
 		"run_detect",
-		dCreateRay(Sim::get_dyn_space(), RUNNING_MAX_DELTA_Y_POS*2),
+		dCreateRay(Sim::get_dyn_space(), _height/2 + RUNNING_MAX_DELTA_Y_POS),
 		std::auto_ptr<CollisionHandler>(new RunCollisionTracker)
 	);
 	dQuaternion rdq;
 	dQFromAxisAndAngle(rdq, 1, 0, 0, M_PI_2);
 	dGeomSetOffsetQuaternion(get_entity().get_geom("run_detect"), rdq);
-	dGeomSetOffsetPosition(get_entity().get_geom("run_detect"), 0, -_height/2 + RUNNING_MAX_DELTA_Y_POS, 0);
 	
 	// TODO Maybe some missions start off in upright mode?
 	_uprightness = 0.0;
