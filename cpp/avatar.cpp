@@ -57,6 +57,16 @@ const float RUNNING_NOCOLL_SPHERE_RAD = RUNNING_MAX_DELTA_Y_POS * 1.2;
 
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 
+void AvatarGameObj::update_geom_offsets() {
+	// Update the orientation of our physical geom to match _uprightness
+	dMatrix3 grot;
+	dRFromAxisAndAngle(grot, 1, 0, 0, _uprightness*M_PI_2);
+	dGeomSetOffsetRotation(get_entity().get_geom("physical"), grot);
+	
+	// Update the position of the run_detect geom to match _uprightness
+	dGeomSetOffsetPosition(get_entity().get_geom("run_detect"), 0, -sin(_uprightness*M_PI_2) + RUNNING_MAX_DELTA_Y_POS, 0);
+}
+
 bool AvatarGameObj::AvatarContactHandler::handle_collision(float t __attribute__ ((unused)), dGeomID o __attribute__ ((unused)), const dContactGeom* c, unsigned int c_len)  {
 	Point p = _avatar->get_rel_point_pos(Point(0, -_avatar->_height/2, 0));
 	
@@ -149,10 +159,7 @@ void AvatarGameObj::step_impl() {
 	}
 	if (_uprightness > 1.0) { _uprightness = 1.0; } else if (_uprightness < 0.0) { _uprightness = 0.0; }
 	
-	// Update the orientation of our physical geom to match _uprightness
-	dMatrix3 grot;
-	dRFromAxisAndAngle(grot, 1, 0, 0, _uprightness*M_PI_2);
-	dGeomSetOffsetRotation(get_entity().get_geom("physical"), grot);
+	update_geom_offsets();
 	
 	// Check if we are contacting a surface in a way that allows attaching
 	_attached = false;
@@ -160,8 +167,7 @@ void AvatarGameObj::step_impl() {
 	if (rct->has_collisions()) {
 		std::auto_ptr<std::vector<CollisionTracker::Collision> > colls = rct->get_collisions();
 		// Distance inwards to which rct penetrates the surface below us
-		float depth = _height/2 + RUNNING_MAX_DELTA_Y_POS - colls->back().contacts[0].depth;
-		_ypos_delta = depth - (std::cos(_uprightness*M_PI_2)*_height/2 + RUNNING_MAX_DELTA_Y_POS);
+		_ypos_delta = -colls->back().contacts[0].depth + RUNNING_MAX_DELTA_Y_POS;
 		
 		if (std::fabs(_ypos_delta) <= RUNNING_MAX_DELTA_Y_POS) {
 			// TODO Consider using two contact points, one for each foot, then averaging out the plane normal
@@ -255,18 +261,20 @@ AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
 		std::auto_ptr<CollisionHandler>(new AvatarContactHandler(this))
 	);
 	
+	// TODO Maybe some missions start off in upright mode?
+	_uprightness = 0.0;
+	
 	// Set up a geom at our feet to detect when we can run on a surface
 	get_entity().set_geom(
 		"run_detect",
-		dCreateRay(Sim::get_dyn_space(), _height/2 + RUNNING_MAX_DELTA_Y_POS),
+		dCreateRay(Sim::get_dyn_space(), RUNNING_MAX_DELTA_Y_POS*2),
 		std::auto_ptr<CollisionHandler>(new RunCollisionTracker)
 	);
 	dQuaternion rdq;
 	dQFromAxisAndAngle(rdq, 1, 0, 0, M_PI_2);
 	dGeomSetOffsetQuaternion(get_entity().get_geom("run_detect"), rdq);
 	
-	// TODO Maybe some missions start off in upright mode?
-	_uprightness = 0.0;
+	update_geom_offsets();
 }
 
 unsigned int AvatarGameObj::get_last_norm_coll_age() {

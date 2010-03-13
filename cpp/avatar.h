@@ -34,7 +34,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 // aligning with a running surface, and maximum delta for attachment
 const float RUNNING_ADJ_RATE_X_ROT = 0.5;   const float RUNNING_MAX_DELTA_X_ROT = 0.8; // Radians
 const float RUNNING_ADJ_RATE_Z_ROT = 0.3;   const float RUNNING_MAX_DELTA_Z_ROT = 0.6; // Radians
-const float RUNNING_ADJ_RATE_Y_POS = 8.0;   const float RUNNING_MAX_DELTA_Y_POS = 0.4;  // Meters
+const float RUNNING_ADJ_RATE_Y_POS = 8.0;   const float RUNNING_MAX_DELTA_Y_POS = 0.8;  // Meters
 const float RUNNING_ADJ_RATE_Y_LVEL = 5.0;  const float RUNNING_MAX_DELTA_Y_LVEL = 7.0; // Meters per second
 const float RUNNING_ADJ_RATE_X_AVEL = 5.0;  const float RUNNING_MAX_DELTA_X_AVEL = 7.0; // Radians per second
 const float RUNNING_ADJ_RATE_Z_AVEL = 5.0;  const float RUNNING_MAX_DELTA_Z_AVEL = 7.0; // Radians per second
@@ -63,6 +63,8 @@ class AvatarGameObj : public GameObj {
 		float _height; // Distance from top of head to bottom of feet
 		float _coll_rad; // Radius of the collision capsule
 		bool _attached;
+		
+		void update_geom_offsets();
 		
 		class AvatarContactHandler;
 		friend class AvatarContactHandler;
