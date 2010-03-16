@@ -120,7 +120,7 @@ bool AvatarGameObj::AvatarContactHandler::handle_collision(
 	const dContactGeom* c,
 	unsigned int c_len __attribute__ ((unused))
 )  {
-	float ypd = c[0].depth;
+	float ypd = -c[0].depth;
 	Vector sn(c[0].normal);
 	if (_avatar->check_attachment(ypd, sn)) {
 		_avatar->_run_coll_steptime = Globals::total_steps;
@@ -137,7 +137,7 @@ bool AvatarGameObj::StickyAttachmentContactHandler::handle_collision(
 	const dContactGeom* c,
 	unsigned int c_len  __attribute__ ((unused))
 )  {
-	float ypd = c[0].depth + RUNNING_MAX_DELTA_Y_POS;
+	float ypd = -c[0].depth + RUNNING_MAX_DELTA_Y_POS;
 	Vector sn(c[0].normal);
 	bool r = _avatar->check_attachment(ypd, sn);
 	Debug::debug_msg("SACH HC : " + boost::lexical_cast<std::string>(r));
