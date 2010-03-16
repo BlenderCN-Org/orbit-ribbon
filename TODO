@@ -29,3 +29,5 @@ Thinh's ideas:
 
 - Maybe when it is necessary to tilt about z axis while running, I should add some x linear force to simulate banking
 	Banking would actually occur, since one foot would be pushing sideways to adjust orientation
+
+- Move attachment detection into the collision handler for the physical body ; that way, there's either collisions that cause attachment or collisions that cause bounce, no mixing. Continue with the current method of causing detachment.

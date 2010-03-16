@@ -147,10 +147,6 @@ void GameplayMode::draw_2d() {
 					Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*4), PHYS_DEBUG_BOX_FONTSIZE, "NORM-C");
 					break;
 				case 2:
-					glColor3f(0.2, std::max(0.0, 1.0 - av->get_last_ign_coll_age()/PHYS_DEBUG_BOX_COLL_WINDOW), 0.2);
-					Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*4), PHYS_DEBUG_BOX_FONTSIZE, "IGN-C");
-					break;
-				case 3:
 					glColor3f(0.2, std::max(0.0, 1.0 - av->get_last_run_coll_age()/PHYS_DEBUG_BOX_COLL_WINDOW), 0.2);
 					Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*4), PHYS_DEBUG_BOX_FONTSIZE, "RUN-C");
 					break;

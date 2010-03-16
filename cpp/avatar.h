@@ -34,7 +34,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 // aligning with a running surface, and maximum delta for attachment
 const float RUNNING_ADJ_RATE_X_ROT = 0.5;   const float RUNNING_MAX_DELTA_X_ROT = 0.8; // Radians
 const float RUNNING_ADJ_RATE_Z_ROT = 0.3;   const float RUNNING_MAX_DELTA_Z_ROT = 0.6; // Radians
-const float RUNNING_ADJ_RATE_Y_POS = 8.0;   const float RUNNING_MAX_DELTA_Y_POS = 0.8;  // Meters
+const float RUNNING_ADJ_RATE_Y_POS = 16.0;   const float RUNNING_MAX_DELTA_Y_POS = 0.4;  // Meters
 const float RUNNING_ADJ_RATE_Y_LVEL = 5.0;  const float RUNNING_MAX_DELTA_Y_LVEL = 7.0; // Meters per second
 const float RUNNING_ADJ_RATE_X_AVEL = 5.0;  const float RUNNING_MAX_DELTA_X_AVEL = 7.0; // Radians per second
 const float RUNNING_ADJ_RATE_Z_AVEL = 5.0;  const float RUNNING_MAX_DELTA_Z_AVEL = 7.0; // Radians per second
@@ -47,6 +47,7 @@ class AvatarGameObj : public GameObj {
 	private:
 		// Tracking how far off we are from ideal running state, if attached
 		// These are kept so they can be used for debugging by GameplayMode
+		Vector _sn;
 		float _xrot_delta;
 		float _zrot_delta;
 		float _ypos_delta;
@@ -54,17 +55,18 @@ class AvatarGameObj : public GameObj {
 		float _xavel_delta;
 		float _zavel_delta;
 		unsigned int _norm_coll_steptime;
-		unsigned int _ign_coll_steptime;
 		unsigned int _run_coll_steptime;
 		
 		boost::shared_ptr<MeshAnimation> _anim_fly_to_prerun;
 		float _uprightness;
-				
+		
 		float _height; // Distance from top of head to bottom of feet
 		float _coll_rad; // Radius of the collision capsule
 		bool _attached;
+		bool _attached_this_frame;
 		
 		void update_geom_offsets();
+		bool check_attachment(float yp_delta, const Vector& sn);
 		
 		class AvatarContactHandler;
 		friend class AvatarContactHandler;
@@ -77,9 +79,13 @@ class AvatarGameObj : public GameObj {
 				bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
 		};
 		
-		class RunCollisionTracker : public CollisionTracker {
+		class StickyAttachmentContactHandler : public SimpleContactHandler {
+			private:
+				AvatarGameObj* _avatar;
+				
 			public:
-				bool should_contact(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) const;
+				StickyAttachmentContactHandler(AvatarGameObj* avatar) : _avatar(avatar) {}
+				bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
 		};
 		
 	protected:
@@ -97,7 +103,6 @@ class AvatarGameObj : public GameObj {
 		float get_last_ylvel() { return _ylvel_delta; }
 		bool is_attached() { return _attached; }
 		unsigned int get_last_norm_coll_age();
-		unsigned int get_last_ign_coll_age();
 		unsigned int get_last_run_coll_age();
 };
 

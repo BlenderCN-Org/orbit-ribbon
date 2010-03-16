@@ -99,23 +99,25 @@ void collision_callback(void* data, dGeomID o1, dGeomID o2) {
 	if (dGeomIsSpace(o1) or dGeomIsSpace(o2)) {
 		dSpaceCollide2(o1, o2, NULL, &collision_callback);
 	} else {
-		unsigned int len = dCollide(o1, o2, MAXIMUM_CONTACT_POINTS, &(contacts[0]), sizeof(dContactGeom));
-		if (len > 0) {
-			CollisionHandler* o1h = static_cast<CollisionHandler*>(dGeomGetData(o1));
-			CollisionHandler* o2h = static_cast<CollisionHandler*>(dGeomGetData(o2));
-			bool contact1 = o1h->handle_collision(step_time, o2, &(contacts[0]), len);
-			bool contact2 = o2h->handle_collision(step_time, o1, &(contacts[0]), len);
-			if (contact1 && contact2) {
-				dContact contact;
-				contact.surface.mode = dContactApprox1 | dContactBounce;
-				contact.surface.bounce = 0.5;
-				contact.surface.mu = 5000;
-				for (unsigned int ci = 0; ci < len; ++ci) {
-					contact.geom = contacts[ci];
-					dJointID joint = dJointCreateContact(ode_world, contact_group, &contact);
-					dJointAttach(joint, dGeomGetBody(o1), dGeomGetBody(o2));
+		if (dGeomIsEnabled(o1) && dGeomIsEnabled(o2)) {
+			unsigned int len = dCollide(o1, o2, MAXIMUM_CONTACT_POINTS, &(contacts[0]), sizeof(dContactGeom));
+			if (len > 0) {
+				CollisionHandler* o1h = static_cast<CollisionHandler*>(dGeomGetData(o1));
+				CollisionHandler* o2h = static_cast<CollisionHandler*>(dGeomGetData(o2));
+				bool contact1 = o1h->handle_collision(step_time, o2, &(contacts[0]), len);
+				bool contact2 = o2h->handle_collision(step_time, o1, &(contacts[0]), len);
+				if (contact1 && contact2) {
+					dContact contact;
+					contact.surface.mode = dContactApprox1 | dContactBounce;
+					contact.surface.bounce = 0.5;
+					contact.surface.mu = 5000;
+					for (unsigned int ci = 0; ci < len; ++ci) {
+						contact.geom = contacts[ci];
+						dJointID joint = dJointCreateContact(ode_world, contact_group, &contact);
+						dJointAttach(joint, dGeomGetBody(o1), dGeomGetBody(o2));
+					}
 				}
- 			}
+			}
 		}
 	}
 }
