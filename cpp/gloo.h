@@ -36,6 +36,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <ode/ode.h>
 
 #include "cache.h"
+#include "geometry.h"
 
 class GLOOPushedMatrix : boost::noncopyable {
 	public:
@@ -76,13 +77,16 @@ struct GLOOVertex {
 	GLfloat nx, ny, nz;
 	GLfloat u, v;
 	
-	static void set_gl_pointers();
+	static void set_gl_vbo_pointers();
 };
 
 struct GLOOFace {
 	// Indices to the vertices forming a triangle face
 	GLuint a, b, c;
-		
+	
+	GLOOFace() {}
+	GLOOFace(GLuint ia, GLuint ib, GLuint ic) : a(ia), b(ib), c(ic) {}
+	
 	static GLenum gl_type() { return GL_UNSIGNED_INT; }
 	static unsigned int elem_bytes() { return sizeof(GLuint); }
 };
@@ -172,6 +176,12 @@ class GLOOBufferedMesh : boost::noncopyable {
 		
 		// Call this method after finish_loading() has been called, and only if you specified true for gen_trimesh_data
 		dTriMeshDataID get_trimesh_data();
+		
+		// You can only call these if gen_trimesh_data had been activated
+		Point get_vertex_pos(unsigned int v_idx);
+		Vector get_vertex_norm(unsigned int v_idx);
+		GLOOFace get_face(unsigned int f_idx);
+		Vector get_interpolated_normal(const Point& local_pt, unsigned int f_idx);
 		
 		virtual ~GLOOBufferedMesh();
 };

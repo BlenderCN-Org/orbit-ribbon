@@ -168,7 +168,7 @@ GLfloat Point::dist_to(const Point& other) const {
 }
 
 GLfloat Point::sq_dist_to(const Point& other) const {
-	return pow(std::sqrt(pow(x-other.x, 2) + pow(y-other.y, 2)), 2) + pow(z-other.z, 2);
+	return (x-other.x)*(x-other.x) + (y-other.y)*(y-other.y) + (z-other.z)*(z-other.z);
 }
 
 GLfloat Point::ang_to(const Point& other) const {

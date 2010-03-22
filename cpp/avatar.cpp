@@ -72,6 +72,8 @@ bool AvatarGameObj::check_attachment(float yp_delta, const Vector& sn) {
 	// TODO Don't attach when relative velocity is non-trivial and too different from facing direction
 	// TODO Maybe treat linear velocity projected onto XZ as another one of these limited variables, to simulate friction
 	
+	// If multiple potential collisions occurred this frame, choose the one with the least ypos delta
+	// Hopefully this will stop the sticky attachment ray from trying to attach us to a more distant geom beneath the floor
 	if (_attached_this_frame) {
 		if (std::fabs(yp_delta) > std::fabs(_ypos_delta)) {
 			return false;
@@ -106,6 +108,17 @@ bool AvatarGameObj::check_attachment(float yp_delta, const Vector& sn) {
 		std::fabs(_zavel_delta) <= RUNNING_MAX_DELTA_Z_AVEL
 	) {
 		ret = true;
+	} else {
+		/*
+		Debug::debug_msg(std::string("ATTACH FAILURE") +
+			" YPOS:" + boost::lexical_cast<std::string>(_ypos_delta) +
+			" XROT:" + boost::lexical_cast<std::string>(_xrot_delta) +
+			" ZROT:" + boost::lexical_cast<std::string>(_zrot_delta) +
+			" YLVEL:" + boost::lexical_cast<std::string>(_ylvel_delta) +
+			" XAVEL:" + boost::lexical_cast<std::string>(_xavel_delta) +
+			" ZAVEL:" + boost::lexical_cast<std::string>(_zavel_delta)
+		);
+		*/
 	}
 	
 	if (ret) {
@@ -120,12 +133,13 @@ bool AvatarGameObj::AvatarContactHandler::handle_collision(
 	const dContactGeom* c,
 	unsigned int c_len __attribute__ ((unused))
 )  {
-	float ypd = -c[0].depth;
+	float ypd = c[0].depth;
 	Vector sn(c[0].normal);
 	if (_avatar->check_attachment(ypd, sn)) {
 		_avatar->_run_coll_steptime = Globals::total_steps;
 		return false;
 	} else {
+		Debug::debug_msg("NORM-C");
 		_avatar->_norm_coll_steptime = Globals::total_steps;
 		return true;
 	}
@@ -139,8 +153,7 @@ bool AvatarGameObj::StickyAttachmentContactHandler::handle_collision(
 )  {
 	float ypd = -c[0].depth + RUNNING_MAX_DELTA_Y_POS;
 	Vector sn(c[0].normal);
-	bool r = _avatar->check_attachment(ypd, sn);
-	Debug::debug_msg("SACH HC : " + boost::lexical_cast<std::string>(r));
+	//bool r = _avatar->check_attachment(ypd, sn);
 	
 	// This geom is never used to create contact joints
 	return false;

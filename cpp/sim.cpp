@@ -21,6 +21,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
 #include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <ode/ode.h>
@@ -102,10 +103,29 @@ void collision_callback(void* data, dGeomID o1, dGeomID o2) {
 		if (dGeomIsEnabled(o1) && dGeomIsEnabled(o2)) {
 			unsigned int len = dCollide(o1, o2, MAXIMUM_CONTACT_POINTS, &(contacts[0]), sizeof(dContactGeom));
 			if (len > 0) {
+				for (unsigned int i = 0; i < len; ++i) {
+					Debug::debug_msg("C" + boost::lexical_cast<std::string>(i) + " " + boost::lexical_cast<std::string>(contacts[i].side1) + ":" + boost::lexical_cast<std::string>(contacts[i].side2));
+				}
 				CollisionHandler* o1h = static_cast<CollisionHandler*>(dGeomGetData(o1));
 				CollisionHandler* o2h = static_cast<CollisionHandler*>(dGeomGetData(o2));
 				bool contact1 = o1h->handle_collision(step_time, o2, &(contacts[0]), len);
+				for (unsigned int i = 0; i < len; ++i) {
+					// Reverse each contact so that o2h sees itself as the first geom
+					contacts[i].normal[0] = -contacts[i].normal[0];
+					contacts[i].normal[1] = -contacts[i].normal[1];
+					contacts[i].normal[2] = -contacts[i].normal[2];
+					dGeomID tempG = contacts[i].g1; contacts[i].g1 = contacts[i].g2; contacts[i].g2 = tempG;
+					int tempS = contacts[i].side1; contacts[i].side1 = contacts[i].side2; contacts[i].side2 = tempS;
+				}
 				bool contact2 = o2h->handle_collision(step_time, o1, &(contacts[0]), len);
+				for (unsigned int i = 0; i < len; ++i) {
+					// Reverse each contact so that o2h sees itself as the first geom
+					contacts[i].normal[0] = -contacts[i].normal[0];
+					contacts[i].normal[1] = -contacts[i].normal[1];
+					contacts[i].normal[2] = -contacts[i].normal[2];
+					dGeomID tempG = contacts[i].g1; contacts[i].g1 = contacts[i].g2; contacts[i].g2 = tempG;
+					int tempS = contacts[i].side1; contacts[i].side1 = contacts[i].side2; contacts[i].side2 = tempS;
+				}
 				if (contact1 && contact2) {
 					dContact contact;
 					contact.surface.mode = dContactApprox1 | dContactBounce;

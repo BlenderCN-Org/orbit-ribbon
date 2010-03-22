@@ -36,6 +36,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "cache.h"
 #include "constants.h"
 #include "except.h"
+#include "geometry.h"
 #include "globals.h"
 #include "gloo.h"
 #include "ore.h"
@@ -121,7 +122,7 @@ GLOOTexture::~GLOOTexture() {
 	glDeleteTextures(1, &_tex_name);
 }
 
-void GLOOVertex::set_gl_pointers() {
+void GLOOVertex::set_gl_vbo_pointers() {
 	const char* offset = 0;
 	glVertexPointer(3, GL_FLOAT, sizeof(GLOOVertex), offset);
 	glNormalPointer(GL_FLOAT, sizeof(GLOOVertex), offset + 3*sizeof(float));
@@ -206,7 +207,7 @@ GLOOBufferedMesh::GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_
 	if (!_initialized) {
 		_vertices_vboman.reset(new _VBOManager(GL_ARRAY_BUFFER, VERTICES_BUFFER_ALLOCATED_SIZE*1024));
 		_faces_vboman.reset(new _VBOManager(GL_ELEMENT_ARRAY_BUFFER, FACES_BUFFER_ALLOCATED_SIZE*1024));
-		GLOOVertex::set_gl_pointers();
+		GLOOVertex::set_gl_vbo_pointers();
 		_initialized = true;
 	}
 	
@@ -321,6 +322,41 @@ dTriMeshDataID GLOOBufferedMesh::get_trimesh_data() {
 		throw OreException("Attempted to get trimesh data from GLOOBufferedMesh while still mapped");
 	}
 	return _trimesh_id;
+}
+
+Point GLOOBufferedMesh::get_vertex_pos(unsigned int v_idx) {
+	return Point(
+		_trimesh_vertices[v_idx*3],
+		_trimesh_vertices[v_idx*3 + 1],
+		_trimesh_vertices[v_idx*3 + 2]
+	);
+}
+
+Vector GLOOBufferedMesh::get_vertex_norm(unsigned int v_idx) {
+	return Vector(
+		_trimesh_normals[v_idx*3],
+		_trimesh_normals[v_idx*3 + 1],
+		_trimesh_normals[v_idx*3 + 2]
+	);
+}
+
+GLOOFace GLOOBufferedMesh::get_face(unsigned int f_idx) {
+	return GLOOFace(
+		_trimesh_indices[f_idx*3],
+		_trimesh_indices[f_idx*3 + 1],
+		_trimesh_indices[f_idx*3 + 2]
+	);
+}
+
+Vector GLOOBufferedMesh::get_interpolated_normal(const Point& local_pt, unsigned int f_idx) {
+	GLOOFace face = get_face(f_idx);
+	Point vertices[3] = { get_vertex_pos(face.a), get_vertex_pos(face.b), get_vertex_pos(face.c) };
+	Vector normals[3] = { get_vertex_norm(face.a), get_vertex_norm(face.b), get_vertex_norm(face.c) };
+	Point p = local_pt;
+	// Project p onto the plane
+	// Rotate vertices and p so that z can be ignored
+	// Find the barycentric coordinates of p on the triangle defined by vertices
+	// Use the barycentric coordinates to interpolate between the values defined by normals
 }
 
 GLOOBufferedMesh::~GLOOBufferedMesh() {
