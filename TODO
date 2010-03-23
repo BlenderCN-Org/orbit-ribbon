@@ -1,3 +1,24 @@
+== ROADMAP ==
+* Get collision and running working reliably and smoothly
+* Implement a simple menu system with mouse support
+* Add mouse support for game input
+* Add mission requirements and a simple HUD
+* Add background stuff (like in the Python version, but do a better job on the ring)
+* Get it to build on Windows
+* Seperate out the ORE file into its own package
+* Include build date in version (seperate into its own tiny TU so that compilation time not bad)
+---> Release as alpha1. Dan can try it out at this stage.
+* Music & sound effects
+* Skeletal animation
+* Shadows
+* Particles
+* Make the HUD better
+* Implement simple versions of some of the story missions
+* Do a Shadow-of-the-Colossus type of effect on jungle-leaf textures
+* Inside/outside effect (HDR?), with light shining through leaves nicely if possible
+---> Release as alpha2. Try to reach this point by end of service.
+
+== OTHER STUFF TO DO ==
 Thinh's ideas:
 - FOV on acceleration
 - Compass
@@ -20,14 +41,10 @@ Thinh's ideas:
 - Consider using three VBOs: one for very static geometry, one for rigid but movable geometry, and one for dynamic geometry
 	- If using above: have the ORE file pre-transform static geometry
 - Have the ORE file include pre-calculated information about how much memory must be allocated for the VBOs
-- Show the loading animation
+- Show the loading animation while loading
 - Include all resources in the ORE file (including loading anim, title screen image, sounds, etc)
-- Separate out the ORE file into its own repository
+- Separate out the ORE file into its own repository; name it No Lack Of Sky
 - Figure out why SDL won't restore the original screen resolution! (Grumble, mumble)
 - Why doesn't vsync work?
 - Allow video mode to be reinitialized without having to reinit the entire display module
-
-- Maybe when it is necessary to tilt about z axis while running, I should add some x linear force to simulate banking
-	Banking would actually occur, since one foot would be pushing sideways to adjust orientation
-
-- Move attachment detection into the collision handler for the physical body ; that way, there's either collisions that cause attachment or collisions that cause bounce, no mixing. Continue with the current method of causing detachment.
+- Maybe when it is necessary to tilt about z axis while running, I should add some x linear force to simulate banking. Banking would actually occur, since one foot would be pushing sideways to adjust orientation, right?
