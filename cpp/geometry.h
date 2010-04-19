@@ -27,16 +27,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <string>
 #include <ode/ode.h>
 
-GLfloat rev2rad(GLfloat ang); // FIXME: In old version, this also converted cw to ccw. Make sure everything that needed that does it itself!
-GLfloat rad2rev(GLfloat ang);
-GLfloat rev2deg(GLfloat ang);
-GLfloat deg2rev(GLfloat ang);
-GLfloat rad2deg(GLfloat ang);
-GLfloat deg2rad(GLfloat ang);
-
-bool similar(float a, float b);
-
-float limit_abs(float x, float max);
+class Point;
+class Plane;
+typedef Point Vector;
+typedef Point Size;
 
 class Point {
 	public:
@@ -47,6 +41,8 @@ class Point {
 		Point(const dReal* s) : x(s[0]), y(s[1]), z(s[2]) {}
 		Point(GLfloat nx = 0.0, GLfloat ny = 0.0, GLfloat nz = 0.0) : x(nx), y(ny), z(nz) {}
 		Point(const Point& other) : x(other.x), y(other.y), z(other.z) {}
+		
+		GLfloat operator[](int i) const { return (i == 0 ? x : (i == 1 ? y : z)); }
 		
 		Point& operator=(const Point& other);
 		
@@ -73,17 +69,36 @@ class Point {
 		
 		bool near_to(const Point& other) const;
 		GLfloat dot_prod(const Point& other) const;
+		Point cross_prod(const Point& other) const;
 		GLfloat mag() const;
 		GLfloat dist_to(const Point& other) const;
 		GLfloat sq_dist_to(const Point& other) const;
 		GLfloat ang_to(const Point& other) const;
 		Point to_length(float len) const;
 		Point project_onto(const Point& other) const;
+		Point project_onto(const Plane& other) const;
 		
 		std::string to_str() const;
 };
 
-typedef Point Vector;
-typedef Point Size;
+class Plane {
+	public:
+		GLfloat a, b, c, d;
+		
+		Plane(GLfloat na, GLfloat nb, GLfloat nc, GLfloat nd);
+		Plane(const Point& p0, const Point& p1, const Point& p2);
+		
+		Vector normal() const;
+};
+
+GLfloat rev2rad(GLfloat ang); // FIXME: In old version, this also converted cw to ccw. Make sure everything that needed that does it itself!
+GLfloat rad2rev(GLfloat ang);
+GLfloat rev2deg(GLfloat ang);
+GLfloat deg2rev(GLfloat ang);
+GLfloat rad2deg(GLfloat ang);
+GLfloat deg2rad(GLfloat ang);
+bool similar(float a, float b);
+float limit_abs(float x, float max);
+Vector get_barycentric(const Point& p, const Point& a, const Point& b, const Point& c);
 
 #endif

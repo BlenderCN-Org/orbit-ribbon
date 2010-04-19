@@ -163,6 +163,14 @@ GLfloat Point::dot_prod(const Point& other) const {
 	return x*other.x + y*other.y + z*other.z;
 }
 
+Point Point::cross_prod(const Point& other) const {
+	return Point(
+		y*other.z - z*other.y,
+		z*other.x - x*other.z,
+		x*other.y - y*other.x
+	);
+}
+
 GLfloat Point::dist_to(const Point& other) const {
 	return std::sqrt(sq_dist_to(other));
 }
@@ -186,4 +194,42 @@ Point Point::to_length(float len) const {
 
 Point Point::project_onto(const Point& other) const {
 	return other*(this->dot_prod(other));
+}
+
+Point Point::project_onto(const Plane& p) const {
+	Vector n = p.normal();
+	float dist = this->dot_prod(n) + p.d;
+	return *this - (n*dist);
+}
+
+Plane::Plane(GLfloat na, GLfloat nb, GLfloat nc, GLfloat nd) :
+	a(na), b(nb), c(nc), d(nd)
+{}
+
+Plane::Plane(const Point& p0, const Point& p1, const Point& p2) {
+	Vector v = p1-p0;
+	Vector u = p2-p0;
+	Vector n = v.cross_prod(u).to_length(1.0);
+	a = n.x;
+	b = n.y;
+	c = n.z;
+	d = (-n).dot_prod(p0);
+}
+
+Vector Plane::normal() const {
+	return Vector(a, b, c);
+}
+
+Vector get_barycentric(const Point& p, const Point& a, const Point& b, const Point& c) {
+	Plane tri_p(a, b, c);
+	Point pp = p.project_onto(tri_p);
+	
+	// Algorithm from Christer Ericson on the gamedev.net forums
+	Vector n = tri_p.normal();
+	float area_abc = n.dot_prod((b-a).cross_prod(c-a));
+	float area_pbc = n.dot_prod((b-p).cross_prod(c-p));
+	float area_pca = n.dot_prod((c-p).cross_prod(a-p));
+	float ba = area_pbc/area_abc;
+	float bb = area_pca/area_abc;
+	return Vector(ba, bb, 1.0 - ba - bb);
 }
