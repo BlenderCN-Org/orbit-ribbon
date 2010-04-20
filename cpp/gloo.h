@@ -29,6 +29,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <string>
 #include <list>
 #include <vector>
+#include <map>
 #include <SDL/SDL.h>
 #include <GL/glew.h>
 #include <GL/gl.h>
@@ -63,9 +64,9 @@ class GLOOTexture : boost::noncopyable {
 	public:
 		static boost::shared_ptr<GLOOTexture> load(const std::string& name);
 		
-		std::string get_load_name() { return _load_name; }
-		GLuint get_width() { return _width; }
-		GLuint get_height() { return _height; }
+		std::string get_load_name() const { return _load_name; }
+		GLuint get_width() const { return _width; }
+		GLuint get_height() const { return _height; }
 		
 		void bind();
 		
@@ -131,15 +132,17 @@ class _VBOManager : boost::noncopyable {
 		boost::shared_ptr<Allocation> allocate(unsigned int bytes)
 			{ return boost::shared_ptr<Allocation>(new Allocation(bytes, this)); }
 			
-		float get_usage();
+		float get_usage() const;
 		
-		bool mapped() { return _mapped; }
+		bool mapped() const { return _mapped; }
 };
 
+class GLOOBufferedMesh;
 class GLOOBufferedMesh : boost::noncopyable {
 	private:
 		static bool _initialized;
 		static boost::scoped_ptr<_VBOManager> _vertices_vboman, _faces_vboman;
+		static std::map<dTriMeshDataID, const GLOOBufferedMesh*> _trimesh_id_map;
 		
 		std::vector<dReal> _trimesh_vertices;
 		std::vector<dReal> _trimesh_normals;
@@ -164,6 +167,8 @@ class GLOOBufferedMesh : boost::noncopyable {
 			return (boost::format("VBO:%.2f%% IBO:%.2f%%") % (get_vertices_usage()*100) % (get_faces_usage()*100)).str();
 		}
 		
+		static const GLOOBufferedMesh* get_mesh_from_geom(dGeomID g);
+		
 		// These functions can only be called before the finish_loading() method is called
 		void load_vertex(const GLOOVertex& v);
 		void load_face(const GLOOFace& f);
@@ -175,13 +180,13 @@ class GLOOBufferedMesh : boost::noncopyable {
 		void draw();
 		
 		// Call this method after finish_loading() has been called, and only if you specified true for gen_trimesh_data
-		dTriMeshDataID get_trimesh_data();
+		dTriMeshDataID get_trimesh_data() const;
 		
 		// You can only call these if gen_trimesh_data had been activated
-		Point get_vertex_pos(unsigned int v_idx);
-		Vector get_vertex_norm(unsigned int v_idx);
-		GLOOFace get_face(unsigned int f_idx);
-		Vector get_interpolated_normal(const Point& local_pt, unsigned int f_idx);
+		Point get_vertex_pos(unsigned int v_idx) const;
+		Vector get_vertex_norm(unsigned int v_idx) const;
+		GLOOFace get_face(unsigned int f_idx) const ;
+		Vector get_interpolated_normal(const Point& p, unsigned int f_idx) const;
 		
 		virtual ~GLOOBufferedMesh();
 };

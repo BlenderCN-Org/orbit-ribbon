@@ -103,9 +103,11 @@ void collision_callback(void* data, dGeomID o1, dGeomID o2) {
 		if (dGeomIsEnabled(o1) && dGeomIsEnabled(o2)) {
 			unsigned int len = dCollide(o1, o2, MAXIMUM_CONTACT_POINTS, &(contacts[0]), sizeof(dContactGeom));
 			if (len > 0) {
+				/*
 				for (unsigned int i = 0; i < len; ++i) {
 					Debug::debug_msg("C" + boost::lexical_cast<std::string>(i) + " " + boost::lexical_cast<std::string>(contacts[i].side1) + ":" + boost::lexical_cast<std::string>(contacts[i].side2));
 				}
+				*/
 				CollisionHandler* o1h = static_cast<CollisionHandler*>(dGeomGetData(o1));
 				CollisionHandler* o2h = static_cast<CollisionHandler*>(dGeomGetData(o2));
 				bool contact1 = o1h->handle_collision(step_time, o2, &(contacts[0]), len);
@@ -199,8 +201,7 @@ void gen_ode_rot_matr(const boost::array<float, 9>& rot, dMatrix3 matr) {
 
 void OdeEntity::set_geom(const std::string& gname, dGeomID geom, std::auto_ptr<CollisionHandler> ch) {
 	// From here on out, we have to manage the memory for this CollisionHandler manually
-	CollisionHandler* chp = ch.release();
-	dGeomSetData(geom, chp);
+	dGeomSetData(geom, ch.release());
 	
 	// TODO possible optimization : to automatically use a space if a body has more than one geom
 	// This could be done without changing the external set_geom/get_geom interface

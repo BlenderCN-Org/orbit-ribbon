@@ -41,6 +41,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gloo.h"
 #include "ore.h"
 
+#include "debug.h"
+
 // How many kilobytes should be allocated for the vertices buffer and faces buffer respectively
 const int VERTICES_BUFFER_ALLOCATED_SIZE = 4096;
 const int FACES_BUFFER_ALLOCATED_SIZE = 2048;
@@ -185,7 +187,7 @@ _VBOManager::~_VBOManager() {
 	glDeleteBuffers(1, &_buf_id);
 }
 
-float _VBOManager::get_usage() {
+float _VBOManager::get_usage() const {
 	float used = 0.0;
 	if (!_ranges.empty()) {
 		used = float(_ranges.back().offset + _ranges.back().bytes);
@@ -195,6 +197,21 @@ float _VBOManager::get_usage() {
 
 bool GLOOBufferedMesh::_initialized = false;
 boost::scoped_ptr<_VBOManager> GLOOBufferedMesh::_vertices_vboman, GLOOBufferedMesh::_faces_vboman;
+std::map<dTriMeshDataID, const GLOOBufferedMesh*> GLOOBufferedMesh::_trimesh_id_map;
+
+const GLOOBufferedMesh* GLOOBufferedMesh::get_mesh_from_geom(dGeomID g) {
+	if (dGeomGetClass(g) != dTriMeshClass) {
+		return 0;
+	}
+	
+	dTriMeshDataID d = dGeomTriMeshGetData(g);
+	std::map<dTriMeshDataID, const GLOOBufferedMesh*>::iterator i = _trimesh_id_map.find(d);
+	if (i == _trimesh_id_map.end()) {
+		return 0;
+	} else {
+		return i->second;
+	}
+}
 
 GLOOBufferedMesh::GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_count, boost::shared_ptr<GLOOTexture> tex, bool gen_trimesh_data) :
 	_trimesh_id(0),
@@ -283,6 +300,7 @@ void GLOOBufferedMesh::finish_loading() {
 			&*(_trimesh_vertices.begin()), 3*sizeof(dReal), _total_vertices,
 			&*(_trimesh_indices.begin()), _total_faces*3, 3*sizeof(unsigned int),
 			&*(_trimesh_normals.begin()));
+		_trimesh_id_map[_trimesh_id] = this;
 	}
 	
 	_vertices_alloc->unmap();
@@ -317,14 +335,14 @@ void GLOOBufferedMesh::draw() {
 	}
 }
 
-dTriMeshDataID GLOOBufferedMesh::get_trimesh_data() {
+dTriMeshDataID GLOOBufferedMesh::get_trimesh_data() const {
 	if (_vertices_vboman->mapped() or _faces_vboman->mapped()) {
 		throw OreException("Attempted to get trimesh data from GLOOBufferedMesh while still mapped");
 	}
 	return _trimesh_id;
 }
 
-Point GLOOBufferedMesh::get_vertex_pos(unsigned int v_idx) {
+Point GLOOBufferedMesh::get_vertex_pos(unsigned int v_idx) const {
 	return Point(
 		_trimesh_vertices[v_idx*3],
 		_trimesh_vertices[v_idx*3 + 1],
@@ -332,7 +350,7 @@ Point GLOOBufferedMesh::get_vertex_pos(unsigned int v_idx) {
 	);
 }
 
-Vector GLOOBufferedMesh::get_vertex_norm(unsigned int v_idx) {
+Vector GLOOBufferedMesh::get_vertex_norm(unsigned int v_idx) const {
 	return Vector(
 		_trimesh_normals[v_idx*3],
 		_trimesh_normals[v_idx*3 + 1],
@@ -340,7 +358,7 @@ Vector GLOOBufferedMesh::get_vertex_norm(unsigned int v_idx) {
 	);
 }
 
-GLOOFace GLOOBufferedMesh::get_face(unsigned int f_idx) {
+GLOOFace GLOOBufferedMesh::get_face(unsigned int f_idx) const {
 	return GLOOFace(
 		_trimesh_indices[f_idx*3],
 		_trimesh_indices[f_idx*3 + 1],
@@ -348,19 +366,17 @@ GLOOFace GLOOBufferedMesh::get_face(unsigned int f_idx) {
 	);
 }
 
-Vector GLOOBufferedMesh::get_interpolated_normal(const Point& local_pt, unsigned int f_idx) {
+Vector GLOOBufferedMesh::get_interpolated_normal(const Point& p, unsigned int f_idx) const {
 	GLOOFace face = get_face(f_idx);
-	Point vertices[3] = { get_vertex_pos(face.a), get_vertex_pos(face.b), get_vertex_pos(face.c) };
 	Vector normals[3] = { get_vertex_norm(face.a), get_vertex_norm(face.b), get_vertex_norm(face.c) };
-	Point p = local_pt;
-	// Project p onto the plane
-	// Rotate vertices and p so that z can be ignored
-	// Find the barycentric coordinates of p on the triangle defined by vertices
-	// Use the barycentric coordinates to interpolate between the values defined by normals
+	Vector b = get_barycentric(p, get_vertex_pos(face.a), get_vertex_pos(face.b), get_vertex_pos(face.c));
+	Debug::debug_msg("BARY:" + b.to_str());
+	return normals[0]*b[0] + normals[1]*b[1] + normals[2]*b[2];
 }
 
 GLOOBufferedMesh::~GLOOBufferedMesh() {
 	if (_trimesh_id != 0) {
+		_trimesh_id_map.erase(_trimesh_id);
 		dGeomTriMeshDataDestroy(_trimesh_id);
 	}
 	finish_loading();

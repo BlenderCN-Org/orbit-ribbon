@@ -50,6 +50,7 @@ class MeshAnimation : boost::noncopyable {
 		static boost::shared_ptr<MeshAnimation> load(const std::string& name);
 		
 		dTriMeshDataID get_trimesh_data(unsigned int frame) { return _frames[frame]->get_trimesh_data(); }
+		const GLOOBufferedMesh* get_frame(unsigned int frame) { return &(*_frames[frame]); }
 		const std::string& get_name() { return _name; }
 		void draw();
 };
