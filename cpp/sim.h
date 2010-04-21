@@ -120,6 +120,9 @@ class OdeEntity : boost::noncopyable {
 		void set_pos(const Point& pos);
 		void set_rot(const boost::array<float, 9>& rot);
 		
+		static GameObj* get_gameobj_from_body(dBodyID b);
+		void set_gameobj(GameObj* g);
+		
 		~OdeEntity();
 };
 

@@ -57,9 +57,10 @@ class GameObj : boost::noncopyable {
 		void draw(bool near);
 		void step();
 		
-		Point get_rel_point_pos(const Point& p);
-		Vector vector_to_world(const Vector& v);
-		Vector vector_from_world(const Vector& v);
+		Point get_rel_point_pos(const Point& p) const;
+		Point get_pos_rel_point(const Point& p) const;
+		Vector vector_to_world(const Vector& v) const;
+		Vector vector_from_world(const Vector& v) const;
 	
 	protected:
 		OdeEntity& get_entity() { return *_entity; }

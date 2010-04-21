@@ -155,7 +155,7 @@ bool AvatarGameObj::StickyAttachmentContactHandler::handle_collision(
 	
 	const GLOOBufferedMesh* mesh = GLOOBufferedMesh::get_mesh_from_geom(c[0].g2);
 	if (mesh != 0) {
-		mesh->get_interpolated_normal(Point(c[0].pos), c[0].side2);
+		mesh->get_interpolated_normal(c[0].g2, Point(c[0].pos), c[0].side2);
 	}
 	
 	_avatar->check_attachment(ypd, sn);

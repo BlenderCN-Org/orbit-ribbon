@@ -253,6 +253,16 @@ void OdeEntity::set_rot(const boost::array<float, 9>& rot) {
 	}
 }
 
+GameObj* OdeEntity::get_gameobj_from_body(dBodyID b) {
+	return static_cast<GameObj*>(dBodyGetData(b));
+}
+
+void OdeEntity::set_gameobj(GameObj* g) {
+	if (_id != 0) {
+		dBodySetData(_id, g);
+	}
+}
+
 OdeEntity::~OdeEntity() {
 	if (_id != 0) {
 		dBodyDestroy(_id);

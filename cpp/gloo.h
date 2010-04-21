@@ -39,6 +39,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "cache.h"
 #include "geometry.h"
 
+class GameObj;
+
 class GLOOPushedMatrix : boost::noncopyable {
 	public:
 		GLOOPushedMatrix();
@@ -186,7 +188,7 @@ class GLOOBufferedMesh : boost::noncopyable {
 		Point get_vertex_pos(unsigned int v_idx) const;
 		Vector get_vertex_norm(unsigned int v_idx) const;
 		GLOOFace get_face(unsigned int f_idx) const ;
-		Vector get_interpolated_normal(const Point& p, unsigned int f_idx) const;
+		Vector get_interpolated_normal(dGeomID g, const Point& p, unsigned int f_idx) const;
 		
 		virtual ~GLOOBufferedMesh();
 };

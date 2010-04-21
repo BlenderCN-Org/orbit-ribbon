@@ -55,6 +55,7 @@ GameObj::GameObj(const ORE1::ObjType& obj, std::auto_ptr<OdeEntity> entity) :
 	
 	_entity->set_pos(_pos);
 	_entity->set_rot(_rot);
+	_entity->set_gameobj(this);
 	
 	_vel_damp_coef[0] = DEFAULT_VEL_DAMP_COEF;
 	_vel_damp_coef[1] = DEFAULT_VEL_DAMP_COEF;
@@ -168,19 +169,25 @@ void GameObj::step() {
 	}
 }
 
-Point GameObj::get_rel_point_pos(const Point& p) {
+Point GameObj::get_rel_point_pos(const Point& p) const {
 	dVector3 res;
 	dBodyGetRelPointPos(_entity->get_id(), p.x, p.y, p.z, res);
 	return Point(res[0], res[1], res[2]);
 }
 
-Vector GameObj::vector_to_world(const Vector& v) {
+Point GameObj::get_pos_rel_point(const Point& p) const {
+	dVector3 res;
+	dBodyGetPosRelPoint(_entity->get_id(), p.x, p.y, p.z, res);
+	return Point(res[0], res[1], res[2]);
+}
+
+Vector GameObj::vector_to_world(const Vector& v) const {
 	dVector3 res;
 	dBodyVectorToWorld(_entity->get_id(), v.x, v.y, v.z, res);
 	return Vector(res[0], res[1], res[2]);
 }
 
-Vector GameObj::vector_from_world(const Vector& v) {
+Vector GameObj::vector_from_world(const Vector& v) const {
 	dVector3 res;
 	dBodyVectorFromWorld(_entity->get_id(), v.x, v.y, v.z, res);
 	return Vector(res[0], res[1], res[2]);
