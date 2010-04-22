@@ -40,6 +40,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "gloo.h"
 #include "ore.h"
+#include "sim.h"
 
 #include "debug.h"
 
@@ -369,15 +370,15 @@ GLOOFace GLOOBufferedMesh::get_face(unsigned int f_idx) const {
 Vector GLOOBufferedMesh::get_interpolated_normal(dGeomID g, const Point& p, unsigned int f_idx) const {
 	GLOOFace face = get_face(f_idx);
 	Vector normals[3] = { get_vertex_norm(face.a), get_vertex_norm(face.b), get_vertex_norm(face.c) };
-	Vector b = get_barycentric(g.get_pos_rel_point(p), get_vertex_pos(face.a), get_vertex_pos(face.b), get_vertex_pos(face.c));
+	Vector b = get_barycentric(OdeGeomUtil::get_pos_rel_point(g, p), get_vertex_pos(face.a), get_vertex_pos(face.b), get_vertex_pos(face.c));
 	Debug::debug_msg("P:" + p.to_str());
-	Debug::debug_msg("REL-P:" + g.get_pos_rel_point(p).to_str());
+	Debug::debug_msg("REL-P:" + OdeGeomUtil::get_pos_rel_point(g, p).to_str());
 	Debug::debug_msg("A:" + get_vertex_pos(face.a).to_str());
 	Debug::debug_msg("B:" + get_vertex_pos(face.b).to_str());
 	Debug::debug_msg("C:" + get_vertex_pos(face.c).to_str());
 	Debug::debug_msg("BARY:" + b.to_str());
 	Debug::debug_msg("----");
-	return g.vector_to_world(normals[0]*b[0] + normals[1]*b[1] + normals[2]*b[2]);
+	return OdeGeomUtil::vector_to_world(g, normals[0]*b[0] + normals[1]*b[1] + normals[2]*b[2]);
 }
 
 GLOOBufferedMesh::~GLOOBufferedMesh() {

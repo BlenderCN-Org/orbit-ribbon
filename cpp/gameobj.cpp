@@ -172,25 +172,25 @@ void GameObj::step() {
 Point GameObj::get_rel_point_pos(const Point& p) const {
 	dVector3 res;
 	dBodyGetRelPointPos(_entity->get_id(), p.x, p.y, p.z, res);
-	return Point(res[0], res[1], res[2]);
+	return Point(res);
 }
 
 Point GameObj::get_pos_rel_point(const Point& p) const {
 	dVector3 res;
 	dBodyGetPosRelPoint(_entity->get_id(), p.x, p.y, p.z, res);
-	return Point(res[0], res[1], res[2]);
+	return Point(res);
 }
 
 Vector GameObj::vector_to_world(const Vector& v) const {
 	dVector3 res;
 	dBodyVectorToWorld(_entity->get_id(), v.x, v.y, v.z, res);
-	return Vector(res[0], res[1], res[2]);
+	return Vector(res);
 }
 
 Vector GameObj::vector_from_world(const Vector& v) const {
 	dVector3 res;
 	dBodyVectorFromWorld(_entity->get_id(), v.x, v.y, v.z, res);
-	return Vector(res[0], res[1], res[2]);
+	return Vector(res);
 }
 
 bool GOFactoryRegistry::_initialized;

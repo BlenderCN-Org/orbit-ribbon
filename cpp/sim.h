@@ -126,4 +126,31 @@ class OdeEntity : boost::noncopyable {
 		~OdeEntity();
 };
 
+class OdeGeomUtil {
+	public:
+		static Point get_rel_point_pos(dGeomID g, const Point& p) {
+			dVector3 res;
+			dGeomGetRelPointPos(g, p.x, p.y, p.z, res);
+			return Point(res);
+		}
+		
+		static Point get_pos_rel_point(dGeomID g, const Point& p) {
+			dVector3 res;
+			dGeomGetPosRelPoint(g, p.x, p.y, p.z, res);
+			return Point(res);
+		}
+		
+		static Vector vector_to_world(dGeomID g, const Vector& v) {
+			dVector3 res;
+			dGeomVectorToWorld(g, v.x, v.y, v.z, res);
+			return Vector(res);
+		}
+		
+		static Vector vector_from_world(dGeomID g, const Vector& v) {
+			dVector3 res;
+			dGeomVectorFromWorld(g, v.x, v.y, v.z, res);
+			return Vector(res);
+		}
+};	
+
 #endif
