@@ -221,5 +221,5 @@ env.Program(
 	'orbit-ribbon',
 	[b for b in (tree_built + parser_built) if str(b).endswith(".cpp")] + Glob('buildtmp/*.cpp'),
 	LIBS=['GL', 'GLU', 'GLEW', 'ode', 'SDL', 'SDL_mixer', 'SDL_image', 'zzip', 'boost_filesystem-mt', 'boost_regex-mt', 'boost_program_options-mt', 'xerces-c', 'ftgl'],
-	CCFLAGS='-Wall -Wextra -pedantic-errors -DdSINGLE -I/usr/include/freetype2/'
+	CCFLAGS='-Wall -Wextra -pedantic-errors -DdDOUBLE -I/usr/include/freetype2/'
 )
