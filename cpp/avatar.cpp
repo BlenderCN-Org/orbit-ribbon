@@ -135,6 +135,11 @@ bool AvatarGameObj::AvatarContactHandler::handle_collision(
 )  {
 	float ypd = c[0].depth;
 	Vector sn(c[0].normal);
+	const GLOOBufferedMesh* mesh = GLOOBufferedMesh::get_mesh_from_geom(c[0].g2);
+	if (mesh != 0) {
+		sn = mesh->get_interpolated_normal(c[0].g2, Point(c[0].pos), c[0].side2);
+	}
+	
 	if (_avatar->check_attachment(ypd, sn)) {
 		_avatar->_run_coll_steptime = Globals::total_steps;
 		return false;
@@ -152,7 +157,6 @@ bool AvatarGameObj::StickyAttachmentContactHandler::handle_collision(
 )  {
 	float ypd = -c[0].depth + RUNNING_MAX_DELTA_Y_POS;
 	Vector sn(c[0].normal);
-	
 	const GLOOBufferedMesh* mesh = GLOOBufferedMesh::get_mesh_from_geom(c[0].g2);
 	if (mesh != 0) {
 		sn = mesh->get_interpolated_normal(c[0].g2, Point(c[0].pos), c[0].side2);
