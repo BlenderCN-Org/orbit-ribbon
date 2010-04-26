@@ -52,6 +52,12 @@ const float CROLL_COEF = 700.0;
 const float UPRIGHTNESS_ENTRY_TIME = 0.5;
 const float UPRIGHTNESS_STEP_DIFF = 1.0f/(UPRIGHTNESS_ENTRY_TIME*MAX_FPS);
 
+// Detach grace period is a brief time after an attachment where collisions near the feet of the avatar don't cause contact joints
+const float DETACH_GRACE_PERIOD_TIME = 0.05;
+const float DETACH_GRACE_PERIOD_TIME_STEPS = DETACH_GRACE_PERIOD_TIME*MAX_FPS;
+const float DETACH_GRACE_PERIOD_RADIUS = 0.1;
+const float DETACH_GRACE_PERIOD_RADIUS_SQ = DETACH_GRACE_PERIOD_RADIUS * DETACH_GRACE_PERIOD_RADIUS;
+
 GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 
 void AvatarGameObj::update_geom_offsets() {
@@ -144,8 +150,17 @@ bool AvatarGameObj::AvatarContactHandler::handle_collision(
 		_avatar->_run_coll_steptime = Globals::total_steps;
 		return false;
 	} else {
-		_avatar->_norm_coll_steptime = Globals::total_steps;
-		return true;
+		Point feet_center(_avatar->get_pos() - _avatar->vector_to_world(Vector(0, _avatar->_height/2, 0)));
+		Point coll = Point(c[0].pos);
+		if (
+			_avatar->get_last_run_coll_age() <= DETACH_GRACE_PERIOD_TIME_STEPS &&
+			feet_center.sq_dist_to(coll) <= DETACH_GRACE_PERIOD_RADIUS_SQ
+		) {
+			return false;
+		} else {
+			_avatar->_norm_coll_steptime = Globals::total_steps;
+			return true;
+		}
 	}
 }
 
