@@ -199,10 +199,14 @@ void AvatarGameObj::step_impl() {
 		dBodyAddRelForce(body, -v, 0.0, 0.0);
 	}
 	
+	bool pushing_up = false;
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::TranslateY);
 	v = (chn->get_value())*(MAX_STRAFE/MAX_FPS);
 	if (chn->is_on()) {
 		dBodyAddRelForce(body, 0.0, -v, 0.0);
+		if (v < 0) {
+			pushing_up = true;
+		}
 	}
 	
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::TranslateZ);
@@ -258,7 +262,8 @@ void AvatarGameObj::step_impl() {
 	_attached = _attached_this_frame;
 	
 	// If we are attached, work to keep ourselves ideally oriented to the attachment surface
-	if (_attached) {
+	// However, if the user is pushing up and we're either totally upright or unattached, don't attach
+	if (_attached && !(pushing_up && (_uprightness <= 0.0 || _uprightness >= 1.0))) {
 		Vector sn_rel = vector_from_world(_sn);
 		Vector lvel = Vector(dBodyGetLinearVel(body));
 		Vector lvel_rel = vector_from_world(lvel);
