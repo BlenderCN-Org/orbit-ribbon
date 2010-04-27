@@ -1,5 +1,4 @@
 == ROADMAP ==
-* Get collision and running working reliably and smoothly
 * Implement a simple menu system with mouse support
 * Add mouse support for game input
 * Add mission requirements and a simple HUD
