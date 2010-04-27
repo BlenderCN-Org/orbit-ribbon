@@ -263,7 +263,7 @@ void AvatarGameObj::step_impl() {
 	
 	// If we are attached, work to keep ourselves ideally oriented to the attachment surface
 	// However, if the user is pushing up and we're either totally upright or unattached, don't attach
-	if (_attached && !(pushing_up && (_uprightness <= 0.0 || _uprightness >= 1.0))) {
+	if (_attached) {
 		Vector sn_rel = vector_from_world(_sn);
 		Vector lvel = Vector(dBodyGetLinearVel(body));
 		Vector lvel_rel = vector_from_world(lvel);
@@ -283,7 +283,7 @@ void AvatarGameObj::step_impl() {
 		dBodySetRotation(body, matr);
 		
 		// Y position delta
-		set_pos(get_pos() + _sn*limit_abs(_ypos_delta, RUNNING_ADJ_RATE_Y_POS/MAX_FPS));
+		set_pos(get_pos() + _sn*limit_abs(_ypos_delta + (pushing_up ? RUNNING_MAX_DELTA_Y_POS*2 : 0), RUNNING_ADJ_RATE_Y_POS/MAX_FPS));
 		
 		// Y linear velocity delta
 		lvel_rel.y += limit_abs(_ylvel_delta, RUNNING_ADJ_RATE_Y_LVEL/MAX_FPS);
