@@ -1,6 +1,5 @@
 == ROADMAP ==
 * Implement a simple menu system with mouse support
-* Add mouse support for game input
 * Add mission requirements and a simple HUD
 * Add background stuff (like in the Python version, but do a better job on the ring)
 * Get it to build on Windows
@@ -22,8 +21,6 @@
 Thinh's ideas:
 - FOV on acceleration
 - Compass
-- Increase strength on strafe
-- Y-axis inversion option
 - More stuff in the sky for orientation
 - Reduced rotation speed, cap
 
