@@ -47,7 +47,25 @@
 	</inputDevice>
 </preset>
 
-<preset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:orsave="http://www.orbit-ribbon.org/ORSave">
+<preset>
+	<presetName>Default Mouse Mapping</presetName>
+	<inputDevice device="Mouse">
+		<axis_bind action="RotateX">
+			<input xsi:type="orsave:MouseMovementInputType" axisNum="1" />
+		</axis_bind>
+		<axis_bind action="RotateY">
+			<input xsi:type="orsave:MouseMovementInputType" axisNum="0" />
+		</axis_bind>
+		<axis_bind action="RotateZ">
+			<input xsi:type="orsave:PseudoAxisInputType" posInvert="false" negInvert="true">
+				<negative xsi:type="orsave:MouseButtonInputType" buttonNum="1" />
+				<positive xsi:type="orsave:MouseButtonInputType" buttonNum="3" />
+			</input>
+		</axis_bind>
+	</inputDevice>
+</preset>
+
+<preset>
 	<presetName>PS3 Controller</presetName>
 	<deviceMatchString>PLAYSTATION(R)3</deviceMatchString>
 	<inputDevice device="Gamepad">

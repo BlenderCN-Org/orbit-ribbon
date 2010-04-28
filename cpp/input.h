@@ -102,6 +102,62 @@ class KeyChannel : public Channel {
 		std::string desc() const;
 };
 
+class MouseButtonChannel;
+class MouseMovementChannel;
+class Mouse : public ChannelSource {
+	private:
+		friend class Input;
+		friend class MouseButtonChannel;
+		friend class MouseMovementChannel;
+		
+		int _rel_x;
+		int _rel_y;
+		int _btn_mask;
+		
+		// Key is axis/button number, value is index into _channels
+		std::map<Uint8, unsigned int> _axis_map;
+		std::map<Uint8, unsigned int> _button_map;
+	
+		Mouse();
+	
+	public:
+		void update();
+		const boost::shared_ptr<Channel> button_channel(Uint8 btn) const;
+		const boost::shared_ptr<Channel> movement_channel(Uint8 axis_num) const;
+};
+
+class MouseButtonChannel : public Channel {
+	private:
+		friend class Mouse;
+		
+		Mouse* _mouse;
+		Uint8 _btn;
+		bool _neutral_state;
+		
+		MouseButtonChannel(Mouse* mouse, Uint8 btn);
+	
+	public:
+		bool is_on() const;
+		float get_value() const;
+		void set_neutral();
+		std::string desc() const;
+};
+
+class MouseMovementChannel : public Channel {
+	private:
+		friend class Mouse;
+		
+		Mouse* _mouse;
+		Uint8 _axis;
+		
+		MouseMovementChannel(Mouse* mouse, Uint8 axis);
+	
+	public:
+		bool is_on() const;
+		float get_value() const;
+		std::string desc() const;
+};
+
 class GamepadAxisChannel;
 class GamepadButtonChannel;
 class GamepadManager : public ChannelSource {
@@ -228,6 +284,7 @@ class Input {
 		static boost::shared_ptr<Channel> _null_channel;
 		
 		static boost::shared_ptr<Keyboard> _kbd;
+		static boost::shared_ptr<Mouse> _mouse;
 		static boost::shared_ptr<GamepadManager> _gp_man;
 		static std::vector<ChannelSource*> _sources;
 		

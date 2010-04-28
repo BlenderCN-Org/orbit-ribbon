@@ -127,6 +127,7 @@ void Display::init() {
 	}
 	
 	SDL_ShowCursor(SDL_DISABLE);
+	SDL_WM_GrabInput(SDL_GRAB_ON); // "Captain! Scanners are detecting a Grabon warship in the area!" "Fire photon torpedoes!"
 	
 	GLenum glew_err = glewInit();
 	if (glew_err != GLEW_OK) {

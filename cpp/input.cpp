@@ -39,6 +39,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 // How far from -1, 0, or 1 where we consider an input axis to just be at those exact values
 const float DEAD_ZONE = 0.001;
 
+// At maximum and minimum sensitivity, how far the mouse has to move in a single step to be equivalent to full axis tilt
+const float MAX_MOUSE_SENSITIVITY_FULL = 20;
+const float MIN_MOUSE_SENSITIVITY_FULL = 50;
+
 bool Channel::is_partially_on() const {
 	return is_on();
 }
@@ -72,6 +76,22 @@ const boost::shared_ptr<Channel> Keyboard::key_channel(SDLKey key) const {
 	return _channels[(unsigned int)key];
 }
 
+Mouse::Mouse() {
+	update();
+	for (Uint8 a = 0; a < 2; ++a) {
+		_axis_map[a] = _channels.size();
+		_channels.push_back(boost::shared_ptr<Channel>(new MouseMovementChannel(this, a)));
+	}
+	for (Uint8 b = 1; b <= 7; ++b) { // Since SDL_GetRelativeMouseState returns a Uint8 mask, and 1st button is 1, max of 7 buttons suppoted
+		_button_map[b] = _channels.size();
+		_channels.push_back(boost::shared_ptr<Channel>(new MouseButtonChannel(this, b)));
+	}
+}
+
+void Mouse::update() {
+	_btn_mask = SDL_GetRelativeMouseState(&_rel_x, &_rel_y);
+}
+
 GamepadManager::GamepadManager() {
 	for (Uint8 i = 0; i < SDL_NumJoysticks(); ++i) {
 		SDL_Joystick* gp = SDL_JoystickOpen(i);
@@ -90,6 +110,22 @@ GamepadManager::GamepadManager() {
 
 void GamepadManager::update() {
 	SDL_JoystickUpdate();
+}
+
+const boost::shared_ptr<Channel> Mouse::button_channel(Uint8 btn) const {
+	std::map<Uint8, unsigned int>::const_iterator i = _button_map.find(btn);
+	if (i == _button_map.end()) {
+		return Input::get_null_channel();
+	}
+	return _channels[i->second];
+}
+
+const boost::shared_ptr<Channel> Mouse::movement_channel(Uint8 btn) const {
+	std::map<Uint8, unsigned int>::const_iterator i = _axis_map.find(btn);
+	if (i == _axis_map.end()) {
+		return Input::get_null_channel();
+	}
+	return _channels[i->second];
 }
 
 const boost::shared_ptr<Channel> GamepadManager::axis_channel(Uint8 gamepad_num, Uint8 axis_num) const {
@@ -142,10 +178,7 @@ bool KeyChannel::is_on() const {
 }
 
 float KeyChannel::get_value() const {
-	if (is_on()) {
-		return 1.0;
-	}
-	return 0.0;
+	return is_on() ? 1.0 : 0.0;
 }
 
 void KeyChannel::set_neutral() {
@@ -158,6 +191,52 @@ std::string KeyChannel::desc() const {
 		upper_name.push_back(std::toupper(int(n)));
 	}
 	return std::string("[") + upper_name + std::string("]");
+}
+
+MouseButtonChannel::MouseButtonChannel(Mouse* mouse, Uint8 btn) :
+	_mouse(mouse),
+	_btn(btn)
+{}
+
+bool MouseButtonChannel::is_on() const {
+	return (_mouse->_btn_mask & SDL_BUTTON(_btn)) != _neutral_state;
+}
+
+float MouseButtonChannel::get_value() const {
+	return is_on() ? 1.0 : 0.0;
+}
+
+void MouseButtonChannel::set_neutral() {
+	_neutral_state = _mouse->_btn_mask & SDL_BUTTON(_btn);
+}
+
+std::string MouseButtonChannel::desc() const {
+	return std::string("MouseBtn") + boost::lexical_cast<std::string>(_btn);
+}
+
+MouseMovementChannel::MouseMovementChannel(Mouse* mouse, Uint8 axis) :
+	_mouse(mouse),
+	_axis(axis)
+{}
+
+bool MouseMovementChannel::is_on() const {
+	return !similar(get_value(), 0.0);
+}
+
+float MouseMovementChannel::get_value() const {
+	int v = (_axis == 0) ? _mouse->_rel_x : _mouse->_rel_y;
+	if (v == 0) { return 0.0; }
+	float s = Saving::get().config().mouseSensitivity().get();
+	float f = MIN_MOUSE_SENSITIVITY_FULL + s*(MAX_MOUSE_SENSITIVITY_FULL - MIN_MOUSE_SENSITIVITY_FULL);
+	return v/f;
+}
+
+std::string MouseMovementChannel::desc() const {
+	if (_axis == 0) {
+		return std::string("MouseX");
+	} else {
+		return std::string("MouseY");
+	}
 }
 
 GamepadAxisChannel::GamepadAxisChannel(GamepadManager* gamepad_man, Uint8 gamepad, Uint8 axis) :
@@ -202,7 +281,7 @@ void GamepadAxisChannel::set_neutral() {
 
 std::string GamepadAxisChannel::desc() const {
 	// TODO Allow use of human-readable joystick axis names
-	return (boost::format("Gamepad(%u)Axis:%u") % (_gamepad+1) % (_axis+1)).str();
+	return (boost::format("Gamepad(%u)Axis%u") % (_gamepad+1) % (_axis+1)).str();
 }
 
 GamepadButtonChannel::GamepadButtonChannel(GamepadManager* gamepad_man, Uint8 gamepad,  Uint8 button) :
@@ -228,7 +307,7 @@ void GamepadButtonChannel::set_neutral() {
 
 std::string GamepadButtonChannel::desc() const {
 	// TODO Allow use of human-readable joystick button names
-	return (boost::format("Gamepad(%u)Btn:%u") % (_gamepad+1) % (_button+1)).str();
+	return (boost::format("Gamepad(%u)Btn%u") % (_gamepad+1) % (_button+1)).str();
 }
 
 PseudoAxisChannel::PseudoAxisChannel(const boost::shared_ptr<Channel>& neg, const boost::shared_ptr<Channel>& pos, bool neg_invert, bool pos_invert) :
@@ -375,6 +454,7 @@ std::string MultiAndChannel::desc() const {
 boost::shared_ptr<Channel> Input::_null_channel;
 
 boost::shared_ptr<Keyboard> Input::_kbd;
+boost::shared_ptr<Mouse> Input::_mouse;
 boost::shared_ptr<GamepadManager> Input::_gp_man;
 std::vector<ChannelSource*> Input::_sources;
 
@@ -402,12 +482,23 @@ void Input::init() {
 		config_dirty = true;
 	}
 	
-	// Set up any gamepads.
+	// Set up the mouse input source. If no mouse input config exists, create one from the default preset.
+	_mouse = boost::shared_ptr<Mouse>(new Mouse);
+	_sources.push_back(&*_mouse);
+	try {
+		Saving::get_input_device(ORSave::InputDeviceNameType::Mouse);
+	} catch (const GameException& e) {
+		Debug::status_msg("Loading default input configuration for mouse");
+		Saving::get().config().inputDevice().push_back(get_preset("Default Mouse Mapping").inputDevice());
+		config_dirty = true;
+	}
+	
+	// Set up any gamepads, finding input configuration based on the gamepad's model if possible
 	_gp_man = boost::shared_ptr<GamepadManager>(new GamepadManager);
 	_sources.push_back(&*_gp_man);
 	if (_gp_man->get_num_gamepads() > 0) {
 		try {
-			ORSave::InputDeviceType& gp_input = Saving::get_input_device(ORSave::InputDeviceNameType::Gamepad);
+			ORSave::InputDeviceType& gp_input = Saving::get_input_device(ORSave::InputDeviceNameType::Gamepad); // Can throw GameException
 			if (gp_input.axis_bind().size() == 0 && gp_input.button_bind().size() == 0) {
 				throw GameException("It's empty"); // If a input config exists but is empty, act like we couldn't find an input config at all
 			}
@@ -466,6 +557,14 @@ boost::shared_ptr<Channel> Input::xml_to_channel(const ORSave::BoundInputType& i
 	if (typeid(i) == typeid(ORSave::KeyInputType)) {
 		chn = _kbd->key_channel(
 			SDLKey(static_cast<const ORSave::KeyInputType*>(&i)->key())
+		);
+	} else if (typeid(i) == typeid(ORSave::MouseButtonInputType)) {
+		chn = _mouse->button_channel(
+			static_cast<const ORSave::MouseButtonInputType*>(&i)->buttonNum()
+		);
+	} else if (typeid(i) == typeid(ORSave::MouseMovementInputType)) {
+		chn = _mouse->movement_channel(
+			static_cast<const ORSave::MouseMovementInputType*>(&i)->axisNum()
 		);
 	} else if (typeid(i) == typeid(ORSave::GamepadButtonInputType)) {
 		chn = _gp_man->button_channel(

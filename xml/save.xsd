@@ -66,6 +66,7 @@
 			<xsd:element name="debugPhysics" type="xsd:boolean" minOccurs="0" />
 			<xsd:element name="soundEffectVolume" type="xsd:float" minOccurs="0" />
 			<xsd:element name="musicVolume" type="xsd:float" minOccurs="0" />
+			<xsd:element name="mouseSensitivity" type="xsd:float" minOccurs="0" />
 			<xsd:element name="inputDevice" type="InputDeviceType" minOccurs="0" maxOccurs="unbounded"/>
 		</xsd:sequence>
 	</xsd:complexType>
@@ -137,6 +138,22 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 	
+	<xsd:complexType name="MouseButtonInputType">
+		<xsd:complexContent>
+			<xsd:extension base="ButtonBoundInputType">
+				<xsd:attribute name="buttonNum" type="xsd:unsignedInt" use="required" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	
+	<xsd:complexType name="MouseMovementInputType">
+		<xsd:complexContent>
+			<xsd:extension base="AxisBoundInputType">
+				<xsd:attribute name="axisNum" type="xsd:unsignedInt" use="required" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	
 	<xsd:complexType name="GamepadAxisInputType">
 		<xsd:complexContent>
 			<xsd:extension base="AxisBoundInputType">
@@ -191,6 +208,7 @@
 	<xsd:simpleType name="InputDeviceNameType">
 		<xsd:restriction base="xsd:string">
 			<xsd:enumeration value="Keyboard" />
+			<xsd:enumeration value="Mouse" />
 			<xsd:enumeration value="Gamepad" />
 		</xsd:restriction>
 	</xsd:simpleType>
