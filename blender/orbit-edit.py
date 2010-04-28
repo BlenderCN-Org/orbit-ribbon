@@ -355,9 +355,9 @@ def do_run_game():
 		if r < 0:
 			return
 		elif r == 0:
-			args.append("-m")
-			args.append(curscene)
-	os.system(" ".join((os.path.join(WORKING_DIR, os.pardir, "orbit-ribbon.py"),) + tuple(args)))
+			area, mission = curscene.split("-")
+			args.extend(["-a", area[1:], "-m", mission[1:]])
+	os.system(" ".join((os.path.join(WORKING_DIR, os.pardir, "orbit-ribbon"),) + tuple(args)))
 
 
 def menu():
