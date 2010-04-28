@@ -40,7 +40,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 const float DEAD_ZONE = 0.001;
 
 // At maximum and minimum sensitivity, how far the mouse has to move in a single step to be equivalent to full axis tilt
-const float MAX_MOUSE_SENSITIVITY_FULL = 20;
+const float MAX_MOUSE_SENSITIVITY_FULL = 5;
 const float MIN_MOUSE_SENSITIVITY_FULL = 50;
 
 bool Channel::is_partially_on() const {
@@ -228,7 +228,7 @@ float MouseMovementChannel::get_value() const {
 	if (v == 0) { return 0.0; }
 	float s = Saving::get().config().mouseSensitivity().get();
 	float f = MIN_MOUSE_SENSITIVITY_FULL + s*(MAX_MOUSE_SENSITIVITY_FULL - MIN_MOUSE_SENSITIVITY_FULL);
-	return v/f;
+	return fmax(-1.0, fmin(1.0, v/f));
 }
 
 std::string MouseMovementChannel::desc() const {
@@ -389,10 +389,12 @@ bool MultiOrChannel::is_partially_on() const {
 
 float MultiOrChannel::get_value() const {
 	float v;
+	bool assigned = false;
 	BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
 		float cand = ch->get_value();
-		if (std::fabs(cand) > std::fabs(v)) {
+		if ((!assigned) || std::fabs(cand) > std::fabs(v)) {
 			v = cand;
+			assigned = true;
 		}
 	}
 	return v;

@@ -163,7 +163,7 @@ void App::run(const std::vector<std::string>& args) {
 			}
 			return;
 		}
-
+		
 		// Initialize SDL
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
 			throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));

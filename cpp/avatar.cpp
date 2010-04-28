@@ -35,6 +35,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "input.h"
 #include "mesh.h"
+#include "saving.h"
 #include "sim.h"
 
 // Maximum amount of Newtons per second applied by various maneuvers
@@ -184,25 +185,23 @@ bool AvatarGameObj::StickyAttachmentContactHandler::handle_collision(
 }
 
 void AvatarGameObj::step_impl() {
-	// TODO: Consider adding linear and angular velocity caps
-	// TODO: Set a maximum total acceleration, then force accel vector to be no longer than that magnitude
-	
 	dBodyID body = get_entity().get_id();
 	
 	const Channel* chn;
-	float v;
-	float cv;
 	
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::TranslateX);
-	v = (chn->get_value())*(MAX_STRAFE/MAX_FPS);
 	if (chn->is_on()) {
+		float v = (chn->get_value())*(MAX_STRAFE/MAX_FPS);
 		dBodyAddRelForce(body, -v, 0.0, 0.0);
 	}
 	
 	bool pushing_up = false;
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::TranslateY);
-	v = (chn->get_value())*(MAX_STRAFE/MAX_FPS);
 	if (chn->is_on()) {
+		float v = (chn->get_value())*(MAX_STRAFE/MAX_FPS);
+		if (Saving::get().config().invertTranslateY().get()) {
+			v = -v;
+		}
 		dBodyAddRelForce(body, 0.0, -v, 0.0);
 		if (v < 0) {
 			pushing_up = true;
@@ -210,8 +209,8 @@ void AvatarGameObj::step_impl() {
 	}
 	
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::TranslateZ);
-	v = (chn->get_value())*(MAX_ACCEL/MAX_FPS);
 	if (chn->is_on()) {
+		float v = (chn->get_value())*(MAX_ACCEL/MAX_FPS);
 		dBodyAddRelForce(body, 0.0, 0.0, v);
 	}
 	
@@ -221,31 +220,34 @@ void AvatarGameObj::step_impl() {
 	
 	// X-turn and x-counterturn
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::RotateY);
-	v = -(chn->get_value())*(MAX_TURN/MAX_FPS);
-	cv = rel_avel[1]*-CTURN_COEF/MAX_FPS;
 	if (chn->is_on()) {
+		float v = -(chn->get_value())*(MAX_TURN/MAX_FPS);
 		dBodyAddRelTorque(body, 0.0, v, 0.0);
 	} else {
+		float cv = rel_avel[1]*-CTURN_COEF/MAX_FPS;
 		dBodyAddRelTorque(body, 0.0, cv, 0.0);
 	}
 	
 	// Y-turn and y-counterturn
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::RotateX);
-	v = (chn->get_value())*(MAX_TURN/MAX_FPS);
-	cv = rel_avel[0]*-CTURN_COEF/MAX_FPS;
 	if (chn->is_on()) {
+		float v = (chn->get_value())*(MAX_TURN/MAX_FPS);
+		if (Saving::get().config().invertRotateY().get()) {
+			v = -v;
+		}
 		dBodyAddRelTorque(body, v, 0.0, 0.0);
 	} else {
+		float cv = rel_avel[0]*-CTURN_COEF/MAX_FPS;
 		dBodyAddRelTorque(body, cv, 0.0, 0.0);
 	}
 	
 	// Roll and counter-roll
 	chn = &Input::get_axis_ch(ORSave::AxisBoundAction::RotateZ);
-	v = (chn->get_value())*(MAX_ROLL/MAX_FPS);
-	cv = rel_avel[2]*(-CROLL_COEF/MAX_FPS);
 	if (chn->is_on()) {
+		float v = (chn->get_value())*(MAX_ROLL/MAX_FPS);
 		dBodyAddRelTorque(body, 0.0, 0.0, v);
 	} else {
+		float cv = rel_avel[2]*(-CROLL_COEF/MAX_FPS);
 		dBodyAddRelTorque(body, 0.0, 0.0, cv);
 	}
 	
@@ -262,7 +264,6 @@ void AvatarGameObj::step_impl() {
 	_attached = _attached_this_frame;
 	
 	// If we are attached, work to keep ourselves ideally oriented to the attachment surface
-	// However, if the user is pushing up and we're either totally upright or unattached, don't attach
 	if (_attached) {
 		Vector sn_rel = vector_from_world(_sn);
 		Vector lvel = Vector(dBodyGetLinearVel(body));
@@ -283,6 +284,7 @@ void AvatarGameObj::step_impl() {
 		dBodySetRotation(body, matr);
 		
 		// Y position delta
+		// If the user is pushing up, set the target point high above the ground so we escape sticky attachment
 		set_pos(get_pos() + _sn*limit_abs(_ypos_delta + (pushing_up ? RUNNING_MAX_DELTA_Y_POS*2 : 0), RUNNING_ADJ_RATE_Y_POS/MAX_FPS));
 		
 		// Y linear velocity delta

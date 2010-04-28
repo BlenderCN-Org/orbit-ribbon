@@ -92,6 +92,8 @@ void Saving::load() {
 	conf_dflt(conf->soundEffectVolume(), 0.8);
 	conf_dflt(conf->musicVolume(), 0.5);
 	conf_dflt(conf->mouseSensitivity(), 0.5);
+	conf_dflt(conf->invertTranslateY(), false);
+	conf_dflt(conf->invertRotateY(), false);
 }
 
 void Saving::save() {
