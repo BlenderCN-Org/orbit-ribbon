@@ -46,9 +46,8 @@ void MainMenuMode::draw_2d() {
 	
 	int x, y;
 	SDL_GetMouseState(&x, &y);
-	//_cursor->draw_2d(Point(x - _cursor->get_width()/2, y - _cursor->get_width()/2));
-	glColor3f(1.0, 1.0, 1.0);
-	Gui::draw_box(Point(x - _cursor->get_width()/2, y - _cursor->get_width()/2), Size(_cursor->get_width(), _cursor->get_height()));
+	_cursor->draw_2d(Point(x - _cursor->get_width()/2, y - _cursor->get_width()/2));
+	//Gui::draw_box(Point(x - _cursor->get_width()/2, y - _cursor->get_width()/2), Size(_cursor->get_width(), _cursor->get_height()));
 }
 
 void MainMenuMode::suspended() {
