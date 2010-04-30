@@ -182,6 +182,8 @@ void Display::draw_frame() {
 	static std::string perf_info;
 	static unsigned int last_perf_info = 0; // Tick time at which we last updated perf_info
 	
+	Mode* mode = &*Globals::mode_stack.top();
+	
 	// 3D drawing mode (projection matrix will be set below)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
@@ -190,7 +192,7 @@ void Display::draw_frame() {
 	Globals::bg->set_clear_color();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	Globals::mode->pre_3d();
+	mode->pre_3d();
 	
 	// Projection mode for distant objects
 	glMatrixMode(GL_PROJECTION);
@@ -198,7 +200,7 @@ void Display::draw_frame() {
 	gluPerspective(FOV, screen_ratio, 0.1, SKY_CLIP_DIST);
 	glMatrixMode(GL_MODELVIEW);
 	
-	Globals::mode->draw_3d_far();
+	mode->draw_3d_far();
 	
 	// Projection mode for nearby objects
 	glMatrixMode(GL_PROJECTION);
@@ -206,7 +208,7 @@ void Display::draw_frame() {
 	gluPerspective(FOV, screen_ratio, 0.1, GAMEPLAY_CLIP_DIST);
 	glMatrixMode(GL_MODELVIEW);
 	
-	Globals::mode->draw_3d_near();
+	mode->draw_3d_near();
 	
 	// 2D drawing mode
 	glDisable(GL_DEPTH_TEST);
@@ -217,7 +219,7 @@ void Display::draw_frame() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
-	Globals::mode->draw_2d();
+	mode->draw_2d();
 	
 	if (Saving::get().config().showFps().get()) {
 		if (SDL_GetTicks() - last_perf_info >= MAX_PERF_INFO_AGE) {

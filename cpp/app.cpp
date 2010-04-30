@@ -268,6 +268,6 @@ void App::load_mission(unsigned int area_num, unsigned int mission_num) {
 		Globals::gameobjs.insert(GOMap::value_type(i->objName(), GOFactoryRegistry::create(*i)));
 	}
 	
-	Globals::mode.reset(new GameplayMode());
+	Globals::mode_stack.push(boost::shared_ptr<Mode>(new GameplayMode()));
 	Globals::bg.reset(new Background(SkySettings(area->sky())));
 }

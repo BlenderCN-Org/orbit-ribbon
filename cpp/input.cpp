@@ -620,7 +620,7 @@ void Input::set_channels_from_config() {
 	_axis_action_map.clear();
 	_button_action_map.clear();
 	
-	// Create all the channels specified by the config file
+	// Bind all the channels specified by the config file
 	BOOST_FOREACH(const ORSave::InputDeviceType& idev, Saving::get().config().inputDevice()) {
 		BOOST_FOREACH(const ORSave::AxisBindType& abind, idev.axis_bind()) {
 			insert_binding(abind.action(), xml_to_channel(abind.input()), _axis_action_map);
@@ -630,7 +630,7 @@ void Input::set_channels_from_config() {
 		}
 	}
 	
-	// Create channels for the fixed default keyboard mappings
+	// Bind channels for the fixed default keyboard mappings
 	insert_binding(
 		ORSave::AxisBoundAction::UIX,
 		boost::shared_ptr<Channel>(	
@@ -656,16 +656,18 @@ void Input::set_channels_from_config() {
 		),
 		_axis_action_map
 	);
-	
 	insert_binding(ORSave::ButtonBoundAction::Confirm, _kbd->key_channel(SDLK_RETURN), _button_action_map);
 	insert_binding(ORSave::ButtonBoundAction::Confirm, _kbd->key_channel(SDLK_SPACE), _button_action_map);
 	insert_binding(ORSave::ButtonBoundAction::Confirm, _kbd->key_channel(SDLK_KP_ENTER), _button_action_map);
-	
 	insert_binding(ORSave::ButtonBoundAction::Cancel, _kbd->key_channel(SDLK_ESCAPE), _button_action_map);
-	
 	insert_binding(ORSave::ButtonBoundAction::ResetNeutral, _kbd->key_channel(SDLK_F10), _button_action_map);
-	
 	insert_binding(ORSave::ButtonBoundAction::ForceQuit, _kbd->key_channel(SDLK_F4), _button_action_map);
+	
+	// Fixed default mouse UI bindings
+	// Doesn't matter which mouse button you push, that's still a click upon the thing
+	insert_binding(ORSave::ButtonBoundAction::Confirm, _mouse->button_channel(1), _button_action_map);
+	insert_binding(ORSave::ButtonBoundAction::Confirm, _mouse->button_channel(2), _button_action_map);
+	insert_binding(ORSave::ButtonBoundAction::Confirm, _mouse->button_channel(3), _button_action_map);
 }
 
 const ORSave::PresetType& Input::get_preset(const std::string& name) {
