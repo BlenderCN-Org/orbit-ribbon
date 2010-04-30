@@ -189,7 +189,7 @@ void Display::draw_frame() {
 	glEnable(GL_LIGHTING);
 	
 	// Clear the screen
-	Globals::bg->set_clear_color();
+	mode->pre_clear();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	mode->pre_3d();

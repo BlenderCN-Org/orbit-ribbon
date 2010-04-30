@@ -71,6 +71,7 @@ class GLOOTexture : boost::noncopyable {
 		GLuint get_height() const { return _height; }
 		
 		void bind();
+		void draw_2d(const Point& pos);
 		
 		virtual ~GLOOTexture();
 };

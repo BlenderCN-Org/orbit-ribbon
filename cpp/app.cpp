@@ -43,6 +43,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "gameobj.h"
 #include "input.h"
+#include "main_menu_mode.h"
 #include "mesh.h"
 #include "mode.h"
 #include "performance.h"
@@ -205,12 +206,13 @@ void App::run(const std::vector<std::string>& args) {
 			unsigned int mission = vm["mission"].as<unsigned int>();
 			Debug::status_msg("Starting area " + boost::lexical_cast<std::string>(area) + ", mission " + boost::lexical_cast<std::string>(mission));
 			load_mission(area, mission);
+			Globals::mode_stack.push(boost::shared_ptr<Mode>(new GameplayMode()));
 		} else if (vm.count("area")) {
 			// TODO Go straight to this area's menu
 			throw GameException("Area menu jumping not yet implemented");
 		} else {
 			// TODO Go to the main menu
-			throw GameException("Main menu not yet implemented");
+			Globals::mode_stack.push(boost::shared_ptr<Mode>(new MainMenuMode()));
 		}
 	} catch (const std::exception& e) {
 		Debug::error_msg(std::string("Uncaught exception during init: ") + e.what());
@@ -268,6 +270,5 @@ void App::load_mission(unsigned int area_num, unsigned int mission_num) {
 		Globals::gameobjs.insert(GOMap::value_type(i->objName(), GOFactoryRegistry::create(*i)));
 	}
 	
-	Globals::mode_stack.push(boost::shared_ptr<Mode>(new GameplayMode()));
 	Globals::bg.reset(new Background(SkySettings(area->sky())));
 }

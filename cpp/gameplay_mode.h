@@ -35,6 +35,7 @@ class GameplayMode : public Mode {
 		
 	public:
 		GameplayMode();
+		void pre_clear();
 		void pre_3d();
 		void draw_3d_far();
 		void draw_3d_near();

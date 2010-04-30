@@ -121,6 +121,49 @@ void GLOOTexture::bind() {
 	glBindTexture(GL_TEXTURE_2D, _tex_name);
 }
 
+void GLOOTexture::draw_2d(const Point& pos) {
+	/*
+	const static GLfloat uv_points[8] = {
+		0.0, 1.0,
+		1.0, 1.0,
+		1.0, 0.0,
+		0.0, 0.0
+	};
+	
+	GLfloat points[8] = {
+		pos.x, pos.y,
+		pos.x + _width, pos.y,
+		pos.x + _width, pos.y + _height,
+		pos.x, pos.y + _height
+	};
+	
+	bind();
+	
+	glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glDisableClientState(GL_NORMAL_ARRAY);
+	
+	glVertexPointer(2, GL_FLOAT, 0, points);
+	glTexCoordPointer(2, GL_FLOAT, 0, uv_points);
+	glDrawArrays(GL_QUADS, 0, 8);
+	
+	glPopClientAttrib();
+	*/
+	
+	bind();
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0, 1.0);
+	glVertex2f(pos.x, pos.y);
+	glTexCoord2f(1.0, 1.0);
+	glVertex2f(pos.x + _width, pos.y);
+	glTexCoord2f(1.0, 0.0);
+	glVertex2f(pos.x + _width, pos.y + _height);
+	glTexCoord2f(0.0, 0.0);
+	glVertex2f(pos.x, pos.y + _height);
+	glEnd();
+}
+
 GLOOTexture::~GLOOTexture() {
 	glDeleteTextures(1, &_tex_name);
 }

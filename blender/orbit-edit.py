@@ -239,7 +239,7 @@ def do_export():
 	zfh.writestr("ore-desc", lxml.etree.tostring(descDoc, xml_declaration=True))
 	
 	# FIXME Adding in the cursor image; there will be many more "standard UI images", need a way of including them all
-	zfh.write("images/cursor.png", "cursor.png", zipfile.ZIP_STORED)
+	zfh.write("images/cursor.png", "image-cursor.png", zipfile.ZIP_STORED)
 	
 	copiedImages = set() # Set of image names that have already been copied into the zipfile
 	def populateMeshNode(meshNode, mesh):

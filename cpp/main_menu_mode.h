@@ -1,6 +1,6 @@
 /*
-mode.h: Header for the Mode class.
-Mode classes are responsible for handling overall control of gameplay and menu behaviour
+main_menu_mode.h: Header for the MainMenuMode class.
+The MainMenuMode class is the active Mode from when the program starts until a mission is begun.
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 
@@ -20,18 +20,28 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
-#ifndef ORBIT_RIBBON_MODE_H
-#define ORBIT_RIBBON_MODE_H
+#ifndef ORBIT_RIBBON_MAIN_MENU_MODE_H
+#define ORBIT_RIBBON_MAIN_MENU_MODE_H
 
-#include <string>
+#include <boost/shared_ptr.hpp>
+#include <SDL/SDL.h>
 
-class Mode {
+#include "gloo.h"
+#include "mode.h"
+
+class MainMenuMode : public Mode {
+	private:
+		boost::shared_ptr<GLOOTexture> _cursor;
+		bool _resumed;
+		
 	public:
-		virtual void pre_clear() {}
-		virtual void pre_3d() {}
-		virtual void draw_3d_far() {}
-		virtual void draw_3d_near() {}
-		virtual void draw_2d() {}
+		MainMenuMode();
+		
+		void pre_clear();
+		void draw_2d();
+		
+		void suspended();
+		void resumed();
 };
 
 #endif

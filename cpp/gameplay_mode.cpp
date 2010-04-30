@@ -73,6 +73,10 @@ AvatarGameObj* GameplayMode::find_avatar() {
 	return static_cast<AvatarGameObj*>(&(*(i->second)));
 }
 
+void GameplayMode::pre_clear() {
+	Globals::bg->set_clear_color();
+}
+
 void GameplayMode::pre_3d() {
 	AvatarGameObj* avatar = find_avatar();
 	Point cam_pos = avatar->get_rel_point_pos(CAMERA_POS_OFFSET);
