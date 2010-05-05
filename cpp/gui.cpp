@@ -22,7 +22,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gui.h"
 #include "gloo.h"
 
-void Gui::draw_box(const Point& top_left, const Size& size) {
+void Gui::draw_box(const Point& top_left, const Size& size, float r, float g, float b, float a) {
 	const static GLushort indices[12] = {
 		0, 1, 2,
 		0, 2, 5,
@@ -46,7 +46,7 @@ void Gui::draw_box(const Point& top_left, const Size& size) {
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	
-	glColor4fv(GUI_BOX_COLOR);
+	glColor4f(r, g, b, a);
 	glVertexPointer(2, GL_FLOAT, 0, points);
 	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_SHORT, indices);
 	

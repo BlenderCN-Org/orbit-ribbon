@@ -63,6 +63,7 @@
 	<xsd:complexType name="MissionType">
 		<xsd:sequence>
 			<xsd:element name="niceName" type="xsd:string" />
+			<xsd:element name="description" type="xsd:string" />
 			<xsd:element name="winConditionFunc" type="xsd:string" />
 			<xsd:element name="timerStartFunc" type="xsd:string" />
 			<xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />

@@ -26,11 +26,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gloo.h"
 
 const Vector GUI_BOX_BORDER(8, 2); // Number of pixels from the left/right and top/bottom of a box you should draw its contents 
-const GLfloat GUI_BOX_COLOR[4] = {0.0, 0.0, 1.0, 0.5}; // Color of the box
 
 class Gui {
 	public:
-		static void draw_box(const Point& top_left, const Size& size);
+		static void draw_box(const Point& top_left, const Size& size, float r = 0.0, float g = 0.0, float b = 0.0, float a = 0.5);
 };
 
 #endif

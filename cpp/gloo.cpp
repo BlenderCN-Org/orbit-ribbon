@@ -138,6 +138,7 @@ void GLOOTexture::draw_2d(const Point& pos) {
 	
 	bind();
 	
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -146,6 +147,7 @@ void GLOOTexture::draw_2d(const Point& pos) {
 	glTexCoordPointer(2, GL_FLOAT, 0, uv_points);
 	glDrawArrays(GL_QUADS, 0, 8);
 	glPopClientAttrib();
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }
 
 GLOOTexture::~GLOOTexture() {

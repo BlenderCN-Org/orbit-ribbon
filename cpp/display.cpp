@@ -222,7 +222,7 @@ void Display::draw_frame() {
 	mode->draw_2d();
 	
 	if (Saving::get().config().showFps().get()) {
-		if (SDL_GetTicks() - last_perf_info >= MAX_PERF_INFO_AGE) {
+		if (perf_info == "" or SDL_GetTicks() - last_perf_info >= MAX_PERF_INFO_AGE) {
 			last_perf_info = SDL_GetTicks();
 			perf_info = Performance::get_perf_info() + " " + GLOOBufferedMesh::get_usage_info();
 		}
