@@ -30,12 +30,12 @@ class App;
 
 class Display {
 	private:
-		static GLsizei screen_width, screen_height;
+		static int screen_width, screen_height;
 		static GLfloat screen_ratio;
 	
 	public:
-		static GLsizei get_screen_width() { return screen_width; }
-		static GLsizei get_screen_height() { return screen_height; }
+		static int get_screen_width() { return screen_width; }
+		static int get_screen_height() { return screen_height; }
 		
 	private:
 		static void init();

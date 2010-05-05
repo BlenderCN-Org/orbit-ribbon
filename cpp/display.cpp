@@ -50,8 +50,8 @@ const unsigned int MAX_PERF_INFO_AGE = 2000;
 
 SDL_Surface* screen;
 
-GLsizei Display::screen_width = 0;
-GLsizei Display::screen_height = 0;
+int Display::screen_width = 0;
+int Display::screen_height = 0;
 GLfloat Display::screen_ratio = 0;
 
 void Display::init() {

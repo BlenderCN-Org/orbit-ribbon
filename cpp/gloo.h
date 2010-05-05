@@ -57,7 +57,7 @@ class GLOOTexture : boost::noncopyable {
 	private:
 		std::string _load_name;
 		GLuint _tex_name;
-		GLuint _width, _height;
+		int _width, _height;
 		
 		GLOOTexture() : _tex_name(0) {}
 		
@@ -67,8 +67,8 @@ class GLOOTexture : boost::noncopyable {
 		static boost::shared_ptr<GLOOTexture> load(const std::string& name);
 		
 		std::string get_load_name() const { return _load_name; }
-		GLuint get_width() const { return _width; }
-		GLuint get_height() const { return _height; }
+		int get_width() const { return _width; }
+		int get_height() const { return _height; }
 		
 		void bind();
 		void draw_2d(const Point& pos);
