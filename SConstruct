@@ -104,7 +104,7 @@ def build_capsulate(source, target, env):
 		return 0
 		
 	for s in src_list:
-		if Execute(Action(lambda target, source, env: capsulize(s, matches[s]))):
+		if Execute(Action(lambda target, source, env: capsulize(s, matches[s]), "Encapsulating %s into header %s" % (str(s), str(matches[s])))):
 			raise RuntimeError("build_capsulate: construction failed")
 
 
@@ -186,17 +186,17 @@ VariantDir('buildtmp', 'cpp', duplicate=0)
 env = Environment()
 
 env['BUILDERS']['XSDTree'] = Builder(
-	action = lambda source, target, env: build_xsd('cxx-tree', source, target, env),
+	action = Action(lambda source, target, env: build_xsd('cxx-tree', source, target, env), "C++/Tree for XML schemas: $SOURCES"),
 	suffix = {'.xsd' : '.cpp'},
 	emitter = xsd_emitter
 )
 env['BUILDERS']['XSDParser'] = Builder(
-	action = lambda source, target, env: build_xsd('cxx-parser', source, target, env),
+	action = Action(lambda source, target, env: build_xsd('cxx-parser', source, target, env), "C++/Parser for XML schemas: $SOURCES"),
 	suffix = {'.xsd' : '-pskel.cpp'},
 	emitter = xsd_emitter
 )
 env['BUILDERS']['Capsulate'] = Builder(
-	action = build_capsulate,
+	action = Action(build_capsulate, "Encapsulating to headers: $SOURCES"),
 	suffix = {'.xsd' : '.h', '.xml' : '.h'}
 )
 
