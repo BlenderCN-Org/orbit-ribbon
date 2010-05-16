@@ -23,31 +23,38 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_GUI_H
 
 #include <boost/shared_ptr.hpp>
-#include <vector>
+#include <list>
 
 #include "geometry.h"
 #include "gloo.h"
 
 const Vector GUI_BOX_BORDER(8, 2); // A box's contents are drawn this number of pixels from the left/right and top/bottom of the box respectively
-const int LAYOUT_PADDING = 4; // Number of pixels between adjacent items in a layout widget
+const int LAYOUT_PADDING = 4; // Number of pixels between adjacent items in a layout widget      
 
 class Widget {
+	private:
+		Point _upper_left;
+		Size _bbox_size;
+		
 	public:
 		enum DrawMode { WIDGET_PASSIVE, WIDGET_FOCUSED, WIDGET_ACTIVATED };
 		
-		virtual void draw(const Point& upper_left, DrawMode mode) const =0;
-		virtual const Widget* widget_containing_point(const Point& widget_upper_left, const Point& test_pt) const;
-		virtual Size get_size() const =0;
+		virtual void draw(DrawMode mode) const =0;
+		virtual bool widget_contains_point(const Point& test_pt) const { return bbox_contains_point(test_pt); }
+		virtual std::list<boost::shared_ptr<Widget> > get_focusable_children() const { return std::list<boost::shared_ptr<Widget> >(); }
+		virtual bool is_focusable() const { return false; }
+		
+		bool bbox_contains_point(const Point& test_pt) const;
+		void set_upper_left(const Point& p) { _upper_left = p; }
+		Point get_upper_left() const { return _upper_left; }
+		void set_bbox_size(const Size& s) { _bbox_size = s; } 
+		Size get_bbox_size() const { return _bbox_size; }
 };
 
 class NullWidget : public Widget {
-	private:
-		Size _size;
-		
 	public:
-		NullWidget(const Size& size = Size()) : _size(size) {}
-		void draw(const Point& upper_left, Widget::DrawMode mode) const {}
-		Size get_size() const { return _size; }
+		NullWidget(const Size& s = Size()) { set_bbox_size(s); }
+		void draw(Widget::DrawMode mode __attribute__ ((unused))) const {}
 };
 
 class BoxWidget : public Widget {
@@ -59,15 +66,14 @@ class BoxWidget : public Widget {
 		BoxWidget(boost::shared_ptr<Widget> child, float r = 0.0, float g = 0.0, float b = 0.0, float a = 0.5)
 			: _child(child), _r(r), _g(g), _b(b), _a(a) {}
 		
-		void draw(const Point& upper_left, Widget::DrawMode mode) const;
-		Widget* widget_containing_point(const Point& widget_upper_left, const Point& test_pt) const;
-		Size get_size() const;
+		void draw(Widget::DrawMode mode) const;
+		bool widget_contains_point(const Point& test_pt) const;
 		
-		void set_box_colors(float r, float g, float b) { _r = r; _g = g; _b = b; }
+		void set_box_color(float r, float g, float b) { _r = r; _g = g; _b = b; }
 		void set_box_alpha(float a) { _a = a; }
 		
-		const Widget& get_child() const { return *_child; }
 		void set_child(boost::shared_ptr<Widget> child) { _child = child; }
+		const Widget& get_child() const { return *_child; }
 };
 
 class LayoutWidget : public Widget {
@@ -76,14 +82,13 @@ class LayoutWidget : public Widget {
 	
 	private:
 		Orientation _orientation;
+		std::list<boost::shared_ptr<Widget> > children;
 	
 	public:
-		std::vector<boost::shared_ptr<Widget> > children;
-		
 		LayoutWidget(Orientation orientation) : _orientation(orientation) {}
 		
-		void draw(const Point& upper_left, Widget::DrawMode mode) const;
-		Size get_size() const;
+		void add_child(boost::shared_ptr<Widget>& widget);
+		void draw(Widget::DrawMode mode) const;
 };
 
 // TODO: Also going to need a TableLayoutWidget sooner or later

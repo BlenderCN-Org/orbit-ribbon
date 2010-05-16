@@ -22,36 +22,25 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gui.h"
 #include "gloo.h"
 
-const Widget* Widget::widget_containing_point(const Point& widget_upper_left, const Point& test_pt) const {
-	if (
-		test_pt.x >= widget_upper_left.x &&
-		test_pt.y >= widget_upper_left.y
-	) {
-		Size size = get_size();
-		if (
-			test_pt.x < widget_upper_left.x + size.x &&
-			test_pt.y < widget_upper_left.y + size.y
-		) {
-			return this;
-		}
-	}
-	
-	return 0;
+bool Widget::bbox_contains_point(const Point& test_pt) const {
+	return (
+		test_pt.x >= _upper_left.x &&
+		test_pt.y >= _upper_left.y &&
+		test_pt.x < _upper_left.x + _bbox_size.x &&
+		test_pt.y < _upper_left.y + _bbox_size.y
+	);
 }
 
-void BoxWidget::draw(const Point& upper_left, Widget::DrawMode mode) const {
+void BoxWidget::draw(Widget::DrawMode mode) const {
 }
 
-Widget* BoxWidget::widget_containing_point(const Point& widget_upper_left, const Point& test_pt) const {
+bool BoxWidget::widget_contains_point(const Point& test_pt) const {
 }
 
-Size BoxWidget::get_size() const {
+void LayoutWidget::add_child(boost::shared_ptr<Widget>& widget) {
 }
 
-void LayoutWidget::draw(const Point& upper_left, Widget::DrawMode mode) const {
-}
-
-Size LayoutWidget::get_size() const {
+void LayoutWidget::draw(Widget::DrawMode mode) const {
 }
 
 void GUI::draw_box(const Point& top_left, const Size& size, float r, float g, float b, float a) {

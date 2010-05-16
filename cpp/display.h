@@ -36,6 +36,7 @@ class Display {
 	public:
 		static int get_screen_width() { return screen_width; }
 		static int get_screen_height() { return screen_height; }
+		static float get_screen_ratio() { return screen_ratio; }
 		
 	private:
 		static void init();
