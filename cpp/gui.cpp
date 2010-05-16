@@ -22,25 +22,50 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gui.h"
 #include "gloo.h"
 
-bool Widget::bbox_contains_point(const Point& test_pt) const {
+bool Widget::bbox_contains_point(const Point& upper_left, const Point& test_pt) const {
+	Size bbox_size = get_bbox_size();
 	return (
-		test_pt.x >= _upper_left.x &&
-		test_pt.y >= _upper_left.y &&
-		test_pt.x < _upper_left.x + _bbox_size.x &&
-		test_pt.y < _upper_left.y + _bbox_size.y
+		test_pt.x >= upper_left.x &&
+		test_pt.y >= upper_left.y &&
+		test_pt.x < upper_left.x + bbox_size.x &&
+		test_pt.y < upper_left.y + bbox_size.y
 	);
 }
 
-void BoxWidget::draw(Widget::DrawMode mode) const {
+void BoxWidget::draw(const Point& upper_left, Widget::DrawMode mode) const {
 }
 
 bool BoxWidget::widget_contains_point(const Point& test_pt) const {
 }
 
-void LayoutWidget::add_child(boost::shared_ptr<Widget>& widget) {
+Size BoxWidget::get_bbox_size() const {
 }
 
-void LayoutWidget::draw(Widget::DrawMode mode) const {
+std::list<WidgetLocation> BoxWidget::get_focusable_children(const Point& upper_left) const {
+}
+
+ButtonWidget::ButtonWidget(const boost::shared_ptr<Widget>& child) : BoxWidget(child) {
+}
+
+void ButtonWidget::draw(const Point& upper_left, Widget::DrawMode mode) const {
+}
+
+void LayoutWidget::add_child(const boost::shared_ptr<Widget>& widget) {
+}
+
+void LayoutWidget::draw(const Point& upper_left, Widget::DrawMode mode) const {
+}
+
+Size LayoutWidget::get_bbox_size() const {
+}
+
+std::list<WidgetLocation> LayoutWidget::get_focusable_children(const Point& upper_left) const {
+}
+
+void TextWidget::draw(const Point& upper_left, Widget::DrawMode mode) const {
+}
+
+Size TextWidget::get_bbox_size() const {
 }
 
 void GUI::draw_box(const Point& top_left, const Size& size, float r, float g, float b, float a) {
