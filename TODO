@@ -1,5 +1,5 @@
 == ROADMAP ==
-* Implement a simple menu system with mouse support
+* Implement a simple menu system with mouse and keyboard support
 * Add mission requirements and a simple HUD
 * Add background stuff (like in the Python version, but do a better job on the ring)
 * Get it to build on Windows
