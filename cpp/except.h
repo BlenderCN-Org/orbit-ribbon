@@ -26,20 +26,20 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <exception>
 
 class GameException : public std::exception {
-	public:
-		GameException(const std::string& msg) : _msg(msg) {}
-		virtual ~GameException() throw() {}
-		std::string get_msg() const throw() { return _msg; }
-		const char* what() const throw() { return _msg.c_str(); }
-	
-	private:
-		std::string _msg;
+  public:
+    GameException(const std::string& msg) : _msg(msg) {}
+    virtual ~GameException() throw() {}
+    std::string get_msg() const throw() { return _msg; }
+    const char* what() const throw() { return _msg.c_str(); }
+  
+  private:
+    std::string _msg;
 };
 
 class GameQuitException : public GameException {
-	public:
-		GameQuitException(const std::string& msg) : GameException(msg) {}
-		virtual ~GameQuitException() throw() {}
+  public:
+    GameQuitException(const std::string& msg) : GameException(msg) {}
+    virtual ~GameQuitException() throw() {}
 };
 
 #endif

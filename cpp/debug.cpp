@@ -26,13 +26,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "debug.h"
 
 void Debug::debug_msg(const std::string& msg) {
-	std::cout << "DEBUG: " << msg << std::endl << std::flush;
+  std::cout << "DEBUG: " << msg << std::endl << std::flush;
 }
 
 void Debug::error_msg(const std::string& msg) {
-	std::cout << "ERROR: " << msg << std::endl << std::flush;
+  std::cout << "ERROR: " << msg << std::endl << std::flush;
 }
 
 void Debug::status_msg(const std::string& msg) {
-	std::cout << msg << std::endl << std::flush;
+  std::cout << msg << std::endl << std::flush;
 }

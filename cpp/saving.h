@@ -28,16 +28,16 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "autoxsd/save.h"
 
 class Saving {
-	private:
-		static boost::scoped_ptr<boost::filesystem::path> _save_path;
-		static boost::scoped_ptr<ORSave::SaveType> _save;
-		
-	public:
-		static ORSave::SaveType& get();
-		static ORSave::InputDeviceType& get_input_device(ORSave::InputDeviceNameType::Value dev_type);
-		
-		static void load();
-		static void save();
+  private:
+    static boost::scoped_ptr<boost::filesystem::path> _save_path;
+    static boost::scoped_ptr<ORSave::SaveType> _save;
+    
+  public:
+    static ORSave::SaveType& get();
+    static ORSave::InputDeviceType& get_input_device(ORSave::InputDeviceNameType::Value dev_type);
+    
+    static void load();
+    static void save();
 };
 
 #endif

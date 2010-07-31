@@ -55,220 +55,220 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 const unsigned int MIN_TICKS_PER_FRAME = 1000/MAX_FPS;
 
 void App::frame_loop() {
-	unsigned int unsimulated_ticks = 0;
-	
-	while (1) {
-		GLint frame_start = SDL_GetTicks();
-		
-		// Fetch the latest state of the input devices
-		Input::update();
-		
-		// Add all new events to the events list for this frame, and quit on QUIT events
-		Globals::frame_events.clear();
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			Globals::frame_events.push_back(event);
-		  	if (event.type == SDL_QUIT) {
-				throw GameQuitException("SDL quit event");
-			}
-		}
-		
-		// Check for a ForceQuit binding activation
-		const Channel& force_quit_chn = Input::get_button_ch(ORSave::ButtonBoundAction::ForceQuit);
-		if (force_quit_chn.is_on()) {
-			throw GameQuitException("ForceQuit binding " + force_quit_chn.desc() + " activated");
-		}
-		
-		// Check for a ResetNeutral binding activation
-		const Channel& reset_neutral_chn = Input::get_button_ch(ORSave::ButtonBoundAction::ResetNeutral);
-		if (reset_neutral_chn.is_on()) {
-			Debug::status_msg("ResetNeutral binding " + reset_neutral_chn.desc() + " activated");
-			Input::set_neutral();
-		}
-		
-		// Do simulation steps until we've no more than one frame behind the display
-		while (unsimulated_ticks > MIN_TICKS_PER_FRAME) {
-			Sim::sim_step();
-			Globals::total_steps += 1;
-			unsimulated_ticks -= MIN_TICKS_PER_FRAME;
-		}
-		
-		// Re-draw the display
-		Display::draw_frame();
-		
-		// Sleep if we're running faster than our maximum fps
-		unsigned int frame_ticks = SDL_GetTicks() - frame_start;
-		if (frame_ticks > 0 && frame_ticks < MIN_TICKS_PER_FRAME) {
-			SDL_Delay(MIN_TICKS_PER_FRAME - frame_ticks); // Slow down, buster!
-		}
-		
-		// The time that passed during this frame needs to pass in the simulator next frame
-		unsigned int total_ticks = SDL_GetTicks() - frame_start;
-		unsimulated_ticks += total_ticks;
-		
-		// Put this frame into the FPS calculations
-		Performance::record_frame(total_ticks, total_ticks - frame_ticks);
-	}
+  unsigned int unsimulated_ticks = 0;
+  
+  while (1) {
+    GLint frame_start = SDL_GetTicks();
+    
+    // Fetch the latest state of the input devices
+    Input::update();
+    
+    // Add all new events to the events list for this frame, and quit on QUIT events
+    Globals::frame_events.clear();
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+      Globals::frame_events.push_back(event);
+        if (event.type == SDL_QUIT) {
+        throw GameQuitException("SDL quit event");
+      }
+    }
+    
+    // Check for a ForceQuit binding activation
+    const Channel& force_quit_chn = Input::get_button_ch(ORSave::ButtonBoundAction::ForceQuit);
+    if (force_quit_chn.is_on()) {
+      throw GameQuitException("ForceQuit binding " + force_quit_chn.desc() + " activated");
+    }
+    
+    // Check for a ResetNeutral binding activation
+    const Channel& reset_neutral_chn = Input::get_button_ch(ORSave::ButtonBoundAction::ResetNeutral);
+    if (reset_neutral_chn.is_on()) {
+      Debug::status_msg("ResetNeutral binding " + reset_neutral_chn.desc() + " activated");
+      Input::set_neutral();
+    }
+    
+    // Do simulation steps until we've no more than one frame behind the display
+    while (unsimulated_ticks > MIN_TICKS_PER_FRAME) {
+      Sim::sim_step();
+      Globals::total_steps += 1;
+      unsimulated_ticks -= MIN_TICKS_PER_FRAME;
+    }
+    
+    // Re-draw the display
+    Display::draw_frame();
+    
+    // Sleep if we're running faster than our maximum fps
+    unsigned int frame_ticks = SDL_GetTicks() - frame_start;
+    if (frame_ticks > 0 && frame_ticks < MIN_TICKS_PER_FRAME) {
+      SDL_Delay(MIN_TICKS_PER_FRAME - frame_ticks); // Slow down, buster!
+    }
+    
+    // The time that passed during this frame needs to pass in the simulator next frame
+    unsigned int total_ticks = SDL_GetTicks() - frame_start;
+    unsimulated_ticks += total_ticks;
+    
+    // Put this frame into the FPS calculations
+    Performance::record_frame(total_ticks, total_ticks - frame_ticks);
+  }
 }
 
 void App::run(const std::vector<std::string>& args) {
-	try {
-		// Parse command-line arguments
-		boost::program_options::options_description visible_opt_desc("Command-line options");
-		visible_opt_desc.add_options()
-			("help,h", "display help message, then exit")
-			("version,V", "display version and author information, then exit")
-			("area,a", boost::program_options::value<unsigned int>(), "preselect numbered area to play")
-			("mission,m", boost::program_options::value<unsigned int>(), "preselect numbered mission to play, you must also specify --area")
-		;
-		boost::program_options::options_description hidden_opt_desc;
-		hidden_opt_desc.add_options()
-			("ore", boost::program_options::value<std::string>(), "path to an ore file containing the game data and scenario to use")
-		;
-		boost::program_options::options_description opt_desc;
-		opt_desc.add(visible_opt_desc).add(hidden_opt_desc);
-		boost::program_options::positional_options_description pos_desc;
-		pos_desc.add("ore", 1);
-		
-		boost::program_options::variables_map vm;
-		try {
-			boost::program_options::store(boost::program_options::command_line_parser(args).options(opt_desc).positional(pos_desc).run(), vm);
-			boost::program_options::notify(vm);
-			if (vm.count("mission") and not vm.count("area")) {
-				throw GameException("mission specified but no area specified");
-			}
-		} catch (const std::exception& e) {
-			Debug::error_msg(std::string("Invalid arguments: ") + e.what());
-			return;
-		}
-		
-		// Deal with command-line arguments that cause the program to end right away
-		if (vm.count("help") or vm.count("version")) {
-			Debug::status_msg("");
-			Debug::status_msg(std::string("Orbit Ribbon version ") + APP_VERSION);
-			Debug::status_msg("");
-			if (vm.count("help")) {
-				std::stringstream ss;
-				visible_opt_desc.print(ss);
-				Debug::status_msg(ss.str());
-			} else {
-				Debug::status_msg("Copyright 2009 David Simon, who can be reached at <david.mike.simon@gmail.com>.");
-				Debug::status_msg("License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.");
-				Debug::status_msg("This is free software: you are free to change and redistribute it.");
-				Debug::status_msg("");
-				Debug::status_msg("Orbit Ribbon is distributed in the hope that it will be awesome,");
-				Debug::status_msg("but WITHOUT ANY WARRANTY; without even the implied warranty of");
-				Debug::status_msg("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
-				Debug::status_msg("GNU General Public License for more details.");
-				Debug::status_msg("");
-			}
-			return;
-		}
-		
-		// Initialize SDL
-		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
-			throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
-		}
-		
-		Saving::load();
-		Display::init();
-		
-		boost::filesystem::path orePath;
-		bool orePathSave = false;
-		if (vm.count("ore")) {
-			orePathSave = true;
-			orePath = boost::filesystem::system_complete(vm["ore"].as<std::string>());
-		} else {
-			orePath = boost::filesystem::path(Saving::get().config().lastOre().get());
-		}
-		try {
-			Debug::status_msg("Loading ORE package '" + orePath.file_string() + "'");
-			Globals::ore.reset(new OrePackage(orePath));
-		} catch (const OreException& e) {
-			// TODO: Display a dialog to the user that lets them pick a different ORE file
-			throw;
-		}
-		if (orePathSave) {
-			//If a different ORE file was successfully loaded, save that path to the config
-			Saving::get().config().lastOre().set(orePath.file_string());
-			Saving::save();
-		}
-		
-		Sim::init();
-		Input::init();
-		
-		// TODO Find an appropriate font based on the environment we're running in
-		Globals::sys_font.reset(new GLOOFont("/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf", 15));
-		
-		if (vm.count("area") and vm.count("mission")) {
-			// TODO Check if this area and mission have been unlocked yet
-			unsigned int area = vm["area"].as<unsigned int>();
-			unsigned int mission = vm["mission"].as<unsigned int>();
-			Debug::status_msg("Starting area " + boost::lexical_cast<std::string>(area) + ", mission " + boost::lexical_cast<std::string>(mission));
-			load_mission(area, mission);
-			Globals::mode_stack.push(boost::shared_ptr<Mode>(new GameplayMode()));
-		} else if (vm.count("area")) {
-			// TODO Go straight to this area's menu
-			throw GameException("Area menu jumping not yet implemented");
-		} else {
-			// TODO Go to the main menu
-			Globals::mode_stack.push(boost::shared_ptr<Mode>(new MainMenuMode()));
-		}
-	} catch (const std::exception& e) {
-		Debug::error_msg(std::string("Uncaught exception during init: ") + e.what());
-		return;
-	}
-	
-	try {
-		frame_loop();
-	} catch (const GameQuitException& e) {
-		Debug::status_msg(std::string("Program quitting: ") + e.what());
-	} catch (const std::exception& e) {
-		Debug::error_msg(std::string("Uncaught exception during run: ") + e.what());
-	}
-	
-	Saving::save();
-	
-	// TODO Deinitialize as well as possible here, to reduce possibility of weird error messages on close
+  try {
+    // Parse command-line arguments
+    boost::program_options::options_description visible_opt_desc("Command-line options");
+    visible_opt_desc.add_options()
+      ("help,h", "display help message, then exit")
+      ("version,V", "display version and author information, then exit")
+      ("area,a", boost::program_options::value<unsigned int>(), "preselect numbered area to play")
+      ("mission,m", boost::program_options::value<unsigned int>(), "preselect numbered mission to play, you must also specify --area")
+    ;
+    boost::program_options::options_description hidden_opt_desc;
+    hidden_opt_desc.add_options()
+      ("ore", boost::program_options::value<std::string>(), "path to an ore file containing the game data and scenario to use")
+    ;
+    boost::program_options::options_description opt_desc;
+    opt_desc.add(visible_opt_desc).add(hidden_opt_desc);
+    boost::program_options::positional_options_description pos_desc;
+    pos_desc.add("ore", 1);
+    
+    boost::program_options::variables_map vm;
+    try {
+      boost::program_options::store(boost::program_options::command_line_parser(args).options(opt_desc).positional(pos_desc).run(), vm);
+      boost::program_options::notify(vm);
+      if (vm.count("mission") and not vm.count("area")) {
+        throw GameException("mission specified but no area specified");
+      }
+    } catch (const std::exception& e) {
+      Debug::error_msg(std::string("Invalid arguments: ") + e.what());
+      return;
+    }
+    
+    // Deal with command-line arguments that cause the program to end right away
+    if (vm.count("help") or vm.count("version")) {
+      Debug::status_msg("");
+      Debug::status_msg(std::string("Orbit Ribbon version ") + APP_VERSION);
+      Debug::status_msg("");
+      if (vm.count("help")) {
+        std::stringstream ss;
+        visible_opt_desc.print(ss);
+        Debug::status_msg(ss.str());
+      } else {
+        Debug::status_msg("Copyright 2009 David Simon, who can be reached at <david.mike.simon@gmail.com>.");
+        Debug::status_msg("License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.");
+        Debug::status_msg("This is free software: you are free to change and redistribute it.");
+        Debug::status_msg("");
+        Debug::status_msg("Orbit Ribbon is distributed in the hope that it will be awesome,");
+        Debug::status_msg("but WITHOUT ANY WARRANTY; without even the implied warranty of");
+        Debug::status_msg("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
+        Debug::status_msg("GNU General Public License for more details.");
+        Debug::status_msg("");
+      }
+      return;
+    }
+    
+    // Initialize SDL
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
+      throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
+    }
+    
+    Saving::load();
+    Display::init();
+    
+    boost::filesystem::path orePath;
+    bool orePathSave = false;
+    if (vm.count("ore")) {
+      orePathSave = true;
+      orePath = boost::filesystem::system_complete(vm["ore"].as<std::string>());
+    } else {
+      orePath = boost::filesystem::path(Saving::get().config().lastOre().get());
+    }
+    try {
+      Debug::status_msg("Loading ORE package '" + orePath.file_string() + "'");
+      Globals::ore.reset(new OrePackage(orePath));
+    } catch (const OreException& e) {
+      // TODO: Display a dialog to the user that lets them pick a different ORE file
+      throw;
+    }
+    if (orePathSave) {
+      //If a different ORE file was successfully loaded, save that path to the config
+      Saving::get().config().lastOre().set(orePath.file_string());
+      Saving::save();
+    }
+    
+    Sim::init();
+    Input::init();
+    
+    // TODO Find an appropriate font based on the environment we're running in
+    Globals::sys_font.reset(new GLOOFont("/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf", 15));
+    
+    if (vm.count("area") and vm.count("mission")) {
+      // TODO Check if this area and mission have been unlocked yet
+      unsigned int area = vm["area"].as<unsigned int>();
+      unsigned int mission = vm["mission"].as<unsigned int>();
+      Debug::status_msg("Starting area " + boost::lexical_cast<std::string>(area) + ", mission " + boost::lexical_cast<std::string>(mission));
+      load_mission(area, mission);
+      Globals::mode_stack.push(boost::shared_ptr<Mode>(new GameplayMode()));
+    } else if (vm.count("area")) {
+      // TODO Go straight to this area's menu
+      throw GameException("Area menu jumping not yet implemented");
+    } else {
+      // TODO Go to the main menu
+      Globals::mode_stack.push(boost::shared_ptr<Mode>(new MainMenuMode()));
+    }
+  } catch (const std::exception& e) {
+    Debug::error_msg(std::string("Uncaught exception during init: ") + e.what());
+    return;
+  }
+  
+  try {
+    frame_loop();
+  } catch (const GameQuitException& e) {
+    Debug::status_msg(std::string("Program quitting: ") + e.what());
+  } catch (const std::exception& e) {
+    Debug::error_msg(std::string("Uncaught exception during run: ") + e.what());
+  }
+  
+  Saving::save();
+  
+  // TODO Deinitialize as well as possible here, to reduce possibility of weird error messages on close
 }
 
 void App::load_mission(unsigned int area_num, unsigned int mission_num) {
-	const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
-	
-	const ORE1::AreaType* area = NULL;
-	for (ORE1::PkgDescType::AreaConstIterator i = desc->area().begin(); i != desc->area().end(); ++i) {
-		if (i->n() == area_num) {
-			area = &(*i);
-			break;
-		}
-	}
-	if (!area) {
-		throw GameException(
-			"Unable to load area " + boost::lexical_cast<std::string>(area_num)
-		);
-	}
-	
-	const ORE1::MissionType* mission = NULL;
-	for (ORE1::AreaType::MissionConstIterator i = area->mission().begin(); i != area->mission().end(); ++i) {
-		if (i->n() == mission_num) {
-			mission = &(*i);
-			break;
-		}
-	}
-	if (!mission) {
-		throw GameException(
-			"Unable to load mission " + boost::lexical_cast<std::string>(mission_num) + " from area " + boost::lexical_cast<std::string>(area_num)
-		);
-	}
-	
-	// Okay, we're now sure we have the area and mission we want. Let's load all the objects.
-	Globals::gameobjs.clear();
-	for (ORE1::AreaType::ObjConstIterator i = area->obj().begin(); i != area->obj().end(); ++i) {
-		Globals::gameobjs.insert(GOMap::value_type(i->objName(), GOFactoryRegistry::create(*i)));
-	}
-	for (ORE1::MissionType::ObjConstIterator i = mission->obj().begin(); i != mission->obj().end(); ++i) {
-		Globals::gameobjs.insert(GOMap::value_type(i->objName(), GOFactoryRegistry::create(*i)));
-	}
-	
-	Globals::bg.reset(new Background(SkySettings(area->sky())));
+  const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
+  
+  const ORE1::AreaType* area = NULL;
+  for (ORE1::PkgDescType::AreaConstIterator i = desc->area().begin(); i != desc->area().end(); ++i) {
+    if (i->n() == area_num) {
+      area = &(*i);
+      break;
+    }
+  }
+  if (!area) {
+    throw GameException(
+      "Unable to load area " + boost::lexical_cast<std::string>(area_num)
+    );
+  }
+  
+  const ORE1::MissionType* mission = NULL;
+  for (ORE1::AreaType::MissionConstIterator i = area->mission().begin(); i != area->mission().end(); ++i) {
+    if (i->n() == mission_num) {
+      mission = &(*i);
+      break;
+    }
+  }
+  if (!mission) {
+    throw GameException(
+      "Unable to load mission " + boost::lexical_cast<std::string>(mission_num) + " from area " + boost::lexical_cast<std::string>(area_num)
+    );
+  }
+  
+  // Okay, we're now sure we have the area and mission we want. Let's load all the objects.
+  Globals::gameobjs.clear();
+  for (ORE1::AreaType::ObjConstIterator i = area->obj().begin(); i != area->obj().end(); ++i) {
+    Globals::gameobjs.insert(GOMap::value_type(i->objName(), GOFactoryRegistry::create(*i)));
+  }
+  for (ORE1::MissionType::ObjConstIterator i = mission->obj().begin(); i != mission->obj().end(); ++i) {
+    Globals::gameobjs.insert(GOMap::value_type(i->objName(), GOFactoryRegistry::create(*i)));
+  }
+  
+  Globals::bg.reset(new Background(SkySettings(area->sky())));
 }

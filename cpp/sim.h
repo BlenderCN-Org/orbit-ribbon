@@ -37,120 +37,120 @@ class GameObj;
 class CollisionTracker;
 
 class CollisionHandler {
-	public:
-		// Returns true if a contact joint should be created (a joint is actually created only if both geoms' handlers agree that one should be)
-		virtual bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) =0;
+  public:
+    // Returns true if a contact joint should be created (a joint is actually created only if both geoms' handlers agree that one should be)
+    virtual bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) =0;
 };
 
 class SimpleContactHandler : public CollisionHandler {
-	public:
-		SimpleContactHandler() {}
-		
-		bool handle_collision(float t, dGeomID other, const dContactGeom* contacts, unsigned int contacts_len);
+  public:
+    SimpleContactHandler() {}
+    
+    bool handle_collision(float t, dGeomID other, const dContactGeom* contacts, unsigned int contacts_len);
 };
 
 class CollisionTracker : public CollisionHandler {
-	public:
-		class Collision {
-			public:
-				float step_time;
-				dGeomID other;
-				const GameObj* other_gameobj;
-				std::vector<dContactGeom> contacts;
-			
-			private:
-				friend class CollisionTracker;
-			
-				Collision() {}
-				void init(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
-		};
-		
-		CollisionTracker();
-		bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
-		bool has_collisions() const { return _collisions->size() > 0; }
-		std::auto_ptr<std::vector<Collision> > get_collisions();
-		
-		virtual bool should_contact(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) const =0;
-	
-	private:
-		std::auto_ptr<std::vector<Collision> > _collisions;
+  public:
+    class Collision {
+      public:
+        float step_time;
+        dGeomID other;
+        const GameObj* other_gameobj;
+        std::vector<dContactGeom> contacts;
+      
+      private:
+        friend class CollisionTracker;
+      
+        Collision() {}
+        void init(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
+    };
+    
+    CollisionTracker();
+    bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
+    bool has_collisions() const { return _collisions->size() > 0; }
+    std::auto_ptr<std::vector<Collision> > get_collisions();
+    
+    virtual bool should_contact(float t, dGeomID o, const dContactGeom* c, unsigned int c_len) const =0;
+  
+  private:
+    std::auto_ptr<std::vector<Collision> > _collisions;
 };
 
 
 class OdeEntity;
 class Sim {
-	public:
-		static dWorldID get_ode_world();
-		static dSpaceID get_static_space();
-		static dSpaceID get_dyn_space();
-		
-		static std::auto_ptr<OdeEntity> gen_empty_body();
-		static std::auto_ptr<OdeEntity> gen_sphere_body(float mass, float rad);
-	
-	private:
-		static void init();
-		static void sim_step();
-		friend class App;
+  public:
+    static dWorldID get_ode_world();
+    static dSpaceID get_static_space();
+    static dSpaceID get_dyn_space();
+    
+    static std::auto_ptr<OdeEntity> gen_empty_body();
+    static std::auto_ptr<OdeEntity> gen_sphere_body(float mass, float rad);
+  
+  private:
+    static void init();
+    static void sim_step();
+    friend class App;
 };
 
 class OdeEntity : boost::noncopyable {
-	private:
-		friend class Sim;
-		
-		typedef std::map<std::string, dGeomID> GeomMap;
-		
-		// These are used when _id isn't set to fill in starting position of newly inserted geoms
-		Point _last_pos;
-		boost::array<float, 9> _last_rot;
-		
-		dBodyID _id;
-		GeomMap _geoms;
-		
-		OdeEntity() : _id(0) {}
-		OdeEntity(dBodyID id) : _id(id) {}
-		
-	public:
-		bool has_id() const { return _id != 0; }
-		dBodyID get_id();
-		
-		dGeomID get_geom(const std::string& gname);
-		CollisionHandler* get_geom_ch(const std::string& gname);
-		void set_geom(const std::string& gname, dGeomID geom, std::auto_ptr<CollisionHandler> ch);
-		
-		void set_pos(const Point& pos);
-		void set_rot(const boost::array<float, 9>& rot);
-		
-		static GameObj* get_gameobj_from_body(dBodyID b);
-		void set_gameobj(GameObj* g);
-		
-		~OdeEntity();
+  private:
+    friend class Sim;
+    
+    typedef std::map<std::string, dGeomID> GeomMap;
+    
+    // These are used when _id isn't set to fill in starting position of newly inserted geoms
+    Point _last_pos;
+    boost::array<float, 9> _last_rot;
+    
+    dBodyID _id;
+    GeomMap _geoms;
+    
+    OdeEntity() : _id(0) {}
+    OdeEntity(dBodyID id) : _id(id) {}
+    
+  public:
+    bool has_id() const { return _id != 0; }
+    dBodyID get_id();
+    
+    dGeomID get_geom(const std::string& gname);
+    CollisionHandler* get_geom_ch(const std::string& gname);
+    void set_geom(const std::string& gname, dGeomID geom, std::auto_ptr<CollisionHandler> ch);
+    
+    void set_pos(const Point& pos);
+    void set_rot(const boost::array<float, 9>& rot);
+    
+    static GameObj* get_gameobj_from_body(dBodyID b);
+    void set_gameobj(GameObj* g);
+    
+    ~OdeEntity();
 };
 
 class OdeGeomUtil {
-	public:
-		static Point get_rel_point_pos(dGeomID g, const Point& p) {
-			dVector3 res;
-			dGeomGetRelPointPos(g, p.x, p.y, p.z, res);
-			return Point(res);
-		}
-		
-		static Point get_pos_rel_point(dGeomID g, const Point& p) {
-			dVector3 res;
-			dGeomGetPosRelPoint(g, p.x, p.y, p.z, res);
-			return Point(res);
-		}
-		
-		static Vector vector_to_world(dGeomID g, const Vector& v) {
-			dVector3 res;
-			dGeomVectorToWorld(g, v.x, v.y, v.z, res);
-			return Vector(res);
-		}
-		
-		static Vector vector_from_world(dGeomID g, const Vector& v) {
-			dVector3 res;
-			dGeomVectorFromWorld(g, v.x, v.y, v.z, res);
-			return Vector(res);
-		}
-};	
+  public:
+    static Point get_rel_point_pos(dGeomID g, const Point& p) {
+      dVector3 res;
+      dGeomGetRelPointPos(g, p.x, p.y, p.z, res);
+      return Point(res);
+    }
+    
+    static Point get_pos_rel_point(dGeomID g, const Point& p) {
+      dVector3 res;
+      dGeomGetPosRelPoint(g, p.x, p.y, p.z, res);
+      return Point(res);
+    }
+    
+    static Vector vector_to_world(dGeomID g, const Vector& v) {
+      dVector3 res;
+      dGeomVectorToWorld(g, v.x, v.y, v.z, res);
+      return Vector(res);
+    }
+    
+    static Vector vector_from_world(dGeomID g, const Vector& v) {
+      dVector3 res;
+      dGeomVectorFromWorld(g, v.x, v.y, v.z, res);
+      return Vector(res);
+    }
+};  
 
 #endif

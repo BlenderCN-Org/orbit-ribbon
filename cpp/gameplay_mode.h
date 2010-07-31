@@ -28,18 +28,18 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 class AvatarGameObj;
 
 class GameplayMode : public Mode {
-	private:
-		std::string _avatar_key;
-		
-		AvatarGameObj* find_avatar();
-		
-	public:
-		GameplayMode();
-		void pre_clear();
-		void pre_3d();
-		void draw_3d_far();
-		void draw_3d_near();
-		void draw_2d();
+  private:
+    std::string _avatar_key;
+    
+    AvatarGameObj* find_avatar();
+    
+  public:
+    GameplayMode();
+    void pre_clear();
+    void pre_3d();
+    void draw_3d_far();
+    void draw_3d_near();
+    void draw_2d();
 };
 
 

@@ -49,39 +49,39 @@ class Point;
 namespace ORE1 { class SkySettingsType; }
 
 struct SkySettings {
-	float ring_angle;
-	float ring_y_offset;
-	float ring_d_offset;
-	float tilt_angle;
-	float tilt_x;
-	float tilt_z;
-	float t3_angle;
-	
-	SkySettings();
-	SkySettings(const boost::array<float, 7>& args);
-	SkySettings(const ORE1::SkySettingsType& area);
-	
-	void fill_array(boost::array<float, 7>& tgt);
+  float ring_angle;
+  float ring_y_offset;
+  float ring_d_offset;
+  float tilt_angle;
+  float tilt_x;
+  float tilt_z;
+  float t3_angle;
+  
+  SkySettings();
+  SkySettings(const boost::array<float, 7>& args);
+  SkySettings(const ORE1::SkySettingsType& area);
+  
+  void fill_array(boost::array<float, 7>& tgt);
 };
 
 class Background {
-	private:
-		SkySettings _sky;
-		boost::array<float, 16> _skyMatr;
-		
-		Point get_game_origin();
-		Point convert_to_sky_coords(const Point& pt);
-	
-	public:
-		Background(const SkySettings& sky);
-		
-		const SkySettings& get_sky() const { return _sky; }
-		void set_sky(const SkySettings& sky);
-		
-		float get_dist_from_ring(const Point& pt);
-		
-		void set_clear_color();
-		void draw();
+  private:
+    SkySettings _sky;
+    boost::array<float, 16> _skyMatr;
+    
+    Point get_game_origin();
+    Point convert_to_sky_coords(const Point& pt);
+  
+  public:
+    Background(const SkySettings& sky);
+    
+    const SkySettings& get_sky() const { return _sky; }
+    void set_sky(const SkySettings& sky);
+    
+    float get_dist_from_ring(const Point& pt);
+    
+    void set_clear_color();
+    void draw();
 };
 
 #endif

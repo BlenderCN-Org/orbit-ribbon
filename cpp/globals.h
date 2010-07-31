@@ -41,14 +41,14 @@ class OrePackage;
 typedef std::map<std::string, boost::shared_ptr<GameObj> > GOMap;
 
 class Globals {
-	public:
-		static std::vector<SDL_Event> frame_events;
-		static unsigned int total_steps;
-		static GOMap gameobjs;
-		static std::stack<boost::shared_ptr<Mode> > mode_stack;
-		static boost::scoped_ptr<Background> bg;
-		static boost::scoped_ptr<GLOOFont> sys_font;
-		static boost::scoped_ptr<OrePackage> ore;
+  public:
+    static std::vector<SDL_Event> frame_events;
+    static unsigned int total_steps;
+    static GOMap gameobjs;
+    static std::stack<boost::shared_ptr<Mode> > mode_stack;
+    static boost::scoped_ptr<Background> bg;
+    static boost::scoped_ptr<GLOOFont> sys_font;
+    static boost::scoped_ptr<OrePackage> ore;
 };
 
 #endif

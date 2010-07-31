@@ -30,46 +30,46 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 const unsigned int PERF_TICKS_WINDOW = 2000;
 
 struct FrameInfo {
-	unsigned int total_ticks;
-	unsigned int idle_ticks;
-	FrameInfo(unsigned int t, unsigned int i) : total_ticks(t), idle_ticks(i) {}
+  unsigned int total_ticks;
+  unsigned int idle_ticks;
+  FrameInfo(unsigned int t, unsigned int i) : total_ticks(t), idle_ticks(i) {}
 };
 
 std::deque<FrameInfo> frames;
 
 void Performance::record_frame(unsigned int total_ticks, unsigned int idle_ticks) {
-	frames.push_back(FrameInfo(total_ticks, idle_ticks));
-	
-	// Erase any FrameInfos that aren't needed to have a history PERF_TICKS_WINDOW ticks into the past
-	unsigned int sum_t = 0;
-	BOOST_FOREACH(const FrameInfo& f, frames) {
-		sum_t += f.total_ticks;
-	}
-	while (1) {
-		unsigned int front_ticks = frames.front().total_ticks;
-		if ((sum_t - front_ticks) > PERF_TICKS_WINDOW) {
-			sum_t -= front_ticks;
-			frames.pop_front();
-		} else {
-			break;
-		}
-	}
+  frames.push_back(FrameInfo(total_ticks, idle_ticks));
+  
+  // Erase any FrameInfos that aren't needed to have a history PERF_TICKS_WINDOW ticks into the past
+  unsigned int sum_t = 0;
+  BOOST_FOREACH(const FrameInfo& f, frames) {
+    sum_t += f.total_ticks;
+  }
+  while (1) {
+    unsigned int front_ticks = frames.front().total_ticks;
+    if ((sum_t - front_ticks) > PERF_TICKS_WINDOW) {
+      sum_t -= front_ticks;
+      frames.pop_front();
+    } else {
+      break;
+    }
+  }
 }
 
 std::string Performance::get_perf_info() {
-	unsigned int sum_t = 0;
-	unsigned int sum_i = 0;
-	BOOST_FOREACH(const FrameInfo& f, frames) {
-		sum_t += f.total_ticks;
-		sum_i += f.idle_ticks;
-	}
-	
-	if (sum_t < PERF_TICKS_WINDOW) {
-		return std::string("CALCULATING FPS...   ");
-	}
-	
-	return (boost::format("FPS:%4.2f IDLE:%4.2f%%")
-		% (frames.size()*1000/float(sum_t))
-		% (float(sum_i*100)/float(sum_t))
-	).str();
+  unsigned int sum_t = 0;
+  unsigned int sum_i = 0;
+  BOOST_FOREACH(const FrameInfo& f, frames) {
+    sum_t += f.total_ticks;
+    sum_i += f.idle_ticks;
+  }
+  
+  if (sum_t < PERF_TICKS_WINDOW) {
+    return std::string("CALCULATING FPS...   ");
+  }
+  
+  return (boost::format("FPS:%4.2f IDLE:%4.2f%%")
+    % (frames.size()*1000/float(sum_t))
+    % (float(sum_i*100)/float(sum_t))
+  ).str();
 }

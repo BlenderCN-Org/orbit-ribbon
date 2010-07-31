@@ -27,15 +27,15 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <vector>
 
 class App {
-	public:
-		static void run(const std::vector<std::string>& arguments);
-		
-		// To just load the base objects for an area, specify 0 for mission
-		// TODO Implement above feature
-		static void load_mission(unsigned int area_num, unsigned int mission);
-		
-	private:
-		static void frame_loop();
+  public:
+    static void run(const std::vector<std::string>& arguments);
+    
+    // To just load the base objects for an area, specify 0 for mission
+    // TODO Implement above feature
+    static void load_mission(unsigned int area_num, unsigned int mission);
+    
+  private:
+    static void frame_loop();
 };
 
 #endif

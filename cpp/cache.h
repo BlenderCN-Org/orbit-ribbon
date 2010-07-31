@@ -29,23 +29,23 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/shared_ptr.hpp>
 
 template<typename T> class CacheBase {
-	private:
-		typedef boost::unordered_map<std::string, boost::weak_ptr<T> > CacheMap;
-		CacheMap _cache;
-		
-	public:
-		virtual boost::shared_ptr<T> generate(const std::string& id) =0;
-		
-		boost::shared_ptr<T> get(const std::string& id) {
-			boost::weak_ptr<T>& p = _cache[id];
-			if (p.expired()) {
-				boost::shared_ptr<T> gen = generate(id);
-				p = gen;
-				return gen;
-			} else {
-				return p.lock();
-			}
-		}
+  private:
+    typedef boost::unordered_map<std::string, boost::weak_ptr<T> > CacheMap;
+    CacheMap _cache;
+    
+  public:
+    virtual boost::shared_ptr<T> generate(const std::string& id) =0;
+    
+    boost::shared_ptr<T> get(const std::string& id) {
+      boost::weak_ptr<T>& p = _cache[id];
+      if (p.expired()) {
+        boost::shared_ptr<T> gen = generate(id);
+        p = gen;
+        return gen;
+      } else {
+        return p.lock();
+      }
+    }
 };
 
 #endif

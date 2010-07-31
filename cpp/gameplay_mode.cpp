@@ -51,112 +51,112 @@ const float PHYS_DEBUG_BOX_FONTSIZE = 15;
 const float PHYS_DEBUG_BOX_COLL_WINDOW = MAX_FPS*2;
 
 GameplayMode::GameplayMode() {
-	// Locate the avatar object
-	for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
-		GOMap::size_type idx = i->first.find("LIBAvatar");
-		if (idx == 0) {
-			_avatar_key = i->first;
-			break;
-		}
-	}
-	
-	if (_avatar_key.size() == 0) {
-		throw GameException(std::string("Unable to locate LIBAvatar GameObj in GameplayMode init!"));
-	}
+  // Locate the avatar object
+  for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
+    GOMap::size_type idx = i->first.find("LIBAvatar");
+    if (idx == 0) {
+      _avatar_key = i->first;
+      break;
+    }
+  }
+  
+  if (_avatar_key.size() == 0) {
+    throw GameException(std::string("Unable to locate LIBAvatar GameObj in GameplayMode init!"));
+  }
 }
 
 AvatarGameObj* GameplayMode::find_avatar() {
-	GOMap::iterator i = Globals::gameobjs.find(_avatar_key);
-	if (i == Globals::gameobjs.end()) {
-		throw GameException(std::string("GameplayMode: LIBAvatar GameObj named ") + _avatar_key + " has disappeared unexpectedly");
-	}
-	return static_cast<AvatarGameObj*>(&(*(i->second)));
+  GOMap::iterator i = Globals::gameobjs.find(_avatar_key);
+  if (i == Globals::gameobjs.end()) {
+    throw GameException(std::string("GameplayMode: LIBAvatar GameObj named ") + _avatar_key + " has disappeared unexpectedly");
+  }
+  return static_cast<AvatarGameObj*>(&(*(i->second)));
 }
 
 void GameplayMode::pre_clear() {
-	Globals::bg->set_clear_color();
+  Globals::bg->set_clear_color();
 }
 
 void GameplayMode::pre_3d() {
-	AvatarGameObj* avatar = find_avatar();
-	Point cam_pos = avatar->get_rel_point_pos(CAMERA_POS_OFFSET);
-	Point cam_tgt = avatar->get_rel_point_pos(CAMERA_TGT_OFFSET);
-	Vector up_vec = avatar->vector_to_world(CAMERA_UP_VECTOR);
-	gluLookAt(
-		cam_pos.x, cam_pos.y, cam_pos.z,
-		cam_tgt.x, cam_tgt.y, cam_tgt.z,
-		 up_vec.x,  up_vec.y,  up_vec.z
-	);
+  AvatarGameObj* avatar = find_avatar();
+  Point cam_pos = avatar->get_rel_point_pos(CAMERA_POS_OFFSET);
+  Point cam_tgt = avatar->get_rel_point_pos(CAMERA_TGT_OFFSET);
+  Vector up_vec = avatar->vector_to_world(CAMERA_UP_VECTOR);
+  gluLookAt(
+    cam_pos.x, cam_pos.y, cam_pos.z,
+    cam_tgt.x, cam_tgt.y, cam_tgt.z,
+     up_vec.x,  up_vec.y,  up_vec.z
+  );
 }
 
 void GameplayMode::draw_3d_far() {
-	// Draw all the background objects
-	Globals::bg->draw();
+  // Draw all the background objects
+  Globals::bg->draw();
 }
 
 void GameplayMode::draw_3d_near() {
-	// Draw every game object (FIXME Do near/far sorting)
-	for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
-		i->second->draw(true);
-	}
+  // Draw every game object (FIXME Do near/far sorting)
+  for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
+    i->second->draw(true);
+  }
 }
 
 void GameplayMode::draw_2d() {
-	AvatarGameObj* av = find_avatar();
-	
-	if (Saving::get().config().debugPhysics().get()) {
-		Point p(
-			Display::get_screen_width()/2 - PHYS_DEBUG_BOX_SIZE.x/2,
-			Display::get_screen_height()/2 - PHYS_DEBUG_BOX_SIZE.y/2 + PHYS_DEBUG_BOX_Y
-		);
-		GUI::draw_box(p, PHYS_DEBUG_BOX_SIZE + GUI_BOX_BORDER*2);
-		p += GUI_BOX_BORDER;
-		
-		static const char* labels[6] = { "XROT", "ZROT", "YPOS", "XAVEL", "ZAVEL", "YLVEL"};
-		float cur_vals[6] = {
-			av->get_last_xrot(),
-			av->get_last_zrot(),
-			av->get_last_ypos(),
-			av->get_last_xavel(),
-			av->get_last_zavel(),
-			av->get_last_ylvel()
-		};
-		float max_vals[6] = {
-			RUNNING_MAX_DELTA_X_ROT,
-			RUNNING_MAX_DELTA_Z_ROT,
-			RUNNING_MAX_DELTA_Y_POS,
-			RUNNING_MAX_DELTA_Y_LVEL,
-			RUNNING_MAX_DELTA_X_AVEL,
-			RUNNING_MAX_DELTA_Z_AVEL
-		};
-		
-		boost::format f(PHYS_DEBUG_BOX_NUMFMT);
-		for (int i = 0; i < 6; ++i) {
-			float x = (PHYS_DEBUG_BOX_SIZE.x/6) * i;
-			glColor3f(1.0, 1.0, 1.0);
-			Globals::sys_font->draw(p + Vector(x, 0), PHYS_DEBUG_BOX_FONTSIZE, labels[i]);
-			Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*2), PHYS_DEBUG_BOX_FONTSIZE, (f % max_vals[i]).str());
-			
-			float r = std::fabs(cur_vals[i])/(max_vals[i]*1.2);
-			glColor3f(1.0, 1.0 - r, 1.0 - r);
-			Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE), PHYS_DEBUG_BOX_FONTSIZE, (f % cur_vals[i]).str());
-			
-			switch (i) {
-				case 0:
-					glColor3f(0.2, (av->is_attached() ? 1.0 : 0.0), 0.2);
-					Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*4), PHYS_DEBUG_BOX_FONTSIZE, "ATTACH");
-					break;
-				case 1:
-					glColor3f(0.2, std::max(0.0, 1.0 - av->get_last_norm_coll_age()/PHYS_DEBUG_BOX_COLL_WINDOW), 0.2);
-					Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*4), PHYS_DEBUG_BOX_FONTSIZE, "NORM-C");
-					break;
-				case 2:
-					glColor3f(0.2, std::max(0.0, 1.0 - av->get_last_run_coll_age()/PHYS_DEBUG_BOX_COLL_WINDOW), 0.2);
-					Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*4), PHYS_DEBUG_BOX_FONTSIZE, "RUN-C");
-					break;
-				default:
-					break;
-			}
-		}
-	}
+  AvatarGameObj* av = find_avatar();
+  
+  if (Saving::get().config().debugPhysics().get()) {
+    Point p(
+      Display::get_screen_width()/2 - PHYS_DEBUG_BOX_SIZE.x/2,
+      Display::get_screen_height()/2 - PHYS_DEBUG_BOX_SIZE.y/2 + PHYS_DEBUG_BOX_Y
+    );
+    GUI::draw_box(p, PHYS_DEBUG_BOX_SIZE + GUI_BOX_BORDER*2);
+    p += GUI_BOX_BORDER;
+    
+    static const char* labels[6] = { "XROT", "ZROT", "YPOS", "XAVEL", "ZAVEL", "YLVEL"};
+    float cur_vals[6] = {
+      av->get_last_xrot(),
+      av->get_last_zrot(),
+      av->get_last_ypos(),
+      av->get_last_xavel(),
+      av->get_last_zavel(),
+      av->get_last_ylvel()
+    };
+    float max_vals[6] = {
+      RUNNING_MAX_DELTA_X_ROT,
+      RUNNING_MAX_DELTA_Z_ROT,
+      RUNNING_MAX_DELTA_Y_POS,
+      RUNNING_MAX_DELTA_Y_LVEL,
+      RUNNING_MAX_DELTA_X_AVEL,
+      RUNNING_MAX_DELTA_Z_AVEL
+    };
+    
+    boost::format f(PHYS_DEBUG_BOX_NUMFMT);
+    for (int i = 0; i < 6; ++i) {
+      float x = (PHYS_DEBUG_BOX_SIZE.x/6) * i;
+      glColor3f(1.0, 1.0, 1.0);
+      Globals::sys_font->draw(p + Vector(x, 0), PHYS_DEBUG_BOX_FONTSIZE, labels[i]);
+      Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*2), PHYS_DEBUG_BOX_FONTSIZE, (f % max_vals[i]).str());
+      
+      float r = std::fabs(cur_vals[i])/(max_vals[i]*1.2);
+      glColor3f(1.0, 1.0 - r, 1.0 - r);
+      Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE), PHYS_DEBUG_BOX_FONTSIZE, (f % cur_vals[i]).str());
+      
+      switch (i) {
+        case 0:
+          glColor3f(0.2, (av->is_attached() ? 1.0 : 0.0), 0.2);
+          Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*4), PHYS_DEBUG_BOX_FONTSIZE, "ATTACH");
+          break;
+        case 1:
+          glColor3f(0.2, std::max(0.0, 1.0 - av->get_last_norm_coll_age()/PHYS_DEBUG_BOX_COLL_WINDOW), 0.2);
+          Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*4), PHYS_DEBUG_BOX_FONTSIZE, "NORM-C");
+          break;
+        case 2:
+          glColor3f(0.2, std::max(0.0, 1.0 - av->get_last_run_coll_age()/PHYS_DEBUG_BOX_COLL_WINDOW), 0.2);
+          Globals::sys_font->draw(p + Vector(x, PHYS_DEBUG_BOX_FONTSIZE*4), PHYS_DEBUG_BOX_FONTSIZE, "RUN-C");
+          break;
+        default:
+          break;
+      }
+    }
+  }
 }

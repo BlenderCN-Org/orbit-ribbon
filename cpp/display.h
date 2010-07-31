@@ -29,22 +29,22 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 class App;
 
 class Display {
-	private:
-		static int screen_width, screen_height;
-		static GLfloat screen_ratio;
-	
-	public:
-		static int get_screen_width() { return screen_width; }
-		static int get_screen_height() { return screen_height; }
-		static float get_screen_ratio() { return screen_ratio; }
-		
-	private:
-		static void init();
-		
-		static void draw_frame();
-		static void screen_resize();
-		
-		friend class App;
+  private:
+    static int screen_width, screen_height;
+    static GLfloat screen_ratio;
+  
+  public:
+    static int get_screen_width() { return screen_width; }
+    static int get_screen_height() { return screen_height; }
+    static float get_screen_ratio() { return screen_ratio; }
+    
+  private:
+    static void init();
+    
+    static void draw_frame();
+    static void screen_resize();
+    
+    friend class App;
 };
 
 #endif

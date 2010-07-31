@@ -29,29 +29,29 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gui.h"
 
 MainMenuMode::MainMenuMode() :
-	_cursor(GLOOTexture::load("cursor.png"))
+  _cursor(GLOOTexture::load("cursor.png"))
 {
-	resumed();
+  resumed();
 }
 
 void MainMenuMode::pre_clear() {
-	glClearColor(0.0, 0.0, 0.0, 0.0);
+  glClearColor(0.0, 0.0, 0.0, 0.0);
 }
 
 void MainMenuMode::draw_2d() {
-	if (_resumed) {
-		SDL_WarpMouse(Display::get_screen_width()/2, Display::get_screen_height()/2);
-		_resumed = false;
-	}
-	
-	int x, y;
-	SDL_GetMouseState(&x, &y);
-	_cursor->draw_2d(Point(x - _cursor->get_width()/2, y - _cursor->get_width()/2));
+  if (_resumed) {
+    SDL_WarpMouse(Display::get_screen_width()/2, Display::get_screen_height()/2);
+    _resumed = false;
+  }
+  
+  int x, y;
+  SDL_GetMouseState(&x, &y);
+  _cursor->draw_2d(Point(x - _cursor->get_width()/2, y - _cursor->get_width()/2));
 }
 
 void MainMenuMode::suspended() {
 }
 
 void MainMenuMode::resumed() {
-	_resumed = true;
+  _resumed = true;
 }

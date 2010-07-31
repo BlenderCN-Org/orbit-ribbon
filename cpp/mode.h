@@ -26,12 +26,12 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <string>
 
 class Mode {
-	public:
-		virtual void pre_clear() {}
-		virtual void pre_3d() {}
-		virtual void draw_3d_far() {}
-		virtual void draw_3d_near() {}
-		virtual void draw_2d() {}
+  public:
+    virtual void pre_clear() {}
+    virtual void pre_3d() {}
+    virtual void draw_3d_far() {}
+    virtual void draw_3d_near() {}
+    virtual void draw_2d() {}
 };
 
 #endif

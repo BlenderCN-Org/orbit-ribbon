@@ -27,13 +27,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 class App;
 
 class Performance {
-	private:
-		static void record_frame(unsigned int total_ticks, unsigned int idle_ticks);
-		
-		friend class App;
-	
-	public:
-		static std::string get_perf_info();
+  private:
+    static void record_frame(unsigned int total_ticks, unsigned int idle_ticks);
+    
+    friend class App;
+  
+  public:
+    static std::string get_perf_info();
 };
 
 #endif

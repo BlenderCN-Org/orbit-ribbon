@@ -44,66 +44,66 @@ namespace ORE1 { class ObjType; }
 
 class AvatarGameObj;
 class AvatarGameObj : public GameObj {
-	private:
-		// Tracking how far off we are from ideal running state, if attached
-		// These are kept so they can be used for debugging by GameplayMode
-		Vector _sn;
-		float _xrot_delta;
-		float _zrot_delta;
-		float _ypos_delta;
-		float _ylvel_delta;
-		float _xavel_delta;
-		float _zavel_delta;
-		unsigned int _norm_coll_steptime;
-		unsigned int _run_coll_steptime;
-		
-		boost::shared_ptr<MeshAnimation> _anim_fly_to_prerun;
-		float _uprightness;
-		
-		float _height; // Distance from top of head to bottom of feet
-		float _coll_rad; // Radius of the collision capsule
-		bool _attached;
-		bool _attached_this_frame;
-		
-		void update_geom_offsets();
-		bool check_attachment(float yp_delta, const Vector& sn);
-		
-		class AvatarContactHandler;
-		friend class AvatarContactHandler;
-		class AvatarContactHandler : public SimpleContactHandler {
-			private:
-				AvatarGameObj* _avatar;
-				
-			public:
-				AvatarContactHandler(AvatarGameObj* avatar) : _avatar(avatar) {}
-				bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
-		};
-		
-		class StickyAttachmentContactHandler : public SimpleContactHandler {
-			private:
-				AvatarGameObj* _avatar;
-				
-			public:
-				StickyAttachmentContactHandler(AvatarGameObj* avatar) : _avatar(avatar) {}
-				bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
-		};
-		
-	protected:
-		void step_impl();
-		void near_draw_impl();
-	
-	public:
-		AvatarGameObj(const ORE1::ObjType& obj);
-		
-		float get_last_xrot() { return _xrot_delta; }
-		float get_last_zrot() { return _zrot_delta; }
-		float get_last_ypos() { return _ypos_delta; }
-		float get_last_xavel() { return _xavel_delta; }
-		float get_last_zavel() { return _zavel_delta; }
-		float get_last_ylvel() { return _ylvel_delta; }
-		bool is_attached() { return _attached; }
-		unsigned int get_last_norm_coll_age();
-		unsigned int get_last_run_coll_age();
+  private:
+    // Tracking how far off we are from ideal running state, if attached
+    // These are kept so they can be used for debugging by GameplayMode
+    Vector _sn;
+    float _xrot_delta;
+    float _zrot_delta;
+    float _ypos_delta;
+    float _ylvel_delta;
+    float _xavel_delta;
+    float _zavel_delta;
+    unsigned int _norm_coll_steptime;
+    unsigned int _run_coll_steptime;
+    
+    boost::shared_ptr<MeshAnimation> _anim_fly_to_prerun;
+    float _uprightness;
+    
+    float _height; // Distance from top of head to bottom of feet
+    float _coll_rad; // Radius of the collision capsule
+    bool _attached;
+    bool _attached_this_frame;
+    
+    void update_geom_offsets();
+    bool check_attachment(float yp_delta, const Vector& sn);
+    
+    class AvatarContactHandler;
+    friend class AvatarContactHandler;
+    class AvatarContactHandler : public SimpleContactHandler {
+      private:
+        AvatarGameObj* _avatar;
+        
+      public:
+        AvatarContactHandler(AvatarGameObj* avatar) : _avatar(avatar) {}
+        bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
+    };
+    
+    class StickyAttachmentContactHandler : public SimpleContactHandler {
+      private:
+        AvatarGameObj* _avatar;
+        
+      public:
+        StickyAttachmentContactHandler(AvatarGameObj* avatar) : _avatar(avatar) {}
+        bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
+    };
+    
+  protected:
+    void step_impl();
+    void near_draw_impl();
+  
+  public:
+    AvatarGameObj(const ORE1::ObjType& obj);
+    
+    float get_last_xrot() { return _xrot_delta; }
+    float get_last_zrot() { return _zrot_delta; }
+    float get_last_ypos() { return _ypos_delta; }
+    float get_last_xavel() { return _xavel_delta; }
+    float get_last_zavel() { return _zavel_delta; }
+    float get_last_ylvel() { return _ylvel_delta; }
+    bool is_attached() { return _attached; }
+    unsigned int get_last_norm_coll_age();
+    unsigned int get_last_run_coll_age();
 };
 
 #endif

@@ -26,11 +26,11 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "app.h"
 
 int main(int argc, char** argv) {
-	std::vector<std::string> args;
-	for (int i = 1; i < argc; ++i) {
-		args.push_back(std::string(argv[i]));
-	}
-	
-	App::run(args);
-	return 0;
+  std::vector<std::string> args;
+  for (int i = 1; i < argc; ++i) {
+    args.push_back(std::string(argv[i]));
+  }
+  
+  App::run(args);
+  return 0;
 }

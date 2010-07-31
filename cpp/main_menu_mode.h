@@ -30,18 +30,18 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "mode.h"
 
 class MainMenuMode : public Mode {
-	private:
-		boost::shared_ptr<GLOOTexture> _cursor;
-		bool _resumed;
-		
-	public:
-		MainMenuMode();
-		
-		void pre_clear();
-		void draw_2d();
-		
-		void suspended();
-		void resumed();
+  private:
+    boost::shared_ptr<GLOOTexture> _cursor;
+    bool _resumed;
+    
+  public:
+    MainMenuMode();
+    
+    void pre_clear();
+    void draw_2d();
+    
+    void suspended();
+    void resumed();
 };
 
 #endif

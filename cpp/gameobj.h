@@ -41,110 +41,110 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 namespace ORE1 { class ObjType; }
 
 class GameObj : boost::noncopyable {
-	public:
-		GameObj(const ORE1::ObjType& obj, std::auto_ptr<OdeEntity> entity = Sim::gen_empty_body());
-		
-		const Point& get_pos() const { return _pos; }
-		void set_pos(const Point& pos);
-		
-		const boost::array<float, 9>& get_rot() const { return _rot; }
-		void set_rot(const boost::array<float, 9>& rot);
-		
-		const Vector& get_vel() const { return _vel; }
-		
-		std::string to_str() const;
-		
-		void draw(bool near);
-		void step();
-		
-		Point get_rel_point_pos(const Point& p) const;
-		Point get_pos_rel_point(const Point& p) const;
-		Vector vector_to_world(const Vector& v) const;
-		Vector vector_from_world(const Vector& v) const;
-	
-	protected:
-		OdeEntity& get_entity() { return *_entity; }
-		const OdeEntity& get_entity() const { return *_entity; }
-		
-		virtual void near_draw_impl() {}
-		virtual void far_draw_impl() { near_draw_impl(); }
-		virtual void step_impl() {}
-	
-	private:
-		Point _pos;
-		boost::array<float, 9> _rot; // 3x3 column-major
-		Vector _vel;
-		boost::scoped_ptr<CollisionHandler> _coll_handler;
-		
-		// Damping coefficients for linear and angular velocity along each body axis
-		// For example, vel_damp_coef[0] is the linear damping coefficient along relative x axis
-		// Each step, vel_damp_coef[0]/MAX_FPS * relative x velocity is removed
-		float _vel_damp_coef[3];
-		float _ang_damp_coef[3];
-		
-		std::auto_ptr<OdeEntity> _entity;
+  public:
+    GameObj(const ORE1::ObjType& obj, std::auto_ptr<OdeEntity> entity = Sim::gen_empty_body());
+    
+    const Point& get_pos() const { return _pos; }
+    void set_pos(const Point& pos);
+    
+    const boost::array<float, 9>& get_rot() const { return _rot; }
+    void set_rot(const boost::array<float, 9>& rot);
+    
+    const Vector& get_vel() const { return _vel; }
+    
+    std::string to_str() const;
+    
+    void draw(bool near);
+    void step();
+    
+    Point get_rel_point_pos(const Point& p) const;
+    Point get_pos_rel_point(const Point& p) const;
+    Vector vector_to_world(const Vector& v) const;
+    Vector vector_from_world(const Vector& v) const;
+  
+  protected:
+    OdeEntity& get_entity() { return *_entity; }
+    const OdeEntity& get_entity() const { return *_entity; }
+    
+    virtual void near_draw_impl() {}
+    virtual void far_draw_impl() { near_draw_impl(); }
+    virtual void step_impl() {}
+  
+  private:
+    Point _pos;
+    boost::array<float, 9> _rot; // 3x3 column-major
+    Vector _vel;
+    boost::scoped_ptr<CollisionHandler> _coll_handler;
+    
+    // Damping coefficients for linear and angular velocity along each body axis
+    // For example, vel_damp_coef[0] is the linear damping coefficient along relative x axis
+    // Each step, vel_damp_coef[0]/MAX_FPS * relative x velocity is removed
+    float _vel_damp_coef[3];
+    float _ang_damp_coef[3];
+    
+    std::auto_ptr<OdeEntity> _entity;
 };
 
 class GOFactory {
-	public:
-		virtual boost::shared_ptr<GameObj> create(const ORE1::ObjType& obj) =0;
+  public:
+    virtual boost::shared_ptr<GameObj> create(const ORE1::ObjType& obj) =0;
 };
 
 class GOFactoryRegistry {
-	private:
-		// Since we can't rely on static object ctors being called before any GOAutoRegistrations are initialized...
-		// We'll just create simple free store allocation (which we can safely not worry about deleting) on first call to register_*
-		
-		struct _Factories {
-			std::map<std::string, boost::shared_ptr<GOFactory> > _factory_map;
-			boost::shared_ptr<GOFactory> _default_factory;
-		};
-		static bool _initialized;
-		static _Factories* _factories;
-		
-		static void init() {
-			if (!_initialized) {
-				_factories = new _Factories;
-				_initialized = true;
-			}
-		}
-	
-	public:
-		static void register_factory(const std::string& name, const boost::shared_ptr<GOFactory>& factory) {
-			init();
-			std::map<std::string, boost::shared_ptr<GOFactory> >::iterator i = _factories->_factory_map.find(name);
-			if (i != _factories->_factory_map.end()) {
-				throw GameException("Attempted to register over existing GameObject factory for " + name);
-			}
-			_factories->_factory_map.insert(std::pair<const std::string, boost::shared_ptr<GOFactory> >(name, factory));
-		}
-		
-		static void register_default_factory(const boost::shared_ptr<GOFactory>& factory) { 
-			init();
-			if (_factories->_default_factory) {
-				throw GameException("Attempted to register over existing default GameObject factory");
-			}
-			_factories->_default_factory = factory; 
-		}
-		
-		static boost::shared_ptr<GameObj> create(const ORE1::ObjType& obj);
+  private:
+    // Since we can't rely on static object ctors being called before any GOAutoRegistrations are initialized...
+    // We'll just create simple free store allocation (which we can safely not worry about deleting) on first call to register_*
+    
+    struct _Factories {
+      std::map<std::string, boost::shared_ptr<GOFactory> > _factory_map;
+      boost::shared_ptr<GOFactory> _default_factory;
+    };
+    static bool _initialized;
+    static _Factories* _factories;
+    
+    static void init() {
+      if (!_initialized) {
+        _factories = new _Factories;
+        _initialized = true;
+      }
+    }
+  
+  public:
+    static void register_factory(const std::string& name, const boost::shared_ptr<GOFactory>& factory) {
+      init();
+      std::map<std::string, boost::shared_ptr<GOFactory> >::iterator i = _factories->_factory_map.find(name);
+      if (i != _factories->_factory_map.end()) {
+        throw GameException("Attempted to register over existing GameObject factory for " + name);
+      }
+      _factories->_factory_map.insert(std::pair<const std::string, boost::shared_ptr<GOFactory> >(name, factory));
+    }
+    
+    static void register_default_factory(const boost::shared_ptr<GOFactory>& factory) { 
+      init();
+      if (_factories->_default_factory) {
+        throw GameException("Attempted to register over existing default GameObject factory");
+      }
+      _factories->_default_factory = factory; 
+    }
+    
+    static boost::shared_ptr<GameObj> create(const ORE1::ObjType& obj);
 };
 
 template<typename T> class _GOAutoFactory : public GOFactory {
-	boost::shared_ptr<GameObj> create(const ORE1::ObjType& obj) {
-		return boost::shared_ptr<GameObj>(new T(obj));
-	}
+  boost::shared_ptr<GameObj> create(const ORE1::ObjType& obj) {
+    return boost::shared_ptr<GameObj>(new T(obj));
+  }
 };
 
 template<typename T> class GOAutoRegistration {
-	public:
-		GOAutoRegistration() {
-			GOFactoryRegistry::register_default_factory(boost::shared_ptr<GOFactory>(new _GOAutoFactory<T>));
-		}
-		
-		GOAutoRegistration(const std::string& name) {
-			GOFactoryRegistry::register_factory(name, boost::shared_ptr<GOFactory>(new _GOAutoFactory<T>));
-		}
+  public:
+    GOAutoRegistration() {
+      GOFactoryRegistry::register_default_factory(boost::shared_ptr<GOFactory>(new _GOAutoFactory<T>));
+    }
+    
+    GOAutoRegistration(const std::string& name) {
+      GOFactoryRegistry::register_factory(name, boost::shared_ptr<GOFactory>(new _GOAutoFactory<T>));
+    }
 };
 
 #endif
