@@ -31,13 +31,16 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 const Vector GUI_BOX_BORDER(8, 2); // A box's contents are drawn this number of pixels from the left/right and top/bottom of the box respectively
 const int LAYOUT_PADDING = 4; // Number of pixels between adjacent items in a layout widget
 
+bool bbox_contains_point(const Size& bbox_size, const Point& upper_left, const Point& test_pt);
+
 class Widget;
 struct WidgetLocation {
   const Widget* widget;
   Point upper_left;
-  Size bbox_size;
   
-  WidgetLocation(const Widget* w, const Point& ul, const Size& bbs) : widget(w), upper_left(ul), bbox_size(bbs) {}
+  WidgetLocation(const Widget* w, const Point& ul) : widget(w), upper_left(ul) {}
+  
+  Size get_bbox_size();
 };
 
 class Widget {
@@ -45,12 +48,10 @@ class Widget {
     enum DrawMode { WIDGET_PASSIVE, WIDGET_FOCUSED, WIDGET_ACTIVATED };
     
     virtual void draw(const Point& upper_left, DrawMode mode) const =0;
-    virtual bool widget_contains_point(const Point& upper_left, const Point& test_pt) const { return bbox_contains_point(upper_left, test_pt); }
-    virtual std::list<WidgetLocation> get_focusable_children(const Point& upper_left __attribute__ ((unused))) const { return std::list<WidgetLocation>(); }
+    virtual bool widget_contains_point(const Point& upper_left, const Point& test_pt) const { return bbox_contains_point(get_bbox_size(), upper_left, test_pt); }
+    virtual std::list<WidgetLocation> get_children_locations_locations(const Point& upper_left __attribute__ ((unused))) const { return std::list<WidgetLocation>(); }
     virtual bool is_focusable() const { return false; }
     virtual Size get_bbox_size() const =0;
-    
-    bool bbox_contains_point(const Point& upper_left, const Point& test_pt) const;
 };
 
 class UserSizedWidget : public Widget {
@@ -61,7 +62,7 @@ class UserSizedWidget : public Widget {
     UserSizedWidget(const Size& bbox_size) : _bbox_size(bbox_size) {}
     
     void set_bbox_size(const Size& s) { _bbox_size = s; }
-    virtual Size get_bbox_size() const { return _bbox_size; }
+    Size get_bbox_size() const { return _bbox_size; }
 };
 
 class NullWidget : public UserSizedWidget {
@@ -73,27 +74,26 @@ class NullWidget : public UserSizedWidget {
 class BoxWidget : public Widget {
   private:
     boost::shared_ptr<Widget> _child;
-    float _r, _g, _b, _a;
     
   public:
-    BoxWidget(const boost::shared_ptr<Widget>& child, float r = 0.0, float g = 0.0, float b = 0.0, float a = 0.5)
-      : _child(child), _r(r), _g(g), _b(b), _a(a) {}
+    BoxWidget(const boost::shared_ptr<Widget>& child) : _child(child) {}
     
-    void draw(const Point& upper_left, Widget::DrawMode mode) const;
-    bool widget_contains_point(const Point& test_pt) const;
+    void draw(const Point& upper_left, float r, float g, float b, float a) const;
     Size get_bbox_size() const;
-    std::list<WidgetLocation> get_focusable_children(const Point& upper_left) const;
-    
-    void set_box_color(float r, float g, float b) { _r = r; _g = g; _b = b; }
-    void set_box_alpha(float a) { _a = a; }
+    std::list<WidgetLocation> get_children_locations(const Point& upper_left) const;
     
     void set_child(boost::shared_ptr<Widget> child) { _child = child; }
     const Widget& get_child() const { return *_child; }
 };
 
 class ButtonWidget : public BoxWidget {
+  private:
+    static const float PASSIVE_COLOR[4];
+    static const float FOCUSED_COLOR[4];
+    static const float ACTIVATED_COLOR[4];
+    
   public:
-    ButtonWidget(const boost::shared_ptr<Widget>& child);
+    ButtonWidget(const boost::shared_ptr<Widget>& child) : BoxWidget(child) {}
     
     void draw(const Point& upper_left, Widget::DrawMode mode) const;
     bool is_focusable() const { return true; }
@@ -105,7 +105,7 @@ class LayoutWidget : public Widget {
   
   private:
     Orientation _orientation;
-    std::list<boost::shared_ptr<Widget> > children;
+    std::list<boost::shared_ptr<Widget> > _children;
   
   public:
     LayoutWidget(Orientation orientation) : _orientation(orientation) {}
@@ -113,7 +113,7 @@ class LayoutWidget : public Widget {
     void add_child(const boost::shared_ptr<Widget>& child);
     void draw(const Point& upper_left, Widget::DrawMode mode) const;
     Size get_bbox_size() const;
-    std::list<WidgetLocation> get_focusable_children(const Point& upper_left) const;
+    std::list<WidgetLocation> get_children_locations(const Point& upper_left) const;
 };
 
 class TextWidget : public Widget {
@@ -127,8 +127,6 @@ class TextWidget : public Widget {
     void draw(const Point& upper_left, Widget::DrawMode mode) const;
     Size get_bbox_size() const;
 };
-
-// TODO: Also going to need a TableLayoutWidget sooner or later
 
 class GUI {
   public:
