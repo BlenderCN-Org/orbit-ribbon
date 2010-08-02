@@ -39,23 +39,19 @@ namespace GUI {
   const float BUTTON_ACTIVATED_COLOR[4] = { 0.5, 0.8, 0.5, 1.0 };
   
   class FocusTracker {
-    public:
-      enum FocusMode { KEYBOARD_FOCUS, MOUSE_FOCUS };
-    
     private:
       std::list<std::string> _region_order;
       std::map<std::string, Box> _focus_regions;
       std::map<std::string, Box>::const_iterator _focus_iter;
-      FocusMode _focus_mode;
+      bool _ui_bindings_on_last_frame;
     
     public:
-      FocusTracker() : _focus_regions(), _focus_iter(_focus_regions.end()), _focus_mode(KEYBOARD_FOCUS) {}
+      FocusTracker() : _focus_regions(), _focus_iter(_focus_regions.end()), _ui_bindings_on_last_frame(false) {}
       
       void add_region(const std::string& name, const Box& box);
       const Box* get_region(const std::string& name) const;
       void process();
       std::string get_current_focus() const;
-      FocusMode get_focus_mode() const { return _focus_mode; }
   };
   
   class SimpleMenu {
