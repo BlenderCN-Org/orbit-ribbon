@@ -95,6 +95,7 @@ void FocusTracker::process() {
       bool found_match = false;
       for(std::map<std::string, Box>::const_iterator i = _focus_regions.begin(); i != _focus_regions.end(); ++i) {
         if (i->second.contains_point(mouse_pos)) {
+          found_match = true;
           _focus_iter = i;
           break;
         }
