@@ -24,6 +24,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "gloo.h"
 
+#include "debug.h"
+
 bool bbox_contains_point(const Size& bbox_size, const Point& upper_left, const Point& test_pt){
   return (
     test_pt.x >= upper_left.x &&
@@ -37,8 +39,9 @@ Size WidgetLocation::get_bbox_size() {
   return widget->get_bbox_size();
 }
 
-void BoxWidget::draw(const Point& upper_left, float r, float g, float b, float a) const {
-    GUI::draw_box(upper_left, get_bbox_size(), r, g, b, a);
+void BoxWidget::draw(const Point& upper_left, const WidgetDrawModeMap& mode_map, float r, float g, float b, float a) const {
+  GUI::draw_box(upper_left, get_bbox_size(), r, g, b, a);
+  _child->draw(upper_left + GUI_BOX_BORDER, mode_map);
 }
 
 Size BoxWidget::get_bbox_size() const {
@@ -58,13 +61,13 @@ const float ButtonWidget::ACTIVATED_COLOR[4] = { 0.5, 0.8, 0.5, 1.0 };
 void ButtonWidget::draw(const Point& upper_left, const WidgetDrawModeMap& mode_map) const {
   switch(mode_map.get_mode(this)) {
     case WIDGET_PASSIVE:
-      BoxWidget::draw(upper_left, PASSIVE_COLOR[0], PASSIVE_COLOR[1], PASSIVE_COLOR[2], PASSIVE_COLOR[3]);
+      BoxWidget::draw(upper_left, mode_map, PASSIVE_COLOR[0], PASSIVE_COLOR[1], PASSIVE_COLOR[2], PASSIVE_COLOR[3]);
       break;
     case WIDGET_FOCUSED:
-      BoxWidget::draw(upper_left, FOCUSED_COLOR[0], FOCUSED_COLOR[1], FOCUSED_COLOR[2], FOCUSED_COLOR[3]);
+      BoxWidget::draw(upper_left, mode_map, FOCUSED_COLOR[0], FOCUSED_COLOR[1], FOCUSED_COLOR[2], FOCUSED_COLOR[3]);
       break;
     case WIDGET_ACTIVATED:
-      BoxWidget::draw(upper_left, ACTIVATED_COLOR[0], ACTIVATED_COLOR[1], ACTIVATED_COLOR[2], ACTIVATED_COLOR[3]);
+      BoxWidget::draw(upper_left, mode_map, ACTIVATED_COLOR[0], ACTIVATED_COLOR[1], ACTIVATED_COLOR[2], ACTIVATED_COLOR[3]);
       break;
   }
 }
@@ -74,43 +77,20 @@ void LayoutWidget::add_child(const boost::shared_ptr<Widget>& widget) {
 }
 
 void LayoutWidget::draw(const Point& upper_left, const WidgetDrawModeMap& mode_map) const {
-  Point pos(upper_left);
-  for (std::list<boost::shared_ptr<Widget> >::const_iterator i = _children.begin(); i != _children.end(); ++i) {
-    const boost::shared_ptr<Widget>& widget = *i;
-    widget->draw(pos, mode_map);
-    switch(_orientation) {
-      case WIDGET_HORIZONTAL:
-        pos.x += widget->get_bbox_size().x + LAYOUT_PADDING;
-        break;
-      case WIDGET_VERTICAL:
-        pos.y += widget->get_bbox_size().y + LAYOUT_PADDING;
-        break;
-    }
+  std::list<WidgetLocation> widget_locs = get_children_locations(upper_left);
+  for (std::list<WidgetLocation>::const_iterator i = widget_locs.begin(); i != widget_locs.end(); ++i) {
+    i->widget->draw(i->upper_left, mode_map);
   }
 }
 
 Size LayoutWidget::get_bbox_size() const {
   Size ret(0, 0);
-  
-  for (std::list<boost::shared_ptr<Widget> >::const_iterator i = _children.begin(); i != _children.end(); ++i) {
-    const boost::shared_ptr<Widget>& widget = *i;
-    Size widget_size = widget->get_bbox_size();
-    switch(_orientation) {
-      case WIDGET_HORIZONTAL:
-        ret.x += widget_size.x + LAYOUT_PADDING;
-        if (widget_size.y > ret.y) {
-          ret.y = widget_size.y;
-        }
-        break;
-      case WIDGET_VERTICAL:
-        ret.y += widget_size.y + LAYOUT_PADDING;
-        if (widget_size.x > ret.x) {
-          ret.x = widget_size.x;
-        }
-        break;
-    }
+  std::list<WidgetLocation> widget_locs = get_children_locations(Point(0,0));
+  for (std::list<WidgetLocation>::const_iterator i = widget_locs.begin(); i != widget_locs.end(); ++i) {
+    Point widget_lower_right(i->upper_left + i->widget->get_bbox_size());
+    if (widget_lower_right.x > ret.x) { ret.x = widget_lower_right.x; }
+    if (widget_lower_right.y > ret.y) { ret.y = widget_lower_right.y; }
   }
-  
   return ret;
 }
 
@@ -123,10 +103,10 @@ std::list<WidgetLocation> LayoutWidget::get_children_locations(const Point& uppe
     ret.push_back(WidgetLocation(&*widget, pos));
     switch(_orientation) {
       case WIDGET_HORIZONTAL:
-        pos.x += widget->get_bbox_size().x + LAYOUT_PADDING;
+        pos.x += widget->get_bbox_size().x + _padding;
         break;
       case WIDGET_VERTICAL:
-        pos.y += widget->get_bbox_size().y + LAYOUT_PADDING;
+        pos.y += widget->get_bbox_size().y + _padding;
         break;
     }
   }

@@ -30,7 +30,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gloo.h"
 
 const Vector GUI_BOX_BORDER(8, 2); // A box's contents are drawn this number of pixels from the left/right and top/bottom of the box respectively
-const int LAYOUT_PADDING = 4; // Number of pixels between adjacent items in a layout widget
 
 bool bbox_contains_point(const Size& bbox_size, const Point& upper_left, const Point& test_pt);
 
@@ -92,8 +91,8 @@ class BoxWidget : public Widget {
   public:
     BoxWidget(const boost::shared_ptr<Widget>& child) : _child(child) {}
     
-    // Note that this has the wrong specification for Widget's virtual draw, so BoxWidget is abstract
-    void draw(const Point& upper_left, float r, float g, float b, float a) const;
+    // Note that this has the wrong specification for Widget's virtual draw, so BoxWidget is still abstract
+    void draw(const Point& upper_left, const WidgetDrawModeMap& mode_map, float r, float g, float b, float a) const;
     
     Size get_bbox_size() const;
     std::list<WidgetLocation> get_children_locations(const Point& upper_left) const;
@@ -139,9 +138,10 @@ class LayoutWidget : public Widget {
   private:
     Orientation _orientation;
     std::list<boost::shared_ptr<Widget> > _children;
+    int _padding;
   
   public:
-    LayoutWidget(Orientation orientation) : _orientation(orientation) {}
+    LayoutWidget(Orientation orientation, int padding) : _orientation(orientation), _padding(padding) {}
     
     void add_child(const boost::shared_ptr<Widget>& child);
     void draw(const Point& upper_left, const WidgetDrawModeMap& mode_map) const;

@@ -31,7 +31,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 MainMenuMode::MainMenuMode() :
   _cursor(GLOOTexture::load("cursor.png"))
 {
-  LayoutWidget* layout_widget = new LayoutWidget(LayoutWidget::WIDGET_VERTICAL);
+  LayoutWidget* layout_widget = new LayoutWidget(LayoutWidget::WIDGET_VERTICAL, 10);
   boost::shared_ptr<Widget> button_panel = boost::shared_ptr<Widget>();
   layout_widget->add_child(boost::shared_ptr<Widget>(new LabelButtonWidget("Play")));
   layout_widget->add_child(boost::shared_ptr<Widget>(new LabelButtonWidget("Options")));
