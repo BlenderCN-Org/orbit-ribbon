@@ -27,6 +27,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "input.h"
 #include "globals.h"
 #include "gloo.h"
+#include "mouse_cursor.h"
 
 namespace GUI {
 
@@ -88,13 +89,9 @@ void FocusTracker::process() {
     if (event.type == SDL_MOUSEMOTION) {
       _focus_mode = MOUSE_FOCUS;
       
-      int x, y;
-      SDL_GetMouseState(&x, &y);
-      Point mouse_pos(x, y);
-      
       bool found_match = false;
       for(std::map<std::string, Box>::const_iterator i = _focus_regions.begin(); i != _focus_regions.end(); ++i) {
-        if (i->second.contains_point(mouse_pos)) {
+        if (i->second.contains_point(Globals::mouse_cursor->get_pos())) {
           found_match = true;
           _focus_iter = i;
           break;

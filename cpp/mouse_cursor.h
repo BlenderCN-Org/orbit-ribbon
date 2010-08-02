@@ -1,5 +1,6 @@
 /*
-globals.cpp: Translation unit for game-wide globals
+mouse_cursor.h: Header of the MouseCursor class
+MouseCursor is responsible for showing, hiding, and moving the mouse cursor.
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 
@@ -19,22 +20,32 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
-#include <SDL/SDL.h>
+#ifndef ORBIT_RIBBON_MOUSE_CURSOR_H
+#define ORBIT_RIBBON_MOUSE_CURSOR_H
 
-#include "background.h"
-#include "gameobj.h"
-#include "globals.h"
+#include <boost/shared_ptr.hpp>
+
+#include "geometry.h"
 #include "gloo.h"
-#include "mode.h"
-#include "ore.h"
-#include "mouse_cursor.h"
-#include "autoxsd/save.h"
 
-std::vector<SDL_Event> Globals::frame_events;
-unsigned int Globals::total_steps = 0;
-GOMap Globals::gameobjs;
-std::stack<boost::shared_ptr<Mode> > Globals::mode_stack;
-boost::scoped_ptr<Background> Globals::bg;
-boost::scoped_ptr<GLOOFont> Globals::sys_font;
-boost::scoped_ptr<OrePackage> Globals::ore;
-boost::scoped_ptr<MouseCursor> Globals::mouse_cursor;
+union SDL_Event;
+
+class MouseCursor {
+  private:
+    boost::shared_ptr<GLOOTexture> _cursor_img;
+    Point _pos;
+    bool _visible;
+  
+  public:
+    MouseCursor();
+    
+    void set_visibility(bool v);
+    void handle_motion_event(const SDL_Event* event);
+    
+    void reset_pos();
+    Point get_pos() const { return _pos; }
+    
+    void draw();
+};
+
+#endif

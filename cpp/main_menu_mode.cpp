@@ -22,16 +22,16 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <boost/lexical_cast.hpp>
 
+#include "main_menu_mode.h"
+
 #include "display.h"
 #include "debug.h"
-#include "main_menu_mode.h"
+#include "globals.h"
 #include "gloo.h"
 #include "gui.h"
+#include "mouse_cursor.h"
 
-MainMenuMode::MainMenuMode() :
-  _cursor(GLOOTexture::load("cursor.png")),
-  _main_menu(180, 22, 8)
-{
+MainMenuMode::MainMenuMode() : _main_menu(180, 22, 8) {
   _main_menu.add_button("play", "Play");
   _main_menu.add_button("credits", "Credits");
   _main_menu.add_button("options", "Options");
@@ -45,22 +45,13 @@ void MainMenuMode::pre_clear() {
 }
 
 void MainMenuMode::draw_2d() {
-  if (_resumed) {
-    SDL_WarpMouse(Display::get_screen_width()/2, Display::get_screen_height()/2);
-    _resumed = false;
-  }
-  
   _main_menu.process();
   _main_menu.draw();
-  
-  int x, y;
-  SDL_GetMouseState(&x, &y);
-  _cursor->draw_2d(Point(x - _cursor->get_width()/2, y - _cursor->get_width()/2));
 }
 
 void MainMenuMode::suspended() {
 }
 
 void MainMenuMode::resumed() {
-  _resumed = true;
+  Globals::mouse_cursor->set_visibility(true);
 }

@@ -69,6 +69,7 @@ class GLOOTexture : boost::noncopyable {
     std::string get_load_name() const { return _load_name; }
     int get_width() const { return _width; }
     int get_height() const { return _height; }
+    Size get_size() const { return Size(_width, _height); }
     
     void bind();
     void draw_2d(const Point& pos);

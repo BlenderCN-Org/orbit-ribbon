@@ -32,11 +32,15 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/scoped_ptr.hpp>
 #include <ode/ode.h>
 
+#include "geometry.h"
+
 class GameObj;
 class Mode;
 class Background;
 class GLOOFont;
+class GLOOTexture;
 class OrePackage;
+class MouseCursor;
 
 typedef std::map<std::string, boost::shared_ptr<GameObj> > GOMap;
 
@@ -49,6 +53,7 @@ class Globals {
     static boost::scoped_ptr<Background> bg;
     static boost::scoped_ptr<GLOOFont> sys_font;
     static boost::scoped_ptr<OrePackage> ore;
+    static boost::scoped_ptr<MouseCursor> mouse_cursor;
 };
 
 #endif

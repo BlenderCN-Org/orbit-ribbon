@@ -35,6 +35,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gui.h"
 #include "saving.h"
 #include "mode.h"
+#include "mouse_cursor.h"
 #include "performance.h"
 #include "gloo.h"
 
@@ -220,6 +221,8 @@ void Display::draw_frame() {
   glLoadIdentity();
   
   mode->draw_2d();
+  
+  Globals::mouse_cursor->draw();
   
   if (Saving::get().config().showFps().get()) {
     if (perf_info == "" or SDL_GetTicks() - last_perf_info >= MAX_PERF_INFO_AGE) {

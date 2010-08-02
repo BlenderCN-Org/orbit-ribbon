@@ -46,6 +46,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "main_menu_mode.h"
 #include "mesh.h"
 #include "mode.h"
+#include "mouse_cursor.h"
 #include "performance.h"
 #include "saving.h"
 #include "sim.h"
@@ -63,13 +64,15 @@ void App::frame_loop() {
     // Fetch the latest state of the input devices
     Input::update();
     
-    // Add all new events to the events list for this frame, and quit on QUIT events
+    // Add all new events to the events list for this frame, move mouse cursor, and quit on QUIT events
     Globals::frame_events.clear();
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       Globals::frame_events.push_back(event);
       if (event.type == SDL_QUIT) {
         throw GameQuitException("SDL quit event");
+      } else if (event.type == SDL_MOUSEMOTION) {
+        Globals::mouse_cursor->handle_motion_event(&event);
       }
     }
     
@@ -197,11 +200,12 @@ void App::run(const std::vector<std::string>& args) {
     Sim::init();
     Input::init();
     
-    // TODO Find an appropriate font based on the environment we're running in
+    // TODO Load font from the ORE package
     Globals::sys_font.reset(new GLOOFont("/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf", 15));
     
+    Globals::mouse_cursor.reset(new MouseCursor());
+    
     if (vm.count("area") and vm.count("mission")) {
-      // TODO Check if this area and mission have been unlocked yet
       unsigned int area = vm["area"].as<unsigned int>();
       unsigned int mission = vm["mission"].as<unsigned int>();
       Debug::status_msg("Starting area " + boost::lexical_cast<std::string>(area) + ", mission " + boost::lexical_cast<std::string>(mission));
@@ -211,7 +215,6 @@ void App::run(const std::vector<std::string>& args) {
       // TODO Go straight to this area's menu
       throw GameException("Area menu jumping not yet implemented");
     } else {
-      // TODO Go to the main menu
       Globals::mode_stack.push(boost::shared_ptr<Mode>(new MainMenuMode()));
     }
   } catch (const std::exception& e) {
