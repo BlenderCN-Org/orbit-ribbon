@@ -22,6 +22,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gui.h"
 
 #include <boost/foreach.hpp>
+#include <algorithm>
+#include <cmath>
 
 #include "display.h"
 #include "input.h"
@@ -64,6 +66,7 @@ void draw_diamond_box(const Box& box, float r, float g, float b, float a) {
 }
 
 void FocusTracker::add_region(const std::string& name, const Box& box) {
+  _region_order.push_back(name);
   _focus_regions[name] = box;
   
   // If this is the first region being added, make it the default focus
@@ -82,22 +85,41 @@ const Box* FocusTracker::get_region(const std::string& name) const {
 }
 
 void FocusTracker::process() {
-  // TODO: Check for bound UI events (for keyboard focus)
-  
-  // Check for mouse motion events, put focus where the mouse cursor is
-  BOOST_FOREACH(const SDL_Event& event, Globals::frame_events) {
-    if (event.type == SDL_MOUSEMOTION) {
-      _focus_mode = MOUSE_FOCUS;
-      
-      bool found_match = false;
-      for(std::map<std::string, Box>::const_iterator i = _focus_regions.begin(); i != _focus_regions.end(); ++i) {
-        if (i->second.contains_point(Globals::mouse_cursor->get_pos())) {
-          found_match = true;
-          _focus_iter = i;
-          break;
-        }
+  if (Globals::mouse_cursor->get_visibility()) {
+    // If the mouse cursor is visible, put focus where the cursor is
+    bool found_match = false;
+    for(std::map<std::string, Box>::const_iterator i = _focus_regions.begin(); i != _focus_regions.end(); ++i) {
+      if (i->second.contains_point(Globals::mouse_cursor->get_pos())) {
+        found_match = true;
+        _focus_iter = i;
+        break;
       }
-      if (!found_match) { _focus_iter = _focus_regions.end(); }
+    }
+    if (!found_match) { _focus_iter = _focus_regions.end(); }
+  } else {
+    // If the mouse cursor isn't visible, check for UI axis events to change focus
+    const Channel& x_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIX);
+    const Channel& y_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIY);
+    if (x_axis.is_on() || y_axis.is_on()) {
+      if (_focus_iter != _focus_regions.end()) {
+        float val = std::fabs(x_axis.get_value()) > std::fabs(y_axis.get_value()) ? x_axis.get_value() : y_axis.get_value();
+        std::list<std::string>::const_iterator order_iter = std::find(_region_order.begin(), _region_order.end(), _focus_iter->first);
+        if (val > 0.0) {
+          ++order_iter;
+          if (order_iter == _region_order.end()) {
+            order_iter = _region_order.begin();
+          }
+        } else {
+          if (order_iter == _region_order.begin()) {
+            order_iter = _region_order.end();
+          }
+          --order_iter;
+        }
+        _focus_iter = _focus_regions.find(*order_iter);
+      } else {
+        // Nothing is currently in focus, so put focus on the default region
+        _focus_iter = _focus_regions.find(_region_order.front());
+      }
     }
   }
 }

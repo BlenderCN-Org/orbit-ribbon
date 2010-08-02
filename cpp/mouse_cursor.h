@@ -34,16 +34,16 @@ class MouseCursor {
   private:
     boost::shared_ptr<GLOOTexture> _cursor_img;
     Point _pos;
-    bool _visible;
+    bool _visible, _active;
   
   public:
     MouseCursor();
     
-    void set_visibility(bool v);
-    void handle_motion_event(const SDL_Event* event);
-    
+    void set_active(bool f);
+    void process_events();
     void reset_pos();
     Point get_pos() const { return _pos; }
+    bool get_visibility() const { return _visible; }
     
     void draw();
 };

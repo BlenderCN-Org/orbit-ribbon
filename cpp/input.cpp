@@ -663,8 +663,8 @@ void Input::set_channels_from_config() {
   insert_binding(ORSave::ButtonBoundAction::ResetNeutral, _kbd->key_channel(SDLK_F10), _button_action_map);
   insert_binding(ORSave::ButtonBoundAction::ForceQuit, _kbd->key_channel(SDLK_F4), _button_action_map);
   
-  // Fixed default mouse UI bindings
-  // Doesn't matter which mouse button you push, that's still a click upon the thing
+  // Bind channels for the fixed default mouse button mappings
+  // Doesn't matter which mouse button you push, it's a confirmation
   insert_binding(ORSave::ButtonBoundAction::Confirm, _mouse->button_channel(1), _button_action_map);
   insert_binding(ORSave::ButtonBoundAction::Confirm, _mouse->button_channel(2), _button_action_map);
   insert_binding(ORSave::ButtonBoundAction::Confirm, _mouse->button_channel(3), _button_action_map);

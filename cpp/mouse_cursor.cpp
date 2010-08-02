@@ -22,25 +22,40 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "mouse_cursor.h"
 
+#include <boost/foreach.hpp>
+
 #include "display.h"
 #include "geometry.h"
+#include "globals.h"
+#include "input.h"
 
-MouseCursor::MouseCursor() : _cursor_img(GLOOTexture::load("cursor.png")), _visible(false) {}
-
-void MouseCursor::set_visibility(bool v) {
-  if (v && !_visible) { reset_pos(); }
-  _visible = v;
+MouseCursor::MouseCursor() : _cursor_img(GLOOTexture::load("cursor.png")), _visible(false), _active(false) {
+  reset_pos();
 }
 
-void MouseCursor::handle_motion_event(const SDL_Event* event) {
-  if (_visible) {
-    // We often get a garbage motion event right after the program starts
-    if (SDL_GetTicks() < 500) {
-      return;
+void MouseCursor::set_active(bool f) {
+  _active = f;
+}
+
+void MouseCursor::process_events() {
+  if (!_active) { return; }
+  
+  // Check for bound UI events, which make the mouse cursor invisible
+  const Channel& x_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIX);
+  const Channel& y_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIY);
+  if (x_axis.is_on() || y_axis.is_on()) {
+    _visible = false;
+  }
+  
+  // Check for mouse motion events, which move the mouse cursor and make it visible
+  if (SDL_GetTicks() > 500) { // We often get garbage mousemotion events right after the program starts
+    BOOST_FOREACH(SDL_Event event, Globals::frame_events) {
+      if (event.type == SDL_MOUSEMOTION) {
+        _visible = true;
+        _pos += Vector(event.motion.xrel, event.motion.yrel);
+      }
     }
     
-    _pos += Vector(event->motion.xrel, event->motion.yrel);
-          
     if (_pos.x < 0) {
       _pos.x = 0;
     } else if (_pos.x >= Display::get_screen_width()) {
@@ -60,7 +75,7 @@ void MouseCursor::reset_pos() {
 }
 
 void MouseCursor::draw() {
-  if (_visible) {
+  if (_active && _visible) {
     _cursor_img->draw_2d(Point(_pos - _cursor_img->get_size()/2));
   }
 }

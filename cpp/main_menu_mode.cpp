@@ -53,5 +53,5 @@ void MainMenuMode::suspended() {
 }
 
 void MainMenuMode::resumed() {
-  Globals::mouse_cursor->set_visibility(true);
+  Globals::mouse_cursor->set_active(true);
 }

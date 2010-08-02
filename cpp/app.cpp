@@ -71,10 +71,11 @@ void App::frame_loop() {
       Globals::frame_events.push_back(event);
       if (event.type == SDL_QUIT) {
         throw GameQuitException("SDL quit event");
-      } else if (event.type == SDL_MOUSEMOTION) {
-        Globals::mouse_cursor->handle_motion_event(&event);
       }
     }
+    
+    // Handle mouse cursor movement, and showing/hiding the mouse cursor as necessary
+    Globals::mouse_cursor->process_events();
     
     // Check for a ForceQuit binding activation
     const Channel& force_quit_chn = Input::get_button_ch(ORSave::ButtonBoundAction::ForceQuit);

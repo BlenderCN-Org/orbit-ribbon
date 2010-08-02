@@ -43,6 +43,7 @@ namespace GUI {
       enum FocusMode { KEYBOARD_FOCUS, MOUSE_FOCUS };
     
     private:
+      std::list<std::string> _region_order;
       std::map<std::string, Box> _focus_regions;
       std::map<std::string, Box>::const_iterator _focus_iter;
       FocusMode _focus_mode;
