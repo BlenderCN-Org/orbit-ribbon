@@ -648,8 +648,8 @@ void Input::set_channels_from_config() {
     ORSave::AxisBoundAction::UIY,
     boost::shared_ptr<Channel>(  
       new PseudoAxisChannel(
-        _kbd->key_channel(SDLK_DOWN),
         _kbd->key_channel(SDLK_UP),
+        _kbd->key_channel(SDLK_DOWN),
         true,
         false
       )
@@ -668,6 +668,13 @@ void Input::set_channels_from_config() {
   insert_binding(ORSave::ButtonBoundAction::Confirm, _mouse->button_channel(1), _button_action_map);
   insert_binding(ORSave::ButtonBoundAction::Confirm, _mouse->button_channel(2), _button_action_map);
   insert_binding(ORSave::ButtonBoundAction::Confirm, _mouse->button_channel(3), _button_action_map);
+  
+  // Alias gameplay motion bindings to UI movement for convenience
+  std::map<ORSave::AxisBoundAction::Value, boost::shared_ptr<Channel> >::iterator i;
+  i = _axis_action_map.find(ORSave::AxisBoundAction::TranslateX);
+  if (i != _axis_action_map.end()) { insert_binding(ORSave::AxisBoundAction::UIX, i->second, _axis_action_map); }
+  i = _axis_action_map.find(ORSave::AxisBoundAction::TranslateY);
+  if (i != _axis_action_map.end()) { insert_binding(ORSave::AxisBoundAction::UIY, i->second, _axis_action_map); }
 }
 
 const ORSave::PresetType& Input::get_preset(const std::string& name) {

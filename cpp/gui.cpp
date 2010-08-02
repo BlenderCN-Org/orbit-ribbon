@@ -103,7 +103,7 @@ void FocusTracker::process() {
     if (x_axis.is_on() || y_axis.is_on()) {
       if (!_ui_bindings_on_last_frame) {
         if (_focus_iter != _focus_regions.end()) {
-          float val = std::fabs(x_axis.get_value()) > std::fabs(y_axis.get_value()) ? x_axis.get_value() : -y_axis.get_value();
+          float val = std::fabs(x_axis.get_value()) > std::fabs(y_axis.get_value()) ? x_axis.get_value() : y_axis.get_value();
           std::list<std::string>::const_iterator order_iter = std::find(_region_order.begin(), _region_order.end(), _focus_iter->first);
           if (val > 0.0) {
             ++order_iter;
