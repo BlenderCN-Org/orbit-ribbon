@@ -31,6 +31,16 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 MainMenuMode::MainMenuMode() :
   _cursor(GLOOTexture::load("cursor.png"))
 {
+  LayoutWidget* layout_widget = new LayoutWidget(LayoutWidget::WIDGET_VERTICAL);
+  boost::shared_ptr<Widget> button_panel = boost::shared_ptr<Widget>();
+  layout_widget->add_child(boost::shared_ptr<Widget>(new LabelButtonWidget("Play")));
+  layout_widget->add_child(boost::shared_ptr<Widget>(new LabelButtonWidget("Options")));
+  layout_widget->add_child(boost::shared_ptr<Widget>(new LabelButtonWidget("Credits")));
+  layout_widget->add_child(boost::shared_ptr<Widget>(new LabelButtonWidget("Quit")));
+  _base_widget = boost::shared_ptr<Widget>(new CenterWidget(Display::get_screen_size(), boost::shared_ptr<Widget>(layout_widget)));
+  
+  _draw_mode_map = boost::shared_ptr<WidgetDrawModeMap>(new AlwaysPassiveDrawModeMap());
+  
   resumed();
 }
 
@@ -43,6 +53,8 @@ void MainMenuMode::draw_2d() {
     SDL_WarpMouse(Display::get_screen_width()/2, Display::get_screen_height()/2);
     _resumed = false;
   }
+  
+  _base_widget->draw(Point(0,0), *_draw_mode_map);
   
   int x, y;
   SDL_GetMouseState(&x, &y);

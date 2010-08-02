@@ -55,8 +55,8 @@ const float ButtonWidget::PASSIVE_COLOR[4] = { 0.5, 0.5, 0.8, 0.8 };
 const float ButtonWidget::FOCUSED_COLOR[4] = { 0.7, 0.7, 1.0, 1.0 };
 const float ButtonWidget::ACTIVATED_COLOR[4] = { 0.5, 0.8, 0.5, 1.0 };
 
-void ButtonWidget::draw(const Point& upper_left, Widget::DrawMode mode) const {
-  switch(mode) {
+void ButtonWidget::draw(const Point& upper_left, const WidgetDrawModeMap& mode_map) const {
+  switch(mode_map.get_mode(this)) {
     case WIDGET_PASSIVE:
       BoxWidget::draw(upper_left, PASSIVE_COLOR[0], PASSIVE_COLOR[1], PASSIVE_COLOR[2], PASSIVE_COLOR[3]);
       break;
@@ -73,11 +73,11 @@ void LayoutWidget::add_child(const boost::shared_ptr<Widget>& widget) {
   _children.push_back(widget);
 }
 
-void LayoutWidget::draw(const Point& upper_left, Widget::DrawMode mode) const {
+void LayoutWidget::draw(const Point& upper_left, const WidgetDrawModeMap& mode_map) const {
   Point pos(upper_left);
   for (std::list<boost::shared_ptr<Widget> >::const_iterator i = _children.begin(); i != _children.end(); ++i) {
     const boost::shared_ptr<Widget>& widget = *i;
-    widget->draw(pos, mode);
+    widget->draw(pos, mode_map);
     switch(_orientation) {
       case WIDGET_HORIZONTAL:
         pos.x += widget->get_bbox_size().x + LAYOUT_PADDING;
@@ -134,7 +134,20 @@ std::list<WidgetLocation> LayoutWidget::get_children_locations(const Point& uppe
   return ret;
 }
 
-void TextWidget::draw(const Point& upper_left, Widget::DrawMode mode __attribute__ ((unused))) const {
+void CenterWidget::draw(const Point& upper_left, const WidgetDrawModeMap& mode_map) const {
+  Size child_bbox = _child->get_bbox_size();
+  _child->draw(upper_left + get_bbox_size()/2 - child_bbox/2, mode_map);
+}
+
+std::list<WidgetLocation> CenterWidget::get_children_locations(const Point& upper_left) const {
+  Size child_bbox = _child->get_bbox_size();
+  std::list<WidgetLocation> ret;
+  ret.push_back(WidgetLocation(&*_child, upper_left + get_bbox_size()/2 - child_bbox/2));
+  return ret;
+}
+
+void TextWidget::draw(const Point& upper_left, const WidgetDrawModeMap& mode __attribute__ ((unused))) const {
+  glColor3f(1.0, 1.0, 1.0);
   Globals::sys_font->draw(upper_left, _font_height, _msg);
 }
 

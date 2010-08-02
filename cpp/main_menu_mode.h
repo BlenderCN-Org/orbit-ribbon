@@ -27,11 +27,14 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <SDL/SDL.h>
 
 #include "gloo.h"
+#include "gui.h"
 #include "mode.h"
 
 class MainMenuMode : public Mode {
   private:
     boost::shared_ptr<GLOOTexture> _cursor;
+    boost::shared_ptr<Widget> _base_widget;
+    boost::shared_ptr<WidgetDrawModeMap> _draw_mode_map;
     bool _resumed;
     
   public:

@@ -26,6 +26,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/glew.h>
 #include <GL/gl.h>
 
+#include "geometry.h"
+
 class App;
 
 class Display {
@@ -36,6 +38,7 @@ class Display {
   public:
     static int get_screen_width() { return screen_width; }
     static int get_screen_height() { return screen_height; }
+    static Size get_screen_size() { return Size(screen_width, screen_height); }
     static float get_screen_ratio() { return screen_ratio; }
     
   private:
