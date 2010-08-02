@@ -97,16 +97,32 @@ Size LayoutWidget::get_bbox_size() const {
 std::list<WidgetLocation> LayoutWidget::get_children_locations(const Point& upper_left) const {
   std::list<WidgetLocation> ret;
   
+  int max_cross_size = 0;
   Point pos(upper_left);
   for (std::list<boost::shared_ptr<Widget> >::const_iterator i = _children.begin(); i != _children.end(); ++i) {
     const boost::shared_ptr<Widget>& widget = *i;
     ret.push_back(WidgetLocation(&*widget, pos));
-    switch(_orientation) {
+    Size widget_size = widget->get_bbox_size();
+    switch (_orientation) {
       case WIDGET_HORIZONTAL:
-        pos.x += widget->get_bbox_size().x + _padding;
+        pos.x += widget_size.x + _padding;
+        if (widget_size.y > max_cross_size) { max_cross_size = widget_size.y; }
         break;
       case WIDGET_VERTICAL:
-        pos.y += widget->get_bbox_size().y + _padding;
+        pos.y += widget_size.y + _padding;
+        if (widget_size.x > max_cross_size) { max_cross_size = widget_size.x; }
+        break;
+    }
+  }
+  
+  // FIXME : Do we need to avoid calling each widget's get_bbox_size again?
+  for (std::list<WidgetLocation>::iterator i = ret.begin(); i != ret.end(); ++i) {
+    switch(_orientation) {
+      case WIDGET_HORIZONTAL:
+        i->upper_left.y += (max_cross_size - i->widget->get_bbox_size().y)/2;
+        break;
+      case WIDGET_VERTICAL:
+        i->upper_left.x += (max_cross_size - i->widget->get_bbox_size().x)/2;
         break;
     }
   }
