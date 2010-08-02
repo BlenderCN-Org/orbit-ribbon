@@ -68,7 +68,7 @@ void App::frame_loop() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       Globals::frame_events.push_back(event);
-        if (event.type == SDL_QUIT) {
+      if (event.type == SDL_QUIT) {
         throw GameQuitException("SDL quit event");
       }
     }

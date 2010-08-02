@@ -33,8 +33,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 class MainMenuMode : public Mode {
   private:
     boost::shared_ptr<GLOOTexture> _cursor;
-    boost::shared_ptr<Widget> _base_widget;
-    boost::shared_ptr<WidgetDrawModeMap> _draw_mode_map;
+    GUI::SimpleMenu _main_menu;
     bool _resumed;
     
   public:

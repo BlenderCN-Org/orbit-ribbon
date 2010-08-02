@@ -109,8 +109,8 @@ void GameplayMode::draw_2d() {
       Display::get_screen_width()/2 - PHYS_DEBUG_BOX_SIZE.x/2,
       Display::get_screen_height()/2 - PHYS_DEBUG_BOX_SIZE.y/2 + PHYS_DEBUG_BOX_Y
     );
-    GUI::draw_box(p, PHYS_DEBUG_BOX_SIZE + GUI_BOX_BORDER*2);
-    p += GUI_BOX_BORDER;
+    GUI::draw_diamond_box(Box(p, PHYS_DEBUG_BOX_SIZE + GUI::DIAMOND_BOX_BORDER*2));
+    p += GUI::DIAMOND_BOX_BORDER;
     
     static const char* labels[6] = { "XROT", "ZROT", "YPOS", "XAVEL", "ZAVEL", "YLVEL"};
     float cur_vals[6] = {

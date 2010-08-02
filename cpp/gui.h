@@ -23,150 +23,58 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_GUI_H
 
 #include <boost/shared_ptr.hpp>
-#include <list>
 #include <string>
+#include <map>
+#include <list>
 
 #include "geometry.h"
 #include "gloo.h"
 
-const Vector GUI_BOX_BORDER(8, 2); // A box's contents are drawn this number of pixels from the left/right and top/bottom of the box respectively
-
-bool bbox_contains_point(const Size& bbox_size, const Point& upper_left, const Point& test_pt);
-
-class Widget;
-
-struct WidgetLocation {
-  const Widget* widget;
-  Point upper_left;
+namespace GUI {
+  const Vector DIAMOND_BOX_BORDER(8, 2); // A diamond box's contents are drawn this number of pixels from the left/right and top/bottom of the box respectively
+  void draw_diamond_box(const Box& box, float r = 0.0, float g = 0.0, float b = 0.0, float a = 0.5);
   
-  WidgetLocation(const Widget* w, const Point& ul) : widget(w), upper_left(ul) {}
+  const float BUTTON_PASSIVE_COLOR[4] = { 0.5, 0.5, 0.8, 0.8 };
+  const float BUTTON_FOCUSED_COLOR[4] = { 0.7, 0.7, 1.0, 1.0 };
+  const float BUTTON_ACTIVATED_COLOR[4] = { 0.5, 0.8, 0.5, 1.0 };
   
-  Size get_bbox_size();
-};
-
-struct WidgetDrawModeMap;
-
-class Widget {
-  public:
-    enum DrawMode { WIDGET_PASSIVE, WIDGET_FOCUSED, WIDGET_ACTIVATED };
+  class FocusTracker {
+    public:
+      enum FocusMode { KEYBOARD_FOCUS, MOUSE_FOCUS };
     
-    virtual void draw(const Point& upper_left, const WidgetDrawModeMap& mode_map) const =0;
-    virtual bool widget_contains_point(const Point& upper_left, const Point& test_pt) const { return bbox_contains_point(get_bbox_size(), upper_left, test_pt); }
-    virtual std::list<WidgetLocation> get_children_locations_locations(const Point& upper_left __attribute__ ((unused))) const { return std::list<WidgetLocation>(); }
-    virtual bool is_focusable() const { return false; }
-    virtual Size get_bbox_size() const =0;
-};
-
-class WidgetDrawModeMap {
-  public:
-    virtual Widget::DrawMode get_mode(const Widget* widget) const =0;
-};
-
-class AlwaysPassiveDrawModeMap : public WidgetDrawModeMap {
-  public:
-    Widget::DrawMode get_mode(const Widget* widget __attribute__ ((unused))) const { return Widget::WIDGET_PASSIVE; }
-};
-
-class UserSizedWidget : public Widget {
-  private:
-    Size _bbox_size;
+    private:
+      std::map<std::string, Box> _focus_regions;
+      std::map<std::string, Box>::const_iterator _focus_iter;
+      FocusMode _focus_mode;
     
-  public:
-    UserSizedWidget(const Size& bbox_size) : _bbox_size(bbox_size) {}
-    
-    void set_bbox_size(const Size& s) { _bbox_size = s; }
-    Size get_bbox_size() const { return _bbox_size; }
-};
-
-class NullWidget : public UserSizedWidget {
-  public:
-    NullWidget(const Size& s = Size()) : UserSizedWidget(s) {}
-    void draw(const Point& upper_left __attribute__ ((unused)), const WidgetDrawModeMap& mode_map __attribute__ ((unused))) const {}
-};
-
-class BoxWidget : public Widget {
-  private:
-    boost::shared_ptr<Widget> _child;
-    
-  public:
-    BoxWidget(const boost::shared_ptr<Widget>& child) : _child(child) {}
-    
-    // Note that this has the wrong specification for Widget's virtual draw, so BoxWidget is still abstract
-    void draw(const Point& upper_left, const WidgetDrawModeMap& mode_map, float r, float g, float b, float a) const;
-    
-    Size get_bbox_size() const;
-    std::list<WidgetLocation> get_children_locations(const Point& upper_left) const;
-    
-    void set_child(boost::shared_ptr<Widget> child) { _child = child; }
-    const Widget& get_child() const { return *_child; }
-};
-
-class ButtonWidget : public BoxWidget {
-  private:
-    static const float PASSIVE_COLOR[4];
-    static const float FOCUSED_COLOR[4];
-    static const float ACTIVATED_COLOR[4];
-    
-  public:
-    ButtonWidget(const boost::shared_ptr<Widget>& child) : BoxWidget(child) {}
-    
-    void draw(const Point& upper_left, const WidgetDrawModeMap& mode_map) const;
-    bool is_focusable() const { return true; }
-};
-
-class TextWidget : public Widget {
-  private:
-    float _font_height;
-    std::string _msg;
+    public:
+      FocusTracker() : _focus_regions(), _focus_iter(_focus_regions.end()), _focus_mode(KEYBOARD_FOCUS) {}
+      
+      void add_region(const std::string& name, const Box& box);
+      const Box* get_region(const std::string& name) const;
+      void process();
+      std::string get_current_focus() const;
+      FocusMode get_focus_mode() const { return _focus_mode; }
+  };
   
-  public:
-    TextWidget(float height, const std::string& msg) : _font_height(height), _msg(msg) {}
+  class SimpleMenu {
+    private:
+      int _width, _btn_height, _padding;
+      FocusTracker _focus_tracker;
+      bool _filled_focus_tracker;
+      std::list<std::pair<std::string, std::string> > _entries;
     
-    void draw(const Point& upper_left, const WidgetDrawModeMap& mode_map) const;
-    Size get_bbox_size() const;
-};
-
-class LabelButtonWidget : public ButtonWidget {
-  public:
-      LabelButtonWidget(const std::string& label) : ButtonWidget(boost::shared_ptr<Widget>(new TextWidget(18, label))) {}
-};
-
-class LayoutWidget : public Widget {
-  public:
-    enum Orientation { WIDGET_HORIZONTAL, WIDGET_VERTICAL };
-  
-  private:
-    Orientation _orientation;
-    std::list<boost::shared_ptr<Widget> > _children;
-    int _padding;
-  
-  public:
-    LayoutWidget(Orientation orientation, int padding) : _orientation(orientation), _padding(padding) {}
-    
-    void add_child(const boost::shared_ptr<Widget>& child);
-    void draw(const Point& upper_left, const WidgetDrawModeMap& mode_map) const;
-    Size get_bbox_size() const;
-    std::list<WidgetLocation> get_children_locations(const Point& upper_left) const;
-};
-
-class CenterWidget : public UserSizedWidget {
-  private:
-    boost::shared_ptr<Widget> _child;
-  
-  public:
-    CenterWidget(const Size& bbox_size, const boost::shared_ptr<Widget>& child) : UserSizedWidget(bbox_size), _child(child) {}
-    
-    void draw(const Point& upper_left, const WidgetDrawModeMap& mode_map) const;
-    
-    std::list<WidgetLocation> get_children_locations(const Point& upper_left) const;
-    
-    void set_child(boost::shared_ptr<Widget> child) { _child = child; }
-    const Widget& get_child() const { return *_child; }
-};
-
-class GUI {
-  public:
-    static void draw_box(const Point& top_left, const Size& size, float r = 0.0, float g = 0.0, float b = 0.0, float a = 0.5);
-};
+    public:
+      SimpleMenu(int width, int btn_height, int padding) :
+        _width(width), _btn_height(btn_height), _padding(padding), _filled_focus_tracker(false) {}
+      
+      void add_button(const std::string& name, const std::string& label);
+      
+      void process();
+      void draw();
+      
+      std::string get_activated_button();
+  };
+}
 
 #endif

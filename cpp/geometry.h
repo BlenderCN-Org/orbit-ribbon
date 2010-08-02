@@ -91,6 +91,16 @@ class Plane {
     Vector normal() const;
 };
 
+struct Box {
+  Point top_left;
+  Size size;
+  
+  Box() {}
+  Box(const Point& tl, const Size& s) : top_left(tl), size(s) {}
+  
+  bool contains_point(const Point& pt) const;
+};
+
 GLfloat rev2rad(GLfloat ang); // FIXME: In old version, this also converted cw to ccw. Make sure everything that needed that does it itself!
 GLfloat rad2rev(GLfloat ang);
 GLfloat rev2deg(GLfloat ang);

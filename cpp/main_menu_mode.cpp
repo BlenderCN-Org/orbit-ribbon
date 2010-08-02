@@ -29,17 +29,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gui.h"
 
 MainMenuMode::MainMenuMode() :
-  _cursor(GLOOTexture::load("cursor.png"))
+  _cursor(GLOOTexture::load("cursor.png")),
+  _main_menu(180, 22, 8)
 {
-  LayoutWidget* layout_widget = new LayoutWidget(LayoutWidget::WIDGET_VERTICAL, 10);
-  boost::shared_ptr<Widget> button_panel = boost::shared_ptr<Widget>();
-  layout_widget->add_child(boost::shared_ptr<Widget>(new LabelButtonWidget("Play")));
-  layout_widget->add_child(boost::shared_ptr<Widget>(new LabelButtonWidget("Options")));
-  layout_widget->add_child(boost::shared_ptr<Widget>(new LabelButtonWidget("Credits")));
-  layout_widget->add_child(boost::shared_ptr<Widget>(new LabelButtonWidget("Quit")));
-  _base_widget = boost::shared_ptr<Widget>(new CenterWidget(Display::get_screen_size(), boost::shared_ptr<Widget>(layout_widget)));
-  
-  _draw_mode_map = boost::shared_ptr<WidgetDrawModeMap>(new AlwaysPassiveDrawModeMap());
+  _main_menu.add_button("play", "Play");
+  _main_menu.add_button("credits", "Credits");
+  _main_menu.add_button("options", "Options");
+  _main_menu.add_button("quit", "Quit");
   
   resumed();
 }
@@ -54,7 +50,8 @@ void MainMenuMode::draw_2d() {
     _resumed = false;
   }
   
-  _base_widget->draw(Point(0,0), *_draw_mode_map);
+  _main_menu.process();
+  _main_menu.draw();
   
   int x, y;
   SDL_GetMouseState(&x, &y);

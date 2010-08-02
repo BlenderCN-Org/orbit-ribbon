@@ -220,6 +220,15 @@ Vector Plane::normal() const {
   return Vector(a, b, c);
 }
 
+bool Box::contains_point(const Point& pt) const {
+  return (
+    pt.x >= top_left.x &&
+    pt.y >= top_left.y &&
+    pt.x < top_left.x + size.x &&
+    pt.y < top_left.y + size.y
+  );
+}
+
 Vector get_barycentric(const Point& p, const Point& a, const Point& b, const Point& c) {
   Plane tri_p(a, b, c);
   Point pp = p.project_onto(tri_p);

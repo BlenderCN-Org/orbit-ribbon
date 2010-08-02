@@ -21,137 +21,16 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "gui.h"
 
+#include <boost/foreach.hpp>
+
+#include "display.h"
+#include "input.h"
 #include "globals.h"
 #include "gloo.h"
 
-#include "debug.h"
+namespace GUI {
 
-bool bbox_contains_point(const Size& bbox_size, const Point& upper_left, const Point& test_pt){
-  return (
-    test_pt.x >= upper_left.x &&
-    test_pt.y >= upper_left.y &&
-    test_pt.x < upper_left.x + bbox_size.x &&
-    test_pt.y < upper_left.y + bbox_size.y
-  );
-}
-
-Size WidgetLocation::get_bbox_size() {
-  return widget->get_bbox_size();
-}
-
-void BoxWidget::draw(const Point& upper_left, const WidgetDrawModeMap& mode_map, float r, float g, float b, float a) const {
-  GUI::draw_box(upper_left, get_bbox_size(), r, g, b, a);
-  _child->draw(upper_left + GUI_BOX_BORDER, mode_map);
-}
-
-Size BoxWidget::get_bbox_size() const {
-  return _child->get_bbox_size() + (GUI_BOX_BORDER*2);
-}
-
-std::list<WidgetLocation> BoxWidget::get_children_locations(const Point& upper_left) const {
-  std::list<WidgetLocation> ret;
-  ret.push_back(WidgetLocation(&*_child, upper_left + GUI_BOX_BORDER));
-  return ret;
-}
-
-const float ButtonWidget::PASSIVE_COLOR[4] = { 0.5, 0.5, 0.8, 0.8 };
-const float ButtonWidget::FOCUSED_COLOR[4] = { 0.7, 0.7, 1.0, 1.0 };
-const float ButtonWidget::ACTIVATED_COLOR[4] = { 0.5, 0.8, 0.5, 1.0 };
-
-void ButtonWidget::draw(const Point& upper_left, const WidgetDrawModeMap& mode_map) const {
-  switch(mode_map.get_mode(this)) {
-    case WIDGET_PASSIVE:
-      BoxWidget::draw(upper_left, mode_map, PASSIVE_COLOR[0], PASSIVE_COLOR[1], PASSIVE_COLOR[2], PASSIVE_COLOR[3]);
-      break;
-    case WIDGET_FOCUSED:
-      BoxWidget::draw(upper_left, mode_map, FOCUSED_COLOR[0], FOCUSED_COLOR[1], FOCUSED_COLOR[2], FOCUSED_COLOR[3]);
-      break;
-    case WIDGET_ACTIVATED:
-      BoxWidget::draw(upper_left, mode_map, ACTIVATED_COLOR[0], ACTIVATED_COLOR[1], ACTIVATED_COLOR[2], ACTIVATED_COLOR[3]);
-      break;
-  }
-}
-
-void LayoutWidget::add_child(const boost::shared_ptr<Widget>& widget) {
-  _children.push_back(widget);
-}
-
-void LayoutWidget::draw(const Point& upper_left, const WidgetDrawModeMap& mode_map) const {
-  std::list<WidgetLocation> widget_locs = get_children_locations(upper_left);
-  for (std::list<WidgetLocation>::const_iterator i = widget_locs.begin(); i != widget_locs.end(); ++i) {
-    i->widget->draw(i->upper_left, mode_map);
-  }
-}
-
-Size LayoutWidget::get_bbox_size() const {
-  Size ret(0, 0);
-  std::list<WidgetLocation> widget_locs = get_children_locations(Point(0,0));
-  for (std::list<WidgetLocation>::const_iterator i = widget_locs.begin(); i != widget_locs.end(); ++i) {
-    Point widget_lower_right(i->upper_left + i->widget->get_bbox_size());
-    if (widget_lower_right.x > ret.x) { ret.x = widget_lower_right.x; }
-    if (widget_lower_right.y > ret.y) { ret.y = widget_lower_right.y; }
-  }
-  return ret;
-}
-
-std::list<WidgetLocation> LayoutWidget::get_children_locations(const Point& upper_left) const {
-  std::list<WidgetLocation> ret;
-  
-  int max_cross_size = 0;
-  Point pos(upper_left);
-  for (std::list<boost::shared_ptr<Widget> >::const_iterator i = _children.begin(); i != _children.end(); ++i) {
-    const boost::shared_ptr<Widget>& widget = *i;
-    ret.push_back(WidgetLocation(&*widget, pos));
-    Size widget_size = widget->get_bbox_size();
-    switch (_orientation) {
-      case WIDGET_HORIZONTAL:
-        pos.x += widget_size.x + _padding;
-        if (widget_size.y > max_cross_size) { max_cross_size = widget_size.y; }
-        break;
-      case WIDGET_VERTICAL:
-        pos.y += widget_size.y + _padding;
-        if (widget_size.x > max_cross_size) { max_cross_size = widget_size.x; }
-        break;
-    }
-  }
-  
-  // FIXME : Do we need to avoid calling each widget's get_bbox_size again?
-  for (std::list<WidgetLocation>::iterator i = ret.begin(); i != ret.end(); ++i) {
-    switch(_orientation) {
-      case WIDGET_HORIZONTAL:
-        i->upper_left.y += (max_cross_size - i->widget->get_bbox_size().y)/2;
-        break;
-      case WIDGET_VERTICAL:
-        i->upper_left.x += (max_cross_size - i->widget->get_bbox_size().x)/2;
-        break;
-    }
-  }
-  
-  return ret;
-}
-
-void CenterWidget::draw(const Point& upper_left, const WidgetDrawModeMap& mode_map) const {
-  Size child_bbox = _child->get_bbox_size();
-  _child->draw(upper_left + get_bbox_size()/2 - child_bbox/2, mode_map);
-}
-
-std::list<WidgetLocation> CenterWidget::get_children_locations(const Point& upper_left) const {
-  Size child_bbox = _child->get_bbox_size();
-  std::list<WidgetLocation> ret;
-  ret.push_back(WidgetLocation(&*_child, upper_left + get_bbox_size()/2 - child_bbox/2));
-  return ret;
-}
-
-void TextWidget::draw(const Point& upper_left, const WidgetDrawModeMap& mode __attribute__ ((unused))) const {
-  glColor3f(1.0, 1.0, 1.0);
-  Globals::sys_font->draw(upper_left, _font_height, _msg);
-}
-
-Size TextWidget::get_bbox_size() const {
-  return Size(Globals::sys_font->get_width(_font_height, _msg), _font_height);
-}
-
-void GUI::draw_box(const Point& top_left, const Size& size, float r, float g, float b, float a) {
+void draw_diamond_box(const Box& box, float r, float g, float b, float a) {
   const static GLushort indices[12] = {
     0, 1, 2,
     0, 2, 5,
@@ -160,12 +39,12 @@ void GUI::draw_box(const Point& top_left, const Size& size, float r, float g, fl
   };
   
   GLfloat points[12] = {
-    top_left.x + GUI_BOX_BORDER.x/2, top_left.y,
-    top_left.x, top_left.y + size.y/2,
-    top_left.x + GUI_BOX_BORDER.x/2, top_left.y + size.y,
-    top_left.x + size.x - GUI_BOX_BORDER.x/2, top_left.y,
-    top_left.x + size.x, top_left.y + size.y/2,
-    top_left.x + size.x - GUI_BOX_BORDER.x/2, top_left.y + size.y
+    box.top_left.x + DIAMOND_BOX_BORDER.x/2, box.top_left.y,
+    box.top_left.x, box.top_left.y + box.size.y/2,
+    box.top_left.x + DIAMOND_BOX_BORDER.x/2, box.top_left.y + box.size.y,
+    box.top_left.x + box.size.x - DIAMOND_BOX_BORDER.x/2, box.top_left.y,
+    box.top_left.x + box.size.x, box.top_left.y + box.size.y/2,
+    box.top_left.x + box.size.x - DIAMOND_BOX_BORDER.x/2, box.top_left.y + box.size.y
   };
   
   glDisable(GL_TEXTURE_2D);
@@ -181,4 +60,120 @@ void GUI::draw_box(const Point& top_left, const Size& size, float r, float g, fl
   
   glPopClientAttrib();
   glEnable(GL_TEXTURE_2D);
+}
+
+void FocusTracker::add_region(const std::string& name, const Box& box) {
+  _focus_regions[name] = box;
+  
+  // If this is the first region being added, make it the default focus
+  if (_focus_regions.size() == 1) {
+    _focus_iter = _focus_regions.begin();
+  }
+}
+
+const Box* FocusTracker::get_region(const std::string& name) const {
+  std::map<std::string, Box>::const_iterator i = _focus_regions.find(name);
+  if (i == _focus_regions.end()) {
+    return NULL;
+  } else {
+    return &(i->second);
+  }
+}
+
+void FocusTracker::process() {
+  // TODO: Check for bound UI events (for keyboard focus)
+  
+  // Check for mouse motion events, put focus where the mouse cursor is
+  BOOST_FOREACH(const SDL_Event& event, Globals::frame_events) {
+    if (event.type == SDL_MOUSEMOTION) {
+      _focus_mode = MOUSE_FOCUS;
+      
+      int x, y;
+      SDL_GetMouseState(&x, &y);
+      Point mouse_pos(x, y);
+      
+      bool found_match = false;
+      for(std::map<std::string, Box>::const_iterator i = _focus_regions.begin(); i != _focus_regions.end(); ++i) {
+        if (i->second.contains_point(mouse_pos)) {
+          _focus_iter = i;
+          break;
+        }
+      }
+      if (!found_match) { _focus_iter = _focus_regions.end(); }
+    }
+  }
+}
+
+std::string FocusTracker::get_current_focus() const {
+  if (_focus_iter == _focus_regions.end()) {
+    return std::string("");
+  } else {
+    return _focus_iter->first;
+  }
+}
+
+void SimpleMenu::add_button(const std::string& name, const std::string& label) {
+  _entries.push_back(std::pair<std::string, std::string>(name, label));
+}
+
+void SimpleMenu::process() {
+  if (!_filled_focus_tracker) {
+    int full_height = _entries.size() * (_btn_height + _padding) - _padding; // Subtract one padding for fencepost error
+    Point pos((Display::get_screen_width() - _width)/2, (Display::get_screen_height() - full_height)/2);
+    for (std::list<std::pair<std::string, std::string> >::const_iterator i = _entries.begin(); i != _entries.end(); ++i) {
+      _focus_tracker.add_region(i->first, Box(pos, Size(_width, _btn_height)));
+      pos.y += _btn_height + _padding;
+    }
+    
+    _filled_focus_tracker = true;
+  }
+  
+  _focus_tracker.process();
+  
+  // Check for events that would activate the currently focused entry
+}
+
+void SimpleMenu::draw() {
+  std::string cur_activated = get_activated_button();
+  std::string cur_focus = _focus_tracker.get_current_focus();
+  
+  for (std::list<std::pair<std::string, std::string> >::const_iterator i = _entries.begin(); i != _entries.end(); ++i) {
+    const Box* region = _focus_tracker.get_region(i->first);
+    if (cur_activated == i->first) {
+      GUI::draw_diamond_box(
+        *region,
+        BUTTON_ACTIVATED_COLOR[0],
+        BUTTON_ACTIVATED_COLOR[1],
+        BUTTON_ACTIVATED_COLOR[2],
+        BUTTON_ACTIVATED_COLOR[3]
+      );
+    } else if (cur_focus == i->first) {
+      GUI::draw_diamond_box(
+        *region,
+        BUTTON_FOCUSED_COLOR[0],
+        BUTTON_FOCUSED_COLOR[1],
+        BUTTON_FOCUSED_COLOR[2],
+        BUTTON_FOCUSED_COLOR[3]
+      );
+    } else {
+      GUI::draw_diamond_box(
+        *region,
+        BUTTON_PASSIVE_COLOR[0],
+        BUTTON_PASSIVE_COLOR[1],
+        BUTTON_PASSIVE_COLOR[2],
+        BUTTON_PASSIVE_COLOR[3]
+      );
+    }
+    
+    glColor3f(1.0, 1.0, 1.0);
+    int font_height = _btn_height - DIAMOND_BOX_BORDER.y*2;
+    int text_width = Globals::sys_font->get_width(font_height, i->second);
+    Globals::sys_font->draw(region->top_left + (_width - text_width)/2, font_height, i->second);
+  }
+}
+
+std::string SimpleMenu::get_activated_button() {
+  return "";
+}
+
 }
