@@ -39,6 +39,7 @@ class Channel : boost::noncopyable {
   public:
     virtual bool is_on() const =0;
     virtual bool is_partially_on() const;
+    virtual bool matches_frame_events() const =0;
     virtual float get_value() const =0;
     virtual void set_neutral();
     virtual bool is_null() const;
@@ -53,6 +54,7 @@ class NullChannel : public Channel {
   
   public:
     bool is_on() const;
+    bool matches_frame_events() const;
     float get_value() const;
     bool is_null() const;
     std::string desc() const;
@@ -97,6 +99,7 @@ class KeyChannel : public Channel {
   
   public:
     bool is_on() const;
+    bool matches_frame_events() const;
     float get_value() const;
     void set_neutral();
     std::string desc() const;
@@ -138,6 +141,7 @@ class MouseButtonChannel : public Channel {
   
   public:
     bool is_on() const;
+    bool matches_frame_events() const;
     float get_value() const;
     void set_neutral();
     std::string desc() const;
@@ -154,6 +158,7 @@ class MouseMovementChannel : public Channel {
   
   public:
     bool is_on() const;
+    bool matches_frame_events() const;
     float get_value() const;
     std::string desc() const;
 };
@@ -191,11 +196,13 @@ class GamepadAxisChannel : public Channel {
     Uint8 _gamepad;
     Uint8 _axis;
     float _neutral_value;
+    float _last_pseudo_frame_event_value;
     
     GamepadAxisChannel(GamepadManager* gamepad_man, Uint8 gamepad, Uint8 axis);
   
   public:
     bool is_on() const;
+    bool matches_frame_events() const;
     float get_value() const;
     void set_neutral();
     std::string desc() const;
@@ -214,6 +221,7 @@ class GamepadButtonChannel : public Channel {
   
   public:
     bool is_on() const;
+    bool matches_frame_events() const;
     float get_value() const;
     void set_neutral();
     std::string desc() const;
@@ -229,6 +237,7 @@ class PseudoAxisChannel : public Channel {
     PseudoAxisChannel(const boost::shared_ptr<Channel>& neg, const boost::shared_ptr<Channel>& pos, bool neg_invert, bool pos_invert);
     
     bool is_on() const;
+    bool matches_frame_events() const;
     float get_value() const;
     void set_neutral();
     std::string desc() const;
@@ -242,6 +251,7 @@ class PseudoButtonChannel : public Channel {
     PseudoButtonChannel(const boost::shared_ptr<Channel>& chn);
     
     bool is_on() const;
+    bool matches_frame_events() const;
     float get_value() const;
     void set_neutral();
     std::string desc() const;
@@ -264,6 +274,7 @@ class MultiChannel : public Channel {
 class MultiOrChannel : public MultiChannel {
   public:
     bool is_on() const;
+    bool matches_frame_events() const;
     bool is_partially_on() const;
     float get_value() const;
     std::string desc() const;  
@@ -272,6 +283,7 @@ class MultiOrChannel : public MultiChannel {
 class MultiAndChannel : public MultiChannel {
   public:
     bool is_on() const;
+    bool matches_frame_events() const;
     bool is_partially_on() const;
     float get_value() const;
     std::string desc() const;  

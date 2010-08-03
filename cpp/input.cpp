@@ -33,6 +33,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "constants.h"
 #include "debug.h"
 #include "except.h"
+#include "globals.h"
 #include "input.h"
 #include "saving.h"
 
@@ -156,6 +157,10 @@ bool NullChannel::is_on() const {
   return false;
 }
 
+bool NullChannel::matches_frame_events() const {
+  return false;
+}
+
 float NullChannel::get_value() const {
   return 0.0;
 }
@@ -175,6 +180,15 @@ KeyChannel::KeyChannel(Keyboard* kbd, SDLKey key) :
 
 bool KeyChannel::is_on() const {
   return _kbd->_sdl_key_state[_key] != _neutral_state;
+}
+
+bool KeyChannel::matches_frame_events() const {
+  BOOST_FOREACH(const SDL_Event& event, Globals::frame_events) {
+    if (event.type == SDL_KEYDOWN && event.key.keysym.sym == _key) {
+      return true;
+    }
+  }
+  return false;
 }
 
 float KeyChannel::get_value() const {
@@ -202,6 +216,15 @@ bool MouseButtonChannel::is_on() const {
   return (_mouse->_btn_mask & SDL_BUTTON(_btn)) != _neutral_state;
 }
 
+bool MouseButtonChannel::matches_frame_events() const {
+  BOOST_FOREACH(const SDL_Event& event, Globals::frame_events) {
+    if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON(_btn)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 float MouseButtonChannel::get_value() const {
   return is_on() ? 1.0 : 0.0;
 }
@@ -223,6 +246,11 @@ bool MouseMovementChannel::is_on() const {
   return !similar(get_value(), 0.0);
 }
 
+bool MouseMovementChannel::matches_frame_events() const {
+  // Could implement this, but can't think of any use for it...
+  throw GameException("MMC MFE Unimplemented");
+}
+
 float MouseMovementChannel::get_value() const {
   int v = (_axis == 0) ? _mouse->_rel_x : _mouse->_rel_y;
   if (v == 0) { return 0.0; }
@@ -242,7 +270,8 @@ std::string MouseMovementChannel::desc() const {
 GamepadAxisChannel::GamepadAxisChannel(GamepadManager* gamepad_man, Uint8 gamepad, Uint8 axis) :
   _gamepad_man(gamepad_man),
   _gamepad(gamepad),
-  _axis(axis)
+  _axis(axis),
+  _last_pseudo_frame_event_value(0.0)
 {}
 
 float sint16_to_axis_float(Sint16 val) {
@@ -265,6 +294,18 @@ bool GamepadAxisChannel::is_on() const {
   return false;
 }
 
+bool GamepadAxisChannel::matches_frame_events() const {
+  // Need to implement this to make it act like a button, and notice when it moves from "off" to "on"
+  bool ret = false;
+  if (std::fabs(_last_pseudo_frame_event_value) < DEAD_ZONE && std::fabs(get_value()) >= DEAD_ZONE) {
+    ret = true;
+  }
+  
+  // Evil use of const_cast, but I can't think of a less evil solution at the moment
+  const_cast<GamepadAxisChannel*>(this)->_last_pseudo_frame_event_value = get_value();
+  return ret;
+}
+
 float GamepadAxisChannel::get_value() const {
   float v = sint16_to_axis_float(SDL_JoystickGetAxis(_gamepad_man->_gamepads[_gamepad], _axis));
   // Treat _neutral_value as though it were 0 on a scale to -1 or to 1 (if v < _neutral_value or v > _neutral_value respectively)
@@ -284,7 +325,7 @@ std::string GamepadAxisChannel::desc() const {
   return (boost::format("Gamepad(%u)Axis%u") % (_gamepad+1) % (_axis+1)).str();
 }
 
-GamepadButtonChannel::GamepadButtonChannel(GamepadManager* gamepad_man, Uint8 gamepad,  Uint8 button) :
+GamepadButtonChannel::GamepadButtonChannel(GamepadManager* gamepad_man, Uint8 gamepad, Uint8 button) :
   _gamepad_man(gamepad_man),
   _gamepad(gamepad),
   _button(button)
@@ -292,6 +333,15 @@ GamepadButtonChannel::GamepadButtonChannel(GamepadManager* gamepad_man, Uint8 ga
 
 bool GamepadButtonChannel::is_on() const {
   return SDL_JoystickGetButton(_gamepad_man->_gamepads[_gamepad], _button) != _neutral_state;
+}
+
+bool GamepadButtonChannel::matches_frame_events() const {
+  BOOST_FOREACH(const SDL_Event& event, Globals::frame_events) {
+    if (event.type == SDL_JOYBUTTONDOWN && event.jbutton.which == _gamepad && event.jbutton.button == _button) {
+      return true;
+    }
+  }
+  return false;
 }
 
 float GamepadButtonChannel::get_value() const {
@@ -319,6 +369,10 @@ PseudoAxisChannel::PseudoAxisChannel(const boost::shared_ptr<Channel>& neg, cons
 
 bool PseudoAxisChannel::is_on() const {
   return _neg->is_on() != _pos->is_on();
+}
+
+bool PseudoAxisChannel::matches_frame_events() const {
+  return _neg->matches_frame_events() != _pos->matches_frame_events();
 }
 
 float PseudoAxisChannel::get_value() const {
@@ -351,6 +405,10 @@ bool PseudoButtonChannel::is_on() const {
   return _chn->is_on();
 }
 
+bool PseudoButtonChannel::matches_frame_events() const {
+  return _chn->matches_frame_events();
+}
+
 float PseudoButtonChannel::get_value() const {
   return std::fabs(_chn->get_value());
 }
@@ -372,6 +430,15 @@ void MultiChannel::set_neutral() {
 bool MultiOrChannel::is_on() const {
   BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
     if (ch->is_on()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool MultiOrChannel::matches_frame_events() const {
+  BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
+    if (ch->matches_frame_events()) {
       return true;
     }
   }
@@ -414,6 +481,15 @@ std::string MultiOrChannel::desc() const {
 bool MultiAndChannel::is_on() const {
   BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
     if (!ch->is_on()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool MultiAndChannel::matches_frame_events() const {
+  BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
+    if (!ch->matches_frame_events()) {
       return false;
     }
   }

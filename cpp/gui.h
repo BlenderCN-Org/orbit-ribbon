@@ -43,10 +43,9 @@ namespace GUI {
       std::list<std::string> _region_order;
       std::map<std::string, Box> _focus_regions;
       std::map<std::string, Box>::const_iterator _focus_iter;
-      bool _ui_bindings_on_last_frame;
     
     public:
-      FocusTracker() : _focus_regions(), _focus_iter(_focus_regions.end()), _ui_bindings_on_last_frame(false) {}
+      FocusTracker() : _focus_regions(), _focus_iter(_focus_regions.end()) {}
       
       void add_region(const std::string& name, const Box& box);
       const Box* get_region(const std::string& name) const;

@@ -100,32 +100,26 @@ void FocusTracker::process() {
     // If the mouse cursor isn't visible, check for UI axis events to change focus
     const Channel& x_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIX);
     const Channel& y_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIY);
-    if (x_axis.is_on() || y_axis.is_on()) {
-      if (!_ui_bindings_on_last_frame) {
-        if (_focus_iter != _focus_regions.end()) {
-          float val = std::fabs(x_axis.get_value()) > std::fabs(y_axis.get_value()) ? x_axis.get_value() : y_axis.get_value();
-          std::list<std::string>::const_iterator order_iter = std::find(_region_order.begin(), _region_order.end(), _focus_iter->first);
-          if (val > 0.0) {
-            ++order_iter;
-            if (order_iter == _region_order.end()) {
-              order_iter = _region_order.begin();
-            }
-          } else {
-            if (order_iter == _region_order.begin()) {
-              order_iter = _region_order.end();
-            }
-            --order_iter;
+    if (x_axis.matches_frame_events() || y_axis.matches_frame_events()) {
+      if (_focus_iter != _focus_regions.end()) {
+        float val = std::fabs(x_axis.get_value()) > std::fabs(y_axis.get_value()) ? x_axis.get_value() : y_axis.get_value();
+        std::list<std::string>::const_iterator order_iter = std::find(_region_order.begin(), _region_order.end(), _focus_iter->first);
+        if (val > 0.0) {
+          ++order_iter;
+          if (order_iter == _region_order.end()) {
+            order_iter = _region_order.begin();
           }
-          _focus_iter = _focus_regions.find(*order_iter);
         } else {
-          // Nothing is currently in focus, so put focus on the default region
-          _focus_iter = _focus_regions.find(_region_order.front());
+          if (order_iter == _region_order.begin()) {
+            order_iter = _region_order.end();
+          }
+          --order_iter;
         }
+        _focus_iter = _focus_regions.find(*order_iter);
+      } else {
+        // Nothing is currently in focus, so put focus on the default region
+        _focus_iter = _focus_regions.find(_region_order.front());
       }
-      
-      _ui_bindings_on_last_frame = true;
-    } else {
-      _ui_bindings_on_last_frame = false;
     }
   }
 }
