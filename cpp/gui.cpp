@@ -150,7 +150,9 @@ void SimpleMenu::process() {
   
   _focus_tracker.process();
   
-  // Check for events that would activate the currently focused entry
+  if (Input::get_button_ch(ORSave::ButtonBoundAction::Confirm).matches_frame_events()) {
+    _activated_entry = _focus_tracker.get_current_focus();
+  }
 }
 
 void SimpleMenu::draw() {
@@ -190,10 +192,6 @@ void SimpleMenu::draw() {
     int text_width = Globals::sys_font->get_width(font_height, i->second);
     Globals::sys_font->draw(region->top_left + (_width - text_width)/2, font_height, i->second);
   }
-}
-
-std::string SimpleMenu::get_activated_button() {
-  return "";
 }
 
 }

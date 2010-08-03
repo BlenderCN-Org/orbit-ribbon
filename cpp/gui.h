@@ -59,6 +59,7 @@ namespace GUI {
       FocusTracker _focus_tracker;
       bool _filled_focus_tracker;
       std::list<std::pair<std::string, std::string> > _entries;
+      std::string _activated_entry;
     
     public:
       SimpleMenu(int width, int btn_height, int padding) :
@@ -69,7 +70,7 @@ namespace GUI {
       void process();
       void draw();
       
-      std::string get_activated_button();
+      std::string get_activated_button() { return _activated_entry; }
   };
 }
 
