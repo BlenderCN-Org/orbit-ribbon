@@ -44,6 +44,9 @@ class MainMenuMode : public Mode {
     
     void pre_clear(bool top);
     void draw_2d(bool top);
+    
+    void pushed_below_top();
+    void now_at_top();
 };
 
 #endif

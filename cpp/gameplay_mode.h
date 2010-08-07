@@ -38,8 +38,7 @@ class GameplayMode : public Mode {
     
     bool simulation_enabled() { return true; }
     
-    // There is no input handling phase in this mode because that's dealt with in avatar step instead
-    // If it weren't handled in avatar step, control would be negatively affected by framerate drops
+    bool handle_input();
     
     void pre_clear(bool top);
     void pre_3d(bool top);

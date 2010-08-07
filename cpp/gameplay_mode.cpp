@@ -36,6 +36,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gameobj.h"
 #include "geometry.h"
 #include "gui.h"
+#include "input.h"
 #include "saving.h"
 
 // Camera positioning relative to avatar's reference frame
@@ -71,6 +72,15 @@ AvatarGameObj* GameplayMode::find_avatar() {
     throw GameException(std::string("GameplayMode: LIBAvatar GameObj named ") + _avatar_key + " has disappeared unexpectedly");
   }
   return static_cast<AvatarGameObj*>(&(*(i->second)));
+}
+
+bool GameplayMode::handle_input() {
+  // There is no avatar control handling here because that's dealt with in avatar step instead
+  // If it weren't handled in avatar step, control would be negatively affected by framerate drops
+  if (Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).matches_frame_events()) {
+    Globals::mode_stack.next_frame_pop_mode();
+  }
+  return true;
 }
 
 void GameplayMode::pre_clear(bool top __attribute__ ((unused))) {

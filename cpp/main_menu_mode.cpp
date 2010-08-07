@@ -24,7 +24,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "main_menu_mode.h"
 
+#include "app.h"
 #include "display.h"
+#include "gameplay_mode.h"
 #include "globals.h"
 #include "gloo.h"
 #include "gui.h"
@@ -39,6 +41,14 @@ MainMenuMode::MainMenuMode() : _main_menu(180, 22, 8) {
 
 bool MainMenuMode::handle_input() {
   _main_menu.process();
+  std::string activated = _main_menu.get_activated_button();
+  if (activated == "play") {
+    App::load_mission(1, 1);
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new GameplayMode()));
+  } else if (activated == "quit") {
+    Globals::mode_stack.next_frame_pop_mode();
+  }
+  
   return true;
 }
 
@@ -48,4 +58,12 @@ void MainMenuMode::pre_clear(bool top __attribute__ ((unused))) {
 
 void MainMenuMode::draw_2d(bool top __attribute__ ((unused))) {
   _main_menu.draw();
+}
+
+void MainMenuMode::pushed_below_top() {
+  _main_menu.reset_activation();
+}
+
+void MainMenuMode::now_at_top() {
+  Globals::mouse_cursor->reset_pos();
 }
