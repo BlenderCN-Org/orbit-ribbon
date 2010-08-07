@@ -36,22 +36,13 @@ MainMenuMode::MainMenuMode() : _main_menu(180, 22, 8) {
   _main_menu.add_button("credits", "Credits");
   _main_menu.add_button("options", "Options");
   _main_menu.add_button("quit", "Quit");
-  
-  resumed();
 }
 
-void MainMenuMode::pre_clear() {
+void MainMenuMode::pre_clear(bool top __attribute__ ((unused))) {
   glClearColor(0.0, 0.0, 0.0, 0.0);
 }
 
-void MainMenuMode::draw_2d() {
+void MainMenuMode::draw_2d(bool top __attribute__ ((unused))) {
   _main_menu.process();
   _main_menu.draw();
-}
-
-void MainMenuMode::suspended() {
-}
-
-void MainMenuMode::resumed() {
-  Globals::mouse_cursor->set_active(true);
 }

@@ -33,16 +33,15 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 class MainMenuMode : public Mode {
   private:
     GUI::SimpleMenu _main_menu;
-    bool _resumed;
     
   public:
     MainMenuMode();
     
-    void pre_clear();
-    void draw_2d();
+    bool simulation_disabled() { return true; }
+    bool mouse_cursor_enabled() { return true; }
     
-    void suspended();
-    void resumed();
+    void pre_clear(bool top);
+    void draw_2d(bool top);
 };
 
 #endif

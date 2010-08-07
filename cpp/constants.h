@@ -30,5 +30,14 @@ const char* const APP_VERSION = "prealpha";
 // Maximum number of frames per second, and the base number of simulated steps per second
 const unsigned int MAX_FPS = 60;
 
+// How many ticks each frame must at least last
+const unsigned int MIN_TICKS_PER_FRAME = 1000/MAX_FPS;
+
+// Clipping distance for gameplay objects and background objects respectively
+const float GAMEPLAY_CLIP_DIST = 50000;
+const float SKY_CLIP_DIST = 1e12;
+
+// Field-of-view in degrees
+const float FOV = 45;
 
 #endif

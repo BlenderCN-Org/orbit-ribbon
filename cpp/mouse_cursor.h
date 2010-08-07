@@ -34,12 +34,11 @@ class MouseCursor {
   private:
     boost::shared_ptr<GLOOTexture> _cursor_img;
     Point _pos;
-    bool _visible, _active;
+    bool _visible;
   
   public:
     MouseCursor();
     
-    void set_active(bool f);
     void process_events();
     void reset_pos();
     Point get_pos() const { return _pos; }

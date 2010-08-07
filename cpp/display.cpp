@@ -39,16 +39,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "performance.h"
 #include "gloo.h"
 
-// Clipping distance for gameplay objects and background objects respectively
-const float GAMEPLAY_CLIP_DIST = 50000;
-const float SKY_CLIP_DIST = 1e12;
-
-// Field-of-view in degrees
-const float FOV = 45;
-
-// How often in ticks to update the performance info string
-const unsigned int MAX_PERF_INFO_AGE = 2000;
-
 SDL_Surface* screen;
 
 int Display::screen_width = 0;
@@ -177,65 +167,4 @@ void Display::screen_resize() {
   glViewport(0, 0, screen_width, screen_height);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-}
-
-void Display::draw_frame() {
-  static std::string perf_info;
-  static unsigned int last_perf_info = 0; // Tick time at which we last updated perf_info
-  
-  Mode* mode = &*Globals::mode_stack.top();
-  
-  // 3D drawing mode (projection matrix will be set below)
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_LIGHTING);
-  
-  // Clear the screen
-  mode->pre_clear();
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  
-  mode->pre_3d();
-  
-  // Projection mode for distant objects
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(FOV, screen_ratio, 0.1, SKY_CLIP_DIST);
-  glMatrixMode(GL_MODELVIEW);
-  
-  mode->draw_3d_far();
-  
-  // Projection mode for nearby objects
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(FOV, screen_ratio, 0.1, GAMEPLAY_CLIP_DIST);
-  glMatrixMode(GL_MODELVIEW);
-  
-  mode->draw_3d_near();
-  
-  // 2D drawing mode
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_LIGHTING);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluOrtho2D(0.0, screen_width, screen_height, 0.0); // Set origin at top-left of screen
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  
-  mode->draw_2d();
-  
-  Globals::mouse_cursor->draw();
-  
-  if (Saving::get().config().showFps().get()) {
-    if (perf_info == "" or SDL_GetTicks() - last_perf_info >= MAX_PERF_INFO_AGE) {
-      last_perf_info = SDL_GetTicks();
-      perf_info = Performance::get_perf_info() + " " + GLOOBufferedMesh::get_usage_info();
-    }
-    const static Point pos(15, 15);
-    const static float height = 15;
-    GUI::draw_diamond_box(Box(pos, Size(Globals::sys_font->get_width(height, perf_info), height) + GUI::DIAMOND_BOX_BORDER*2));
-    glColor3f(1.0, 1.0, 1.0);
-    Globals::sys_font->draw(pos + GUI::DIAMOND_BOX_BORDER, height, perf_info);
-  }
-  
-  // Output and flip buffers
-  SDL_GL_SwapBuffers();
 }

@@ -33,7 +33,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 std::vector<SDL_Event> Globals::frame_events;
 unsigned int Globals::total_steps = 0;
 GOMap Globals::gameobjs;
-std::stack<boost::shared_ptr<Mode> > Globals::mode_stack;
+ModeStack Globals::mode_stack;
 boost::scoped_ptr<Background> Globals::bg;
 boost::scoped_ptr<GLOOFont> Globals::sys_font;
 boost::scoped_ptr<OrePackage> Globals::ore;

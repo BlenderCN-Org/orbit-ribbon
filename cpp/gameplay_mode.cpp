@@ -73,11 +73,11 @@ AvatarGameObj* GameplayMode::find_avatar() {
   return static_cast<AvatarGameObj*>(&(*(i->second)));
 }
 
-void GameplayMode::pre_clear() {
+void GameplayMode::pre_clear(bool top __attribute__ ((unused))) {
   Globals::bg->set_clear_color();
 }
 
-void GameplayMode::pre_3d() {
+void GameplayMode::pre_3d(bool top __attribute__ ((unused))) {
   AvatarGameObj* avatar = find_avatar();
   Point cam_pos = avatar->get_rel_point_pos(CAMERA_POS_OFFSET);
   Point cam_tgt = avatar->get_rel_point_pos(CAMERA_TGT_OFFSET);
@@ -89,19 +89,19 @@ void GameplayMode::pre_3d() {
   );
 }
 
-void GameplayMode::draw_3d_far() {
+void GameplayMode::draw_3d_far(bool top __attribute__ ((unused))) {
   // Draw all the background objects
   Globals::bg->draw();
 }
 
-void GameplayMode::draw_3d_near() {
+void GameplayMode::draw_3d_near(bool top __attribute__ ((unused))) {
   // Draw every game object (FIXME Do near/far sorting)
   for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
     i->second->draw(true);
   }
 }
 
-void GameplayMode::draw_2d() {
+void GameplayMode::draw_2d(bool top __attribute__ ((unused))) {
   AvatarGameObj* av = find_avatar();
   
   if (Saving::get().config().debugPhysics().get()) {

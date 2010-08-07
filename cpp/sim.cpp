@@ -158,6 +158,8 @@ void Sim::sim_step() {
   for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
     i->second->step();
   }
+  
+  Globals::total_steps += 1;
 }
 
 std::auto_ptr<OdeEntity> Sim::gen_empty_body() {

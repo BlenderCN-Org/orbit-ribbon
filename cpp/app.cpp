@@ -52,10 +52,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "sim.h"
 #include "ore.h"
 
-// How many ticks each frame must at least last
-const unsigned int MIN_TICKS_PER_FRAME = 1000/MAX_FPS;
+// How often in ticks to update the performance info string
+const unsigned int MAX_PERF_INFO_AGE = 2000;
 
 void App::frame_loop() {
+  std::string perf_info;
+  unsigned int last_perf_info = 0; // Tick time at which we last updated perf_info
+  
   unsigned int unsimulated_ticks = 0;
   
   while (1) {
@@ -90,15 +93,28 @@ void App::frame_loop() {
       Input::set_neutral();
     }
     
-    // Do simulation steps until we've no more than one frame behind the display
-    while (unsimulated_ticks > MIN_TICKS_PER_FRAME) {
-      Sim::sim_step();
-      Globals::total_steps += 1;
-      unsimulated_ticks -= MIN_TICKS_PER_FRAME;
+    // This is where the important stuff happens, depending on what mode the game currently is
+    Globals::mode_stack.execute_frame(unsimulated_ticks - (unsimulated_ticks % MIN_TICKS_PER_FRAME));
+    
+    // If showFps config flag is enabled, calculate and display recent FPS
+    if (Saving::get().config().showFps().get()) {
+      if (perf_info == "" or SDL_GetTicks() - last_perf_info >= MAX_PERF_INFO_AGE) {
+        last_perf_info = SDL_GetTicks();
+        perf_info = Performance::get_perf_info() + " " + GLOOBufferedMesh::get_usage_info();
+      }
+      const static Point pos(15, 15);
+      const static float height = 15;
+      GUI::draw_diamond_box(Box(pos, Size(Globals::sys_font->get_width(height, perf_info), height) + GUI::DIAMOND_BOX_BORDER*2));
+      glColor3f(1.0, 1.0, 1.0);
+      Globals::sys_font->draw(pos + GUI::DIAMOND_BOX_BORDER, height, perf_info);
     }
     
-    // Re-draw the display
-    Display::draw_frame();
+    // Output frame and flip buffers
+    SDL_GL_SwapBuffers();
+    
+    // The time that passed during this frame needs to pass in the simulator next frame
+    // Plus, also add in any leftover ticks that didn't get simulated this frame
+    unsimulated_ticks = (SDL_GetTicks() - frame_start) + (unsimulated_ticks % MIN_TICKS_PER_FRAME);
     
     // Sleep if we're running faster than our maximum fps
     unsigned int frame_ticks = SDL_GetTicks() - frame_start;
@@ -106,11 +122,8 @@ void App::frame_loop() {
       SDL_Delay(MIN_TICKS_PER_FRAME - frame_ticks); // Slow down, buster!
     }
     
-    // The time that passed during this frame needs to pass in the simulator next frame
+    // Put this frame's timing data into the FPS calculations
     unsigned int total_ticks = SDL_GetTicks() - frame_start;
-    unsimulated_ticks += total_ticks;
-    
-    // Put this frame into the FPS calculations
     Performance::record_frame(total_ticks, total_ticks - frame_ticks);
   }
 }
@@ -211,12 +224,12 @@ void App::run(const std::vector<std::string>& args) {
       unsigned int mission = vm["mission"].as<unsigned int>();
       Debug::status_msg("Starting area " + boost::lexical_cast<std::string>(area) + ", mission " + boost::lexical_cast<std::string>(mission));
       load_mission(area, mission);
-      Globals::mode_stack.push(boost::shared_ptr<Mode>(new GameplayMode()));
+      Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new GameplayMode()));
     } else if (vm.count("area")) {
       // TODO Go straight to this area's menu
       throw GameException("Area menu jumping not yet implemented");
     } else {
-      Globals::mode_stack.push(boost::shared_ptr<Mode>(new MainMenuMode()));
+      Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MainMenuMode()));
     }
   } catch (const std::exception& e) {
     Debug::error_msg(std::string("Uncaught exception during init: ") + e.what());
@@ -226,7 +239,7 @@ void App::run(const std::vector<std::string>& args) {
   try {
     frame_loop();
   } catch (const GameQuitException& e) {
-    Debug::status_msg(std::string("Program quitting: ") + e.what());
+    Debug::status_msg(std::string("Program quitting: ") + e.what() + ". Thanks for playing!");
   } catch (const std::exception& e) {
     Debug::error_msg(std::string("Uncaught exception during run: ") + e.what());
   }

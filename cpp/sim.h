@@ -86,10 +86,11 @@ class Sim {
     
     static std::auto_ptr<OdeEntity> gen_empty_body();
     static std::auto_ptr<OdeEntity> gen_sphere_body(float mass, float rad);
+    
+    static void sim_step();
   
   private:
     static void init();
-    static void sim_step();
     friend class App;
 };
 

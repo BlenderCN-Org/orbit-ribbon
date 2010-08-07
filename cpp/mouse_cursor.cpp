@@ -29,17 +29,11 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "input.h"
 
-MouseCursor::MouseCursor() : _cursor_img(GLOOTexture::load("cursor.png")), _visible(false), _active(false) {
+MouseCursor::MouseCursor() : _cursor_img(GLOOTexture::load("cursor.png")), _visible(false) {
   reset_pos();
 }
 
-void MouseCursor::set_active(bool f) {
-  _active = f;
-}
-
 void MouseCursor::process_events() {
-  if (!_active) { return; }
-  
   // Check for bound UI events, which make the mouse cursor invisible
   const Channel& x_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIX);
   const Channel& y_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIY);
@@ -75,7 +69,7 @@ void MouseCursor::reset_pos() {
 }
 
 void MouseCursor::draw() {
-  if (_active && _visible) {
+  if (_visible) {
     _cursor_img->draw_2d(Point(_pos - _cursor_img->get_size()/2));
   }
 }

@@ -44,7 +44,6 @@ class Display {
   private:
     static void init();
     
-    static void draw_frame();
     static void screen_resize();
     
     friend class App;

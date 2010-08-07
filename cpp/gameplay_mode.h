@@ -35,11 +35,14 @@ class GameplayMode : public Mode {
     
   public:
     GameplayMode();
-    void pre_clear();
-    void pre_3d();
-    void draw_3d_far();
-    void draw_3d_near();
-    void draw_2d();
+    
+    bool simulation_enabled() { return true; }
+    
+    void pre_clear(bool top);
+    void pre_3d(bool top);
+    void draw_3d_far(bool top);
+    void draw_3d_near(bool top);
+    void draw_2d(bool top);
 };
 
 
