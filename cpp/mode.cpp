@@ -30,6 +30,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "sim.h"
 
 void ModeStack::PushOperation::apply(ModeStack& mode_stack) {
+  if (!mode_stack._stack.empty()) {
+    mode_stack._stack.top()->pushed_below_top();
+  }
+  _mode_to_push->now_at_top();
   mode_stack._stack.push(_mode_to_push);
 }
 
@@ -37,13 +41,16 @@ void ModeStack::PopOperation::apply(ModeStack& mode_stack) {
   if (!mode_stack._stack.empty()) {
     mode_stack._stack.pop();
   }
+  if (!mode_stack._stack.empty()) {
+    mode_stack._stack.top()->now_at_top();
+  }
 }
 
 void ModeStack::next_frame_push_mode(const boost::shared_ptr<Mode>& new_mode) {
   _op_queue.push(boost::shared_ptr<PushOperation>(new PushOperation(new_mode)));
 }
 
-void ModeStack::next_frame_pop_current_mode() {
+void ModeStack::next_frame_pop_mode() {
   _op_queue.push(boost::shared_ptr<PopOperation>(new PopOperation()));
 }
 

@@ -48,6 +48,9 @@ class Mode {
     virtual void draw_3d_far(bool top __attribute__ ((unused))) {}
     virtual void draw_3d_near(bool top __attribute__ ((unused))) {}
     virtual void draw_2d(bool top __attribute__ ((unused))) {}
+    
+    virtual void pushed_below_top() {}
+    virtual void now_at_top() {}
 };
 
 class ModeStack {
@@ -95,7 +98,7 @@ class ModeStack {
   
   public:
     void next_frame_push_mode(const boost::shared_ptr<Mode>& new_mode);
-    void next_frame_pop_current_mode();
+    void next_frame_pop_mode();
     
     void execute_frame(unsigned int steps_elapsed);
 };
