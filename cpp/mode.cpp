@@ -47,6 +47,20 @@ void ModeStack::next_frame_pop_current_mode() {
   _op_queue.push(boost::shared_ptr<PopOperation>(new PopOperation()));
 }
 
+void ModeStack::execute_input_handling_phase() {
+  PoppedModeStackItem cur_mode(*this);
+  
+  // If this mode handles input, then stop descending
+  if (cur_mode.mode->handle_input()) {
+    return;
+  }
+  
+  // If this mode doesn't handle input, descend down to the next one
+  if (!_stack.empty()) {
+    execute_input_handling_phase();
+  }
+}
+
 void ModeStack::execute_simulation_phase(unsigned int ticks) {
   PoppedModeStackItem cur_mode(*this);
   
@@ -137,8 +151,8 @@ void ModeStack::execute_frame(unsigned int ticks_elapsed) {
   if (_stack.empty()) {
     throw GameQuitException("Mode stack depleted");
   } else {
+    execute_input_handling_phase();
     execute_simulation_phase(ticks_elapsed);
-    
     execute_pre_clear_phase(true);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     execute_draw_phase(true);

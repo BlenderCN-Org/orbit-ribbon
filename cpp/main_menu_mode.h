@@ -40,6 +40,8 @@ class MainMenuMode : public Mode {
     bool simulation_disabled() { return true; }
     bool mouse_cursor_enabled() { return true; }
     
+    bool handle_input();
+    
     void pre_clear(bool top);
     void draw_2d(bool top);
 };
