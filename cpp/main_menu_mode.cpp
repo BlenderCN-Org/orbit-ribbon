@@ -25,7 +25,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "main_menu_mode.h"
 
 #include "display.h"
-#include "debug.h"
 #include "globals.h"
 #include "gloo.h"
 #include "gui.h"

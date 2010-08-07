@@ -72,7 +72,7 @@ void ModeStack::execute_simulation_phase(unsigned int ticks) {
   // If this mode wants simulation, then run the simulation and stop descending here
   if (cur_mode.mode->simulation_enabled()) {
     // Do a simulation step for each realtime tick elapsed
-    for (; ticks > MIN_TICKS_PER_FRAME; --ticks) {
+    for (; ticks > 0; --ticks) {
       Sim::sim_step();
     }
     return;
