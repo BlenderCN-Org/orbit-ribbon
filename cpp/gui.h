@@ -71,6 +71,7 @@ namespace GUI {
       void draw();
       
       std::string get_activated_button() { return _activated_entry; }
+      void reset_activation() { _activated_entry = ""; }
   };
 }
 
