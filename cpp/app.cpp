@@ -94,7 +94,9 @@ void App::frame_loop() {
     }
     
     // This is where the important stuff happens, depending on what mode the game currently is
-    Globals::mode_stack.execute_frame(unsimulated_ticks - (unsimulated_ticks % MIN_TICKS_PER_FRAME));
+    unsigned int steps_to_simulate = unsimulated_ticks / MIN_TICKS_PER_FRAME;
+    Globals::mode_stack.execute_frame(steps_to_simulate);
+    unsimulated_ticks -= steps_to_simulate * MIN_TICKS_PER_FRAME;
     
     // If showFps config flag is enabled, calculate and display recent FPS
     if (Saving::get().config().showFps().get()) {
@@ -112,15 +114,14 @@ void App::frame_loop() {
     // Output frame and flip buffers
     SDL_GL_SwapBuffers();
     
-    // The time that passed during this frame needs to pass in the simulator next frame
-    // Plus, also add in any leftover ticks that didn't get simulated this frame
-    unsimulated_ticks = (SDL_GetTicks() - frame_start) + (unsimulated_ticks % MIN_TICKS_PER_FRAME);
-    
     // Sleep if we're running faster than our maximum fps
     unsigned int frame_ticks = SDL_GetTicks() - frame_start;
     if (frame_ticks > 0 && frame_ticks < MIN_TICKS_PER_FRAME) {
       SDL_Delay(MIN_TICKS_PER_FRAME - frame_ticks); // Slow down, buster!
     }
+    
+    // The time that this frame took to run needs to pass in the simulator next frame
+    unsimulated_ticks += SDL_GetTicks() - frame_start;
     
     // Put this frame's timing data into the FPS calculations
     unsigned int total_ticks = SDL_GetTicks() - frame_start;

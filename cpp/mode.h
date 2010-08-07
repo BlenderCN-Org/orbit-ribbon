@@ -89,7 +89,7 @@ class ModeStack {
     std::queue<boost::shared_ptr<Operation> > _op_queue;
     
     void execute_input_handling_phase();
-    void execute_simulation_phase(unsigned int ticks_elapsed);
+    void execute_simulation_phase(unsigned int steps_elapsed);
     void execute_pre_clear_phase(bool top);
     void execute_draw_phase(bool top);
   
@@ -97,7 +97,7 @@ class ModeStack {
     void next_frame_push_mode(const boost::shared_ptr<Mode>& new_mode);
     void next_frame_pop_current_mode();
     
-    void execute_frame(unsigned int ticks_elapsed);
+    void execute_frame(unsigned int steps_elapsed);
 };
 
 #endif

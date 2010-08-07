@@ -61,7 +61,7 @@ void ModeStack::execute_input_handling_phase() {
   }
 }
 
-void ModeStack::execute_simulation_phase(unsigned int ticks) {
+void ModeStack::execute_simulation_phase(unsigned int steps_elapsed) {
   PoppedModeStackItem cur_mode(*this);
   
   // If this mode blocks simulation, then just stop here, don't simulate or descend any further
@@ -72,7 +72,7 @@ void ModeStack::execute_simulation_phase(unsigned int ticks) {
   // If this mode wants simulation, then run the simulation and stop descending here
   if (cur_mode.mode->simulation_enabled()) {
     // Do a simulation step for each realtime tick elapsed
-    for (; ticks > 0; --ticks) {
+    for (; steps_elapsed > 0; --steps_elapsed) {
       Sim::sim_step();
     }
     return;
@@ -80,7 +80,7 @@ void ModeStack::execute_simulation_phase(unsigned int ticks) {
   
   // If it's inconclusive, see if the next mode down wants to block or run simulation
   if (!_stack.empty()) {
-    execute_simulation_phase(ticks);
+    execute_simulation_phase(steps_elapsed);
   }
 }
 
@@ -142,7 +142,7 @@ void ModeStack::execute_draw_phase(bool top) {
   }
 }
 
-void ModeStack::execute_frame(unsigned int ticks_elapsed) {
+void ModeStack::execute_frame(unsigned int steps_elapsed) {
   while (!_op_queue.empty()) {
     _op_queue.front()->apply(*this);
     _op_queue.pop();
@@ -152,7 +152,7 @@ void ModeStack::execute_frame(unsigned int ticks_elapsed) {
     throw GameQuitException("Mode stack depleted");
   } else {
     execute_input_handling_phase();
-    execute_simulation_phase(ticks_elapsed);
+    execute_simulation_phase(steps_elapsed);
     execute_pre_clear_phase(true);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     execute_draw_phase(true);
