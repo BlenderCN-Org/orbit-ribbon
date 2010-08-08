@@ -30,22 +30,34 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gui.h"
 #include "mode.h"
 
-class MainMenuMode : public Mode {
+class MenuMode : public Mode {
   private:
-    GUI::SimpleMenu _main_menu;
-    
+    GUI::SimpleMenu _simple_menu;
+  
+  protected:
+    void add_entry(const std::string& name, const std::string& label);
+  
   public:
-    MainMenuMode();
+    MenuMode(int menu_width, int btn_height, int padding);
     
     bool simulation_disabled() { return true; }
     bool mouse_cursor_enabled() { return true; }
     
     bool handle_input();
-    
-    void pre_clear(bool top);
     void draw_2d(bool top);
     
     void pushed_below_top();
+    
+    virtual void handle_menu_selection(const std::string& item) =0;
+};
+
+class MainMenuMode : public MenuMode {
+  public:
+    MainMenuMode();
+    
+    void pre_clear(bool top);
+    
+    void handle_menu_selection(const std::string& item);
 };
 
 #endif
