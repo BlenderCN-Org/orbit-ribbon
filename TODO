@@ -29,6 +29,8 @@ Thinh's ideas:
 	- Builds the entire project at once to see if g++'s unit-at-a-time thing helps
 	- Uses g++'s profiling mechanism with some kind of demo
 
+- For the sake of UI juiciness and following the theme, give the mouse cursor a little bit of momentum ala Per.Oxyd
+- FTGL sucks, implement a simple texture-submap-based font system to use instead, bundle fonts into executable
 - Come up with a simple way to do documentation; doxygen's usual format is a pain in the ass
 - Pass boost::shared_ptr by const reference wherever possible
 - Make the naming of variables consistent (in particular, use underscore prefix for members)
