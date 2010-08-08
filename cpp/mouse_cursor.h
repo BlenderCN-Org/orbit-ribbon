@@ -43,6 +43,7 @@ class MouseCursor {
     void reset_pos();
     Point get_pos() const { return _pos; }
     bool get_visibility() const { return _visible; }
+    void set_visibility(bool v) { _visible = v; }
     
     void draw();
 };

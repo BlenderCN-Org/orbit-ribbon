@@ -150,7 +150,8 @@ void ModeStack::execute_draw_phase(bool top) {
       Globals::mouse_cursor->reset_pos();
     }
     Globals::mouse_cursor->draw();
-  } else {
+  } else if (!_mouse_inactive) {
+    Globals::mouse_cursor->set_visibility(false);
     _mouse_inactive = true;
   }
 }
