@@ -63,7 +63,3 @@ void MainMenuMode::draw_2d(bool top __attribute__ ((unused))) {
 void MainMenuMode::pushed_below_top() {
   _main_menu.reset_activation();
 }
-
-void MainMenuMode::now_at_top() {
-  Globals::mouse_cursor->reset_pos();
-}
