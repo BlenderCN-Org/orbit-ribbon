@@ -1,6 +1,6 @@
 /*
-main_menu_mode.h: Header for the MainMenuMode class.
-The MainMenuMode class is the active Mode from when the program starts until a mission is begun.
+main_modes.cpp: Header for the various menu mode classes.
+These handle the menu screens used to start the game, choose a level, set options, etc.
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 

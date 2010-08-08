@@ -1,6 +1,6 @@
 /*
-main_menu_mode.cpp: Implementation for the MainMenuMode class.
-The MainMenuMode class is the active Mode from when the program starts until a mission is begun.
+main_modes.cpp: Implementation for the various menu mode classes.
+These handle the menu screens used to start the game, choose a level, set options, etc.
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 
@@ -22,7 +22,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <boost/lexical_cast.hpp>
 
-#include "main_menu_mode.h"
+#include "menu_modes.h"
 
 #include "app.h"
 #include "display.h"
@@ -30,7 +30,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "gloo.h"
 #include "gui.h"
-#include "mouse_cursor.h"
 
 MainMenuMode::MainMenuMode() : _main_menu(180, 22, 8) {
   _main_menu.add_button("play", "Play");

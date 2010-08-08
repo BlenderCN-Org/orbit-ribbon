@@ -43,7 +43,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "gameobj.h"
 #include "input.h"
-#include "main_menu_mode.h"
+#include "menu_modes.h"
 #include "mesh.h"
 #include "mode.h"
 #include "mouse_cursor.h"
