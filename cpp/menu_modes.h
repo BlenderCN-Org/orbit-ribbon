@@ -75,4 +75,12 @@ class MissionSelectMenuMode : public MenuMode {
     void handle_menu_selection(const std::string& item);
 };
 
+class PauseMenuMode : public MenuMode {
+  public:
+    bool execute_after_lower_mode() { return true; }
+    
+    PauseMenuMode();
+    void handle_menu_selection(const std::string& item);
+};
+
 #endif

@@ -37,6 +37,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "geometry.h"
 #include "gui.h"
 #include "input.h"
+#include "menu_modes.h"
 #include "saving.h"
 
 // Camera positioning relative to avatar's reference frame
@@ -78,7 +79,7 @@ bool GameplayMode::handle_input() {
   // There is no avatar control handling here because that's dealt with in avatar step instead
   // If it weren't handled in avatar step, control would be negatively affected by framerate drops
   if (Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).matches_frame_events()) {
-    Globals::mode_stack.next_frame_pop_mode();
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new PauseMenuMode()));
   }
   return true;
 }

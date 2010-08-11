@@ -135,3 +135,18 @@ void MissionSelectMenuMode::handle_menu_selection(const std::string& item) {
     Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new GameplayMode()));
   }
 }
+
+PauseMenuMode::PauseMenuMode() : MenuMode(150, 22, 30) {
+  add_entry("resume", "Resume Game");
+  add_entry("quit", "Quit Mission");
+}
+
+void PauseMenuMode::handle_menu_selection(const std::string& item) {
+  if (item == "resume" or item == "CANCEL") {
+    Globals::mode_stack.next_frame_pop_mode();
+  } else if (item == "quit") {
+    // Pop both the PauseMenuMode and the GameplayMode underneath it
+    Globals::mode_stack.next_frame_pop_mode();
+    Globals::mode_stack.next_frame_pop_mode();
+  }
+}
