@@ -143,16 +143,18 @@ void ModeStack::execute_draw_phase(bool top) {
   
   cur_mode.mode->draw_2d(top);
   
-    // The top mode gets to decide if the mouse cursor is drawn
-  if (top && cur_mode.mode->mouse_cursor_enabled()) {
-    if (_mouse_inactive) {
-      _mouse_inactive = false;
-      Globals::mouse_cursor->reset_pos();
+  // The top mode gets to decide if the mouse cursor is drawn
+  if (top) {
+    if (cur_mode.mode->mouse_cursor_enabled()) {
+      if (_mouse_inactive) {
+        _mouse_inactive = false;
+        Globals::mouse_cursor->reset_pos();
+      }
+      Globals::mouse_cursor->draw();
+    } else if (!_mouse_inactive) {
+      Globals::mouse_cursor->set_visibility(false);
+      _mouse_inactive = true;
     }
-    Globals::mouse_cursor->draw();
-  } else if (!_mouse_inactive) {
-    Globals::mouse_cursor->set_visibility(false);
-    _mouse_inactive = true;
   }
 }
 
