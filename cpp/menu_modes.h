@@ -54,9 +54,24 @@ class MenuMode : public Mode {
 class MainMenuMode : public MenuMode {
   public:
     MainMenuMode();
-    
     void pre_clear(bool top);
-    
+    void handle_menu_selection(const std::string& item);
+};
+
+class AreaSelectMenuMode : public MenuMode {
+  public:
+    AreaSelectMenuMode();
+    void pre_clear(bool top);
+    void handle_menu_selection(const std::string& item);
+};
+
+class MissionSelectMenuMode : public MenuMode {
+  private:
+    unsigned int _area_num;
+  
+  public:
+    MissionSelectMenuMode(unsigned int area_num);
+    void pre_clear(bool top);
     void handle_menu_selection(const std::string& item);
 };
 

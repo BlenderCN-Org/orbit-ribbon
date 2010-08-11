@@ -30,6 +30,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "gloo.h"
 #include "gui.h"
+#include "ore.h"
 
 void MenuMode::add_entry(const std::string& name, const std::string& label) {
   _simple_menu.add_button(name, label);
@@ -67,9 +68,62 @@ void MainMenuMode::pre_clear(bool top __attribute__ ((unused))) {
 
 void MainMenuMode::handle_menu_selection(const std::string& item) {
   if (item == "play") {
-    App::load_mission(1, 1);
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new GameplayMode()));
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new AreaSelectMenuMode()));
   } else if (item == "quit") {
     Globals::mode_stack.next_frame_pop_mode();
+  }
+}
+
+AreaSelectMenuMode::AreaSelectMenuMode() : MenuMode(300, 22, 8) {
+  const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
+  unsigned int n = 1;
+  for (ORE1::PkgDescType::AreaConstIterator i = desc->area().begin(); i != desc->area().end(); ++i) {
+    const std::string n_as_str = boost::lexical_cast<std::string>(n);
+    const ORE1::AreaType* area = &(*i);
+    add_entry(n_as_str, n_as_str + ". " + area->niceName());
+    ++n;
+  }
+  
+  add_entry("back", "Back");
+}
+
+void AreaSelectMenuMode::pre_clear(bool top __attribute__ ((unused))) {
+  glClearColor(0.0, 0.0, 0.0, 0.0);
+}
+
+void AreaSelectMenuMode::handle_menu_selection(const std::string& item) {
+  if (item == "back") {
+    Globals::mode_stack.next_frame_pop_mode();
+  } else {
+    unsigned int area_num = boost::lexical_cast<unsigned int>(item);
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MissionSelectMenuMode(area_num)));
+  }
+}
+
+MissionSelectMenuMode::MissionSelectMenuMode(unsigned int area_num) : MenuMode(450, 22, 8), _area_num(area_num) {
+  const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
+  const ORE1::AreaType* area = &(desc->area().at(area_num-1));
+  unsigned int n = 1;
+  for (ORE1::AreaType::MissionConstIterator i = area->mission().begin(); i != area->mission().end(); ++i) {
+    const std::string n_as_str = boost::lexical_cast<std::string>(n);
+    const ORE1::MissionType* mission = &*i;
+    add_entry(n_as_str, n_as_str + ". " + mission->niceName());
+    ++n;
+  }
+  
+  add_entry("back", "Back");
+}
+
+void MissionSelectMenuMode::pre_clear(bool top __attribute__ ((unused))) {
+  glClearColor(0.0, 0.0, 0.0, 0.0);
+}
+
+void MissionSelectMenuMode::handle_menu_selection(const std::string& item) {
+  if (item == "back") {
+    Globals::mode_stack.next_frame_pop_mode();
+  } else {
+    unsigned int mission_num = boost::lexical_cast<unsigned int>(item);
+    App::load_mission(_area_num, mission_num);
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new GameplayMode()));
   }
 }
