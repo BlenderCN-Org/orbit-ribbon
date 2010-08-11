@@ -223,7 +223,6 @@ void App::run(const std::vector<std::string>& args) {
     if (vm.count("area") and vm.count("mission")) {
       unsigned int area = vm["area"].as<unsigned int>();
       unsigned int mission = vm["mission"].as<unsigned int>();
-      Debug::status_msg("Starting area " + boost::lexical_cast<std::string>(area) + ", mission " + boost::lexical_cast<std::string>(mission));
       load_mission(area, mission);
       Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new GameplayMode()));
     } else if (vm.count("area")) {
@@ -240,17 +239,24 @@ void App::run(const std::vector<std::string>& args) {
   try {
     frame_loop();
   } catch (const GameQuitException& e) {
-    Debug::status_msg(std::string("Program quitting: ") + e.what() + ". Thanks for playing!");
+    Debug::status_msg(std::string("Program quitting: ") + e.what());
   } catch (const std::exception& e) {
     Debug::error_msg(std::string("Uncaught exception during run: ") + e.what());
   }
   
   Saving::save();
   
+  Debug::status_msg("Thanks for playing!");
+  
   // TODO Deinitialize as well as possible here, to reduce possibility of weird error messages on close
 }
 
 void App::load_mission(unsigned int area_num, unsigned int mission_num) {
+  Debug::status_msg(
+    "Loading area " + boost::lexical_cast<std::string>(area_num) +
+    ", mission " + boost::lexical_cast<std::string>(mission_num)
+  );
+  
   const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
   
   const ORE1::AreaType* area = NULL;
