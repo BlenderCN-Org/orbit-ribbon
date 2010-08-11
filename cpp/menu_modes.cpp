@@ -30,7 +30,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "gloo.h"
 #include "gui.h"
+#include "input.h"
 #include "ore.h"
+#include "saving.h"
 
 void MenuMode::add_entry(const std::string& name, const std::string& label) {
   _simple_menu.add_button(name, label);
@@ -40,10 +42,16 @@ MenuMode::MenuMode(int menu_width, int btn_height, int padding) : _simple_menu(m
 
 bool MenuMode::handle_input() {
   _simple_menu.process();
-  std::string item = _simple_menu.get_activated_button();
-  if (item != "") {
-    handle_menu_selection(item);
+  
+  if (Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).matches_frame_events()) {
+    handle_menu_selection("CANCEL");
+  } else {
+    std::string item = _simple_menu.get_activated_button();
+    if (item != "") {
+      handle_menu_selection(item);
+    }
   }
+  
   return true;
 }
 
@@ -69,7 +77,7 @@ void MainMenuMode::pre_clear(bool top __attribute__ ((unused))) {
 void MainMenuMode::handle_menu_selection(const std::string& item) {
   if (item == "play") {
     Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new AreaSelectMenuMode()));
-  } else if (item == "quit") {
+  } else if (item == "quit" or item == "CANCEL") {
     Globals::mode_stack.next_frame_pop_mode();
   }
 }
@@ -92,7 +100,7 @@ void AreaSelectMenuMode::pre_clear(bool top __attribute__ ((unused))) {
 }
 
 void AreaSelectMenuMode::handle_menu_selection(const std::string& item) {
-  if (item == "back") {
+  if (item == "back" or item == "CANCEL") {
     Globals::mode_stack.next_frame_pop_mode();
   } else {
     unsigned int area_num = boost::lexical_cast<unsigned int>(item);
@@ -119,7 +127,7 @@ void MissionSelectMenuMode::pre_clear(bool top __attribute__ ((unused))) {
 }
 
 void MissionSelectMenuMode::handle_menu_selection(const std::string& item) {
-  if (item == "back") {
+  if (item == "back" or item == "CANCEL") {
     Globals::mode_stack.next_frame_pop_mode();
   } else {
     unsigned int mission_num = boost::lexical_cast<unsigned int>(item);
