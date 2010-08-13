@@ -1,99 +1,155 @@
 <xsd:schema
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-	xmlns="http://www.orbit-ribbon.org/ORE1"
-	targetNamespace="http://www.orbit-ribbon.org/ORE1">
-	
-	<xsd:annotation>
-		<xsd:documentation xml:lang="en">
-		Schema for the Orbit Ribbon ORE package description format.
-		
-		Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
-		
-		This file is part of Orbit Ribbon.
-		
-		Orbit Ribbon is free software: you can redistribute it and/or modify
-		it under the terms of the GNU General Public License as published by
-		the Free Software Foundation, either version 3 of the License, or
-		(at your option) any later version.
-		
-		Orbit Ribbon is distributed in the hope that it will be awesome,
-		but WITHOUT ANY WARRANTY; without even the implied warranty of
-		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-		GNU General Public License for more details.
-		
-		You should have received a copy of the GNU General Public License
-		along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
-		</xsd:documentation>
-	</xsd:annotation>
-	
-	<!-- TODO Enforce uniqueness among area numbers, and among mission numbers within an area -->
-	
-	<xsd:element name="pkgDesc" type="PkgDescType" />
-	
-	<xsd:complexType name="PkgDescType">
-		<xsd:sequence>
-			<xsd:element name="niceName" type="xsd:string" />
-			<xsd:element name="created" type="xsd:dateTime" minOccurs="0" />
-			<xsd:element name="area" minOccurs="0" maxOccurs="unbounded" type="AreaType" />
-		</xsd:sequence>
-	</xsd:complexType>
-	
-	<xsd:complexType name="AreaType">
-		<xsd:sequence>
-			<xsd:element name="niceName" type="xsd:string" />
-			<xsd:element name="sky" type="SkySettingsType" />
-			<xsd:element name="mission" minOccurs="0" maxOccurs="unbounded" type="MissionType" />
-			<xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />
-		</xsd:sequence>
-		<xsd:attribute name="n" type="xsd:unsignedInt" use="required" />
-	</xsd:complexType>
-	
-	<xsd:complexType name="SkySettingsType">
-		<xsd:sequence>
-			<xsd:element name="ringAngle" type="xsd:float" />
-			<xsd:element name="ringYOffset" type="xsd:float" />
-			<xsd:element name="ringDOffset" type="xsd:float" />
-			<xsd:element name="tiltAngle" type="xsd:float" />
-			<xsd:element name="tiltX" type="xsd:float" />
-			<xsd:element name="tiltZ" type="xsd:float" />
-			<xsd:element name="t3Angle" type="xsd:float" />
-		</xsd:sequence>
-	</xsd:complexType>
-	
-	<xsd:complexType name="MissionType">
-		<xsd:sequence>
-			<xsd:element name="niceName" type="xsd:string" />
-			<xsd:element name="description" type="xsd:string" />
-			<xsd:element name="winConditionFunc" type="xsd:string" />
-			<xsd:element name="timerStartFunc" type="xsd:string" />
-			<xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />
-		</xsd:sequence>
-		<xsd:attribute name="n" type="xsd:unsignedInt" use="required" />
-	</xsd:complexType>
-	
-	<xsd:complexType name="ObjType">
-		<xsd:sequence>
-			<xsd:element name="pos" type="Coord3DType" />
-			<xsd:element name="rot" type="RotMatrixType" />
-		</xsd:sequence>
-		<xsd:attribute name="objName" type="xsd:string" use="required" />
-		<xsd:attribute name="meshName" type="xsd:string" use="required" />
-	</xsd:complexType>
-	
-	<xsd:simpleType name="FloatListType">
-		<xsd:list itemType="xsd:float" />
-	</xsd:simpleType>
-	
-	<xsd:simpleType name="Coord3DType">
-		<xsd:restriction base="FloatListType">
-			<xsd:length value='3' />
-		</xsd:restriction>
-	</xsd:simpleType>
-	
-	<xsd:simpleType name="RotMatrixType">
-		<xsd:restriction base="FloatListType">
-			<xsd:length value='9' />
-		</xsd:restriction>
-	</xsd:simpleType>
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns="http://www.orbit-ribbon.org/ORE1"
+  targetNamespace="http://www.orbit-ribbon.org/ORE1">
+  
+  <xsd:annotation>
+    <xsd:documentation xml:lang="en">
+    Schema for the Orbit Ribbon ORE package description format.
+    
+    Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+    
+    This file is part of Orbit Ribbon.
+    
+    Orbit Ribbon is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    Orbit Ribbon is distributed in the hope that it will be awesome,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License
+    along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
+    </xsd:documentation>
+  </xsd:annotation>
+  
+  <!-- TODO Enforce uniqueness among area numbers, and among mission numbers within an area -->
+  
+  <xsd:element name="pkgDesc" type="PkgDescType" />
+  
+  <xsd:complexType name="PkgDescType">
+    <xsd:sequence>
+      <xsd:element name="niceName" type="xsd:string" />
+      <xsd:element name="created" type="xsd:dateTime" minOccurs="0" />
+      <xsd:element name="area" minOccurs="0" maxOccurs="unbounded" type="AreaType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="AreaType">
+    <xsd:sequence>
+      <xsd:element name="niceName" type="xsd:string" />
+      <xsd:element name="sky" type="SkySettingsType" />
+      <xsd:element name="mission" minOccurs="0" maxOccurs="unbounded" type="MissionType" />
+      <xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />
+    </xsd:sequence>
+    <xsd:attribute name="n" type="xsd:unsignedInt" use="required" />
+  </xsd:complexType>
+  
+  <xsd:complexType name="SkySettingsType">
+    <xsd:sequence>
+      <xsd:element name="ringAngle" type="xsd:float" />
+      <xsd:element name="ringYOffset" type="xsd:float" />
+      <xsd:element name="ringDOffset" type="xsd:float" />
+      <xsd:element name="tiltAngle" type="xsd:float" />
+      <xsd:element name="tiltX" type="xsd:float" />
+      <xsd:element name="tiltZ" type="xsd:float" />
+      <xsd:element name="t3Angle" type="xsd:float" />
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="MissionType">
+    <xsd:sequence>
+      <xsd:element name="niceName" type="xsd:string" />
+      <xsd:element name="description" type="xsd:string" />
+      <xsd:element name="state" minOccurs="1" maxOccurs="unbounded" type="MissionStateType" />
+      <xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />
+    </xsd:sequence>
+    <xsd:attribute name="n" type="xsd:unsignedInt" use="required" />
+  </xsd:complexType>
+  
+  <xsd:complexType name="MissionStateType">
+    <xsd:sequence>
+      <xsd:element name="set" minOccurs="0" maxOccurs="unbounded" type="MissionSettingType" />
+      <xsd:element name="transition" minOccurs="0" maxOccurs="unbounded" type="MissionStateTransitionType" />
+    </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string" use="required" />
+  </xsd:complexType>
+  
+  <xsd:complexType name="MissionStateTransitionType">
+    <xsd:sequence>
+      <xsd:element name="cond" minOccurs="1" maxOccurs="unbounded" type="MissionConditionType" />
+    </xsd:sequence>
+    <xsd:attribute name="target" type="xsd:string" use="required" />
+  </xsd:complexType>
+  
+  <xsd:complexType name="MissionConditionType">
+    <xsd:attribute name="display" type="xsd:boolean" use="optional" default="false" />
+  </xsd:complexType>
+  
+  <xsd:complexType name="RingsPassedConditionType">
+    <xsd:complexContent>
+      <xsd:extension base="MissionConditionType">
+        <xsd:attribute name="rings" type="xsd:unsignedInt" use="required"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="TimerCountdownConditionType">
+    <xsd:complexContent>
+      <xsd:extension base="MissionConditionType">
+        <xsd:attribute name="seconds" type="xsd:unsignedInt" use="required"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="AvatarMovesConditionType">
+    <xsd:complexContent>
+      <xsd:extension base="MissionConditionType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="MissionSettingType" />
+  
+  <xsd:complexType name="DisplayMessageSettingType">
+    <xsd:complexContent>
+      <xsd:extension base="MissionSettingType">
+        <xsd:attribute name="message" type="xsd:string" use="required"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="StartTimerSettingType">
+    <xsd:complexContent>
+      <xsd:extension base="MissionSettingType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="ObjType">
+    <xsd:sequence>
+      <xsd:element name="pos" type="Coord3DType" />
+      <xsd:element name="rot" type="RotMatrixType" />
+    </xsd:sequence>
+    <xsd:attribute name="objName" type="xsd:string" use="required" />
+    <xsd:attribute name="meshName" type="xsd:string" use="required" />
+  </xsd:complexType>
+  
+  <xsd:simpleType name="FloatListType">
+    <xsd:list itemType="xsd:float" />
+  </xsd:simpleType>
+  
+  <xsd:simpleType name="Coord3DType">
+    <xsd:restriction base="FloatListType">
+      <xsd:length value='3' />
+    </xsd:restriction>
+  </xsd:simpleType>
+  
+  <xsd:simpleType name="RotMatrixType">
+    <xsd:restriction base="FloatListType">
+      <xsd:length value='9' />
+    </xsd:restriction>
+  </xsd:simpleType>
 
 </xsd:schema>

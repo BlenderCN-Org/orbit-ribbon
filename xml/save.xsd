@@ -1,231 +1,231 @@
 <xsd:schema
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-	xmlns="http://www.orbit-ribbon.org/ORSave"
-	targetNamespace="http://www.orbit-ribbon.org/ORSave">
-	
-	<xsd:annotation>
-		<xsd:documentation xml:lang="en">
-		Schema for the Orbit Ribbon save/config file format.
-		
-		Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
-		
-		This file is part of Orbit Ribbon.
-		
-		Orbit Ribbon is free software: you can redistribute it and/or modify
-		it under the terms of the GNU General Public License as published by
-		the Free Software Foundation, either version 3 of the License, or
-		(at your option) any later version.
-		
-		Orbit Ribbon is distributed in the hope that it will be awesome,
-		but WITHOUT ANY WARRANTY; without even the implied warranty of
-		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-		GNU General Public License for more details.
-		
-		You should have received a copy of the GNU General Public License
-		along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
-		</xsd:documentation>
-	</xsd:annotation>
-	
-	<!-- TODO Enforce uniqueness among ore file names in ProgressType and actions in BindingMapType -->
-	<!-- TODO Enforce that KeyInputTypes can only appear under Keyboard, and Gamepad*InputType under Gamepad -->
-	<!-- TODO Disallow UIX, UIY, Confirm, Cancel, ResetNeutral from appearing under Keyboard input device types, their kbd mappings are fixed -->
-	<!-- TODO Disallow ForceQuit from appearing anywhere, it's mapping is fixed to be only F4 -->
-	
-	<xsd:element name="save" type="SaveType" />
-	<xsd:element name="presets" type="PresetListType" />
-	
-	<xsd:complexType name="SaveType">
-		<xsd:sequence>
-			<xsd:element name="config" type="ConfigType" />
-			<xsd:element name="progress" type="ProgressType" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
-	</xsd:complexType>
-	
-	<xsd:complexType name="PresetListType">
-		<xsd:sequence>
-			<xsd:element name="preset" type="PresetType" maxOccurs="unbounded" />
-		</xsd:sequence>
-	</xsd:complexType>
-	
-	<xsd:complexType name="PresetType">
-		<xsd:sequence>
-			<xsd:element name="presetName" type="xsd:string" />
-			<xsd:element name="deviceMatchString" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
-			<xsd:element name="inputDevice" type="InputDeviceType" />
-		</xsd:sequence>
-	</xsd:complexType>
-	
-	<xsd:complexType name="ConfigType">
-		<xsd:sequence>
-			<xsd:element name="lastOre" type="xsd:string" minOccurs="0" />
-			<xsd:element name="screenWidth" type="xsd:unsignedInt" minOccurs="0" />
-			<xsd:element name="screenHeight" type="xsd:unsignedInt" minOccurs="0" />
-			<xsd:element name="showFps" type="xsd:boolean" minOccurs="0" />
-			<xsd:element name="fullScreen" type="xsd:boolean" minOccurs="0" />
-			<xsd:element name="vSync" type="xsd:boolean" minOccurs="0" />
-			<xsd:element name="debugPhysics" type="xsd:boolean" minOccurs="0" />
-			<xsd:element name="soundEffectVolume" type="xsd:float" minOccurs="0" />
-			<xsd:element name="musicVolume" type="xsd:float" minOccurs="0" />
-			<xsd:element name="mouseSensitivity" type="xsd:float" minOccurs="0" />
-			<xsd:element name="invertTranslateY" type="xsd:boolean" minOccurs="0" />
-			<xsd:element name="invertRotateY" type="xsd:boolean" minOccurs="0" />
-			<xsd:element name="inputDevice" type="InputDeviceType" minOccurs="0" maxOccurs="unbounded"/>
-		</xsd:sequence>
-	</xsd:complexType>
-	
-	<xsd:complexType name="InputDeviceType">
-		<xsd:sequence>
-			<xsd:element name="axis_bind" type="AxisBindType" minOccurs="0" maxOccurs="unbounded" />
-			<xsd:element name="button_bind" type="ButtonBindType" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
-		<xsd:attribute name="device" type="InputDeviceNameType" use="required" />
-	</xsd:complexType>
-	
-	<xsd:complexType name="BoundInputType" />
-	
-	<xsd:complexType name="AxisBindType">
-		<xsd:sequence>
-			<xsd:element name="input" type="AxisBoundInputType" />
-		</xsd:sequence>
-		<xsd:attribute name="action" type="AxisBoundAction" use="required" />
-	</xsd:complexType>
-	
-	<xsd:simpleType name="AxisBoundAction">
-		<xsd:restriction base="xsd:string">
-			<xsd:enumeration value="TranslateX" />
-			<xsd:enumeration value="TranslateY" />
-			<xsd:enumeration value="TranslateZ" />
-			<xsd:enumeration value="RotateX" />
-			<xsd:enumeration value="RotateY" />
-			<xsd:enumeration value="RotateZ" />
-			<xsd:enumeration value="UIX" />
-			<xsd:enumeration value="UIY" />
-		</xsd:restriction>
-	</xsd:simpleType>
-	
-	<xsd:complexType name="AxisBoundInputType">
-		<xsd:complexContent>
-			<xsd:extension base="BoundInputType" />
-		</xsd:complexContent>
-	</xsd:complexType>
-	
-	<xsd:complexType name="ButtonBindType">
-		<xsd:sequence>
-			<xsd:element name="input" type="ButtonBoundInputType" />
-		</xsd:sequence>
-		<xsd:attribute name="action" type="ButtonBoundAction" use="required" />
-	</xsd:complexType>
-	
-	<xsd:simpleType name="ButtonBoundAction">
-		<xsd:restriction base="xsd:string">
-			<xsd:enumeration value="Pause" />
-			<xsd:enumeration value="ForceQuit" />
-			<xsd:enumeration value="ResetNeutral" />
-			<xsd:enumeration value="Confirm" />
-			<xsd:enumeration value="Cancel" />
-		</xsd:restriction>
-	</xsd:simpleType>
-	
-	<xsd:complexType name="ButtonBoundInputType">
-		<xsd:complexContent>
-			<xsd:extension base="BoundInputType" />
-		</xsd:complexContent>
-	</xsd:complexType>
-	
-	<xsd:complexType name="KeyInputType">
-		<xsd:complexContent>
-			<xsd:extension base="ButtonBoundInputType">
-				<xsd:attribute name="key" type="xsd:unsignedInt" use="required" />
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-	
-	<xsd:complexType name="MouseButtonInputType">
-		<xsd:complexContent>
-			<xsd:extension base="ButtonBoundInputType">
-				<xsd:attribute name="buttonNum" type="xsd:unsignedInt" use="required" />
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-	
-	<xsd:complexType name="MouseMovementInputType">
-		<xsd:complexContent>
-			<xsd:extension base="AxisBoundInputType">
-				<xsd:attribute name="axisNum" type="xsd:unsignedInt" use="required" />
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-	
-	<xsd:complexType name="GamepadAxisInputType">
-		<xsd:complexContent>
-			<xsd:extension base="AxisBoundInputType">
-				<xsd:attribute name="gamepadNum" type="xsd:unsignedInt" use="required" />
-				<xsd:attribute name="axisNum" type="xsd:unsignedInt" use="required" />
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-	
-	<xsd:complexType name="GamepadButtonInputType">
-		<xsd:complexContent>
-			<xsd:extension base="ButtonBoundInputType">
-				<xsd:attribute name="gamepadNum" type="xsd:unsignedInt" use="required" />
-				<xsd:attribute name="buttonNum" type="xsd:unsignedInt" use="required" />
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-	
-	<xsd:complexType name="PseudoAxisInputType">
-		<xsd:complexContent>
-			<xsd:extension base="AxisBoundInputType">
-				<xsd:sequence>
-					<xsd:element name="negative" type="BoundInputType" />
-					<xsd:element name="positive" type="BoundInputType" />
-				</xsd:sequence>
-				<xsd:attribute name="posInvert" type="xsd:boolean" use="required" />
-				<xsd:attribute name="negInvert" type="xsd:boolean" use="required" />
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-	
-	<xsd:complexType name="PseudoButtonInputType">
-		<xsd:complexContent>
-			<xsd:extension base="ButtonBoundInputType">
-				<xsd:sequence>
-					<xsd:element name="axis" type="AxisBoundInputType" />
-				</xsd:sequence>
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-	
-	<xsd:complexType name="LogicalAndInputType">
-		<xsd:complexContent>
-			<xsd:extension base="ButtonBoundInputType">
-				<xsd:sequence>
-					<xsd:element name="input" type="BoundInputType" minOccurs="1" maxOccurs="unbounded" />
-				</xsd:sequence>
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-	
-	<xsd:simpleType name="InputDeviceNameType">
-		<xsd:restriction base="xsd:string">
-			<xsd:enumeration value="Keyboard" />
-			<xsd:enumeration value="Mouse" />
-			<xsd:enumeration value="Gamepad" />
-		</xsd:restriction>
-	</xsd:simpleType>
-	
-	<xsd:complexType name="ProgressType">
-		<xsd:sequence>
-			<xsd:element name="completion" type="CompletionType" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
-		<xsd:attribute name="ore" type="xsd:string" use="required" />
-	</xsd:complexType>
-	
-	<xsd:complexType name="CompletionType">
-		<xsd:attribute name="area" type="xsd:unsignedInt" use="required" />
-		<xsd:attribute name="mission" type="xsd:unsignedInt" use="required" />
-		<xsd:attribute name="highScore" type="xsd:unsignedInt" use="required" />
-	</xsd:complexType>
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns="http://www.orbit-ribbon.org/ORSave"
+  targetNamespace="http://www.orbit-ribbon.org/ORSave">
+  
+  <xsd:annotation>
+    <xsd:documentation xml:lang="en">
+    Schema for the Orbit Ribbon save/config file format.
+    
+    Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+    
+    This file is part of Orbit Ribbon.
+    
+    Orbit Ribbon is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    Orbit Ribbon is distributed in the hope that it will be awesome,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License
+    along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
+    </xsd:documentation>
+  </xsd:annotation>
+  
+  <!-- TODO Enforce uniqueness among ore file names in ProgressType and actions in BindingMapType -->
+  <!-- TODO Enforce that KeyInputTypes can only appear under Keyboard, and Gamepad*InputType under Gamepad -->
+  <!-- TODO Disallow UIX, UIY, Confirm, Cancel, ResetNeutral from appearing under Keyboard input device types, their kbd mappings are fixed -->
+  <!-- TODO Disallow ForceQuit from appearing anywhere, it's mapping is fixed to be only F4 -->
+  
+  <xsd:element name="save" type="SaveType" />
+  <xsd:element name="presets" type="PresetListType" />
+  
+  <xsd:complexType name="SaveType">
+    <xsd:sequence>
+      <xsd:element name="config" type="ConfigType" />
+      <xsd:element name="progress" type="ProgressType" minOccurs="0" maxOccurs="unbounded" />
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="PresetListType">
+    <xsd:sequence>
+      <xsd:element name="preset" type="PresetType" maxOccurs="unbounded" />
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="PresetType">
+    <xsd:sequence>
+      <xsd:element name="presetName" type="xsd:string" />
+      <xsd:element name="deviceMatchString" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
+      <xsd:element name="inputDevice" type="InputDeviceType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="ConfigType">
+    <xsd:sequence>
+      <xsd:element name="lastOre" type="xsd:string" minOccurs="0" />
+      <xsd:element name="screenWidth" type="xsd:unsignedInt" minOccurs="0" />
+      <xsd:element name="screenHeight" type="xsd:unsignedInt" minOccurs="0" />
+      <xsd:element name="showFps" type="xsd:boolean" minOccurs="0" />
+      <xsd:element name="fullScreen" type="xsd:boolean" minOccurs="0" />
+      <xsd:element name="vSync" type="xsd:boolean" minOccurs="0" />
+      <xsd:element name="debugPhysics" type="xsd:boolean" minOccurs="0" />
+      <xsd:element name="soundEffectVolume" type="xsd:float" minOccurs="0" />
+      <xsd:element name="musicVolume" type="xsd:float" minOccurs="0" />
+      <xsd:element name="mouseSensitivity" type="xsd:float" minOccurs="0" />
+      <xsd:element name="invertTranslateY" type="xsd:boolean" minOccurs="0" />
+      <xsd:element name="invertRotateY" type="xsd:boolean" minOccurs="0" />
+      <xsd:element name="inputDevice" type="InputDeviceType" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:complexType name="InputDeviceType">
+    <xsd:sequence>
+      <xsd:element name="axis_bind" type="AxisBindType" minOccurs="0" maxOccurs="unbounded" />
+      <xsd:element name="button_bind" type="ButtonBindType" minOccurs="0" maxOccurs="unbounded" />
+    </xsd:sequence>
+    <xsd:attribute name="device" type="InputDeviceNameType" use="required" />
+  </xsd:complexType>
+  
+  <xsd:complexType name="BoundInputType" />
+  
+  <xsd:complexType name="AxisBindType">
+    <xsd:sequence>
+      <xsd:element name="input" type="AxisBoundInputType" />
+    </xsd:sequence>
+    <xsd:attribute name="action" type="AxisBoundAction" use="required" />
+  </xsd:complexType>
+  
+  <xsd:simpleType name="AxisBoundAction">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="TranslateX" />
+      <xsd:enumeration value="TranslateY" />
+      <xsd:enumeration value="TranslateZ" />
+      <xsd:enumeration value="RotateX" />
+      <xsd:enumeration value="RotateY" />
+      <xsd:enumeration value="RotateZ" />
+      <xsd:enumeration value="UIX" />
+      <xsd:enumeration value="UIY" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  
+  <xsd:complexType name="AxisBoundInputType">
+    <xsd:complexContent>
+      <xsd:extension base="BoundInputType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="ButtonBindType">
+    <xsd:sequence>
+      <xsd:element name="input" type="ButtonBoundInputType" />
+    </xsd:sequence>
+    <xsd:attribute name="action" type="ButtonBoundAction" use="required" />
+  </xsd:complexType>
+  
+  <xsd:simpleType name="ButtonBoundAction">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Pause" />
+      <xsd:enumeration value="ForceQuit" />
+      <xsd:enumeration value="ResetNeutral" />
+      <xsd:enumeration value="Confirm" />
+      <xsd:enumeration value="Cancel" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  
+  <xsd:complexType name="ButtonBoundInputType">
+    <xsd:complexContent>
+      <xsd:extension base="BoundInputType" />
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="KeyInputType">
+    <xsd:complexContent>
+      <xsd:extension base="ButtonBoundInputType">
+        <xsd:attribute name="key" type="xsd:unsignedInt" use="required" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="MouseButtonInputType">
+    <xsd:complexContent>
+      <xsd:extension base="ButtonBoundInputType">
+        <xsd:attribute name="buttonNum" type="xsd:unsignedInt" use="required" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="MouseMovementInputType">
+    <xsd:complexContent>
+      <xsd:extension base="AxisBoundInputType">
+        <xsd:attribute name="axisNum" type="xsd:unsignedInt" use="required" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="GamepadAxisInputType">
+    <xsd:complexContent>
+      <xsd:extension base="AxisBoundInputType">
+        <xsd:attribute name="gamepadNum" type="xsd:unsignedInt" use="required" />
+        <xsd:attribute name="axisNum" type="xsd:unsignedInt" use="required" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="GamepadButtonInputType">
+    <xsd:complexContent>
+      <xsd:extension base="ButtonBoundInputType">
+        <xsd:attribute name="gamepadNum" type="xsd:unsignedInt" use="required" />
+        <xsd:attribute name="buttonNum" type="xsd:unsignedInt" use="required" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="PseudoAxisInputType">
+    <xsd:complexContent>
+      <xsd:extension base="AxisBoundInputType">
+        <xsd:sequence>
+          <xsd:element name="negative" type="BoundInputType" />
+          <xsd:element name="positive" type="BoundInputType" />
+        </xsd:sequence>
+        <xsd:attribute name="posInvert" type="xsd:boolean" use="required" />
+        <xsd:attribute name="negInvert" type="xsd:boolean" use="required" />
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="PseudoButtonInputType">
+    <xsd:complexContent>
+      <xsd:extension base="ButtonBoundInputType">
+        <xsd:sequence>
+          <xsd:element name="axis" type="AxisBoundInputType" />
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:complexType name="LogicalAndInputType">
+    <xsd:complexContent>
+      <xsd:extension base="ButtonBoundInputType">
+        <xsd:sequence>
+          <xsd:element name="input" type="BoundInputType" minOccurs="1" maxOccurs="unbounded" />
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  
+  <xsd:simpleType name="InputDeviceNameType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="Keyboard" />
+      <xsd:enumeration value="Mouse" />
+      <xsd:enumeration value="Gamepad" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  
+  <xsd:complexType name="ProgressType">
+    <xsd:sequence>
+      <xsd:element name="completion" type="CompletionType" minOccurs="0" maxOccurs="unbounded" />
+    </xsd:sequence>
+    <xsd:attribute name="ore" type="xsd:string" use="required" />
+  </xsd:complexType>
+  
+  <xsd:complexType name="CompletionType">
+    <xsd:attribute name="area" type="xsd:unsignedInt" use="required" />
+    <xsd:attribute name="mission" type="xsd:unsignedInt" use="required" />
+    <xsd:attribute name="highScore" type="xsd:unsignedInt" use="required" />
+  </xsd:complexType>
 
 </xsd:schema>

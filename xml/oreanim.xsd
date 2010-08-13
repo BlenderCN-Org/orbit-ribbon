@@ -1,82 +1,82 @@
 <xsd:schema
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-	xmlns="http://www.orbit-ribbon.org/ORE1"
-	targetNamespace="http://www.orbit-ribbon.org/ORE1">
-	
-	<xsd:annotation>
-		<xsd:documentation xml:lang="en">
-		Schema for the Orbit Ribbon ORE mesh animation format.
-		
-		Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
-		
-		This file is part of Orbit Ribbon.
-		
-		Orbit Ribbon is free software: you can redistribute it and/or modify
-		it under the terms of the GNU General Public License as published by
-		the Free Software Foundation, either version 3 of the License, or
-		(at your option) any later version.
-		
-		Orbit Ribbon is distributed in the hope that it will be awesome,
-		but WITHOUT ANY WARRANTY; without even the implied warranty of
-		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-		GNU General Public License for more details.
-		
-		You should have received a copy of the GNU General Public License
-		along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
-		</xsd:documentation>
-	</xsd:annotation>
-	
-	<xsd:element name="animation" type="AnimationType" />
-	
-	<xsd:complexType name="AnimationType">
-		<xsd:sequence>
-			<xsd:element name="frame" minOccurs="1" maxOccurs="unbounded" type="MeshType" />
-		</xsd:sequence>
-		<xsd:attribute name="name" type="xsd:string" use="required" />
-	</xsd:complexType>
-	
-	<xsd:complexType name="MeshType">
-		<xsd:sequence>
-			<xsd:element name="f" type="FaceType" minOccurs="0" maxOccurs="unbounded" />
-			<xsd:element name="v" type="VertexType" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
-		<xsd:attribute name="texture" type="xsd:string" use="optional" />
-		<xsd:attribute name="vertcount" type="xsd:unsignedInt" use="required" />
-		<xsd:attribute name="facecount" type="xsd:unsignedInt" use="required" />
-	</xsd:complexType>
-	
-	<xsd:simpleType name="FaceType">
-		<xsd:restriction base="IntListType">
-			<xsd:length value='3' />
-		</xsd:restriction>
-	</xsd:simpleType>
-	
-	<xsd:complexType name="VertexType">
-		<xsd:sequence>
-			<xsd:element name="p" type="Coord3DType" />
-			<xsd:element name="n" type="Coord3DType" />
-			<xsd:element name="t" type="Coord2DType" />
-		</xsd:sequence>
-	</xsd:complexType>
-	
-	<xsd:simpleType name="IntListType">
-		<xsd:list itemType="xsd:unsignedInt" />
-	</xsd:simpleType>
-	
-	<xsd:simpleType name="FloatListType">
-		<xsd:list itemType="xsd:float" />
-	</xsd:simpleType>
-	
-	<xsd:simpleType name="Coord3DType">
-		<xsd:restriction base="FloatListType">
-			<xsd:length value='3' />
-		</xsd:restriction>
-	</xsd:simpleType>
-	
-	<xsd:simpleType name="Coord2DType">
-		<xsd:restriction base="FloatListType">
-			<xsd:length value='2' />
-		</xsd:restriction>
-	</xsd:simpleType>
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns="http://www.orbit-ribbon.org/ORE1"
+  targetNamespace="http://www.orbit-ribbon.org/ORE1">
+  
+  <xsd:annotation>
+    <xsd:documentation xml:lang="en">
+    Schema for the Orbit Ribbon ORE mesh animation format.
+    
+    Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+    
+    This file is part of Orbit Ribbon.
+    
+    Orbit Ribbon is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    Orbit Ribbon is distributed in the hope that it will be awesome,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License
+    along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
+    </xsd:documentation>
+  </xsd:annotation>
+  
+  <xsd:element name="animation" type="AnimationType" />
+  
+  <xsd:complexType name="AnimationType">
+    <xsd:sequence>
+      <xsd:element name="frame" minOccurs="1" maxOccurs="unbounded" type="MeshType" />
+    </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string" use="required" />
+  </xsd:complexType>
+  
+  <xsd:complexType name="MeshType">
+    <xsd:sequence>
+      <xsd:element name="f" type="FaceType" minOccurs="0" maxOccurs="unbounded" />
+      <xsd:element name="v" type="VertexType" minOccurs="0" maxOccurs="unbounded" />
+    </xsd:sequence>
+    <xsd:attribute name="texture" type="xsd:string" use="optional" />
+    <xsd:attribute name="vertcount" type="xsd:unsignedInt" use="required" />
+    <xsd:attribute name="facecount" type="xsd:unsignedInt" use="required" />
+  </xsd:complexType>
+  
+  <xsd:simpleType name="FaceType">
+    <xsd:restriction base="IntListType">
+      <xsd:length value='3' />
+    </xsd:restriction>
+  </xsd:simpleType>
+  
+  <xsd:complexType name="VertexType">
+    <xsd:sequence>
+      <xsd:element name="p" type="Coord3DType" />
+      <xsd:element name="n" type="Coord3DType" />
+      <xsd:element name="t" type="Coord2DType" />
+    </xsd:sequence>
+  </xsd:complexType>
+  
+  <xsd:simpleType name="IntListType">
+    <xsd:list itemType="xsd:unsignedInt" />
+  </xsd:simpleType>
+  
+  <xsd:simpleType name="FloatListType">
+    <xsd:list itemType="xsd:float" />
+  </xsd:simpleType>
+  
+  <xsd:simpleType name="Coord3DType">
+    <xsd:restriction base="FloatListType">
+      <xsd:length value='3' />
+    </xsd:restriction>
+  </xsd:simpleType>
+  
+  <xsd:simpleType name="Coord2DType">
+    <xsd:restriction base="FloatListType">
+      <xsd:length value='2' />
+    </xsd:restriction>
+  </xsd:simpleType>
 
 </xsd:schema>
