@@ -28,6 +28,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "mode.h"
 #include "ore.h"
 #include "mouse_cursor.h"
+#include "autoxsd/orepkgdesc.h"
 #include "autoxsd/save.h"
 
 std::vector<SDL_Event> Globals::frame_events;
@@ -38,3 +39,5 @@ boost::scoped_ptr<Background> Globals::bg;
 boost::scoped_ptr<GLOOFont> Globals::sys_font;
 boost::scoped_ptr<OrePackage> Globals::ore;
 boost::scoped_ptr<MouseCursor> Globals::mouse_cursor;
+const ORE1::AreaType* Globals::current_area = NULL;
+const ORE1::MissionType* Globals::current_mission = NULL;

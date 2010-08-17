@@ -42,6 +42,8 @@ class GLOOTexture;
 class OrePackage;
 class MouseCursor;
 
+namespace ORE1 { class AreaType; class MissionType; }
+
 typedef std::map<std::string, boost::shared_ptr<GameObj> > GOMap;
 
 class Globals {
@@ -54,6 +56,8 @@ class Globals {
     static boost::scoped_ptr<GLOOFont> sys_font;
     static boost::scoped_ptr<OrePackage> ore;
     static boost::scoped_ptr<MouseCursor> mouse_cursor;
+    static const ORE1::AreaType* current_area;
+    static const ORE1::MissionType* current_mission;
 };
 
 #endif

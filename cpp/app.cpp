@@ -295,4 +295,7 @@ void App::load_mission(unsigned int area_num, unsigned int mission_num) {
   }
   
   Globals::bg.reset(new Background(SkySettings(area->sky())));
+  
+  Globals::current_area = area;
+  Globals::current_mission = mission;
 }

@@ -52,7 +52,7 @@ const std::string PHYS_DEBUG_BOX_NUMFMT("%+5.3f");
 const float PHYS_DEBUG_BOX_FONTSIZE = 15;
 const float PHYS_DEBUG_BOX_COLL_WINDOW = MAX_FPS*2;
 
-GameplayMode::GameplayMode() {
+GameplayMode::GameplayMode() : _fsm(*Globals::current_mission) {
   // Locate the avatar object
   for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
     GOMap::size_type idx = i->first.find("LIBAvatar");

@@ -24,11 +24,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_GAMEPLAY_MODE_H
 
 #include "mode.h"
+#include "mission_fsm.h"
 
 class AvatarGameObj;
 
 class GameplayMode : public Mode {
   private:
+    MissionFSM _fsm;
     std::string _avatar_key;
     
     AvatarGameObj* find_avatar();

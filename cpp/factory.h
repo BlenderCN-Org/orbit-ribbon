@@ -77,7 +77,7 @@ template<class FactorySpec> class Factory {
       if (i != _generator_map.end()) {
         return i->second->create(source);
       } else {
-        throw GameException("Could not generate object for " + name);
+        throw GameException("No implementation for " + name + " under FactorySpec " + typeid(FactorySpec).name());
       }
     }
 };
