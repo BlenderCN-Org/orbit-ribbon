@@ -72,7 +72,7 @@
   
   <xsd:complexType name="MissionStateType">
     <xsd:sequence>
-      <xsd:element name="set" minOccurs="0" maxOccurs="unbounded" type="MissionSettingType" />
+      <xsd:element name="effect" minOccurs="0" maxOccurs="unbounded" type="MissionEffectType" />
       <xsd:element name="transition" minOccurs="0" maxOccurs="unbounded" type="MissionStateTransitionType" />
     </xsd:sequence>
     <xsd:attribute name="name" type="xsd:string" use="required" />
@@ -111,19 +111,19 @@
     </xsd:complexContent>
   </xsd:complexType>
   
-  <xsd:complexType name="MissionSettingType" />
+  <xsd:complexType name="MissionEffectType" />
   
-  <xsd:complexType name="DisplayMessageSettingType">
+  <xsd:complexType name="DisplayMessageEffectType">
     <xsd:complexContent>
-      <xsd:extension base="MissionSettingType">
+      <xsd:extension base="MissionEffectType">
         <xsd:attribute name="message" type="xsd:string" use="required"/>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
   
-  <xsd:complexType name="StartTimerSettingType">
+  <xsd:complexType name="StartTimerEffectType">
     <xsd:complexContent>
-      <xsd:extension base="MissionSettingType" />
+      <xsd:extension base="MissionEffectType" />
     </xsd:complexContent>
   </xsd:complexType>
   

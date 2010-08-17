@@ -631,7 +631,7 @@ void Input::set_neutral() {
 boost::shared_ptr<Channel> Input::xml_to_channel(const ORSave::BoundInputType& i) {
   boost::shared_ptr<Channel> chn;
   
-  // Oi, this is bad use of polymorphism, but there's no other good way I can see to do it
+  // TODO: Use Factory for this instead, following the polymorphism-detecting pattern in mission_fsm
   if (typeid(i) == typeid(ORSave::KeyInputType)) {
     chn = _kbd->key_channel(
       SDLKey(static_cast<const ORSave::KeyInputType*>(&i)->key())

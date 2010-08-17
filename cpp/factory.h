@@ -27,6 +27,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <map>
 #include <memory>
 #include <utility>
+#include <typeinfo>
 
 #include "except.h"
 
@@ -35,7 +36,7 @@ template<class BaseType, class SourceType> class FactorySpecBase {
     typedef BaseType base_type;
     typedef SourceType source_type;
     
-    virtual std::string extract_name(const SourceType& source) =0;
+    virtual std::string extract_name(const SourceType& source) { return typeid(source).name(); }
 };
 
 template<class FactorySpec> class Generator {
