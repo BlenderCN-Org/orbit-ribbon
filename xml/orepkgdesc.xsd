@@ -80,7 +80,7 @@
   
   <xsd:complexType name="MissionStateTransitionType">
     <xsd:sequence>
-      <xsd:element name="cond" minOccurs="1" maxOccurs="unbounded" type="MissionConditionType" />
+      <xsd:element name="cond" minOccurs="0" maxOccurs="unbounded" type="MissionConditionType" />
     </xsd:sequence>
     <xsd:attribute name="target" type="xsd:string" use="required" />
   </xsd:complexType>
