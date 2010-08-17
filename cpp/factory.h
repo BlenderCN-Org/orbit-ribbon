@@ -99,4 +99,6 @@ template<class FactorySpec, class C> class AutoRegistration {
     }
 };
 
+template<class FactorySpec, class C> class AutoDefaultRegistration : public AutoRegistration<FactorySpec, C> {};
+
 #endif
