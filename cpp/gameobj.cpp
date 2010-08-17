@@ -193,22 +193,11 @@ Vector GameObj::vector_from_world(const Vector& v) const {
   return Vector(res);
 }
 
-bool GOFactoryRegistry::_initialized;
-GOFactoryRegistry::_Factories* GOFactoryRegistry::_factories;
-
-boost::shared_ptr<GameObj> GOFactoryRegistry::create(const ORE1::ObjType& obj) {
+std::string GameObjFactorySpec::extract_name(const ORE1::ObjType& source) {
   static const boost::regex e("LIB(.+?)(?:\\.\\d+)?");
-  
-  init();
   boost::smatch m;
-  if (boost::regex_match(obj.meshName(), m, e)) {
-    std::map<std::string, boost::shared_ptr<GOFactory> >::iterator i = _factories->_factory_map.find(m[1]);
-    if (i != _factories->_factory_map.end()) {
-      return i->second->create(obj);
-    }
+  if (boost::regex_match(source.meshName(), m, e)) {
+    return m[1];
   }
-  if (!_factories->_default_factory) {
-    throw GameException("No GameObj default factory registered!");
-  }
-  return _factories->_default_factory->create(obj);
+  return "";
 }

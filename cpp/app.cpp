@@ -288,10 +288,10 @@ void App::load_mission(unsigned int area_num, unsigned int mission_num) {
   // Okay, we're now sure we have the area and mission we want. Let's load all the objects.
   Globals::gameobjs.clear();
   for (ORE1::AreaType::ObjConstIterator i = area->obj().begin(); i != area->obj().end(); ++i) {
-    Globals::gameobjs.insert(GOMap::value_type(i->objName(), GOFactoryRegistry::create(*i)));
+    Globals::gameobjs.insert(GOMap::value_type(i->objName(), get_factory<GameObjFactorySpec>().create(*i)));
   }
   for (ORE1::MissionType::ObjConstIterator i = mission->obj().begin(); i != mission->obj().end(); ++i) {
-    Globals::gameobjs.insert(GOMap::value_type(i->objName(), GOFactoryRegistry::create(*i)));
+    Globals::gameobjs.insert(GOMap::value_type(i->objName(), get_factory<GameObjFactorySpec>().create(*i)));
   }
   
   Globals::bg.reset(new Background(SkySettings(area->sky())));

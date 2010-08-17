@@ -31,12 +31,15 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "avatar.h"
 #include "constants.h"
 #include "debug.h"
+#include "factory.h"
 #include "geometry.h"
 #include "globals.h"
 #include "input.h"
 #include "mesh.h"
 #include "saving.h"
 #include "sim.h"
+
+AutoRegistration<GameObjFactorySpec, AvatarGameObj> avatar_gameobj_reg("Avatar");
 
 // Maximum amount of Newtons per second applied by various maneuvers
 const float MAX_STRAFE = 15000.0;
@@ -58,8 +61,6 @@ const float DETACH_GRACE_PERIOD_TIME = 0.05;
 const float DETACH_GRACE_PERIOD_TIME_STEPS = DETACH_GRACE_PERIOD_TIME*MAX_FPS;
 const float DETACH_GRACE_PERIOD_RADIUS = 0.1;
 const float DETACH_GRACE_PERIOD_RADIUS_SQ = DETACH_GRACE_PERIOD_RADIUS * DETACH_GRACE_PERIOD_RADIUS;
-
-GOAutoRegistration<AvatarGameObj> avatar_gameobj_reg("Avatar");
 
 void AvatarGameObj::update_geom_offsets() {
   // Update the orientation of our physical geom to match _uprightness
