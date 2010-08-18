@@ -21,3 +21,22 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
 #include "mission_effects.h"
+#include "autoxsd/orepkgdesc.h"
+
+AutoRegistrationBySourceTypename<
+  MissionEffectFactorySpec,
+  DisplayMessageEffect,
+  ORE1::DisplayMessageEffectType
+> display_message_effect_reg;
+
+DisplayMessageEffect::DisplayMessageEffect(const ORE1::DisplayMessageEffectType& effect) : MissionEffect(effect) {
+}
+
+AutoRegistrationBySourceTypename<
+  MissionEffectFactorySpec,
+  StartTimerEffect,
+  ORE1::StartTimerEffectType
+> start_timer_effect_reg;
+
+StartTimerEffect::StartTimerEffect(const ORE1::StartTimerEffectType& effect) : MissionEffect(effect) {
+}

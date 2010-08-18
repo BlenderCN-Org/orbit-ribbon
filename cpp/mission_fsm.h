@@ -40,8 +40,10 @@ namespace ORE1 {
 
 class MissionEffect {
   public:
+    MissionEffect(const ORE1::MissionEffectType& effect);
+    
     virtual void entering_state() {}
-    virtual void process_frame() {}
+    virtual void step() {}
     virtual void exiting_state() {}
     virtual void draw() {}
 };
@@ -57,7 +59,7 @@ class MissionStateTransitionCondition {
     virtual void draw_impl() {}
   
   public:
-    MissionStateTransitionCondition(bool display) : _display(display) {}
+    MissionStateTransitionCondition(const ORE1::MissionConditionType& condition);
     virtual bool is_true() =0;
     void draw() { if (_display) draw_impl(); }
 };
@@ -91,7 +93,7 @@ class MissionState {
     std::string get_transition();
     
     virtual void entering_state();
-    virtual void process_frame();
+    virtual void step();
     virtual void exiting_state();
     virtual void draw();
 };
@@ -106,7 +108,7 @@ class MissionFSM {
   
   public:
     MissionFSM(const ORE1::MissionType& mission);
-    void process_frame();
+    void step();
     void draw();
 };
 

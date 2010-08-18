@@ -21,3 +21,49 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
 #include "mission_transition_conditions.h"
+#include "autoxsd/orepkgdesc.h"
+
+AutoRegistrationBySourceTypename<
+  MissionStateTransitionConditionFactorySpec,
+  RingsPassedCondition,
+  ORE1::RingsPassedConditionType
+> rings_passed_condition_reg;
+
+RingsPassedCondition::RingsPassedCondition(const ORE1::RingsPassedConditionType& condition) :
+  MissionStateTransitionCondition(condition)
+{
+}
+
+bool RingsPassedCondition::is_true() {
+  return false;
+}
+
+AutoRegistrationBySourceTypename<
+  MissionStateTransitionConditionFactorySpec,
+  TimerCountdownCondition,
+  ORE1::TimerCountdownConditionType
+> timer_countdown_condition_reg;
+
+TimerCountdownCondition::TimerCountdownCondition(const ORE1::TimerCountdownConditionType& condition) :
+  MissionStateTransitionCondition(condition)
+{
+}
+
+bool TimerCountdownCondition::is_true() {
+  return false;
+}
+
+AutoRegistrationBySourceTypename<
+  MissionStateTransitionConditionFactorySpec,
+  AvatarMovesCondition,
+  ORE1::AvatarMovesConditionType
+> avatar_moves_condition_reg;
+
+AvatarMovesCondition::AvatarMovesCondition(const ORE1::AvatarMovesConditionType& condition) :
+  MissionStateTransitionCondition(condition)
+{
+}
+
+bool AvatarMovesCondition::is_true() {
+  return false;
+}

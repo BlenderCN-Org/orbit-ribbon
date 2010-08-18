@@ -51,6 +51,13 @@ template<class FactorySpec, class C> class AutoGenerator : public Generator<Fact
     }
 };
 
+template<class FactorySpec, class C, class S> class AutoCastingGenerator : public Generator<FactorySpec> {
+  public:
+    virtual boost::shared_ptr<typename FactorySpec::base_type> create(const typename FactorySpec::source_type& source) {
+      return boost::shared_ptr<typename FactorySpec::base_type>(new C(static_cast<const S&>(source)));
+    }
+};
+
 template<class FactorySpec> class Factory {
   public:  
     // The entry with the key "" is special: it's the default, used if no more specific generator could be found
@@ -94,12 +101,20 @@ template<class FactorySpec> Factory<FactorySpec>& get_factory() {
 template<class FactorySpec, class C> class AutoRegistration {
   public:
     AutoRegistration(const std::string& name = "") {
-      boost::shared_ptr<Generator<FactorySpec> > generator;
-      generator.reset(new AutoGenerator<FactorySpec, C>);
-      get_factory<FactorySpec>().register_class(generator , name);
+      boost::shared_ptr<Generator<FactorySpec> > generator(new AutoGenerator<FactorySpec, C>);
+      get_factory<FactorySpec>().register_class(generator, name);
     }
 };
 
-template<class FactorySpec, class C> class AutoDefaultRegistration : public AutoRegistration<FactorySpec, C> {};
+template<class FactorySpec, class C> class AutoDefaultRegistration :
+  public AutoRegistration<FactorySpec, C> {};
+
+template<class FactorySpec, class C, class S> class AutoRegistrationBySourceTypename {
+  public:
+    AutoRegistrationBySourceTypename() {
+      boost::shared_ptr<Generator<FactorySpec> > generator(new AutoCastingGenerator<FactorySpec, C, S>);
+      get_factory<FactorySpec>().register_class(generator, typeid(S).name());
+    }
+};
 
 #endif

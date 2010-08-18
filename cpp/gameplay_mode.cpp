@@ -170,4 +170,10 @@ void GameplayMode::draw_2d(bool top __attribute__ ((unused))) {
       }
     }
   }
+  
+  _fsm.draw();
+}
+
+void GameplayMode::step() {
+  _fsm.step();
 }

@@ -25,4 +25,16 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "mission_fsm.h"
 
+namespace ORE1 { class DisplayMessageEffectType; }
+class DisplayMessageEffect : public MissionEffect {
+  public:
+    DisplayMessageEffect(const ORE1::DisplayMessageEffectType& effect);
+};
+
+namespace ORE1 { class StartTimerEffectType; }
+class StartTimerEffect : public MissionEffect {
+  public:
+    StartTimerEffect(const ORE1::StartTimerEffectType& effect);
+};
+
 #endif

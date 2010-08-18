@@ -27,6 +27,14 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "mission_fsm.h"
 
+MissionEffect::MissionEffect(const ORE1::MissionEffectType& effect __attribute__ ((unused))) {
+}
+
+MissionStateTransitionCondition::MissionStateTransitionCondition(const ORE1::MissionConditionType& condition) :
+  _display(condition.display())
+{  
+}
+
 MissionStateTransition::MissionStateTransition(const ORE1::MissionStateTransitionType& transition) :
   _target_name(transition.target())
 {
@@ -78,9 +86,9 @@ void MissionState::entering_state() {
   }
 }
 
-void MissionState::process_frame() {
+void MissionState::step() {
   BOOST_FOREACH(const boost::shared_ptr<MissionEffect>& effect, _effects) {
-    effect->process_frame();
+    effect->step();
   }
 }
 
@@ -118,12 +126,12 @@ MissionFSM::MissionFSM(const ORE1::MissionType& mission) : _cur_state(NULL) {
   }
 }
 
-void MissionFSM::process_frame() {
+void MissionFSM::step() {
   if (_cur_state == NULL) {
     transition_to_state("start");
   }
   
-  _cur_state->process_frame();
+  _cur_state->step();
   
   std::string transition_target = _cur_state->get_transition();
   if (transition_target.size() > 0) {

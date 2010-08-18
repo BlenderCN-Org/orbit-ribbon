@@ -80,6 +80,7 @@ void ModeStack::execute_simulation_phase(unsigned int steps_elapsed) {
   if (cur_mode.mode->simulation_enabled()) {
     // Do a simulation step for each realtime tick elapsed
     for (; steps_elapsed > 0; --steps_elapsed) {
+      cur_mode.mode->step();
       Sim::sim_step();
     }
     return;

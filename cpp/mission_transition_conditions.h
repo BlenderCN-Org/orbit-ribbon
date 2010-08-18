@@ -25,4 +25,25 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "mission_fsm.h"
 
+namespace ORE1 { class RingsPassedConditionType; }
+class RingsPassedCondition : public MissionStateTransitionCondition {
+  public:
+    RingsPassedCondition(const ORE1::RingsPassedConditionType& condition);
+    bool is_true();
+};
+
+namespace ORE1 { class TimerCountdownConditionType; }
+class TimerCountdownCondition : public MissionStateTransitionCondition {
+  public:
+    TimerCountdownCondition(const ORE1::TimerCountdownConditionType& condition);
+    bool is_true();
+};
+
+namespace ORE1 { class AvatarMovesConditionType; }
+class AvatarMovesCondition : public MissionStateTransitionCondition {
+  public:
+    AvatarMovesCondition(const ORE1::AvatarMovesConditionType& condition);
+    bool is_true();
+};
+
 #endif

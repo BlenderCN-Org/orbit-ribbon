@@ -49,6 +49,8 @@ class Mode {
     virtual void draw_3d_near(bool top __attribute__ ((unused))) {}
     virtual void draw_2d(bool top __attribute__ ((unused))) {}
     
+    virtual void step() {}
+    
     virtual void pushed_below_top() {}
     virtual void now_at_top() {}
 };
