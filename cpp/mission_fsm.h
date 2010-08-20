@@ -23,12 +23,16 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_MISSION_FSM_H
 #define ORBIT_RIBBON_MISSION_FSM_H
 
+#include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/utility.hpp>
 #include <list>
 #include <map>
 #include <string>
 
 #include "factory.h"
+
+class GameplayMode;
 
 namespace ORE1 {
   class MissionStateType;
@@ -42,10 +46,10 @@ class MissionEffect {
   public:
     MissionEffect(const ORE1::MissionEffectType& effect);
     
-    virtual void entering_state() {}
-    virtual void step() {}
-    virtual void exiting_state() {}
-    virtual void draw() {}
+    virtual void entering_state(const GameplayMode& gameplay_mode __attribute__ ((unused))) {}
+    virtual void step(const GameplayMode& gameplay_mode __attribute__ ((unused))) {}
+    virtual void exiting_state(const GameplayMode& gameplay_mode __attribute__ ((unused))) {}
+    virtual void draw(const GameplayMode& gameplay_mode __attribute__ ((unused))) {}
 };
 
 class MissionEffectFactorySpec :
@@ -56,12 +60,12 @@ class MissionStateTransitionCondition {
     bool _display;
   
   protected:
-    virtual void draw_impl() {}
+    virtual void draw_impl(const GameplayMode& gameplay_mode __attribute__ ((unused))) {}
   
   public:
     MissionStateTransitionCondition(const ORE1::MissionConditionType& condition);
-    virtual bool is_true() =0;
-    void draw() { if (_display) draw_impl(); }
+    virtual bool is_true(const GameplayMode& gameplay_mode) =0;
+    void draw(const GameplayMode& gameplay_mode) { if (_display) draw_impl(gameplay_mode); }
 };
 
 class MissionStateTransitionConditionFactorySpec :
@@ -77,8 +81,8 @@ class MissionStateTransition {
     MissionStateTransition(const ORE1::MissionStateTransitionType& transition);
     
     std::string get_target_name() const { return _target_name; }
-    bool conditions_true() const;
-    void draw();
+    bool conditions_true(const GameplayMode& gameplay_mode) const;
+    void draw(const GameplayMode& gameplay_mode);
 };
 
 class MissionState {
@@ -90,24 +94,23 @@ class MissionState {
   public:
     MissionState(const ORE1::MissionStateType& state);
     
-    std::string get_transition();
+    std::string get_transition(const GameplayMode& gameplay_mode);
     
-    virtual void entering_state();
-    virtual void step();
-    virtual void exiting_state();
-    virtual void draw();
+    virtual void entering_state(const GameplayMode& gameplay_mode);
+    virtual void step(const GameplayMode& gameplay_mode);
+    virtual void exiting_state(const GameplayMode& gameplay_mode);
+    virtual void draw(const GameplayMode& gameplay_mode);
 };
 
-class MissionFSM {
+class MissionFSM : boost::noncopyable {
   private:
-    typedef std::map<std::string, MissionState> StateMap;
-    StateMap _states;
-    MissionState* _cur_state;
-    
+    const ORE1::MissionType& _mission;
+    const GameplayMode& _gameplay_mode;
+    boost::scoped_ptr<MissionState> _cur_state;
     void transition_to_state(const std::string& name);
   
   public:
-    MissionFSM(const ORE1::MissionType& mission);
+    MissionFSM(const ORE1::MissionType& mission, const GameplayMode& gameplay_mode);
     void step();
     void draw();
 };

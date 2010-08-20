@@ -33,10 +33,11 @@ class GameplayMode : public Mode {
     MissionFSM _fsm;
     std::string _avatar_key;
     
-    AvatarGameObj* find_avatar();
-    
   public:
     GameplayMode();
+    
+    AvatarGameObj* find_avatar();
+    const AvatarGameObj* find_avatar() const;
     
     bool simulation_enabled() { return true; }
     

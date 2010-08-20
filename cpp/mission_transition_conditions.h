@@ -23,27 +23,37 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_MISSION_TRANSITION_CONDITIONS_H
 #define ORBIT_RIBBON_MISSION_TRANSITION_CONDITIONS_H
 
+#include "geometry.h"
 #include "mission_fsm.h"
 
 namespace ORE1 { class RingsPassedConditionType; }
 class RingsPassedCondition : public MissionStateTransitionCondition {
   public:
     RingsPassedCondition(const ORE1::RingsPassedConditionType& condition);
-    bool is_true();
+    bool is_true(const GameplayMode& gameplay_mode);
 };
 
 namespace ORE1 { class TimerCountdownConditionType; }
 class TimerCountdownCondition : public MissionStateTransitionCondition {
+  private:
+    unsigned int _nanvi;
+    unsigned int _steps_at_start;
+    bool _started;
+  
   public:
     TimerCountdownCondition(const ORE1::TimerCountdownConditionType& condition);
-    bool is_true();
+    bool is_true(const GameplayMode& gameplay_mode);
 };
 
 namespace ORE1 { class AvatarMovesConditionType; }
 class AvatarMovesCondition : public MissionStateTransitionCondition {
+  private:
+    Point _starting_pos;
+    bool _started;
+  
   public:
     AvatarMovesCondition(const ORE1::AvatarMovesConditionType& condition);
-    bool is_true();
+    bool is_true(const GameplayMode& gameplay_mode);
 };
 
 #endif

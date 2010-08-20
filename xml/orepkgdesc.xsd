@@ -100,7 +100,7 @@
   <xsd:complexType name="TimerCountdownConditionType">
     <xsd:complexContent>
       <xsd:extension base="MissionConditionType">
-        <xsd:attribute name="seconds" type="xsd:unsignedInt" use="required"/>
+        <xsd:attribute name="nanvi" type="xsd:unsignedInt" use="required"/>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

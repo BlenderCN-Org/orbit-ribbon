@@ -23,7 +23,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/foreach.hpp>
 
 #include "autoxsd/orepkgdesc.h"
+#include "debug.h"
 #include "except.h"
+#include "gameplay_mode.h"
 
 #include "mission_fsm.h"
 
@@ -44,18 +46,18 @@ MissionStateTransition::MissionStateTransition(const ORE1::MissionStateTransitio
   }
 }
 
-bool MissionStateTransition::conditions_true() const {
+bool MissionStateTransition::conditions_true(const GameplayMode& gameplay_mode) const {
  BOOST_FOREACH(const boost::shared_ptr<MissionStateTransitionCondition>& _cond, _conditions) {
-   if (!_cond->is_true()) {
+   if (!_cond->is_true(gameplay_mode)) {
      return false;
    }
  }
  return true;
 }
 
-void MissionStateTransition::draw() {
+void MissionStateTransition::draw(const GameplayMode& gameplay_mode) {
   BOOST_FOREACH(const boost::shared_ptr<MissionStateTransitionCondition>& _cond, _conditions) {
-    _cond->draw();
+    _cond->draw(gameplay_mode);
   }
 }
 
@@ -71,78 +73,81 @@ MissionState::MissionState(const ORE1::MissionStateType& state) {
   }
 }
 
-std::string MissionState::get_transition() {
+std::string MissionState::get_transition(const GameplayMode& gameplay_mode) {
   BOOST_FOREACH(const MissionStateTransition& transition, _transitions) {
-    if (transition.conditions_true()) {
+    if (transition.conditions_true(gameplay_mode)) {
       return transition.get_target_name();
     }
   }
   return "";
 }
 
-void MissionState::entering_state() {
+void MissionState::entering_state(const GameplayMode& gameplay_mode) {
   BOOST_FOREACH(const boost::shared_ptr<MissionEffect>& effect, _effects) {
-    effect->entering_state();
+    effect->entering_state(gameplay_mode);
   }
 }
 
-void MissionState::step() {
+void MissionState::step(const GameplayMode& gameplay_mode) {
   BOOST_FOREACH(const boost::shared_ptr<MissionEffect>& effect, _effects) {
-    effect->step();
+    effect->step(gameplay_mode);
   }
 }
 
-void MissionState::exiting_state() {
+void MissionState::exiting_state(const GameplayMode& gameplay_mode) {
   BOOST_FOREACH(const boost::shared_ptr<MissionEffect>& effect, _effects) {
-    effect->exiting_state();
+    effect->exiting_state(gameplay_mode);
   }
 }
 
-void MissionState::draw() {
+void MissionState::draw(const GameplayMode& gameplay_mode) {
   BOOST_FOREACH(const boost::shared_ptr<MissionEffect>& effect, _effects) {
-    effect->draw();
+    effect->draw(gameplay_mode);
   }
   BOOST_FOREACH(MissionStateTransition& transition, _transitions) {
-    transition.draw();
+    transition.draw(gameplay_mode);
   }
 }
 
 void MissionFSM::transition_to_state(const std::string& name) {
-  StateMap::iterator i = _states.find(name);
-  if (i == _states.end()) {
-    throw GameException("Unable to transition to state \"" + name + "\"");
+  ORE1::MissionType::StateConstIterator i;
+  for (i = _mission.state().begin(); i != _mission.state().end(); ++i) {
+    if (i->name() == name) { break; }
   }
-  if (_cur_state != NULL) {
-    _cur_state->exiting_state();
+  if (i == _mission.state().end()) {
+    throw GameException("No such mission state \"" + name + "\"");
   }
-  _cur_state = &(i->second);
-  _cur_state->entering_state(); 
+  
+  if (_cur_state.get() != NULL) {
+    _cur_state->exiting_state(_gameplay_mode);
+  }
+  _cur_state.reset(new MissionState(*i));
+  _cur_state->entering_state(_gameplay_mode); 
+  Debug::status_msg("Entering mission state \"" + name + "\"");
 }
 
-MissionFSM::MissionFSM(const ORE1::MissionType& mission) : _cur_state(NULL) {
-  ORE1::MissionType::StateConstIterator i;
-  for (i = mission.state().begin(); i != mission.state().end(); ++i) {
-    _states.insert(StateMap::value_type(i->name(), MissionState(*i)));
-  }
+MissionFSM::MissionFSM(const ORE1::MissionType& mission, const GameplayMode& gameplay_mode) :
+  _mission(mission), _gameplay_mode(gameplay_mode), _cur_state(NULL)
+{
 }
 
 void MissionFSM::step() {
-  if (_cur_state == NULL) {
+  if (_cur_state.get() == NULL) {
     transition_to_state("start");
   }
   
-  _cur_state->step();
+  _cur_state->step(_gameplay_mode);
   
-  std::string transition_target = _cur_state->get_transition();
+  std::string transition_target = _cur_state->get_transition(_gameplay_mode);
   if (transition_target.size() > 0) {
     transition_to_state(transition_target);
   }
 }
 
 void MissionFSM::draw() {
-  if (_cur_state == NULL) {
+  if (_cur_state.get() == NULL) {
     transition_to_state("start");
   }
   
-  _cur_state->draw();
+  _cur_state->draw(_gameplay_mode);
 }

@@ -40,4 +40,7 @@ const float SKY_CLIP_DIST = 1e12;
 // Field-of-view in degrees
 const float FOV = 45;
 
+// Number of na'ananvi (year-billionths) per second
+const float NANVI_PER_SECOND = 0.6;
+
 #endif

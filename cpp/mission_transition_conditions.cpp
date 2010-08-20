@@ -21,7 +21,17 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
 #include "mission_transition_conditions.h"
+
 #include "autoxsd/orepkgdesc.h"
+#include "avatar.h"
+#include "constants.h"
+#include "gameplay_mode.h"
+#include "globals.h"
+
+#include <boost/lexical_cast.hpp>
+#include "debug.h"
+
+const float AVATAR_MOVES_CONDITION_DISTANCE = 1.5;
 
 AutoRegistrationBySourceTypename<
   MissionStateTransitionConditionFactorySpec,
@@ -34,7 +44,7 @@ RingsPassedCondition::RingsPassedCondition(const ORE1::RingsPassedConditionType&
 {
 }
 
-bool RingsPassedCondition::is_true() {
+bool RingsPassedCondition::is_true(const GameplayMode& gameplay_mode __attribute__ ((unused))) {
   return false;
 }
 
@@ -45,12 +55,20 @@ AutoRegistrationBySourceTypename<
 > timer_countdown_condition_reg;
 
 TimerCountdownCondition::TimerCountdownCondition(const ORE1::TimerCountdownConditionType& condition) :
-  MissionStateTransitionCondition(condition)
+  MissionStateTransitionCondition(condition),
+  _nanvi(condition.nanvi()),
+  _steps_at_start(0),
+  _started(false)
 {
 }
 
-bool TimerCountdownCondition::is_true() {
-  return false;
+bool TimerCountdownCondition::is_true(const GameplayMode& gameplay_mode __attribute__ ((unused))) {
+  if (!_started) {
+    _steps_at_start = Globals::total_steps;
+    _started = true;
+  }
+  
+  return ((Globals::total_steps - _steps_at_start)/float(MAX_FPS))*NANVI_PER_SECOND > _nanvi;
 }
 
 AutoRegistrationBySourceTypename<
@@ -60,10 +78,15 @@ AutoRegistrationBySourceTypename<
 > avatar_moves_condition_reg;
 
 AvatarMovesCondition::AvatarMovesCondition(const ORE1::AvatarMovesConditionType& condition) :
-  MissionStateTransitionCondition(condition)
+  MissionStateTransitionCondition(condition),
+  _started(false)
 {
 }
 
-bool AvatarMovesCondition::is_true() {
-  return false;
+bool AvatarMovesCondition::is_true(const GameplayMode& gameplay_mode) {
+  if (!_started) {
+    _starting_pos = gameplay_mode.find_avatar()->get_pos();
+    _started = true;
+  }
+  return gameplay_mode.find_avatar()->get_pos().dist_to(_starting_pos) > AVATAR_MOVES_CONDITION_DISTANCE;
 }

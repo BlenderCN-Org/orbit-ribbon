@@ -52,7 +52,7 @@ const std::string PHYS_DEBUG_BOX_NUMFMT("%+5.3f");
 const float PHYS_DEBUG_BOX_FONTSIZE = 15;
 const float PHYS_DEBUG_BOX_COLL_WINDOW = MAX_FPS*2;
 
-GameplayMode::GameplayMode() : _fsm(*Globals::current_mission) {
+GameplayMode::GameplayMode() : _fsm(*Globals::current_mission, *this) {
   // Locate the avatar object
   for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
     GOMap::size_type idx = i->first.find("LIBAvatar");
@@ -73,6 +73,10 @@ AvatarGameObj* GameplayMode::find_avatar() {
     throw GameException(std::string("GameplayMode: LIBAvatar GameObj named ") + _avatar_key + " has disappeared unexpectedly");
   }
   return static_cast<AvatarGameObj*>(&(*(i->second)));
+}
+
+const AvatarGameObj* GameplayMode::find_avatar() const {
+  return const_cast<const AvatarGameObj*>(const_cast<GameplayMode*>(this)->find_avatar());
 }
 
 bool GameplayMode::handle_input() {
