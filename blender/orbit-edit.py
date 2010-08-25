@@ -34,6 +34,8 @@ ORE_NAMESPACE = "http://www.orbit-ribbon.org/ORE1"
 ORE_NS_PREFIX = "{%s}" % ORE_NAMESPACE
 NSMAP = {"ore" : ORE_NAMESPACE}
 
+os.chdir(WORKING_DIR)
+
 def fixcoords(t): # Given a 3-sequence, returns it so that axes changed to fit OpenGL standards (y is up, z is forward)
 	t = Blender.Mathutils.Vector(t) * MATRIX_BLEN2ORE
 	return (t[0], t[1], t[2])
@@ -239,7 +241,7 @@ def do_export():
 	zfh.writestr("ore-desc", lxml.etree.tostring(descDoc, xml_declaration=True))
 	
 	# FIXME Adding in the cursor image; there will be many more "standard UI images", need a way of including them all
-	zfh.write("images/cursor.png", "image-cursor.png", zipfile.ZIP_STORED)
+	zfh.write("../images/cursor.png", "image-cursor.png", zipfile.ZIP_STORED)
 	
 	copiedImages = set() # Set of image names that have already been copied into the zipfile
 	def populateMeshNode(meshNode, mesh):
@@ -289,7 +291,10 @@ def do_export():
 			if imgName is not "" and imgName not in copiedImages:
 				copiedImages.add(imgName)
 				# ZIP_STORED disables compression, it is used here because PNG images are already compressed
-				zfh.write(f.image.filename, "image-%s" % imgName, zipfile.ZIP_STORED)
+				path = f.image.filename
+				if path[:4] == "//..":
+					path = path[2:]
+				zfh.write(path, "image-%s" % imgName, zipfile.ZIP_STORED)
 		
 		# Load the vertices into the node
 		vertexList = vertices.items()
