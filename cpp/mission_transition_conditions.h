@@ -39,9 +39,12 @@ class TimerCountdownCondition : public MissionStateTransitionCondition {
     unsigned int _nanvi;
     unsigned int _steps_at_start;
     bool _started;
+    
+    float elapsed_nanvi() const;
   
   public:
     TimerCountdownCondition(const ORE1::TimerCountdownConditionType& condition);
+    void draw_impl(const GameplayMode& gameplay_mode);
     bool is_true(const GameplayMode& gameplay_mode);
 };
 

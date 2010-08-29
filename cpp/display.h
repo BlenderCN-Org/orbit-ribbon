@@ -40,7 +40,7 @@ class Display {
     static int get_screen_height() { return screen_height; }
     static Size get_screen_size() { return Size(screen_width, screen_height); }
     static float get_screen_ratio() { return screen_ratio; }
-    
+  
   private:
     static void init();
     

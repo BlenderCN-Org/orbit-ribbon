@@ -4,3 +4,4 @@ cpp/autoxsd/*.cpp
 cpp/autoxsd/*.h
 cpp/autoxsd/*.o
 .sconsign.dblite
+*.swp

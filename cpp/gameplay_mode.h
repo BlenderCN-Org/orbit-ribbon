@@ -23,6 +23,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_GAMEPLAY_MODE_H
 #define ORBIT_RIBBON_GAMEPLAY_MODE_H
 
+#include "geometry.h"
 #include "mode.h"
 #include "mission_fsm.h"
 
@@ -32,6 +33,7 @@ class GameplayMode : public Mode {
   private:
     MissionFSM _fsm;
     std::string _avatar_key;
+    Point _condition_widget_cursor;
     
   public:
     GameplayMode();
@@ -50,6 +52,8 @@ class GameplayMode : public Mode {
     void draw_2d(bool top);
     
     void step();
+    
+    Point get_condition_widget_pos(const Size& size) const;
 };
 
 

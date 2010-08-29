@@ -27,9 +27,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "constants.h"
 #include "gameplay_mode.h"
 #include "globals.h"
+#include "gloo.h"
 
+#include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
-#include "debug.h"
 
 const float AVATAR_MOVES_CONDITION_DISTANCE = 1.5;
 
@@ -62,13 +63,23 @@ TimerCountdownCondition::TimerCountdownCondition(const ORE1::TimerCountdownCondi
 {
 }
 
+float TimerCountdownCondition::elapsed_nanvi() const {
+  return ((Globals::total_steps - _steps_at_start)/float(MAX_FPS))*NANVI_PER_SECOND;
+}
+
+void TimerCountdownCondition::draw_impl(const GameplayMode& gameplay_mode) {
+  std::string s = boost::str(boost::format("%.3f nanvi") % (_nanvi - elapsed_nanvi()));
+  Point pos = gameplay_mode.get_condition_widget_pos(Size(Globals::sys_font->get_width(35, s), 5));
+  Globals::sys_font->draw(pos, 35, s);
+}
+
 bool TimerCountdownCondition::is_true(const GameplayMode& gameplay_mode __attribute__ ((unused))) {
   if (!_started) {
     _steps_at_start = Globals::total_steps;
     _started = true;
   }
   
-  return ((Globals::total_steps - _steps_at_start)/float(MAX_FPS))*NANVI_PER_SECOND > _nanvi;
+  return elapsed_nanvi() > _nanvi;
 }
 
 AutoRegistrationBySourceTypename<

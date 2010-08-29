@@ -117,6 +117,8 @@ void GameplayMode::draw_3d_near(bool top __attribute__ ((unused))) {
 }
 
 void GameplayMode::draw_2d(bool top __attribute__ ((unused))) {
+  _condition_widget_cursor = Point(Display::get_screen_width(), 0);
+
   AvatarGameObj* av = find_avatar();
   
   if (Saving::get().config().debugPhysics().get()) {
@@ -181,3 +183,11 @@ void GameplayMode::draw_2d(bool top __attribute__ ((unused))) {
 void GameplayMode::step() {
   _fsm.step();
 }
+
+Point GameplayMode::get_condition_widget_pos(const Size& size) const {
+  Point ret = _condition_widget_cursor;
+  ret.x -= size.x;
+  const_cast<GameplayMode*>(this)->_condition_widget_cursor.y += size.y;
+  return ret;
+}
+
