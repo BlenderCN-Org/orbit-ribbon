@@ -5,3 +5,4 @@ cpp/autoxsd/*.h
 cpp/autoxsd/*.o
 .sconsign.dblite
 *.swp
+*.blend1
