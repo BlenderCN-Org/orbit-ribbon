@@ -52,8 +52,8 @@ RingsPassedCondition::RingsPassedCondition(const ORE1::RingsPassedConditionType&
 
 void RingsPassedCondition::draw_impl(const GameplayMode& gameplay_mode) {
   std::string s = boost::str(boost::format("%u djine velvi'u") % (_rings - passed_rings()));
-  Point pos = gameplay_mode.get_condition_widget_pos(Size(Globals::sys_font->get_width(35, s), 35));
-  Globals::sys_font->draw(pos, 35, s);
+  Point pos = gameplay_mode.get_condition_widget_pos(Size(Globals::sys_font->get_width(20, s), 20));
+  Globals::sys_font->draw(pos, 20, s);
 }
 
 bool RingsPassedCondition::is_true(const GameplayMode& gameplay_mode __attribute__ ((unused))) {
@@ -80,8 +80,8 @@ float TimerCountdownCondition::elapsed_nanvi() const {
 
 void TimerCountdownCondition::draw_impl(const GameplayMode& gameplay_mode) {
   std::string s = boost::str(boost::format("%.3f nanvi velvi'u") % (_nanvi - elapsed_nanvi()));
-  Point pos = gameplay_mode.get_condition_widget_pos(Size(Globals::sys_font->get_width(35, s), 35));
-  Globals::sys_font->draw(pos, 35, s);
+  Point pos = gameplay_mode.get_condition_widget_pos(Size(Globals::sys_font->get_width(20, s), 20));
+  Globals::sys_font->draw(pos, 20, s);
 }
 
 bool TimerCountdownCondition::is_true(const GameplayMode& gameplay_mode __attribute__ ((unused))) {

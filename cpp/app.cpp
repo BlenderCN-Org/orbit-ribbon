@@ -53,7 +53,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "ore.h"
 
 // How often in ticks to update the performance info string
-const unsigned int MAX_PERF_INFO_AGE = 2000;
+const unsigned int MAX_PERF_INFO_AGE = 200;
 
 void App::frame_loop() {
   std::string perf_info;

@@ -27,7 +27,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "performance.h"
 
 // How many ticks into the past performance are analyzed
-const unsigned int PERF_TICKS_WINDOW = 2000;
+const unsigned int PERF_TICKS_WINDOW = 1000;
 
 struct FrameInfo {
   unsigned int total_ticks;
