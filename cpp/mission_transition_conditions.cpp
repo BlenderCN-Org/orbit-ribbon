@@ -40,13 +40,24 @@ AutoRegistrationBySourceTypename<
   ORE1::RingsPassedConditionType
 > rings_passed_condition_reg;
 
+unsigned int RingsPassedCondition::passed_rings() const {
+  return 0;
+}
+
 RingsPassedCondition::RingsPassedCondition(const ORE1::RingsPassedConditionType& condition) :
-  MissionStateTransitionCondition(condition)
+  MissionStateTransitionCondition(condition),
+  _rings(condition.rings())
 {
 }
 
+void RingsPassedCondition::draw_impl(const GameplayMode& gameplay_mode) {
+  std::string s = boost::str(boost::format("%u djine velvi'u") % (_rings - passed_rings()));
+  Point pos = gameplay_mode.get_condition_widget_pos(Size(Globals::sys_font->get_width(35, s), 35));
+  Globals::sys_font->draw(pos, 35, s);
+}
+
 bool RingsPassedCondition::is_true(const GameplayMode& gameplay_mode __attribute__ ((unused))) {
-  return false;
+  return passed_rings() >= _rings;
 }
 
 AutoRegistrationBySourceTypename<
@@ -68,8 +79,8 @@ float TimerCountdownCondition::elapsed_nanvi() const {
 }
 
 void TimerCountdownCondition::draw_impl(const GameplayMode& gameplay_mode) {
-  std::string s = boost::str(boost::format("%.3f nanvi") % (_nanvi - elapsed_nanvi()));
-  Point pos = gameplay_mode.get_condition_widget_pos(Size(Globals::sys_font->get_width(35, s), 5));
+  std::string s = boost::str(boost::format("%.3f nanvi velvi'u") % (_nanvi - elapsed_nanvi()));
+  Point pos = gameplay_mode.get_condition_widget_pos(Size(Globals::sys_font->get_width(35, s), 35));
   Globals::sys_font->draw(pos, 35, s);
 }
 

@@ -28,8 +28,14 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 namespace ORE1 { class RingsPassedConditionType; }
 class RingsPassedCondition : public MissionStateTransitionCondition {
+  private:
+    unsigned int _rings;
+
+    unsigned int passed_rings() const;
+
   public:
     RingsPassedCondition(const ORE1::RingsPassedConditionType& condition);
+    void draw_impl(const GameplayMode& gameplay_mode);
     bool is_true(const GameplayMode& gameplay_mode);
 };
 
@@ -39,9 +45,9 @@ class TimerCountdownCondition : public MissionStateTransitionCondition {
     unsigned int _nanvi;
     unsigned int _steps_at_start;
     bool _started;
-    
+
     float elapsed_nanvi() const;
-  
+
   public:
     TimerCountdownCondition(const ORE1::TimerCountdownConditionType& condition);
     void draw_impl(const GameplayMode& gameplay_mode);
@@ -53,7 +59,7 @@ class AvatarMovesCondition : public MissionStateTransitionCondition {
   private:
     Point _starting_pos;
     bool _started;
-  
+
   public:
     AvatarMovesCondition(const ORE1::AvatarMovesConditionType& condition);
     bool is_true(const GameplayMode& gameplay_mode);
