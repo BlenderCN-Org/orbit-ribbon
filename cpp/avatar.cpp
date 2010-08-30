@@ -42,6 +42,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 AutoRegistration<GameObjFactorySpec, AvatarGameObj> avatar_gameobj_reg("Avatar");
 
 // Maximum amount of Newtons per second applied by various maneuvers
+// FIXME Wait, Newtons per second? That doesn't make sense. Figure out what unit I really mean.
 const float MAX_STRAFE = 15000.0;
 const float MAX_ACCEL = 15000.0;
 const float MAX_TURN = 1000.0;
