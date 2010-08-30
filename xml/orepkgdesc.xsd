@@ -35,7 +35,15 @@
       <xsd:element name="niceName" type="xsd:string" />
       <xsd:element name="created" type="xsd:dateTime" minOccurs="0" />
       <xsd:element name="area" minOccurs="0" maxOccurs="unbounded" type="AreaType" />
+      <xsd:element name="libscene" minOccurs="0" maxOccurs="unbounded" type="SubsceneType" />
     </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="SubsceneType">
+    <xsd:sequence>
+      <xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />
+    </xsd:sequence>
+    <xsd:attribute name="name" type="xsd:string" use="required" />
   </xsd:complexType>
   
   <xsd:complexType name="AreaType">
