@@ -79,7 +79,7 @@ float TimerCountdownCondition::elapsed_nanvi() const {
 }
 
 void TimerCountdownCondition::draw_impl(const GameplayMode& gameplay_mode) {
-  std::string s = boost::str(boost::format("%.3f nanvi velvi'u") % (_nanvi - elapsed_nanvi()));
+  std::string s = boost::str(boost::format("%.2f nanvi velvi'u") % (_nanvi - elapsed_nanvi()));
   Point pos = gameplay_mode.get_condition_widget_pos(Size(Globals::sys_font->get_width(20, s), 20));
   Globals::sys_font->draw(pos, 20, s);
 }
