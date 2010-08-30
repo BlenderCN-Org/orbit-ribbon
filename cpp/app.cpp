@@ -211,6 +211,12 @@ void App::run(const std::vector<std::string>& args) {
       Saving::get().config().lastOre().set(orePath.file_string());
       Saving::save();
     }
+
+    // Find all the libscenes in this ore and let them be easily accessible by name
+    const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
+    for (ORE1::PkgDescType::LibsceneConstIterator i = desc->libscene().begin(); i != desc->libscene().end(); ++i) {
+      Globals::libscenes.insert(LSMap::value_type(i->name(), *i));
+    }
     
     Sim::init();
     Input::init();

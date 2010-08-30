@@ -41,3 +41,4 @@ boost::scoped_ptr<OrePackage> Globals::ore;
 boost::scoped_ptr<MouseCursor> Globals::mouse_cursor;
 const ORE1::AreaType* Globals::current_area = NULL;
 const ORE1::MissionType* Globals::current_mission = NULL;
+LSMap Globals::libscenes;
