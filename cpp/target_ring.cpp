@@ -40,11 +40,11 @@ TargetRingGameObj::TargetRingGameObj(const ORE1::ObjType& obj) :
   GameObj(obj),
   _mesh(MeshAnimation::load("mesh-LIBTargetRing"))
 {
-  /*
-  Debug::debug_msg("LOADING...");
-  const ORE1::SubsceneType& libscene = Globals::libscenes.find("TargetRing")->second;
-  for (ORE1::SubsceneType::ObjConstIterator i = libscene.obj().begin(); i != libscene.obj().end(); ++i) {
-    Debug::debug_msg("SUBSCENE OBJ " + i->objName());
+  LSMap::const_iterator scene_iter = Globals::libscenes.find("LIBTargetRing");
+  if (scene_iter == Globals::libscenes.end()) {
+    throw GameException("Could not locate TargetRing libscene");
   }
-  */
+  const ORE1::SubsceneType& libscene = scene_iter->second;
+  for (ORE1::SubsceneType::ObjConstIterator i = libscene.obj().begin(); i != libscene.obj().end(); ++i) {
+  }
 }
