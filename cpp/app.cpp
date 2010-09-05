@@ -244,8 +244,10 @@ void App::run(const std::vector<std::string>& args) {
       load_mission(area, mission);
       Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new GameplayMode()));
     } else if (vm.count("area")) {
-      // TODO Go straight to this area's menu
-      throw GameException("Area menu jumping not yet implemented");
+      unsigned int area = vm["area"].as<unsigned int>();
+      Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MainMenuMode()));
+      Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new AreaSelectMenuMode()));
+      Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MissionSelectMenuMode(area)));
     } else {
       Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MainMenuMode()));
     }
