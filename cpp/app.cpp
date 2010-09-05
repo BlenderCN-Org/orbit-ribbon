@@ -136,6 +136,8 @@ void App::run(const std::vector<std::string>& args) {
     visible_opt_desc.add_options()
       ("help,h", "display help message, then exit")
       ("version,V", "display version and author information, then exit")
+      ("fullscreen,f", "run game in fullscreen mode (defaults to native resolution)")
+      ("windowed,w", "run game in windowed mode (defaults to 800x600)")
       ("area,a", boost::program_options::value<unsigned int>(), "preselect numbered area to play")
       ("mission,m", boost::program_options::value<unsigned int>(), "preselect numbered mission to play, you must also specify --area")
     ;
@@ -187,8 +189,18 @@ void App::run(const std::vector<std::string>& args) {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
       throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
     }
-    
+ 
     Saving::load();
+
+    // Set to windowed or fullscreen if the appropriate command line arguments were given
+    if (vm.count("fullscreen") or vm.count("windowed")) {
+      Saving::get().config().fullScreen().set((bool)vm.count("fullscreen"));
+      
+      // This forces Display::init to pick a new, sane resolution
+      Saving::get().config().screenWidth().set(0);
+      Saving::get().config().screenHeight().set(0);
+    }
+    
     Display::init();
     
     boost::filesystem::path orePath;

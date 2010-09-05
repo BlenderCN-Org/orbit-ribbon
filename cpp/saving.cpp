@@ -67,7 +67,7 @@ void Saving::load() {
     // Load the save data from this file
     Debug::status_msg("Loading save data from '" + _save_path->string() + "'");
     try {
-      // TODO Turn on validation (need to compile in the XSD...)
+      // TODO Turn on validation
       _save.reset(ORSave::save(ifs, xsd::cxx::tree::flags::dont_validate).release());
     } catch (const xml_schema::Exception& e) {
       std::stringstream ss;
