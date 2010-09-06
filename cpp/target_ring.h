@@ -39,8 +39,8 @@ class TargetRingGameObj;
 class TargetRingGameObj : public GameObj {
   private:
     boost::shared_ptr<MeshAnimation> _mesh;
-    boost::shared_ptr<MeshAnimation> _check_mesh_1;
-    boost::shared_ptr<MeshAnimation> _check_mesh_2;
+    boost::shared_ptr<GameObj> _check_face_1;
+    boost::shared_ptr<GameObj> _check_face_2;
 
     class CheckFaceContactHandler : public SimpleContactHandler {
       private:

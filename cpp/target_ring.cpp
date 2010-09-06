@@ -34,14 +34,14 @@ void TargetRingGameObj::step_impl() {
 
 void TargetRingGameObj::near_draw_impl() {
   _mesh->draw();
-  _check_mesh_1->draw();
-  _check_mesh_2->draw();
+  _check_face_1->draw(true);
+  _check_face_2->draw(true);
 }
 
 TargetRingGameObj::TargetRingGameObj(const ORE1::ObjType& obj) :
   GameObj(obj),
   _mesh(MeshAnimation::load("mesh-LIBTargetRing")),
-  _check_mesh_1(MeshAnimation::load("mesh-" + get_libscene_obj("CheckFace1").meshName())),
-  _check_mesh_2(MeshAnimation::load("mesh-" + get_libscene_obj("CheckFace2").meshName()))
+  _check_face_1(new MeshGameObj(get_libscene_obj("CheckFace1"))),
+  _check_face_2(new MeshGameObj(get_libscene_obj("CheckFace2")))
 {
 }
