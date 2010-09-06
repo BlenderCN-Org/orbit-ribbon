@@ -31,6 +31,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "geometry.h"
 
+namespace ORE1 { class ObjType; }
+
 class Sim;
 class App;
 class GameObj;
@@ -116,7 +118,7 @@ class OdeEntity : boost::noncopyable {
     
     dGeomID get_geom(const std::string& gname);
     CollisionHandler* get_geom_ch(const std::string& gname);
-    void set_geom(const std::string& gname, dGeomID geom, std::auto_ptr<CollisionHandler> ch);
+    void set_geom(const std::string& gname, dGeomID geom, std::auto_ptr<CollisionHandler> ch, const ORE1::ObjType* offset = 0);
     
     void set_pos(const Point& pos);
     void set_rot(const boost::array<float, 9>& rot);
@@ -146,11 +148,17 @@ class OdeGeomUtil {
       dGeomVectorToWorld(g, v.x, v.y, v.z, res);
       return Vector(res);
     }
-    
+ 
     static Vector vector_from_world(dGeomID g, const Vector& v) {
       dVector3 res;
       dGeomVectorFromWorld(g, v.x, v.y, v.z, res);
       return Vector(res);
+    }
+
+    template <typename T> static void gen_ode_rot_matr(const T& arr, dMatrix3 matr) {
+      matr[0]  = arr[0]; matr[1]  = arr[3]; matr[2]  = arr[6]; matr[3]  = 0;
+      matr[4]  = arr[1]; matr[5]  = arr[4]; matr[6]  = arr[7]; matr[7]  = 0;
+      matr[8]  = arr[2]; matr[9]  = arr[5]; matr[10] = arr[8]; matr[11] = 0;
     }
 };  
 

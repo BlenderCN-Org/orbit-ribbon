@@ -25,8 +25,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <ode/ode.h>
+#include <cctype>
 #include <vector>
 
+#include "autoxsd/orepkgdesc.h"
 #include "constants.h"
 #include "debug.h"
 #include "gameobj.h"
@@ -195,13 +197,7 @@ CollisionHandler* OdeEntity::get_geom_ch(const std::string& gname) {
   return static_cast<CollisionHandler*>(dGeomGetData(get_geom(gname)));
 }
 
-void gen_ode_rot_matr(const boost::array<float, 9>& rot, dMatrix3 matr) {
-  matr[0]  = rot[0]; matr[1]  = rot[3]; matr[2]  = rot[6]; matr[3]  = 0;
-  matr[4]  = rot[1]; matr[5]  = rot[4]; matr[6]  = rot[7]; matr[7]  = 0;
-  matr[8]  = rot[2]; matr[9]  = rot[5]; matr[10] = rot[8]; matr[11] = 0;
-}
-
-void OdeEntity::set_geom(const std::string& gname, dGeomID geom, std::auto_ptr<CollisionHandler> ch) {
+void OdeEntity::set_geom(const std::string& gname, dGeomID geom, std::auto_ptr<CollisionHandler> ch, const ORE1::ObjType* offset) {
   // From here on out, we have to manage the memory for this CollisionHandler manually
   dGeomSetData(geom, ch.release());
   
@@ -221,10 +217,26 @@ void OdeEntity::set_geom(const std::string& gname, dGeomID geom, std::auto_ptr<C
     } else {
       dGeomSetPosition(geom, _last_pos.x, _last_pos.y, _last_pos.z);
       dMatrix3 matr;
-      gen_ode_rot_matr(_last_rot, matr);
+      OdeGeomUtil::gen_ode_rot_matr(_last_rot, matr);
       dGeomSetRotation(geom, matr);
     }
     _geoms[gname] = geom;
+
+    if (offset != 0) {
+      if (_id != 0) {
+        dGeomSetOffsetPosition(geom, offset->pos()[0], offset->pos()[1], offset->pos()[2]);
+        
+        dMatrix3 rot;
+        OdeGeomUtil::gen_ode_rot_matr(offset->rot(), rot);
+        dGeomSetOffsetRotation(geom, rot);
+      } else {
+        Point p(dGeomGetPosition(geom));
+        p += Point(offset->pos()[0], offset->pos()[1], offset->pos()[2]);
+        dGeomSetPosition(geom, p[0], p[1], p[2]);
+
+        // TODO Also update rotation by the offset amount
+      }
+    }
   }
 }
 
@@ -245,7 +257,7 @@ void OdeEntity::set_rot(const boost::array<float, 9>& rot) {
   
   // Convert column-major 3x3 to row-major 3x4
   dMatrix3 matr;
-  gen_ode_rot_matr(rot, matr);
+  OdeGeomUtil::gen_ode_rot_matr(rot, matr);
   if (_id != 0) {
     dBodySetRotation(_id, matr);
   } else {
