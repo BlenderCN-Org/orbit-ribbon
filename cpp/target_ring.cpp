@@ -22,26 +22,55 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "target_ring.h"
 
+#include <boost/foreach.hpp>
+#include <list>
+
 #include "autoxsd/orepkgdesc.h"
+#include "constants.h"
 #include "debug.h"
 #include "globals.h"
 #include "mesh.h"
 
 AutoRegistration<GameObjFactorySpec, TargetRingGameObj> target_ring_gameobj_reg("TargetRing");
 
+bool TargetRingGameObj::CheckFaceContactHandler::recent_collision() {
+  return (_last_collision != 0) && ((Globals::total_steps - _last_collision)*(float)MAX_FPS < CHECK_FACE_MAX_COLLISION_AGE);
+}
+
+bool TargetRingGameObj::CheckFaceContactHandler::handle_collision(
+  float t __attribute__ ((unused)),
+  dGeomID o __attribute__ ((unused)),
+  const dContactGeom* c,
+  unsigned int c_len  __attribute__ ((unused))
+) {
+  Debug::debug_msg("COLLISION!");
+
+  // This geom is never used to create contact joints
+  return false;
+}
+
 void TargetRingGameObj::step_impl() {
 }
 
 void TargetRingGameObj::near_draw_impl() {
   _mesh->draw();
-  _check_face_1->draw(true);
-  _check_face_2->draw(true);
 }
 
 TargetRingGameObj::TargetRingGameObj(const ORE1::ObjType& obj) :
   GameObj(obj),
-  _mesh(MeshAnimation::load("mesh-LIBTargetRing")),
-  _check_face_1(new MeshGameObj(get_libscene_obj("CheckFace1"))),
-  _check_face_2(new MeshGameObj(get_libscene_obj("CheckFace2")))
+  _mesh(MeshAnimation::load("mesh-LIBTargetRing"))
 {
+  // Set up geoms for our check faces
+  std::list<std::string> face_nums;
+  face_nums.push_back("1");
+  face_nums.push_back("2");
+  BOOST_FOREACH(const std::string& face_num, face_nums) {
+    boost::shared_ptr<MeshAnimation> ma = MeshAnimation::load("mesh-" + get_libscene_obj("CheckFace" + face_num).meshName());
+    _check_face_meshes.push_back(ma); // Keeps the MeshAnimation from being unloaded until the TargetRing is destroyed
+    get_entity().set_geom(
+      "check_face_" + face_num,
+      dCreateTriMesh(Sim::get_static_space(), ma->get_trimesh_data(0), 0, 0, 0),
+      std::auto_ptr<CollisionHandler>(new CheckFaceContactHandler(this))
+    );
+  }
 }

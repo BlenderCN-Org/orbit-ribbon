@@ -24,6 +24,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_TARGET_RING_H
 
 #include <boost/shared_ptr.hpp>
+#include <list>
 
 #include "gameobj.h"
 #include "sim.h"
@@ -39,9 +40,9 @@ class TargetRingGameObj;
 class TargetRingGameObj : public GameObj {
   private:
     boost::shared_ptr<MeshAnimation> _mesh;
-    boost::shared_ptr<GameObj> _check_face_1;
-    boost::shared_ptr<GameObj> _check_face_2;
-
+    std::list<boost::shared_ptr<MeshAnimation> > _check_face_meshes;
+    
+    
     class CheckFaceContactHandler : public SimpleContactHandler {
       private:
         TargetRingGameObj* _target_ring;

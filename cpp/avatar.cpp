@@ -172,7 +172,7 @@ bool AvatarGameObj::StickyAttachmentContactHandler::handle_collision(
   dGeomID o __attribute__ ((unused)),
   const dContactGeom* c,
   unsigned int c_len  __attribute__ ((unused))
-)  {
+) {
   float ypd = -c[0].depth + RUNNING_MAX_DELTA_Y_POS;
   Vector sn(c[0].normal);
   const GLOOBufferedMesh* mesh = GLOOBufferedMesh::get_mesh_from_geom(c[0].g2);
