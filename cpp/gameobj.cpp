@@ -36,6 +36,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "except.h"
 #include "gameobj.h"
 #include "geometry.h"
+#include "globals.h"
 #include "gloo.h"
 
 // Default coefficients for linear and angular damping on new GameObjs
@@ -64,6 +65,18 @@ GameObj::GameObj(const ORE1::ObjType& obj, std::auto_ptr<OdeEntity> entity) :
   _ang_damp_coef[0] = DEFAULT_ANG_DAMP_COEF;
   _ang_damp_coef[1] = DEFAULT_ANG_DAMP_COEF;
   _ang_damp_coef[2] = DEFAULT_ANG_DAMP_COEF;
+  
+  static const boost::regex e("(LIB.+?)(?:\\.\\d+)?");
+  boost::smatch m;
+  if (boost::regex_match(obj.objName(), m, e)) {
+    LSMap::const_iterator scene_iter = Globals::libscenes.find(m[1]);
+    if (scene_iter != Globals::libscenes.end()) {
+      const ORE1::SubsceneType& libscene = scene_iter->second;
+      for (ORE1::SubsceneType::ObjConstIterator i = libscene.obj().begin(); i != libscene.obj().end(); ++i) {
+        _scene_objs.insert(std::pair<std::string, const ORE1::ObjType&>(i->objName(), *i));
+      }
+    }
+  }
 }
 
 void GameObj::set_pos(const Point& pos) {
@@ -191,6 +204,14 @@ Vector GameObj::vector_from_world(const Vector& v) const {
   dVector3 res;
   dBodyVectorFromWorld(_entity->get_id(), v.x, v.y, v.z, res);
   return Vector(res);
+}
+
+const ORE1::ObjType& GameObj::get_libscene_obj(const std::string& name) const {
+  std::map<std::string, const ORE1::ObjType&>::const_iterator i = _scene_objs.find(name);
+  if (i == _scene_objs.end()) {
+    throw GameException("Unable to find libscene object " + name);
+  }
+  return i->second;
 }
 
 std::string GameObjFactorySpec::extract_name(const ORE1::ObjType& source) {

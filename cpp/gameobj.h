@@ -31,6 +31,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/scoped_ptr.hpp>
 #include <map>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "factory.h"
@@ -64,6 +65,8 @@ class GameObj : boost::noncopyable {
   protected:
     OdeEntity& get_entity() { return *_entity; }
     const OdeEntity& get_entity() const { return *_entity; }
+
+    const ORE1::ObjType& get_libscene_obj(const std::string& name) const;
     
     virtual void near_draw_impl() {}
     virtual void far_draw_impl() { near_draw_impl(); }
@@ -74,6 +77,7 @@ class GameObj : boost::noncopyable {
     boost::array<float, 9> _rot; // 3x3 column-major
     Vector _vel;
     boost::scoped_ptr<CollisionHandler> _coll_handler;
+    std::map<std::string, const ORE1::ObjType&> _scene_objs;
     
     // Damping coefficients for linear and angular velocity along each body axis
     // For example, vel_damp_coef[0] is the linear damping coefficient along relative x axis

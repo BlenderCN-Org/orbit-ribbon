@@ -34,17 +34,14 @@ void TargetRingGameObj::step_impl() {
 
 void TargetRingGameObj::near_draw_impl() {
   _mesh->draw();
+  _check_mesh_1->draw();
+  _check_mesh_2->draw();
 }
 
 TargetRingGameObj::TargetRingGameObj(const ORE1::ObjType& obj) :
   GameObj(obj),
-  _mesh(MeshAnimation::load("mesh-LIBTargetRing"))
+  _mesh(MeshAnimation::load("mesh-LIBTargetRing")),
+  _check_mesh_1(MeshAnimation::load("mesh-" + get_libscene_obj("CheckFace1").meshName())),
+  _check_mesh_2(MeshAnimation::load("mesh-" + get_libscene_obj("CheckFace2").meshName()))
 {
-  LSMap::const_iterator scene_iter = Globals::libscenes.find("LIBTargetRing");
-  if (scene_iter == Globals::libscenes.end()) {
-    throw GameException("Could not locate TargetRing libscene");
-  }
-  const ORE1::SubsceneType& libscene = scene_iter->second;
-  for (ORE1::SubsceneType::ObjConstIterator i = libscene.obj().begin(); i != libscene.obj().end(); ++i) {
-  }
 }

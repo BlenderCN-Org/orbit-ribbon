@@ -26,15 +26,32 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/shared_ptr.hpp>
 
 #include "gameobj.h"
+#include "sim.h"
+
+// Number of seconds before a collision with a check face is no longer considered recent enough to count
+// This way we can reduce the chance that the player can just whiff past both checkfaces from the outside
+const float CHECK_FACE_MAX_COLLISION_AGE = 1.0; 
 
 class MeshAnimation;
 namespace ORE1 { class ObjType; }
 
+class TargetRingGameObj;
 class TargetRingGameObj : public GameObj {
   private:
     boost::shared_ptr<MeshAnimation> _mesh;
     boost::shared_ptr<MeshAnimation> _check_mesh_1;
     boost::shared_ptr<MeshAnimation> _check_mesh_2;
+
+    class CheckFaceContactHandler : public SimpleContactHandler {
+      private:
+        TargetRingGameObj* _target_ring;
+        unsigned int _last_collision;
+
+      public:
+        CheckFaceContactHandler(TargetRingGameObj* target_ring) : _target_ring(target_ring), _last_collision(0) {}
+        bool recent_collision();
+        bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
+    };
 
   protected:
     void step_impl();
