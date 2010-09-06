@@ -28,6 +28,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gameplay_mode.h"
 #include "globals.h"
 #include "gloo.h"
+#include "target_ring.h"
 
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
@@ -41,7 +42,16 @@ AutoRegistrationBySourceTypename<
 > rings_passed_condition_reg;
 
 unsigned int RingsPassedCondition::passed_rings() const {
-  return 0;
+  unsigned int ret = 0;
+  for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
+    GOMap::size_type idx = i->first.find("LIBTargetRing");
+    if (idx == 0) {
+      if (static_cast<const TargetRingGameObj*>(&*(i->second))->passed()) {
+        ++ret;
+      }
+    }
+  }
+  return ret;
 }
 
 RingsPassedCondition::RingsPassedCondition(const ORE1::RingsPassedConditionType& condition) :

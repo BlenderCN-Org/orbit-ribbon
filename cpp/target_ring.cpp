@@ -26,7 +26,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "autoxsd/orepkgdesc.h"
 #include "constants.h"
-#include "debug.h"
 #include "globals.h"
 #include "mesh.h"
 
@@ -60,7 +59,6 @@ void TargetRingGameObj::step_impl() {
 
   // If we have a recent collision on every check face, then we can consider that a ring passthru
   if (_check_face_collision_times.size() == CHECK_FACE_COUNT) {
-    Debug::debug_msg("PASSED!");
     _passed = true;
   }
 }

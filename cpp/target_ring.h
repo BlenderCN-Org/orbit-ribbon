@@ -67,7 +67,7 @@ class TargetRingGameObj : public GameObj {
   public:
     TargetRingGameObj(const ORE1::ObjType& obj);
     
-    bool passed() { return _passed; }
+    bool passed() const { return _passed; }
 };
 
 #endif
