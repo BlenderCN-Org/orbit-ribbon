@@ -22,8 +22,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "target_ring.h"
 
-#include <boost/foreach.hpp>
-#include <list>
+#include <boost/lexical_cast.hpp>
 
 #include "autoxsd/orepkgdesc.h"
 #include "constants.h"
@@ -33,23 +32,37 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 AutoRegistration<GameObjFactorySpec, TargetRingGameObj> target_ring_gameobj_reg("TargetRing");
 
-bool TargetRingGameObj::CheckFaceContactHandler::recent_collision() {
-  return (_last_collision != 0) && ((Globals::total_steps - _last_collision)*(float)MAX_FPS < CHECK_FACE_MAX_COLLISION_AGE);
-}
-
 bool TargetRingGameObj::CheckFaceContactHandler::handle_collision(
   float t __attribute__ ((unused)),
   dGeomID o __attribute__ ((unused)),
-  const dContactGeom* c,
+  const dContactGeom* c __attribute__ ((unused)),
   unsigned int c_len  __attribute__ ((unused))
 ) {
-  Debug::debug_msg("COLLISION!");
+  // TODO Only care about runners that pass through the ring, not other objects (use ODE bitfield)
+  // TODO Use a pair for the map key to track both check face and the object that triggered it
+  _target_ring->_check_face_collision_times[this] = Globals::total_steps;
 
   // This geom is never used to create contact joints
   return false;
 }
 
-void TargetRingGameObj::step_impl() {
+void TargetRingGameObj::step_impl() { 
+  // Destroy any non-recent collisions
+  for (std::map<CheckFaceContactHandler*, unsigned int>::iterator i = _check_face_collision_times.begin(); i != _check_face_collision_times.end(); ++i) {
+    if ((Globals::total_steps - i->second)/(float)MAX_FPS > CHECK_FACE_MAX_COLLISION_AGE) {
+      // FIXME : Check if this is safe; can we count on being able to advance an iterator that points to an erased
+      // element?
+      _check_face_collision_times.erase(i);
+    }
+  }
+  
+  if (_passed) { return; }
+
+  // If we have a recent collision on every check face, then we can consider that a ring passthru
+  if (_check_face_collision_times.size() == CHECK_FACE_COUNT) {
+    Debug::debug_msg("PASSED!");
+    _passed = true;
+  }
 }
 
 void TargetRingGameObj::near_draw_impl() {
@@ -58,19 +71,20 @@ void TargetRingGameObj::near_draw_impl() {
 
 TargetRingGameObj::TargetRingGameObj(const ORE1::ObjType& obj) :
   GameObj(obj),
+  _passed(false),
   _mesh(MeshAnimation::load("mesh-LIBTargetRing"))
 {
   // Set up geoms for our check faces
-  std::list<std::string> face_nums;
-  face_nums.push_back("1");
-  face_nums.push_back("2");
-  BOOST_FOREACH(const std::string& face_num, face_nums) {
-    boost::shared_ptr<MeshAnimation> ma = MeshAnimation::load("mesh-" + get_libscene_obj("CheckFace" + face_num).meshName());
+  for (unsigned int i = 1; i <= CHECK_FACE_COUNT; ++i) {
+    std::string face_num_str = boost::lexical_cast<std::string>(i);
+    const ORE1::ObjType& libscene_obj = get_libscene_obj("CheckFace" + face_num_str);
+    boost::shared_ptr<MeshAnimation> ma = MeshAnimation::load("mesh-" + libscene_obj.meshName());
     _check_face_meshes.push_back(ma); // Keeps the MeshAnimation from being unloaded until the TargetRing is destroyed
     get_entity().set_geom(
-      "check_face_" + face_num,
+      "check_face_" + face_num_str,
       dCreateTriMesh(Sim::get_static_space(), ma->get_trimesh_data(0), 0, 0, 0),
-      std::auto_ptr<CollisionHandler>(new CheckFaceContactHandler(this))
+      std::auto_ptr<CollisionHandler>(new CheckFaceContactHandler(this)),
+      &libscene_obj
     );
   }
 }

@@ -25,13 +25,17 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <boost/shared_ptr.hpp>
 #include <list>
+#include <map>
 
 #include "gameobj.h"
 #include "sim.h"
 
 // Number of seconds before a collision with a check face is no longer considered recent enough to count
 // This way we can reduce the chance that the player can just whiff past both checkfaces from the outside
-const float CHECK_FACE_MAX_COLLISION_AGE = 1.0; 
+const float CHECK_FACE_MAX_COLLISION_AGE = 3.0; 
+
+// Number of check faces
+const unsigned int CHECK_FACE_COUNT = 2;
 
 class MeshAnimation;
 namespace ORE1 { class ObjType; }
@@ -39,18 +43,20 @@ namespace ORE1 { class ObjType; }
 class TargetRingGameObj;
 class TargetRingGameObj : public GameObj {
   private:
+    class CheckFaceContactHandler;
+    friend class CheckFaceContactHandler;
+
+    bool _passed;
     boost::shared_ptr<MeshAnimation> _mesh;
     std::list<boost::shared_ptr<MeshAnimation> > _check_face_meshes;
-    
+    std::map<CheckFaceContactHandler*, unsigned int> _check_face_collision_times;
     
     class CheckFaceContactHandler : public SimpleContactHandler {
       private:
         TargetRingGameObj* _target_ring;
-        unsigned int _last_collision;
 
       public:
-        CheckFaceContactHandler(TargetRingGameObj* target_ring) : _target_ring(target_ring), _last_collision(0) {}
-        bool recent_collision();
+        CheckFaceContactHandler(TargetRingGameObj* target_ring) : _target_ring(target_ring) {}
         bool handle_collision(float t, dGeomID o, const dContactGeom* c, unsigned int c_len);
     };
 
@@ -60,6 +66,8 @@ class TargetRingGameObj : public GameObj {
 
   public:
     TargetRingGameObj(const ORE1::ObjType& obj);
+    
+    bool passed() { return _passed; }
 };
 
 #endif
