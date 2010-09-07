@@ -26,6 +26,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "debug.h"
 #include "except.h"
 #include "gameplay_mode.h"
+#include "globals.h"
+#include "menu_modes.h"
 
 #include "mission_fsm.h"
 
@@ -109,7 +111,18 @@ void MissionState::draw(const GameplayMode& gameplay_mode) {
   }
 }
 
-void MissionFSM::transition_to_state(const std::string& name) {
+void MissionFSM::transition_to_state(const std::string& name) { 
+  Debug::status_msg("Entering mission state \"" + name + "\"");
+
+  if (_cur_state.get() != NULL) {
+    _cur_state->exiting_state(_gameplay_mode);
+  }
+
+  if (name == "win" or name == "fail") {
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new PostMissionMenuMode(name == "win")));
+    return;
+  }
+
   ORE1::MissionType::StateConstIterator i;
   for (i = _mission.state().begin(); i != _mission.state().end(); ++i) {
     if (i->name() == name) { break; }
@@ -117,13 +130,8 @@ void MissionFSM::transition_to_state(const std::string& name) {
   if (i == _mission.state().end()) {
     throw GameException("No such mission state \"" + name + "\"");
   }
-  
-  if (_cur_state.get() != NULL) {
-    _cur_state->exiting_state(_gameplay_mode);
-  }
   _cur_state.reset(new MissionState(*i));
   _cur_state->entering_state(_gameplay_mode); 
-  Debug::status_msg("Entering mission state \"" + name + "\"");
 }
 
 MissionFSM::MissionFSM(const ORE1::MissionType& mission, const GameplayMode& gameplay_mode) :

@@ -150,3 +150,15 @@ void PauseMenuMode::handle_menu_selection(const std::string& item) {
     Globals::mode_stack.next_frame_pop_mode();
   }
 }
+
+PostMissionMenuMode::PostMissionMenuMode(bool won) : MenuMode(400, 40, 30), _won(won) {
+  add_entry("continue", won ? "Rios made it!" : "Didn't make it...");
+}
+
+void PostMissionMenuMode::handle_menu_selection(const std::string& item) {
+  if (item == "continue") {
+    // Pop both this mode and the GameplayMode, returning us to the pre-mission screen
+    Globals::mode_stack.next_frame_pop_mode();
+    Globals::mode_stack.next_frame_pop_mode();
+  }
+}

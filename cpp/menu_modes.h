@@ -83,4 +83,15 @@ class PauseMenuMode : public MenuMode {
     void handle_menu_selection(const std::string& item);
 };
 
+class PostMissionMenuMode : public MenuMode {
+  private:
+    bool _won;
+
+  public:
+    bool execute_after_lower_mode() { return true; }
+
+    PostMissionMenuMode(bool won);
+    void handle_menu_selection(const std::string& item);
+};
+
 #endif
