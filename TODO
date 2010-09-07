@@ -19,7 +19,6 @@
 == OTHER STUFF TO DO ==
 Thinh's ideas:
 - FOV on acceleration
-- Compass
 - More stuff in the sky for orientation
 - Reduced rotation speed, cap
 
@@ -28,7 +27,10 @@ Thinh's ideas:
 	- Builds the entire project at once to see if g++'s unit-at-a-time thing helps
 	- Uses g++'s profiling mechanism with some kind of demo
 
-- Generate an errors.txt file when errors are sent to Debug
+- Speed cap enforced with non-linear drag
+- After generating packed textures, VBOs, etc, save to local system and restore for quick loading
+  - Need to make sure to discard cache if video card/driver changes, or if source data is updated
+- Generate a log file with all debug messages
 - For the sake of UI juiciness and following the theme, give the mouse cursor a little bit of momentum ala Per.Oxyd
 - FTGL sucks, implement a simple texture-submap-based font system to use instead, bundle fonts into executable
 - Come up with a simple way to do documentation; doxygen's usual format is a pain in the ass
@@ -37,12 +39,9 @@ Thinh's ideas:
 - Make sure mipmapping and texture compression are both actually working
 - Use a test texture instead of a test color for untextured faces
 - Consider using texture packing
-- Consider using three VBOs: one for very static geometry, one for rigid but movable geometry, and one for dynamic geometry
-	- If using above: have the ORE file pre-transform static geometry
 - Have the ORE file include pre-calculated information about how much memory must be allocated for the VBOs
 - Show the loading animation while loading
 - Include all resources in the ORE file (including loading anim, title screen image, sounds, etc)
-- Separate out the ORE file into its own repository; name it No Lack Of Sky
-- Figure out why SDL won't restore the original screen resolution! (Grumble, mumble)
-- Allow video mode to be reinitialized without having to reinit the entire display module
+- Separate out the ORE file into its own repository
+- Allow video mode to be changed without having to reinit the entire display module
 - Maybe when it is necessary to tilt about z axis while running, I should add some x linear force to simulate banking. Banking would actually occur, since one foot would be pushing sideways to adjust orientation, right?
