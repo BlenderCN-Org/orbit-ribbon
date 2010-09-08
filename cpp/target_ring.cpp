@@ -47,11 +47,11 @@ bool TargetRingGameObj::CheckFaceContactHandler::handle_collision(
 
 void TargetRingGameObj::step_impl() { 
   // Destroy any non-recent collisions
-  for (std::map<CheckFaceContactHandler*, unsigned int>::iterator i = _check_face_collision_times.begin(); i != _check_face_collision_times.end(); ++i) {
+  for (std::map<CheckFaceContactHandler*, unsigned int>::iterator i = _check_face_collision_times.begin(); i != _check_face_collision_times.end();) {
     if ((Globals::total_steps - i->second)/(float)MAX_FPS > CHECK_FACE_MAX_COLLISION_AGE) {
-      // FIXME : Check if this is safe; can we count on being able to advance an iterator that points to an erased
-      // element?
-      _check_face_collision_times.erase(i);
+      _check_face_collision_times.erase(i++);
+    } else {
+      ++i;
     }
   }
   
