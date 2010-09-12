@@ -52,6 +52,8 @@ const std::string PHYS_DEBUG_BOX_NUMFMT("%+5.3f");
 const float PHYS_DEBUG_BOX_FONTSIZE = 15;
 const float PHYS_DEBUG_BOX_COLL_WINDOW = MAX_FPS*2;
 
+const std::string SPEED_NUMFMT("%6.2f m/s");
+
 GameplayMode::GameplayMode() : _fsm(*Globals::current_mission, *this) {
   // Locate the avatar object
   for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
@@ -176,6 +178,8 @@ void GameplayMode::draw_2d(bool top __attribute__ ((unused))) {
       }
     }
   }
+  
+  Globals::sys_font->draw(Point(0, Display::get_screen_height()-20), 18, (boost::format(SPEED_NUMFMT) % av->get_speed()).str());
   
   _fsm.draw();
 }
