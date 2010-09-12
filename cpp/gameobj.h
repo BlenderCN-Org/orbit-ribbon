@@ -51,6 +51,7 @@ class GameObj : boost::noncopyable {
     void set_rot(const boost::array<float, 9>& rot);
     
     const Vector& get_vel() const { return _vel; }
+    float get_speed() const { return _vel.mag(); }
     
     std::string to_str() const;
     
