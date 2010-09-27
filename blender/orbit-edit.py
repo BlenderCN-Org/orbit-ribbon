@@ -178,9 +178,6 @@ def do_resanify():
 
 
 def do_export():
-  # FIXME: Need to also consider auxillary objects within LIB scenes
-  # Though must keep in mind that objects in LIB scenes only have position/rotation relative to each other
-  
   # Load the schemas we need
   def schema_load(sname):
     return lxml.etree.XMLSchema(lxml.etree.parse(os.path.join(WORKING_DIR, os.path.pardir, "xml", sname)))
@@ -234,6 +231,8 @@ def do_export():
     
     for obj in scene.objects:
       if not filt(obj.name):
+        continue
+      if obj.name.startswith("RIG") or obj.name.startswith("BASERIG"):
         continue
       try:
         objNode = lxml.etree.SubElement(tgt, "obj", objName=obj.name, meshName=obj.getData().name)

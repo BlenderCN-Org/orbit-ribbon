@@ -25,37 +25,25 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <boost/array.hpp>
 
-// Distances in meters from Voy to other sky objects, and sizes of various objects
-const float VOY_RADIUS = 2e4; // From book
-const float T3_DIST = 2.5e11; // From book
-const float T3_RADIUS = 2.5e9; // Our Sun's radius times about 1.2 is 8.4e8, which is from book... but that looks too small
-const float TORUS_OUTSIDE_DIST = 1e9; // From book
-const float TORUS_INSIDE_DIST = 1e7; // Guessed
-const float TORUS_RADIUS = TORUS_OUTSIDE_DIST - TORUS_INSIDE_DIST; // Assuming a circular torus, which probably isn't quite right
-const float GOLD_DIST = 2.6e7; // From book; also, assuming that Gold is in precise middle of Smoke Ring
-const float GOLD_RADIUS = 5e5; // Guessed; includes the storm around Gold
-const float SMOKE_RING_RADIUS = 8e4; // Calculations yielded 1.4e7, but that looked terrible, so this is made up. FIXME Too narrow.
-const float SMOKE_RING_INSIDE_DIST = GOLD_DIST - SMOKE_RING_RADIUS;
-const float SMOKE_RING_OUTSIDE_DIST = GOLD_DIST + SMOKE_RING_RADIUS;
-
-// T3 light settings
-const float T3_LIGHT_DIFFUSE[4] = {1.0, 1.0, 1.0, 1.0};
+// Settings for the star
+const float STAR_DIST = 5e10; // Distance between the center of the star and the center of the Ribbon torus
+const float STAR_LIGHT_DIFFUSE[4] = {1.0, 1.0, 1.0, 1.0};
 
 // Ambient light settings
-const float AMB_LIGHT_DIST = 1e10; // Distance to the ambient light (not too important, as there's no attenuation)
+const float AMB_LIGHT_DIST = 1e9; // Distance to the ambient light (not too important, as there's no attenuation)
 const float AMB_LIGHT_DIFFUSE[4] = {0.15, 0.15, 0.15, 1.0}; // Diffuse color of the ambient light
 
 class Point;
 namespace ORE1 { class SkySettingsType; }
 
 struct SkySettings {
-  float ring_angle;
-  float ring_y_offset;
-  float ring_d_offset;
+  float orbit_angle;
+  float orbit_y_offset;
+  float orbit_d_offset;
   float tilt_angle;
   float tilt_x;
   float tilt_z;
-  float t3_angle;
+  float bubble_radius;
   
   SkySettings();
   SkySettings(const boost::array<float, 7>& args);
@@ -77,8 +65,6 @@ class Background {
     
     const SkySettings& get_sky() const { return _sky; }
     void set_sky(const SkySettings& sky);
-    
-    float get_dist_from_ring(const Point& pt);
     
     void set_clear_color();
     void draw();

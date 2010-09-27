@@ -135,12 +135,11 @@ void Display::init() {
   
   glEnable(GL_TEXTURE_2D);
   
-  glEnable(GL_LIGHT1); glLightfv(GL_LIGHT1, GL_DIFFUSE, T3_LIGHT_DIFFUSE);
-  // glEnable(GL_LIGHT2); glLightfv(GL_LIGHT1, GL_DIFFUSE, VOY_LIGHT_DIFFUSE); // Enable this once Voy lighting is done by Background
+  glEnable(GL_LIGHT1); glLightfv(GL_LIGHT1, GL_DIFFUSE, STAR_LIGHT_DIFFUSE);
+  glEnable(GL_LIGHT2); glLightfv(GL_LIGHT2, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
   glEnable(GL_LIGHT3); glLightfv(GL_LIGHT3, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
   glEnable(GL_LIGHT4); glLightfv(GL_LIGHT4, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
   glEnable(GL_LIGHT5); glLightfv(GL_LIGHT5, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
-  glEnable(GL_LIGHT6); glLightfv(GL_LIGHT6, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
   
   glShadeModel(GL_SMOOTH);
   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);

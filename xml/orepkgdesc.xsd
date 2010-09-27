@@ -58,13 +58,13 @@
   
   <xsd:complexType name="SkySettingsType">
     <xsd:sequence>
-      <xsd:element name="ringAngle" type="xsd:float" />
-      <xsd:element name="ringYOffset" type="xsd:float" />
-      <xsd:element name="ringDOffset" type="xsd:float" />
+      <xsd:element name="orbitAngle" type="xsd:float" />
+      <xsd:element name="orbitYOffset" type="xsd:float" />
+      <xsd:element name="orbitDOffset" type="xsd:float" />
       <xsd:element name="tiltAngle" type="xsd:float" />
       <xsd:element name="tiltX" type="xsd:float" />
       <xsd:element name="tiltZ" type="xsd:float" />
-      <xsd:element name="t3Angle" type="xsd:float" />
+      <xsd:element name="bubbleRadius" type="xsd:float" />
     </xsd:sequence>
   </xsd:complexType>
   
