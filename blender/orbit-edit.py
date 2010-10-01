@@ -218,6 +218,17 @@ def do_export():
         # Area base scene: write all non-TestLamp BASE objects to the Area node
         filt = lambda n: True if (n.startswith("BASE") and not ("TestLamp") in n) else False
         tgt = descDoc.xpath("area[@n='%u']" % (int(name[1:3])))[0] # Use the 'A##' name
+
+        # Scan through and look for a bubble object to use for BubbleSettings
+        for obj in scene.objects:
+          if obj.type == "Surf" and "bubble" in obj.name.lower():
+            try:
+              bubbleNode = lxml.etree.SubElement(tgt, "bubble")
+              posNode = lxml.etree.SubElement(bubbleNode, "pos"); posNode.text = " ".join([str(x) for x in fixcoords(obj.loc)])
+              radiusNode = lxml.etree.SubElement(bubbleNode, "radius"); radiusNode.text = str((sum(obj.size)/3)*(sum(obj.data.size)/3))
+              break
+            except Exception, e:
+              pup_error("Problem exporting surface %s: %s" % (obj.name, str(e)))
       else:
         # Mission scene: write all non-BASE objects (whether LIB or not) to the Mission node under the Area node
         filt = lambda n: True if not n.startswith("BASE") else False
@@ -228,21 +239,22 @@ def do_export():
       tgt = lxml.etree.SubElement(descDoc, "libscene", name=name)
     else:
       continue
-    
+
     for obj in scene.objects:
       if not filt(obj.name):
         continue
       if obj.name.startswith("RIG") or obj.name.startswith("BASERIG"):
         continue
-      try:
-        objNode = lxml.etree.SubElement(tgt, "obj", objName=obj.name, meshName=obj.getData().name)
-        posNode = lxml.etree.SubElement(objNode, "pos"); posNode.text = " ".join([str(x) for x in fixcoords(obj.loc)])
-        rotNode = lxml.etree.SubElement(objNode, "rot"); rotNode.text = " ".join([str(x) for x in genrotmatrix(*obj.rot)])
-      except Exception, e:
-        pup_error("Problem exporting object %s: %s" % (obj.name, str(e)))
+      if obj.type == "Mesh":
+        try:
+          objNode = lxml.etree.SubElement(tgt, "obj", objName=obj.name, meshName=obj.getData().name)
+          posNode = lxml.etree.SubElement(objNode, "pos"); posNode.text = " ".join([str(x) for x in fixcoords(obj.loc)])
+          rotNode = lxml.etree.SubElement(objNode, "rot"); rotNode.text = " ".join([str(x) for x in genrotmatrix(*obj.rot)])
+        except Exception, e:
+          pup_error("Problem exporting object %s: %s" % (obj.name, str(e)))
   
   # Write out the description now that all the scene information has been added in
-  #descSchema.assertValid(descDoc)
+  descSchema.assertValid(descDoc)
   zfh.writestr("ore-desc", lxml.etree.tostring(descDoc, xml_declaration=True))
   
   # FIXME Adding in the cursor image; there will be many more "standard UI images", need a way of including them all

@@ -51,6 +51,7 @@
       <xsd:element name="niceName" type="xsd:string" />
       <xsd:element name="sky" type="SkySettingsType" />
       <xsd:element name="mission" minOccurs="0" maxOccurs="unbounded" type="MissionType" />
+      <xsd:element name="bubble" minOccurs="0" maxOccurs="1" type="BubbleSettingsType" />
       <xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />
     </xsd:sequence>
     <xsd:attribute name="n" type="xsd:unsignedInt" use="required" />
@@ -64,7 +65,13 @@
       <xsd:element name="tiltAngle" type="xsd:float" />
       <xsd:element name="tiltX" type="xsd:float" />
       <xsd:element name="tiltZ" type="xsd:float" />
-      <xsd:element name="bubbleRadius" type="xsd:float" />
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="BubbleSettingsType">
+    <xsd:sequence>
+      <xsd:element name="pos" type="Coord3DType" />
+      <xsd:element name="radius" type="xsd:float" />
     </xsd:sequence>
   </xsd:complexType>
   
