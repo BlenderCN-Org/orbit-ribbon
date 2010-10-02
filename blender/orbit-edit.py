@@ -186,10 +186,10 @@ def do_export():
   
   Blender.Window.DrawProgressBar(0.0, "Initializing export")
   
-  # Load the description from TX:oredesc, and validate it against the description schema
+  # Load the description from TX:oredesc
   descDoc = lxml.etree.fromstring(
     "\n".join(bpy.data.texts["oredesc"].asLines()),
-    parser=lxml.etree.XMLParser(remove_blank_text=True, schema=descSchema),
+    parser=lxml.etree.XMLParser(remove_blank_text=True),
   )
   
   # Record the frame the editor was in before we started mucking about
@@ -223,9 +223,9 @@ def do_export():
         for obj in scene.objects:
           if obj.type == "Surf" and "bubble" in obj.name.lower():
             try:
-              bubbleNode = lxml.etree.SubElement(tgt, "bubble")
-              posNode = lxml.etree.SubElement(bubbleNode, "pos"); posNode.text = " ".join([str(x) for x in fixcoords(obj.loc)])
-              radiusNode = lxml.etree.SubElement(bubbleNode, "radius"); radiusNode.text = str((sum(obj.size)/3)*(sum(obj.data.size)/3))
+              skyNode = tgt.xpath("sky")[0]
+              radiusNode = lxml.etree.SubElement(skyNode, "bubbleRadius"); radiusNode.text = str((sum(obj.size)/3)*(sum(obj.data.size)/3))
+              posNode = lxml.etree.SubElement(skyNode, "bubblePos"); posNode.text = " ".join([str(x) for x in fixcoords(obj.loc)])
               break
             except Exception, e:
               pup_error("Problem exporting surface %s: %s" % (obj.name, str(e)))
@@ -253,7 +253,7 @@ def do_export():
         except Exception, e:
           pup_error("Problem exporting object %s: %s" % (obj.name, str(e)))
   
-  # Write out the description now that all the scene information has been added in
+  # Verify and write out the description now that all the scene information has been added in
   descSchema.assertValid(descDoc)
   zfh.writestr("ore-desc", lxml.etree.tostring(descDoc, xml_declaration=True))
   

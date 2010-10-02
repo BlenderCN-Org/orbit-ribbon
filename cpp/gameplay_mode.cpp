@@ -179,6 +179,7 @@ void GameplayMode::draw_2d(bool top __attribute__ ((unused))) {
     }
   }
   
+  glColor3f(1.0, 1.0, 1.0);
   Globals::sys_font->draw(Point(0, Display::get_screen_height()-20), 18, (boost::format(SPEED_NUMFMT) % av->get_speed()).str());
   
   _fsm.draw();

@@ -40,14 +40,15 @@ SkySettings::SkySettings() :
   bubble_radius(0)
 {}
 
-SkySettings::SkySettings(const boost::array<float, 7>& args) :
+SkySettings::SkySettings(const boost::array<float, 10>& args) :
   orbit_angle(args[0]),
   orbit_y_offset(args[1]),
   orbit_d_offset(args[2]),
   tilt_angle(args[3]),
   tilt_x(args[4]),
   tilt_z(args[5]),
-  bubble_radius(args[6])
+  bubble_radius(args[6]),
+  bubble_pos(args[7], args[8], args[9])
 {}
 
 SkySettings::SkySettings(const ORE1::SkySettingsType& area) :
@@ -60,7 +61,7 @@ SkySettings::SkySettings(const ORE1::SkySettingsType& area) :
   bubble_radius(area.bubbleRadius())
 {}
 
-void SkySettings::fill_array(boost::array<float, 7>& tgt) {
+void SkySettings::fill_array(boost::array<float, 10>& tgt) {
   tgt[0] = orbit_angle;
   tgt[1] = orbit_y_offset;
   tgt[2] = orbit_d_offset;
@@ -68,6 +69,9 @@ void SkySettings::fill_array(boost::array<float, 7>& tgt) {
   tgt[4] = tilt_x;
   tgt[5] = tilt_z;
   tgt[6] = bubble_radius;
+  tgt[7] = bubble_pos.x;
+  tgt[8] = bubble_pos.y;
+  tgt[9] = bubble_pos.z;
 }
 
 Point Background::get_game_origin() {
@@ -82,6 +86,7 @@ Point Background::convert_to_sky_coords(const Point& pt) {
 
 Background::Background(const SkySettings& sky) {
   set_sky(sky);
+  _bubble_quadric = gluNewQuadric();
 }
 
 void Background::set_sky(const SkySettings& sky) {
@@ -105,26 +110,42 @@ void Background::set_clear_color() {
 }
 
 void Background::draw() {
-  GLOOPushedMatrix pm;
-  glMultMatrixf(_skyMatr.begin());
-  
-  // TODO Draw stars
-  
-  // Draw and set up lighting for the star
-  // TODO Draw the star itself
-  float star_pos[4] = {std::sin(-rev2rad(_sky.orbit_angle))*STAR_DIST, 0.0, std::cos(-rev2rad(_sky.orbit_angle))*STAR_DIST, 1.0};
-  glLightfv(GL_LIGHT1, GL_POSITION, star_pos);
-  
-  // Set up ambient lighting (so that areas not directly lit by the star aren't completely dark)
-  float part_ald = std::sqrt(2)*AMB_LIGHT_DIST;
-  float pos3[4] = {0.0, AMB_LIGHT_DIST, 0.0, 1.0};
-  glLightfv(GL_LIGHT2, GL_POSITION, pos3);
-  float pos4[4] = {part_ald, -part_ald, 0.0, 1.0};
-  glLightfv(GL_LIGHT3, GL_POSITION, pos4);
-  float pos5[4] = {-0.5*part_ald, -part_ald, 0.866*part_ald, 1.0};
-  glLightfv(GL_LIGHT4, GL_POSITION, pos5);
-  float pos6[4] = {-0.5*part_ald, -part_ald, -0.866*part_ald, 1.0};
-  glLightfv(GL_LIGHT5, GL_POSITION, pos6);
+  {
+    // Draw the bubble's inside and outside surface
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE);
+    // TODO Draw the outside
+    // Inside
+    gluQuadricOrientation(_bubble_quadric, GLU_INSIDE);
+    glColor4f(1.0, 0.5, 0.2, 0.5);
+    //glTranslatef(_sky.bubble_pos.x, _sky.bubble_pos.y, _sky.bubble_pos.z);
+    gluSphere(_bubble_quadric, _sky.bubble_radius, 32, 32);
+    glEnable(GL_TEXTURE);
+    glEnable(GL_LIGHTING);
+  }
 
-  // Draw distant objects (other bubbles, rocks, megafauna, etc)
+  {
+    GLOOPushedMatrix pm;
+    glMultMatrixf(_skyMatr.begin());
+
+    // TODO Draw stars
+
+    // Draw and set up lighting for the star
+    // TODO Draw the star itself
+    float star_pos[4] = {std::sin(-rev2rad(_sky.orbit_angle))*STAR_DIST, 0.0, std::cos(-rev2rad(_sky.orbit_angle))*STAR_DIST, 1.0};
+    glLightfv(GL_LIGHT1, GL_POSITION, star_pos);
+
+    // Set up ambient lighting (so that areas not directly lit by the star aren't completely dark)
+    float part_ald = std::sqrt(2)*AMB_LIGHT_DIST;
+    float pos3[4] = {0.0, AMB_LIGHT_DIST, 0.0, 1.0};
+    glLightfv(GL_LIGHT2, GL_POSITION, pos3);
+    float pos4[4] = {part_ald, -part_ald, 0.0, 1.0};
+    glLightfv(GL_LIGHT3, GL_POSITION, pos4);
+    float pos5[4] = {-0.5*part_ald, -part_ald, 0.866*part_ald, 1.0};
+    glLightfv(GL_LIGHT4, GL_POSITION, pos5);
+    float pos6[4] = {-0.5*part_ald, -part_ald, -0.866*part_ald, 1.0};
+    glLightfv(GL_LIGHT5, GL_POSITION, pos6);
+
+    // Draw distant objects (other bubbles, rocks, megafauna, etc)
+  }
 }

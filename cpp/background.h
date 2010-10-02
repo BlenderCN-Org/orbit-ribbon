@@ -25,6 +25,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <boost/array.hpp>
 
+#include "geometry.h"
+
 // Settings for the star
 const float STAR_DIST = 5e10; // Distance between the center of the star and the center of the Ribbon torus
 const float STAR_LIGHT_DIFFUSE[4] = {1.0, 1.0, 1.0, 1.0};
@@ -33,29 +35,33 @@ const float STAR_LIGHT_DIFFUSE[4] = {1.0, 1.0, 1.0, 1.0};
 const float AMB_LIGHT_DIST = 1e9; // Distance to the ambient light (not too important, as there's no attenuation)
 const float AMB_LIGHT_DIFFUSE[4] = {0.15, 0.15, 0.15, 1.0}; // Diffuse color of the ambient light
 
-class Point;
+class GLUquadric;
 namespace ORE1 { class SkySettingsType; }
 
 struct SkySettings {
   float orbit_angle;
   float orbit_y_offset;
   float orbit_d_offset;
+  
   float tilt_angle;
   float tilt_x;
   float tilt_z;
+
   float bubble_radius;
+  Point bubble_pos;
   
   SkySettings();
-  SkySettings(const boost::array<float, 7>& args);
+  SkySettings(const boost::array<float, 10>& args);
   SkySettings(const ORE1::SkySettingsType& area);
   
-  void fill_array(boost::array<float, 7>& tgt);
+  void fill_array(boost::array<float, 10>& tgt);
 };
 
 class Background {
   private:
     SkySettings _sky;
     boost::array<float, 16> _skyMatr;
+    GLUquadric* _bubble_quadric;
     
     Point get_game_origin();
     Point convert_to_sky_coords(const Point& pt);
