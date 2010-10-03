@@ -42,6 +42,7 @@ namespace ORE1 { class ObjType; }
 
 class GameObj : boost::noncopyable {
   public:
+    GameObj(const Point& pos, std::auto_ptr<OdeEntity> entity = Sim::gen_empty_body());
     GameObj(const ORE1::ObjType& obj, std::auto_ptr<OdeEntity> entity = Sim::gen_empty_body());
     
     const Point& get_pos() const { return _pos; }
@@ -87,6 +88,8 @@ class GameObj : boost::noncopyable {
     float _ang_damp_coef[3];
     
     std::auto_ptr<OdeEntity> _entity;
+
+    void common_setup();
 };
 
 class GameObjFactorySpec : public FactorySpecBase<GameObj, ORE1::ObjType> {

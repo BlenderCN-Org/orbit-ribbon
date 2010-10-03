@@ -64,8 +64,6 @@
       <xsd:element name="tiltAngle" type="xsd:float" />
       <xsd:element name="tiltX" type="xsd:float" />
       <xsd:element name="tiltZ" type="xsd:float" />
-      <xsd:element name="bubbleRadius" type="xsd:float" />
-      <xsd:element name="bubblePos" type="Coord3DType" />
     </xsd:sequence>
   </xsd:complexType>
   
@@ -143,6 +141,14 @@
     </xsd:sequence>
     <xsd:attribute name="objName" type="xsd:string" use="required" />
     <xsd:attribute name="meshName" type="xsd:string" use="required" />
+  </xsd:complexType>
+
+  <xsd:complexType name="BubbleObjType">
+    <xsd:complexContent>
+      <xsd:extension base="ObjType">
+        <xsd:attribute name="radius" type="xsd:float" use="required" />
+      </xsd:extension>
+    </xsd:complexContent>
   </xsd:complexType>
   
   <xsd:simpleType name="FloatListType">

@@ -43,28 +43,28 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 const float DEFAULT_VEL_DAMP_COEF = 0.15;
 const float DEFAULT_ANG_DAMP_COEF = 0.15;
 
+GameObj::GameObj(const Point& pos, std::auto_ptr<OdeEntity> entity) :
+  _pos(pos),
+  _vel(Vector()),
+  _entity(entity)
+{
+  // Identity matrix, no rotation to start with
+  _rot[0] = 1; _rot[1] = 0; _rot[2] = 0;
+  _rot[3] = 0; _rot[4] = 1; _rot[5] = 0;
+  _rot[6] = 0; _rot[7] = 0; _rot[8] = 0;
+
+  common_setup();
+}
+
+
 GameObj::GameObj(const ORE1::ObjType& obj, std::auto_ptr<OdeEntity> entity) :
   _pos(Point(obj.pos()[0], obj.pos()[1], obj.pos()[2])),
   _vel(Vector()),
   _entity(entity)
 {
-  if (_entity.get() == 0) {
-    throw GameException("Cannot pass null OdeEntity pointer to GameObj. You probably want Sim::gen_empty_body()");
-  }
-  
   std::copy(obj.rot().begin(), obj.rot().end(), _rot.begin());
   
-  _entity->set_pos(_pos);
-  _entity->set_rot(_rot);
-  _entity->set_gameobj(this);
-  
-  _vel_damp_coef[0] = DEFAULT_VEL_DAMP_COEF;
-  _vel_damp_coef[1] = DEFAULT_VEL_DAMP_COEF;
-  _vel_damp_coef[2] = DEFAULT_VEL_DAMP_COEF;
-  
-  _ang_damp_coef[0] = DEFAULT_ANG_DAMP_COEF;
-  _ang_damp_coef[1] = DEFAULT_ANG_DAMP_COEF;
-  _ang_damp_coef[2] = DEFAULT_ANG_DAMP_COEF;
+  common_setup();
   
   static const boost::regex e("(LIB.+?)(?:\\.\\d+)?");
   boost::smatch m;
@@ -77,6 +77,20 @@ GameObj::GameObj(const ORE1::ObjType& obj, std::auto_ptr<OdeEntity> entity) :
       }
     }
   }
+}
+
+void GameObj::common_setup() {
+  _entity->set_pos(_pos);
+  _entity->set_rot(_rot);
+  _entity->set_gameobj(this);
+  
+  _vel_damp_coef[0] = DEFAULT_VEL_DAMP_COEF;
+  _vel_damp_coef[1] = DEFAULT_VEL_DAMP_COEF;
+  _vel_damp_coef[2] = DEFAULT_VEL_DAMP_COEF;
+  
+  _ang_damp_coef[0] = DEFAULT_ANG_DAMP_COEF;
+  _ang_damp_coef[1] = DEFAULT_ANG_DAMP_COEF;
+  _ang_damp_coef[2] = DEFAULT_ANG_DAMP_COEF;
 }
 
 void GameObj::set_pos(const Point& pos) {

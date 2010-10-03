@@ -218,17 +218,6 @@ def do_export():
         # Area base scene: write all non-TestLamp BASE objects to the Area node
         filt = lambda n: True if (n.startswith("BASE") and not ("TestLamp") in n) else False
         tgt = descDoc.xpath("area[@n='%u']" % (int(name[1:3])))[0] # Use the 'A##' name
-
-        # Scan through and look for a bubble object to use for BubbleSettings
-        for obj in scene.objects:
-          if obj.type == "Surf" and "bubble" in obj.name.lower():
-            try:
-              skyNode = tgt.xpath("sky")[0]
-              radiusNode = lxml.etree.SubElement(skyNode, "bubbleRadius"); radiusNode.text = str((sum(obj.size)/3)*(sum(obj.data.size)/3))
-              posNode = lxml.etree.SubElement(skyNode, "bubblePos"); posNode.text = " ".join([str(x) for x in fixcoords(obj.loc)])
-              break
-            except Exception, e:
-              pup_error("Problem exporting surface %s: %s" % (obj.name, str(e)))
       else:
         # Mission scene: write all non-BASE objects (whether LIB or not) to the Mission node under the Area node
         filt = lambda n: True if not n.startswith("BASE") else False
@@ -245,11 +234,14 @@ def do_export():
         continue
       if obj.name.startswith("RIG") or obj.name.startswith("BASERIG"):
         continue
-      if obj.type == "Mesh":
+      if obj.type == "Mesh" or obj.type == "Surf":
         try:
           objNode = lxml.etree.SubElement(tgt, "obj", objName=obj.name, meshName=obj.getData().name)
           posNode = lxml.etree.SubElement(objNode, "pos"); posNode.text = " ".join([str(x) for x in fixcoords(obj.loc)])
           rotNode = lxml.etree.SubElement(objNode, "rot"); rotNode.text = " ".join([str(x) for x in genrotmatrix(*obj.rot)])
+          if obj.type == "Surf":
+            # At the moment, the only thing surfaces are used for are bubbles
+            objNode.attrib["xsi:type"] = "ore:BubbleObjType"
         except Exception, e:
           pup_error("Problem exporting object %s: %s" % (obj.name, str(e)))
   

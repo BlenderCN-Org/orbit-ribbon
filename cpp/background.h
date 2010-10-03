@@ -35,7 +35,6 @@ const float STAR_LIGHT_DIFFUSE[4] = {1.0, 1.0, 1.0, 1.0};
 const float AMB_LIGHT_DIST = 1e9; // Distance to the ambient light (not too important, as there's no attenuation)
 const float AMB_LIGHT_DIFFUSE[4] = {0.15, 0.15, 0.15, 1.0}; // Diffuse color of the ambient light
 
-class GLUquadric;
 namespace ORE1 { class SkySettingsType; }
 
 struct SkySettings {
@@ -47,21 +46,17 @@ struct SkySettings {
   float tilt_x;
   float tilt_z;
 
-  float bubble_radius;
-  Point bubble_pos;
-  
   SkySettings();
-  SkySettings(const boost::array<float, 10>& args);
+  SkySettings(const boost::array<float, 6>& args);
   SkySettings(const ORE1::SkySettingsType& area);
   
-  void fill_array(boost::array<float, 10>& tgt);
+  void fill_array(boost::array<float, 6>& tgt);
 };
 
 class Background {
   private:
     SkySettings _sky;
     boost::array<float, 16> _skyMatr;
-    GLUquadric* _bubble_quadric;
     
     Point get_game_origin();
     Point convert_to_sky_coords(const Point& pt);
