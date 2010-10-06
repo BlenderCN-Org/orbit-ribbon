@@ -146,7 +146,9 @@
   <xsd:complexType name="BubbleObjType">
     <xsd:complexContent>
       <xsd:extension base="ObjType">
-        <xsd:attribute name="radius" type="xsd:float" use="required" />
+        <xsd:sequence>
+          <xsd:element name="radius" type="xsd:float" />
+        </xsd:sequence>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

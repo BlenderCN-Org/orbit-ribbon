@@ -241,7 +241,8 @@ def do_export():
           rotNode = lxml.etree.SubElement(objNode, "rot"); rotNode.text = " ".join([str(x) for x in genrotmatrix(*obj.rot)])
           if obj.type == "Surf":
             # At the moment, the only thing surfaces are used for are bubbles
-            objNode.attrib["xsi:type"] = "ore:BubbleObjType"
+            objNode.attrib["{http://www.w3.org/2001/XMLSchema-instance}type"] = "ore:BubbleObjType"
+            radNode = lxml.etree.SubElement(objNode, "radius"); radNode.text = str((sum(obj.size)/3) * (sum(obj.data.size)/3))
         except Exception, e:
           pup_error("Problem exporting object %s: %s" % (obj.name, str(e)))
   
