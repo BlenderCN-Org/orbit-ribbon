@@ -1,4 +1,5 @@
 == ROADMAP ==
+* Use orbit-edit.py to set "obj_type" attr on GameObjs, doing it through xsi:type from C++ isn't feasible anymore
 * Add background stuff
 * Get it to build on Windows
 * Seperate out the ORE file into its own package
