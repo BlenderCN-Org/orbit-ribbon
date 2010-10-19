@@ -104,7 +104,7 @@ def build_capsulate(source, target, env):
 		return 0
 		
 	for s in src_list:
-		if Execute(Action(lambda target, source, env: capsulize(s, matches[s]), "Encapsulating %s into header %s" % (str(s), str(matches[s])))):
+		if Execute(Action(lambda target, source, env: capsulize(s, matches[s]), "%s encapsulated into header %s" % (str(s), str(matches[s])))):
 			raise RuntimeError("build_capsulate: construction failed")
 
 
