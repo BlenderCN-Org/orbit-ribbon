@@ -1,6 +1,6 @@
 /*
 bubble.h: Header of the Bubble class
-Bubble is a GameObject representing the surface of a large bubble surrounding an asteroid
+Bubble is a GameObject representing the bubble that contains the atmosphere
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 
@@ -24,9 +24,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_BUBBLE_H
 
 #include "gameobj.h"
-
-class Point;
-class GLUquadric;
+#include "sim.h"
 
 class BubbleGameObj : public GameObj {
   private:
@@ -37,7 +35,7 @@ class BubbleGameObj : public GameObj {
     void near_draw_impl();
 
   public:
-    BubbleGameObj(const Point& pos, float radius);
+    BubbleGameObj(const ORE1::ObjType& obj);
 };
 
 #endif

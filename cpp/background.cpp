@@ -23,7 +23,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <cmath>
 #include <GL/glew.h>
 #include <GL/gl.h>
-#include <GL/glu.h>
 
 #include "autoxsd/orepkgdesc.h"
 #include "background.h"

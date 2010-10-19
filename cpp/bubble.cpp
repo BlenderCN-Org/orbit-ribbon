@@ -1,6 +1,6 @@
 /*
-bubble.cpp: Implementation of the Bubble class
-Bubble is a GameObject representing the surface of a large bubble surrounding an asteroid
+bubble.h: Header of the Bubble class
+Bubble is a GameObject representing the bubble that contains the atmosphere
 
 Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
 
@@ -20,13 +20,14 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
-#include "bubble.h"
-
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-// For now, no auto registration; Bubble is to be created manually during area instantiation
+#include "bubble.h"
+#include "autoxsd/orepkgdesc.h"
+
+AutoRegistration<GameObjFactorySpec, BubbleGameObj> bubble_gameobj_reg("Bubble");
 
 void BubbleGameObj::near_draw_impl() {
   // Draw the bubble's inside and outside surface
@@ -42,9 +43,9 @@ void BubbleGameObj::near_draw_impl() {
   glEnable(GL_LIGHTING);
 }
 
-BubbleGameObj::BubbleGameObj(const Point& pos, float radius) :
-  GameObj(pos),
+BubbleGameObj::BubbleGameObj(const ORE1::ObjType& obj) :
+  GameObj(obj),
   _quadric(gluNewQuadric()),
-  _radius(radius)
+  _radius(static_cast<const ORE1::BubbleObjType&>(obj).radius())
 {
 }
