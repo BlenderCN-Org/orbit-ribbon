@@ -140,7 +140,8 @@
       <xsd:element name="rot" type="RotMatrixType" />
     </xsd:sequence>
     <xsd:attribute name="objName" type="xsd:string" use="required" />
-    <xsd:attribute name="meshName" type="xsd:string" use="required" />
+    <xsd:attribute name="dataName" type="xsd:string" use="required" />
+    <xsd:attribute name="implName" type="xsd:string" use="optional" default="" />
   </xsd:complexType>
 
   <xsd:complexType name="BubbleObjType">

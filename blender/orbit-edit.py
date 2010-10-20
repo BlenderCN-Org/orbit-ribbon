@@ -21,7 +21,8 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 """
 
-import Blender, BPyMesh, bpy, os, sys, zipfile, datetime, lxml.etree, traceback
+import Blender, BPyMesh, bpy
+import re, os, sys, zipfile, datetime, lxml.etree, traceback
 from math import *
 
 WORKING_DIR = os.path.dirname(Blender.Get("filename"))
@@ -236,13 +237,19 @@ def do_export():
         continue
       if obj.type == "Mesh" or obj.type == "Surf":
         try:
-          objNode = lxml.etree.SubElement(tgt, "obj", objName=obj.name, meshName=obj.getData().name)
+          objNode = lxml.etree.SubElement(tgt, "obj", objName=obj.name, dataName=obj.getData().name)
           posNode = lxml.etree.SubElement(objNode, "pos"); posNode.text = " ".join([str(x) for x in fixcoords(obj.loc)])
           rotNode = lxml.etree.SubElement(objNode, "rot"); rotNode.text = " ".join([str(x) for x in genrotmatrix(*obj.rot)])
+          libDataMatch = re.match(r"LIB(.+?)(?:\.\d+)?$", obj.getData().name)
           if obj.type == "Surf":
             # At the moment, the only thing surfaces are used for are bubbles
+            objNode.attrib["implName"] = "Bubble"
             objNode.attrib["{http://www.w3.org/2001/XMLSchema-instance}type"] = "ore:BubbleObjType"
             radNode = lxml.etree.SubElement(objNode, "radius"); radNode.text = str((sum(obj.size)/3) * (sum(obj.data.size)/3))
+          elif libDataMatch:
+            # If it's a library object, have the game try to find a matching implementation
+            # The default mesh object implementation will be used if this doesn't match
+            objNode.attrib["implName"] = libDataMatch.group(1)
         except Exception, e:
           pup_error("Problem exporting object %s: %s" % (obj.name, str(e)))
   
