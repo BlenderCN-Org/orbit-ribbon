@@ -280,7 +280,7 @@ AutoDefaultRegistration<GameObjFactorySpec, MeshGameObj> mesh_gameobj_reg;
 
 MeshGameObj::MeshGameObj(const ORE1::ObjType& obj) :
   GameObj(obj),
-  _mesh_anim(MeshAnimation::load(std::string("mesh-") + obj.meshName()))
+  _mesh_anim(MeshAnimation::load(std::string("mesh-") + obj.dataName()))
 {
   get_entity().set_geom(
     "physical",

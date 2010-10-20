@@ -76,7 +76,7 @@ TargetRingGameObj::TargetRingGameObj(const ORE1::ObjType& obj) :
   for (unsigned int i = 1; i <= CHECK_FACE_COUNT; ++i) {
     std::string face_num_str = boost::lexical_cast<std::string>(i);
     const ORE1::ObjType& libscene_obj = get_libscene_obj("CheckFace" + face_num_str);
-    boost::shared_ptr<MeshAnimation> ma = MeshAnimation::load("mesh-" + libscene_obj.meshName());
+    boost::shared_ptr<MeshAnimation> ma = MeshAnimation::load("mesh-" + libscene_obj.dataName()); // FIXME Duplicates code in mesh.cpp
     _check_face_meshes.push_back(ma); // Keeps the MeshAnimation from being unloaded until the TargetRing is destroyed
     get_entity().set_geom(
       "check_face_" + face_num_str,

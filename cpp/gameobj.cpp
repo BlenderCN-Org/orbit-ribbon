@@ -26,7 +26,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/array.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
-#include <boost/regex.hpp>
 #include <cctype>
 #include <vector>
 
@@ -66,10 +65,8 @@ GameObj::GameObj(const ORE1::ObjType& obj, std::auto_ptr<OdeEntity> entity) :
   
   common_setup();
   
-  static const boost::regex e("(LIB.+?)(?:\\.\\d+)?");
-  boost::smatch m;
-  if (boost::regex_match(obj.objName(), m, e)) {
-    LSMap::const_iterator scene_iter = Globals::libscenes.find(m[1]);
+  if (obj.implName() != "") {
+    LSMap::const_iterator scene_iter = Globals::libscenes.find("LIB" + obj.implName());
     if (scene_iter != Globals::libscenes.end()) {
       const ORE1::SubsceneType& libscene = scene_iter->second;
       for (ORE1::SubsceneType::ObjConstIterator i = libscene.obj().begin(); i != libscene.obj().end(); ++i) {
@@ -229,10 +226,5 @@ const ORE1::ObjType& GameObj::get_libscene_obj(const std::string& name) const {
 }
 
 std::string GameObjFactorySpec::extract_name(const ORE1::ObjType& source) {
-  static const boost::regex e("LIB(.+?)(?:\\.\\d+)?");
-  boost::smatch m;
-  if (boost::regex_match(source.meshName(), m, e)) {
-    return m[1];
-  }
-  return "";
+  return source.implName();
 }
