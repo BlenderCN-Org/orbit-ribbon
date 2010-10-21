@@ -30,14 +30,17 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 AutoRegistration<GameObjFactorySpec, BubbleGameObj> bubble_gameobj_reg("Bubble");
 
 void BubbleGameObj::near_draw_impl() {
-  // Draw the bubble's inside and outside surface
+  // Draw the bubble's inside and/or outside surface
   glDisable(GL_LIGHTING);
   glDisable(GL_TEXTURE_2D);
+  
   // TODO Draw the outside
+  
   // Inside
   gluQuadricOrientation(_quadric, GLU_INSIDE);
   glColor4f(0.7, 0.7, 1.0, 1.0);
   gluSphere(_quadric, _radius, 16, 16);
+  
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_LIGHTING);
 }
