@@ -67,7 +67,6 @@ class Background {
     const SkySettings& get_sky() const { return _sky; }
     void set_sky(const SkySettings& sky);
     
-    void set_clear_color();
     void draw();
 };
 

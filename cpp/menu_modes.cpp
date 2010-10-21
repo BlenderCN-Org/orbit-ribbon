@@ -70,10 +70,6 @@ MainMenuMode::MainMenuMode() : MenuMode(180, 22, 8) {
   add_entry("quit", "Quit");
 }
 
-void MainMenuMode::pre_clear(bool top __attribute__ ((unused))) {
-  glClearColor(0.0, 0.0, 0.0, 0.0);
-}
-
 void MainMenuMode::handle_menu_selection(const std::string& item) {
   if (item == "play") {
     Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new AreaSelectMenuMode()));
@@ -93,10 +89,6 @@ AreaSelectMenuMode::AreaSelectMenuMode() : MenuMode(300, 22, 8) {
   }
   
   add_entry("back", "Back");
-}
-
-void AreaSelectMenuMode::pre_clear(bool top __attribute__ ((unused))) {
-  glClearColor(0.0, 0.0, 0.0, 0.0);
 }
 
 void AreaSelectMenuMode::handle_menu_selection(const std::string& item) {
@@ -120,10 +112,6 @@ MissionSelectMenuMode::MissionSelectMenuMode(unsigned int area_num) : MenuMode(4
   }
   
   add_entry("back", "Back");
-}
-
-void MissionSelectMenuMode::pre_clear(bool top __attribute__ ((unused))) {
-  glClearColor(0.0, 0.0, 0.0, 0.0);
 }
 
 void MissionSelectMenuMode::handle_menu_selection(const std::string& item) {

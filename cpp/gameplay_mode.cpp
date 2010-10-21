@@ -90,10 +90,6 @@ bool GameplayMode::handle_input() {
   return true;
 }
 
-void GameplayMode::pre_clear(bool top __attribute__ ((unused))) {
-  Globals::bg->set_clear_color();
-}
-
 void GameplayMode::pre_3d(bool top __attribute__ ((unused))) {
   AvatarGameObj* avatar = find_avatar();
   Point cam_pos = avatar->get_rel_point_pos(CAMERA_POS_OFFSET);

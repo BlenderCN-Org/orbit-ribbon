@@ -43,7 +43,6 @@ class Mode {
     // ModeStack will descend down the modes calling handle_input until it finds one that returns true
     virtual bool handle_input() { return false; }
     
-    virtual void pre_clear(bool top __attribute__ ((unused))) {}
     virtual void pre_3d(bool top __attribute__ ((unused))) {}
     virtual void draw_3d_far(bool top __attribute__ ((unused))) {}
     virtual void draw_3d_near(bool top __attribute__ ((unused))) {}
@@ -96,7 +95,6 @@ class ModeStack {
     
     void execute_input_handling_phase();
     void execute_simulation_phase(unsigned int steps_elapsed);
-    void execute_pre_clear_phase(bool top);
     void execute_draw_phase(bool top);
   
   public:

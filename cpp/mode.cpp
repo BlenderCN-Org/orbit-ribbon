@@ -92,17 +92,6 @@ void ModeStack::execute_simulation_phase(unsigned int steps_elapsed) {
   }
 }
 
-void ModeStack::execute_pre_clear_phase(bool top) {
-  PoppedModeStackItem cur_mode(*this);
-
-  if (cur_mode.mode->execute_after_lower_mode() && !_stack.empty()) {
-    // Descend recursively if this mode wants the prior mode ran first
-    execute_pre_clear_phase(false);
-  }
-  
-  cur_mode.mode->pre_clear(top);
-}
-
 void ModeStack::execute_draw_phase(bool top) {
   PoppedModeStackItem cur_mode(*this);
     
@@ -170,7 +159,6 @@ void ModeStack::execute_frame(unsigned int steps_elapsed) {
   } else {
     execute_input_handling_phase();
     execute_simulation_phase(steps_elapsed);
-    execute_pre_clear_phase(true);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     execute_draw_phase(true);
   }

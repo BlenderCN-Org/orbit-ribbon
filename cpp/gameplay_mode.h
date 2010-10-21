@@ -45,7 +45,6 @@ class GameplayMode : public Mode {
     
     bool handle_input();
     
-    void pre_clear(bool top);
     void pre_3d(bool top);
     void draw_3d_far(bool top);
     void draw_3d_near(bool top);

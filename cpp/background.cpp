@@ -94,11 +94,6 @@ void Background::set_sky(const SkySettings& sky) {
   }
 }
 
-void Background::set_clear_color() {
-  // TODO Have this change based on atmospheric thickness; actually, better yet to make it part of bubble drawing
-  glClearColor(0.6, 0.6, 1.0, 0.0);
-}
-
 void Background::draw() {
   GLOOPushedMatrix pm;
   glMultMatrixf(_skyMatr.begin());
