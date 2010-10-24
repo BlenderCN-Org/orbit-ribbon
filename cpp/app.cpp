@@ -314,7 +314,7 @@ void App::load_mission(unsigned int area_num, unsigned int mission_num) {
     Globals::gameobjs.insert(GOMap::value_type(i->objName(), get_factory<GameObjFactorySpec>().create(*i)));
   }
   
-  Globals::bg.reset(new Background(SkySettings(area->sky())));
+  Globals::bg.reset(new Background(area->sky()));
   
   Globals::current_area = area;
   Globals::current_mission = mission;

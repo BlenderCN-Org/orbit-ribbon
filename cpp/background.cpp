@@ -21,88 +21,28 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
 #include <cmath>
+#include <boost/lexical_cast.hpp>
 #include <GL/glew.h>
 #include <GL/gl.h>
 
 #include "autoxsd/orepkgdesc.h"
 #include "background.h"
+#include "debug.h"
 #include "geometry.h"
 #include "gloo.h"
 
-SkySettings::SkySettings() :
-  orbit_angle(0),
-  orbit_y_offset(0),
-  orbit_d_offset(0),
-  tilt_angle(0),
-  tilt_x(0),
-  tilt_z(0)
-{}
-
-SkySettings::SkySettings(const boost::array<float, 6>& args) :
-  orbit_angle(args[0]),
-  orbit_y_offset(args[1]),
-  orbit_d_offset(args[2]),
-  tilt_angle(args[3]),
-  tilt_x(args[4]),
-  tilt_z(args[5])
-{}
-
-SkySettings::SkySettings(const ORE1::SkySettingsType& area) :
-  orbit_angle(area.orbitAngle()),
-  orbit_y_offset(area.orbitYOffset()),
-  orbit_d_offset(area.orbitDOffset()),
-  tilt_angle(area.tiltAngle()),
-  tilt_x(area.tiltX()),
-  tilt_z(area.tiltZ())
-{}
-
-void SkySettings::fill_array(boost::array<float, 6>& tgt) {
-  tgt[0] = orbit_angle;
-  tgt[1] = orbit_y_offset;
-  tgt[2] = orbit_d_offset;
-  tgt[3] = tilt_angle;
-  tgt[4] = tilt_x;
-  tgt[5] = tilt_z;
-}
-
-Point Background::get_game_origin() {
-  const float d = STAR_DIST + _sky.orbit_d_offset;
-  // TODO : Check if this matches the part below that figures out where to put the light origin of the star and draw it
-  return -Point(d*std::sin(-rev2rad(_sky.orbit_angle)), _sky.orbit_y_offset, d*std::cos(-rev2rad(_sky.orbit_angle)));
-}
-
-Point Background::convert_to_sky_coords(const Point& pt) {
-  //TODO Implement
-}
-
-Background::Background(const SkySettings& sky) {
-  set_sky(sky);
-}
-
-void Background::set_sky(const SkySettings& sky) {
-  _sky = sky;
-  
-  // Generate the transformation matrix that moves us from the game origin to the star
-  // TODO Probably more efficient to do this without using OpenGL, but this sure is convenient
-  {
-    GLOOPushedMatrix pm;
-    glLoadIdentity();
-    glRotatef(_sky.tilt_angle, _sky.tilt_x, 0, _sky.tilt_z); // Apply tilt
-    glTranslatef(0.0, -_sky.orbit_y_offset, STAR_DIST + _sky.orbit_d_offset); // Move out to the star
-    glRotatef(rev2deg(_sky.orbit_angle), 0, 1, 0); // Rotate the Ribbon around the star
-    glGetFloatv(GL_MODELVIEW_MATRIX, _skyMatr.begin());
-  }
+Background::Background(const ORE1::SkySettingsType& sky) : _sky(sky)
+{
 }
 
 void Background::draw() {
   GLOOPushedMatrix pm;
-  glMultMatrixf(_skyMatr.begin());
 
-  // TODO Draw stars
+  // TODO Draw distant stars
 
   // Draw and set up lighting for the star
   // TODO Draw the star itself
-  float star_pos[4] = {std::sin(-rev2rad(_sky.orbit_angle))*STAR_DIST, 0.0, std::cos(-rev2rad(_sky.orbit_angle))*STAR_DIST, 1.0};
+  float star_pos[4] = {0.0, 0.0, 0.0, 1.0};
   glLightfv(GL_LIGHT1, GL_POSITION, star_pos);
 
   // Set up ambient lighting (so that areas not directly lit by the star aren't completely dark)
@@ -116,5 +56,11 @@ void Background::draw() {
   float pos6[4] = {-0.5*part_ald, -part_ald, -0.866*part_ald, 1.0};
   glLightfv(GL_LIGHT5, GL_POSITION, pos6);
 
-  // Draw distant objects (other bubbles, rocks, megafauna, etc)
+  // Draw distant static objects (other bubbles, rocks, megaflora, etc)
+}
+
+void Background::move_to_game_origin() {
+  const float d = STAR_DIST + _sky.orbitDOffset();
+  glTranslatef(-d*std::sin(-rev2rad(_sky.orbitAngle())), -_sky.orbitYOffset(), -d*std::cos(-rev2rad(_sky.orbitAngle())));
+  // TODO Implement tilt
 }

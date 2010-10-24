@@ -28,7 +28,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "geometry.h"
 
 // Settings for the star
-const float STAR_DIST = 5e10; // Distance between the center of the star and the center of the Ribbon torus
+const float STAR_DIST = 5e10; // Distance from center of star to densest part of the Ribbon belt 
 const float STAR_LIGHT_DIFFUSE[4] = {1.0, 1.0, 1.0, 1.0};
 
 // Ambient light settings
@@ -37,37 +37,16 @@ const float AMB_LIGHT_DIFFUSE[4] = {0.15, 0.15, 0.15, 1.0}; // Diffuse color of 
 
 namespace ORE1 { class SkySettingsType; }
 
-struct SkySettings {
-  float orbit_angle;
-  float orbit_y_offset;
-  float orbit_d_offset;
-  
-  float tilt_angle;
-  float tilt_x;
-  float tilt_z;
-
-  SkySettings();
-  SkySettings(const boost::array<float, 6>& args);
-  SkySettings(const ORE1::SkySettingsType& area);
-  
-  void fill_array(boost::array<float, 6>& tgt);
-};
-
 class Background {
   private:
-    SkySettings _sky;
+    const ORE1::SkySettingsType& _sky;
     boost::array<float, 16> _skyMatr;
     
-    Point get_game_origin();
-    Point convert_to_sky_coords(const Point& pt);
-  
   public:
-    Background(const SkySettings& sky);
-    
-    const SkySettings& get_sky() const { return _sky; }
-    void set_sky(const SkySettings& sky);
+    Background(const ORE1::SkySettingsType& sky);
     
     void draw();
+    void move_to_game_origin();
 };
 
 #endif

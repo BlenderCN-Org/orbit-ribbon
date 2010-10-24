@@ -108,6 +108,7 @@ void GameplayMode::draw_3d_far(bool top __attribute__ ((unused))) {
 }
 
 void GameplayMode::draw_3d_near(bool top __attribute__ ((unused))) {
+  Globals::bg->move_to_game_origin();
   // Draw every game object (FIXME Do near/far sorting)
   for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
     i->second->draw(true);
