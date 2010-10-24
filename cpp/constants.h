@@ -35,7 +35,7 @@ const unsigned int MIN_TICKS_PER_FRAME = 1000/MAX_FPS;
 
 // Clipping distance for gameplay objects and background objects respectively
 const float GAMEPLAY_CLIP_DIST = 50000;
-const float SKY_CLIP_DIST = 1e12;
+const float SKY_CLIP_DIST = 2e12;
 
 // Field-of-view in degrees
 const float FOV = 45;

@@ -39,7 +39,7 @@ const float AMB_LIGHT_DIST = 2e11; // Distance to the ambient light (not too imp
 const float AMB_LIGHT_DIFFUSE[4] = {0.1, 0.1, 0.1, 1.0}; // Diffuse color of the ambient light
 
 // Starbox
-const float STARBOX_D = 1e11;
+const float STARBOX_DIST = 1e12;
 
 struct GLUquadric;
 class GLOOTexture;

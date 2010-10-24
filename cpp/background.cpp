@@ -49,49 +49,52 @@ void Background::draw() {
   glDisable(GL_DEPTH_TEST);
 
   // Draw the starbox
-  const static float d = STARBOX_D;
-  const static GLfloat starbox_points[24] = {
-    -d, -d, -d,
-    -d, -d, +d,
-    -d, +d, -d,
-    -d, +d, +d,
-    +d, -d, -d,
-    +d, -d, +d,
-    +d, +d, -d,
-    +d, +d, +d
-  };
-  const static GLushort starbox_quad_indices[24] = {
-    3, 1, 0, 2,
-    1, 5, 4, 0,
-    5, 7, 6, 4,
-    0, 4, 6, 2,
-    2, 6, 7, 3,
-    3, 7, 5, 1
-  };
-  const static GLfloat starbox_uv[8] = {
-    0.0, 0.0,
-    1.0, 0.0,
-    1.0, 1.0,
-    0.0, 1.0
-  };
-  glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  glDisableClientState(GL_NORMAL_ARRAY);
-  glVertexPointer(3, GL_FLOAT, 0, starbox_points);
-  glTexCoordPointer(2, GL_FLOAT, 0, starbox_uv);
+  const static float d = STARBOX_DIST;
   for (int i = 0; i < 6; ++i) {
+    GLOOPushedMatrix pm;
+
     _starbox_faces[i]->bind();
-    glDrawElements(GL_QUADS, 4, GL_UNSIGNED_SHORT, starbox_quad_indices + i*4);
+    switch(i) {
+      case 0:
+        break;
+      case 1:
+        glRotatef(-90, 0, 1, 0);
+        break;
+      case 2:
+        glRotatef(180, 0, 1, 0);
+        break;
+      case 3:
+        glRotatef(90, 1, 0, 0);
+        glRotatef(90, 0, 0, 1);
+        break;
+      case 4:
+        glRotatef(90, 0, 1, 0);
+        glRotatef(180, 0, 0, 1);
+        break;
+      case 5:
+        glRotatef(-90, 1, 0, 0);
+        glRotatef(-90, 0, 0, 1);
+        break;
+    }
+
+    glBegin(GL_QUADS);
+    glTexCoord2f(1.0, 0.0);
+    glVertex3f(-d, +d, +d);
+    glTexCoord2f(0.0, 0.0);
+    glVertex3f(+d, +d, +d);
+    glTexCoord2f(0.0, 1.0);
+    glVertex3f(+d, -d, +d);
+    glTexCoord2f(1.0, 1.0);
+    glVertex3f(-d, -d, +d);
+    glEnd();
   }
-  glPopClientAttrib();
  
   // Draw this system's star
   glDisable(GL_TEXTURE_2D);
   glColor4fv(STAR_COLOR);
   gluSphere(_quadric, STAR_RADIUS, 16, 16);
   glEnable(GL_TEXTURE_2D);
-  
+
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
 
