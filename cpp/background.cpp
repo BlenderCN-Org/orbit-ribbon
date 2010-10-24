@@ -49,11 +49,16 @@ void Background::draw() {
   glDisable(GL_DEPTH_TEST);
 
   // Draw the starbox
+  const static float uv[8] = {
+    1.0, 0.0,
+    0.0, 0.0,
+    0.0, 1.0,
+    1.0, 1.0
+  };
   const static float d = STARBOX_DIST;
   for (int i = 0; i < 6; ++i) {
     GLOOPushedMatrix pm;
-
-    _starbox_faces[i]->bind();
+    unsigned int uv_offset = 0;
     switch(i) {
       case 0:
         break;
@@ -65,26 +70,27 @@ void Background::draw() {
         break;
       case 3:
         glRotatef(90, 1, 0, 0);
-        glRotatef(90, 0, 0, 1);
+        uv_offset = 1;
         break;
       case 4:
         glRotatef(90, 0, 1, 0);
-        glRotatef(180, 0, 0, 1);
+        uv_offset = 2;
         break;
       case 5:
         glRotatef(-90, 1, 0, 0);
-        glRotatef(-90, 0, 0, 1);
+        uv_offset = 3;
         break;
     }
 
+    _starbox_faces[i]->bind();
     glBegin(GL_QUADS);
-    glTexCoord2f(1.0, 0.0);
+    glTexCoord2fv(uv + ((uv_offset+0)%4)*2);
     glVertex3f(-d, +d, +d);
-    glTexCoord2f(0.0, 0.0);
+    glTexCoord2fv(uv + ((uv_offset+1)%4)*2);
     glVertex3f(+d, +d, +d);
-    glTexCoord2f(0.0, 1.0);
+    glTexCoord2fv(uv + ((uv_offset+2)%4)*2);
     glVertex3f(+d, -d, +d);
-    glTexCoord2f(1.0, 1.0);
+    glTexCoord2fv(uv + ((uv_offset+3)%4)*2);
     glVertex3f(-d, -d, +d);
     glEnd();
   }
