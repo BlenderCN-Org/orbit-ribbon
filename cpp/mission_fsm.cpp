@@ -119,6 +119,7 @@ void MissionFSM::transition_to_state(const std::string& name) {
   }
 
   if (name == "win" or name == "fail") {
+    _finished = true;
     Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new PostMissionMenuMode(name == "win")));
     return;
   }
@@ -135,11 +136,15 @@ void MissionFSM::transition_to_state(const std::string& name) {
 }
 
 MissionFSM::MissionFSM(const ORE1::MissionType& mission, const GameplayMode& gameplay_mode) :
-  _mission(mission), _gameplay_mode(gameplay_mode), _cur_state(NULL)
+  _mission(mission), _gameplay_mode(gameplay_mode), _cur_state(NULL), _finished(false)
 {
 }
 
 void MissionFSM::step() {
+  if (_finished) {
+    return;
+  }
+
   if (_cur_state.get() == NULL) {
     transition_to_state("start");
   }

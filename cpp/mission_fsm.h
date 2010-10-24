@@ -107,6 +107,8 @@ class MissionFSM : boost::noncopyable {
     const ORE1::MissionType& _mission;
     const GameplayMode& _gameplay_mode;
     boost::scoped_ptr<MissionState> _cur_state;
+    bool _finished;
+    
     void transition_to_state(const std::string& name);
   
   public:

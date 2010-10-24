@@ -1,6 +1,4 @@
 == ROADMAP ==
-* Fix bugs:
-  * Weird lighting difference between menu-load and cli-load
 * Add background stuff
 * Get it to build on Windows
 * Seperate out the ORE file into its own package
