@@ -46,6 +46,7 @@ Background::Background(const ORE1::SkySettingsType& sky) :
 
 void Background::draw() {
   glDisable(GL_LIGHTING);
+  glDisable(GL_DEPTH_TEST);
 
   // Draw the starbox
   const static float d = STARBOX_D;
@@ -61,15 +62,10 @@ void Background::draw() {
   };
   const static GLushort starbox_quad_indices[24] = {
     3, 1, 0, 2,
-    //0, 4, 5, 1,
     1, 5, 4, 0,
-    //4, 6, 7, 5,
     5, 7, 6, 4,
-    //2, 6, 4, 0,
     0, 4, 6, 2,
-    //3, 7, 6, 2,
     2, 6, 7, 3,
-    //1, 5, 7, 3
     3, 7, 5, 1
   };
   const static GLfloat starbox_uv[8] = {
@@ -96,6 +92,7 @@ void Background::draw() {
   gluSphere(_quadric, STAR_RADIUS, 16, 16);
   glEnable(GL_TEXTURE_2D);
   
+  glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
 
   // Set up lighting for the star
