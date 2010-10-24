@@ -59,14 +59,18 @@ void Background::draw() {
     +d, +d, -d,
     +d, +d, +d
   };
-  const static GLfloat starbox_quad_indices[24] = {
-    // Winding counterclockwise so that we pass face culling
-    2, 0, 1, 3,
-    0, 4, 5, 1,
-    4, 6, 7, 5,
-    2, 6, 4, 0,
-    3, 7, 6, 2,
-    1, 5, 7, 3
+  const static GLushort starbox_quad_indices[24] = {
+    3, 1, 0, 2,
+    //0, 4, 5, 1,
+    1, 5, 4, 0,
+    //4, 6, 7, 5,
+    5, 7, 6, 4,
+    //2, 6, 4, 0,
+    0, 4, 6, 2,
+    //3, 7, 6, 2,
+    2, 6, 7, 3,
+    //1, 5, 7, 3
+    3, 7, 5, 1
   };
   const static GLfloat starbox_uv[8] = {
     0.0, 0.0,
