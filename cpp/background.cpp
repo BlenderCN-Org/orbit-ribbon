@@ -24,6 +24,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/lexical_cast.hpp>
 #include <GL/glew.h>
 #include <GL/gl.h>
+#include <GL/glu.h>
 
 #include "autoxsd/orepkgdesc.h"
 #include "background.h"
@@ -31,15 +32,24 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "geometry.h"
 #include "gloo.h"
 
-Background::Background(const ORE1::SkySettingsType& sky) : _sky(sky)
+Background::Background(const ORE1::SkySettingsType& sky) :
+  _sky(sky),
+  _quadric(gluNewQuadric())
 {
 }
 
 void Background::draw() {
   // TODO Draw distant stars
 
-  // Draw and set up lighting for the star
-  // TODO Draw the star itself
+  // Draw the star itself
+  glDisable(GL_LIGHTING);
+  glDisable(GL_TEXTURE_2D);
+  glColor4fv(STAR_COLOR);
+  gluSphere(_quadric, STAR_RADIUS, 16, 16);
+  glEnable(GL_TEXTURE_2D);
+  glEnable(GL_LIGHTING);
+
+  // Set up lighting for the star
   float star_pos[4] = {0.0, 0.0, 0.0, 1.0};
   glLightfv(GL_LIGHT1, GL_POSITION, star_pos);
 

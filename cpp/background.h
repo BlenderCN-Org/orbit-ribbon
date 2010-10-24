@@ -23,23 +23,25 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_BACKGROUND_H
 #define ORBIT_RIBBON_BACKGROUND_H
 
-#include <boost/array.hpp>
-
 #include "geometry.h"
 
 // Settings for the star
 const float STAR_DIST = 5e10; // Distance from center of star to densest part of the Ribbon belt 
+const float STAR_RADIUS = 1e9; // Radius of the star itself
+const float STAR_COLOR[4] = {1.0, 1.0, 1.0, 1.0};
 const float STAR_LIGHT_DIFFUSE[4] = {1.0, 1.0, 1.0, 1.0};
 
 // Ambient light settings
-const float AMB_LIGHT_DIST = 1e11; // Distance to the ambient light (not too important, as there's no attenuation)
+const float AMB_LIGHT_DIST = 2e11; // Distance to the ambient light (not too important, as there's no attenuation)
 const float AMB_LIGHT_DIFFUSE[4] = {0.1, 0.1, 0.1, 1.0}; // Diffuse color of the ambient light
 
+struct GLUquadric;
 namespace ORE1 { class SkySettingsType; }
 
 class Background {
   private:
     const ORE1::SkySettingsType& _sky;
+    GLUquadric* _quadric;
     
   public:
     Background(const ORE1::SkySettingsType& sky);
