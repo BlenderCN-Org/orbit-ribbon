@@ -23,6 +23,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_BACKGROUND_H
 #define ORBIT_RIBBON_BACKGROUND_H
 
+#include <boost/shared_ptr.hpp>
+#include <vector>
+
 #include "geometry.h"
 
 // Settings for the star
@@ -35,12 +38,17 @@ const float STAR_LIGHT_DIFFUSE[4] = {1.0, 1.0, 1.0, 1.0};
 const float AMB_LIGHT_DIST = 2e11; // Distance to the ambient light (not too important, as there's no attenuation)
 const float AMB_LIGHT_DIFFUSE[4] = {0.1, 0.1, 0.1, 1.0}; // Diffuse color of the ambient light
 
+// Starbox
+const float STARBOX_D = 1e11;
+
 struct GLUquadric;
+class GLOOTexture;
 namespace ORE1 { class SkySettingsType; }
 
 class Background {
   private:
     const ORE1::SkySettingsType& _sky;
+    std::vector<boost::shared_ptr<GLOOTexture> > _starbox_faces;
     GLUquadric* _quadric;
     
   public:

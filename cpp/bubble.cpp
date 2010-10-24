@@ -40,7 +40,7 @@ void BubbleGameObj::near_draw_impl() {
   // Inside
   gluQuadricOrientation(_quadric, GLU_INSIDE);
   glColor4f(0.7, 0.7, 1.0, 0.8);
-  gluSphere(_quadric, _radius, 16, 16);
+  //gluSphere(_quadric, _radius, 16, 16);
   
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_LIGHTING);

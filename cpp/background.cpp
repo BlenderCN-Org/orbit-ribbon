@@ -36,17 +36,62 @@ Background::Background(const ORE1::SkySettingsType& sky) :
   _sky(sky),
   _quadric(gluNewQuadric())
 {
+  _starbox_faces.push_back(GLOOTexture::load("starmap1.png"));
+  _starbox_faces.push_back(GLOOTexture::load("starmap2.png"));
+  _starbox_faces.push_back(GLOOTexture::load("starmap3.png"));
+  _starbox_faces.push_back(GLOOTexture::load("starmap4.png"));
+  _starbox_faces.push_back(GLOOTexture::load("starmap5.png"));
+  _starbox_faces.push_back(GLOOTexture::load("starmap6.png"));
 }
 
 void Background::draw() {
-  // TODO Draw distant stars
-
-  // Draw the star itself
   glDisable(GL_LIGHTING);
+
+  // Draw the starbox
+  const static float d = STARBOX_D;
+  const static GLfloat starbox_points[24] = {
+    -d, -d, -d,
+    -d, -d, +d,
+    -d, +d, -d,
+    -d, +d, +d,
+    +d, -d, -d,
+    +d, -d, +d,
+    +d, +d, -d,
+    +d, +d, +d
+  };
+  const static GLfloat starbox_quad_indices[24] = {
+    // Winding counterclockwise so that we pass face culling
+    2, 0, 1, 3,
+    0, 4, 5, 1,
+    4, 6, 7, 5,
+    2, 6, 4, 0,
+    3, 7, 6, 2,
+    1, 5, 7, 3
+  };
+  const static GLfloat starbox_uv[8] = {
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0
+  };
+  glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glDisableClientState(GL_NORMAL_ARRAY);
+  glVertexPointer(3, GL_FLOAT, 0, starbox_points);
+  glTexCoordPointer(2, GL_FLOAT, 0, starbox_uv);
+  for (int i = 0; i < 6; ++i) {
+    _starbox_faces[i]->bind();
+    glDrawElements(GL_QUADS, 4, GL_UNSIGNED_SHORT, starbox_quad_indices + i*4);
+  }
+  glPopClientAttrib();
+ 
+  // Draw this system's star
   glDisable(GL_TEXTURE_2D);
   glColor4fv(STAR_COLOR);
   gluSphere(_quadric, STAR_RADIUS, 16, 16);
   glEnable(GL_TEXTURE_2D);
+  
   glEnable(GL_LIGHTING);
 
   // Set up lighting for the star

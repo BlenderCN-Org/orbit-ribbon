@@ -80,7 +80,7 @@ boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
       surf->format->Rshift != 0 ||
       surf->format->Gshift != 8 ||
       surf->format->Bshift != 16 ||
-      (surf->format->BitsPerPixel != 24 && surf->format->BitsPerPixel != 32)
+      (surf->format->BitsPerPixel != 8 && surf->format->BitsPerPixel != 24 && surf->format->BitsPerPixel != 32)
     ) {
       throw OreException(
         std::string("Unknown pixel format :") +
@@ -91,14 +91,18 @@ boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
         " As" + boost::lexical_cast<std::string>((unsigned int)surf->format->Ashift)
       );
     }
-    GLenum img_format = (surf->format->BitsPerPixel == 24 ? GL_RGB : GL_RGBA);
     
     // Load the texture with the image
     tex->_width = surf->w;
     tex->_height = surf->h;
     glGenTextures(1, &(tex->_tex_name));
     glBindTexture(GL_TEXTURE_2D, tex->_tex_name);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA, surf->w, surf->h, 0, img_format, GL_UNSIGNED_BYTE, surf->pixels);
+    if (surf->format->BitsPerPixel == 8) {
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_LUMINANCE, surf->w, surf->h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, surf->pixels);
+    } else {
+      GLenum img_format = (surf->format->BitsPerPixel == 24 ? GL_RGB : GL_RGBA);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA, surf->w, surf->h, 0, img_format, GL_UNSIGNED_BYTE, surf->pixels);
+    }
     glGenerateMipmap(GL_TEXTURE_2D);
     
     if (glGetError()) {
