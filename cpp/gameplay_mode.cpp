@@ -103,16 +103,18 @@ void GameplayMode::pre_3d(bool top __attribute__ ((unused))) {
 }
 
 void GameplayMode::draw_3d_far(bool top __attribute__ ((unused))) {
-  // Draw all the background objects
+  // Draw all the background objects and setup lights
+  GLOOPushedMatrix pm;
+  Globals::bg->to_center_from_game_origin();
   Globals::bg->draw();
 }
 
 void GameplayMode::draw_3d_near(bool top __attribute__ ((unused))) {
-  Globals::bg->move_to_game_origin();
   // Draw every game object (FIXME Do near/far sorting)
   for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
     i->second->draw(true);
   }
+  
 }
 
 void GameplayMode::draw_2d(bool top __attribute__ ((unused))) {

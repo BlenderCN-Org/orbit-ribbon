@@ -36,8 +36,6 @@ Background::Background(const ORE1::SkySettingsType& sky) : _sky(sky)
 }
 
 void Background::draw() {
-  GLOOPushedMatrix pm;
-
   // TODO Draw distant stars
 
   // Draw and set up lighting for the star
@@ -59,8 +57,8 @@ void Background::draw() {
   // Draw distant static objects (other bubbles, rocks, megaflora, etc)
 }
 
-void Background::move_to_game_origin() {
+void Background::to_center_from_game_origin() {
   const float d = STAR_DIST + _sky.orbitDOffset();
-  glTranslatef(-d*std::sin(-rev2rad(_sky.orbitAngle())), -_sky.orbitYOffset(), -d*std::cos(-rev2rad(_sky.orbitAngle())));
+  glTranslatef(d*std::sin(-rev2rad(_sky.orbitAngle())), _sky.orbitYOffset(), d*std::cos(-rev2rad(_sky.orbitAngle())));
   // TODO Implement tilt
 }

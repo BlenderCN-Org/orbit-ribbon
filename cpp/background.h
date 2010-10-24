@@ -32,21 +32,20 @@ const float STAR_DIST = 5e10; // Distance from center of star to densest part of
 const float STAR_LIGHT_DIFFUSE[4] = {1.0, 1.0, 1.0, 1.0};
 
 // Ambient light settings
-const float AMB_LIGHT_DIST = 1e9; // Distance to the ambient light (not too important, as there's no attenuation)
-const float AMB_LIGHT_DIFFUSE[4] = {0.15, 0.15, 0.15, 1.0}; // Diffuse color of the ambient light
+const float AMB_LIGHT_DIST = 1e11; // Distance to the ambient light (not too important, as there's no attenuation)
+const float AMB_LIGHT_DIFFUSE[4] = {0.1, 0.1, 0.1, 1.0}; // Diffuse color of the ambient light
 
 namespace ORE1 { class SkySettingsType; }
 
 class Background {
   private:
     const ORE1::SkySettingsType& _sky;
-    boost::array<float, 16> _skyMatr;
     
   public:
     Background(const ORE1::SkySettingsType& sky);
     
     void draw();
-    void move_to_game_origin();
+    void to_center_from_game_origin();
 };
 
 #endif
