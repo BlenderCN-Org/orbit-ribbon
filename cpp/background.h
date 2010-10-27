@@ -26,6 +26,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
+#include "autoxsd/orepkgdesc.h"
 #include "geometry.h"
 
 // Settings for the star
@@ -43,16 +44,17 @@ const float STARBOX_DIST = 1e12;
 
 struct GLUquadric;
 class GLOOTexture;
-namespace ORE1 { class SkySettingsType; }
 
 class Background {
   private:
-    const ORE1::SkySettingsType& _sky;
+    boost::shared_ptr<ORE1::SkySettingsType> _sky;
     std::vector<boost::shared_ptr<GLOOTexture> > _starbox_faces;
     GLUquadric* _quadric;
     
   public:
-    Background(const ORE1::SkySettingsType& sky);
+    Background();
+
+    void set_sky(const ORE1::SkySettingsType& sky);
     
     void draw();
     void to_center_from_game_origin();

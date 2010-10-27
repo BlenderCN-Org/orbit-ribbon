@@ -29,19 +29,21 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "autoxsd/orepkgdesc.h"
 #include "background.h"
 #include "debug.h"
+#include "except.h"
 #include "geometry.h"
 #include "gloo.h"
 
-Background::Background(const ORE1::SkySettingsType& sky) :
-  _sky(sky),
-  _quadric(gluNewQuadric())
-{
+Background::Background() : _quadric(gluNewQuadric()) {
   _starbox_faces.push_back(GLOOTexture::load("starmap1.png"));
   _starbox_faces.push_back(GLOOTexture::load("starmap2.png"));
   _starbox_faces.push_back(GLOOTexture::load("starmap3.png"));
   _starbox_faces.push_back(GLOOTexture::load("starmap4.png"));
   _starbox_faces.push_back(GLOOTexture::load("starmap5.png"));
   _starbox_faces.push_back(GLOOTexture::load("starmap6.png"));
+}
+
+void Background::set_sky(const ORE1::SkySettingsType& sky) {
+  _sky.reset(new ORE1::SkySettingsType(sky));
 }
 
 void Background::draw() {
@@ -123,7 +125,10 @@ void Background::draw() {
 }
 
 void Background::to_center_from_game_origin() {
-  const float d = STAR_DIST + _sky.orbitDOffset();
-  glTranslatef(d*std::sin(-rev2rad(_sky.orbitAngle())), _sky.orbitYOffset(), d*std::cos(-rev2rad(_sky.orbitAngle())));
+  if (!_sky) {
+    throw GameException("Unable to locate game origin, no SkySettings available");
+  }
+  const float d = STAR_DIST + _sky->orbitDOffset();
+  glTranslatef(d*std::sin(-rev2rad(_sky->orbitAngle())), _sky->orbitYOffset(), d*std::cos(-rev2rad(_sky->orbitAngle())));
   // TODO Implement tilt
 }

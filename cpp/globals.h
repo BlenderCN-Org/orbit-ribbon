@@ -34,9 +34,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "geometry.h"
 #include "mode.h"
 
+class Background;
 class GameObj;
 class Mode;
-class Background;
 class GLOOFont;
 class GLOOTexture;
 class OrePackage;

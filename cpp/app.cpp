@@ -235,7 +235,7 @@ void App::run(const std::vector<std::string>& args) {
     
     // TODO Load font from the ORE package
     Globals::sys_font.reset(new GLOOFont("/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf", 15));
-    
+    Globals::bg.reset(new Background);
     Globals::mouse_cursor.reset(new MouseCursor());
     
     if (vm.count("area") and vm.count("mission")) {
@@ -314,7 +314,7 @@ void App::load_mission(unsigned int area_num, unsigned int mission_num) {
     Globals::gameobjs.insert(GOMap::value_type(i->objName(), get_factory<GameObjFactorySpec>().create(*i)));
   }
   
-  Globals::bg.reset(new Background(area->sky()));
+  Globals::bg->set_sky(area->sky());
   
   Globals::current_area = area;
   Globals::current_mission = mission;
