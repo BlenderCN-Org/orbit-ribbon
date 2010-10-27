@@ -32,18 +32,20 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 class MenuMode : public Mode {
   private:
+    bool _draw_background;
     GUI::SimpleMenu _simple_menu;
   
   protected:
     void add_entry(const std::string& name, const std::string& label);
   
   public:
-    MenuMode(int menu_width, int btn_height, int padding);
+    MenuMode(bool draw_background, int menu_width, int btn_height, int padding);
     
     bool simulation_disabled() { return true; }
     bool mouse_cursor_enabled() { return true; }
     
     bool handle_input();
+    void draw_3d_far(bool top);
     void draw_2d(bool top);
     
     void pushed_below_top();

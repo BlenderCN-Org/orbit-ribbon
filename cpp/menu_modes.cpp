@@ -25,6 +25,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "menu_modes.h"
 
 #include "app.h"
+#include "background.h"
 #include "display.h"
 #include "gameplay_mode.h"
 #include "globals.h"
@@ -38,7 +39,11 @@ void MenuMode::add_entry(const std::string& name, const std::string& label) {
   _simple_menu.add_button(name, label);
 }
 
-MenuMode::MenuMode(int menu_width, int btn_height, int padding) : _simple_menu(menu_width, btn_height, padding) {}
+MenuMode::MenuMode(bool draw_background, int menu_width, int btn_height, int padding) :
+  _draw_background(draw_background),
+  _simple_menu(menu_width, btn_height, padding)
+{
+}
 
 bool MenuMode::handle_input() {
   _simple_menu.process();
@@ -55,6 +60,12 @@ bool MenuMode::handle_input() {
   return true;
 }
 
+void MenuMode::draw_3d_far(bool top __attribute__ ((unused))) {
+  if (_draw_background) {
+    Globals::bg->draw();
+  }
+}
+
 void MenuMode::draw_2d(bool top __attribute__ ((unused))) {
   _simple_menu.draw();
 }
@@ -63,7 +74,7 @@ void MenuMode::pushed_below_top() {
   _simple_menu.reset_activation();
 }
 
-MainMenuMode::MainMenuMode() : MenuMode(180, 22, 8) {
+MainMenuMode::MainMenuMode() : MenuMode(true, 180, 22, 8) {
   add_entry("play", "Play");
   add_entry("credits", "Credits");
   add_entry("options", "Options");
@@ -78,7 +89,7 @@ void MainMenuMode::handle_menu_selection(const std::string& item) {
   }
 }
 
-AreaSelectMenuMode::AreaSelectMenuMode() : MenuMode(300, 22, 8) {
+AreaSelectMenuMode::AreaSelectMenuMode() : MenuMode(true, 300, 22, 8) {
   const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
   unsigned int n = 1;
   for (ORE1::PkgDescType::AreaConstIterator i = desc->area().begin(); i != desc->area().end(); ++i) {
@@ -100,7 +111,7 @@ void AreaSelectMenuMode::handle_menu_selection(const std::string& item) {
   }
 }
 
-MissionSelectMenuMode::MissionSelectMenuMode(unsigned int area_num) : MenuMode(450, 22, 8), _area_num(area_num) {
+MissionSelectMenuMode::MissionSelectMenuMode(unsigned int area_num) : MenuMode(true, 450, 22, 8), _area_num(area_num) {
   const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
   const ORE1::AreaType* area = &(desc->area().at(area_num-1));
   unsigned int n = 1;
@@ -124,7 +135,7 @@ void MissionSelectMenuMode::handle_menu_selection(const std::string& item) {
   }
 }
 
-PauseMenuMode::PauseMenuMode() : MenuMode(150, 22, 30) {
+PauseMenuMode::PauseMenuMode() : MenuMode(false, 150, 22, 30) {
   add_entry("resume", "Resume Game");
   add_entry("quit", "Quit Mission");
 }
@@ -139,7 +150,7 @@ void PauseMenuMode::handle_menu_selection(const std::string& item) {
   }
 }
 
-PostMissionMenuMode::PostMissionMenuMode(bool won) : MenuMode(400, 40, 30), _won(won) {
+PostMissionMenuMode::PostMissionMenuMode(bool won) : MenuMode(false, 400, 40, 30), _won(won) {
   add_entry("continue", won ? "Rios made it!" : "Didn't make it...");
 }
 
