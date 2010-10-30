@@ -33,6 +33,28 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "geometry.h"
 #include "gloo.h"
 
+// Settings for the main star
+const float STAR_DIST = 5e10; // Distance from center of star to densest part of the Ribbon belt 
+const float STAR_RADIUS = 1e9; // Radius of the star itself
+const float STAR_COLOR[4] = {1.0, 1.0, 1.0, 1.0};
+const float STAR_LIGHT_DIFFUSE[4] = {1.0, 1.0, 1.0, 1.0};
+
+// Ambient light settings
+const float AMB_LIGHT_DIST = 2e11; // Distance to the ambient light (not too important, as there's no attenuation)
+const float AMB_LIGHT_DIFFUSE[4] = {0.1, 0.1, 0.1, 1.0}; // Diffuse color of the ambient light
+
+// Starbox
+const float STARBOX_DIST = 1e12;
+
+void Background::setup_lights() {
+  glEnable(GL_LIGHT1); glLightfv(GL_LIGHT1, GL_DIFFUSE, STAR_LIGHT_DIFFUSE);
+  glEnable(GL_LIGHT2); glLightfv(GL_LIGHT2, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
+  glEnable(GL_LIGHT3); glLightfv(GL_LIGHT3, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
+  glEnable(GL_LIGHT4); glLightfv(GL_LIGHT4, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
+  glEnable(GL_LIGHT5); glLightfv(GL_LIGHT5, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
+  
+}
+
 Background::Background() : _quadric(gluNewQuadric()) {
   _starbox_faces.push_back(GLOOTexture::load("starmap1.png"));
   _starbox_faces.push_back(GLOOTexture::load("starmap2.png"));
