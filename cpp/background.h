@@ -23,6 +23,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_BACKGROUND_H
 #define ORBIT_RIBBON_BACKGROUND_H
 
+#include <boost/random.hpp>
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
@@ -35,11 +36,25 @@ class GLOOTexture;
 class Background {
   private:
     boost::shared_ptr<ORE1::SkySettingsType> _sky;
+    boost::taus88 _random_gen;
     std::vector<boost::shared_ptr<GLOOTexture> > _starbox_faces;
     GLUquadric* _quadric;
+
+    struct RandomStuffDensityRange {
+      unsigned int segments;
+      unsigned int total_count;
+      float rad_min;
+      float rad_max;
+
+      RandomStuffDensityRange(unsigned int s, unsigned int tc, float rmin, float rmax)
+        : segments(s), total_count(tc), rad_min(rmin), rad_max(rmax)
+      {}
+    };
     
+    static std::vector<RandomStuffDensityRange> density_ranges;
+
   public:
-    static void setup_lights();
+    static void init();
     
     Background();
 

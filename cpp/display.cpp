@@ -149,8 +149,6 @@ void Display::init() {
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
   glEnableClientState(GL_INDEX_ARRAY);
   
-  Background::setup_lights();
-  
   screen_resize();
 }
 

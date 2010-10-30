@@ -202,6 +202,7 @@ void App::run(const std::vector<std::string>& args) {
     }
     
     Display::init();
+    Background::init();
     
     boost::filesystem::path orePath;
     bool orePathSave = false;

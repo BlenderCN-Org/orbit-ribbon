@@ -21,7 +21,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
 #include <cmath>
-#include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
+#include <boost/random.hpp>
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -41,18 +42,27 @@ const float STAR_LIGHT_DIFFUSE[4] = {1.0, 1.0, 1.0, 1.0};
 
 // Ambient light settings
 const float AMB_LIGHT_DIST = 2e11; // Distance to the ambient light (not too important, as there's no attenuation)
+const float PART_ALD = std::sqrt(2)*AMB_LIGHT_DIST;
 const float AMB_LIGHT_DIFFUSE[4] = {0.1, 0.1, 0.1, 1.0}; // Diffuse color of the ambient light
 
 // Starbox
 const float STARBOX_DIST = 1e12;
 
-void Background::setup_lights() {
+// Settings for generation of ribbon background stuff (i.e. distant bubbles)
+const unsigned int RANDOM_STUFF_SEED = 0;
+const float RANDOM_STUFF_D_RANGE = 1e9; // FIXME: Probably too narrow
+const float RANDOM_STUFF_Y_RANGE = 1e9;
+std::vector<Background::RandomStuffDensityRange> Background::density_ranges;
+
+void Background::init() {
   glEnable(GL_LIGHT1); glLightfv(GL_LIGHT1, GL_DIFFUSE, STAR_LIGHT_DIFFUSE);
   glEnable(GL_LIGHT2); glLightfv(GL_LIGHT2, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
   glEnable(GL_LIGHT3); glLightfv(GL_LIGHT3, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
   glEnable(GL_LIGHT4); glLightfv(GL_LIGHT4, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
   glEnable(GL_LIGHT5); glLightfv(GL_LIGHT5, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
   
+  density_ranges.empty();
+  density_ranges.push_back(RandomStuffDensityRange(100, 200, 2e8, 4e8));
 }
 
 Background::Background() : _quadric(gluNewQuadric()) {
@@ -133,17 +143,35 @@ void Background::draw() {
   glLightfv(GL_LIGHT1, GL_POSITION, star_pos);
 
   // Set up ambient lighting (so that areas not directly lit by the star aren't completely dark)
-  float part_ald = std::sqrt(2)*AMB_LIGHT_DIST;
   float pos3[4] = {0.0, AMB_LIGHT_DIST, 0.0, 1.0};
   glLightfv(GL_LIGHT2, GL_POSITION, pos3);
-  float pos4[4] = {part_ald, -part_ald, 0.0, 1.0};
+  float pos4[4] = {PART_ALD, -PART_ALD, 0.0, 1.0};
   glLightfv(GL_LIGHT3, GL_POSITION, pos4);
-  float pos5[4] = {-0.5*part_ald, -part_ald, 0.866*part_ald, 1.0};
+  float pos5[4] = {-0.5*PART_ALD, -PART_ALD, 0.866*PART_ALD, 1.0};
   glLightfv(GL_LIGHT4, GL_POSITION, pos5);
-  float pos6[4] = {-0.5*part_ald, -part_ald, -0.866*part_ald, 1.0};
+  float pos6[4] = {-0.5*PART_ALD, -PART_ALD, -0.866*PART_ALD, 1.0};
   glLightfv(GL_LIGHT5, GL_POSITION, pos6);
 
-  // Draw distant static objects (other bubbles, rocks, megaflora, etc)
+  // Draw distant objects
+  unsigned int seed_offset = RANDOM_STUFF_SEED;
+  BOOST_FOREACH(const RandomStuffDensityRange& r, density_ranges) {
+    boost::binomial_distribution<unsigned int, float> count_dist(r.segments, float(r.segments)/r.total_count);
+    boost::variate_generator<boost::taus88&, boost::binomial_distribution<unsigned int, float> > count_die(_random_gen, count_dist);
+      
+    boost::uniform_real<float> radius_dist(r.rad_min, r.rad_max);
+    boost::variate_generator<boost::taus88&, boost::uniform_real<float> > radius_die(_random_gen, radius_dist);
+
+    static const boost::uniform_real<float> angle_dist(0, 1);
+    static const boost::variate_generator<boost::taus88&, boost::uniform_real<float> > angle_die(_random_gen, angle_dist);
+    
+    for (unsigned int s = 0; s < r.segments; ++s) {
+      _random_gen.seed(seed_offset + s);
+      unsigned int count = std::floor(count_die() + 0.5);
+      for (unsigned int i = 0; i < count; ++i) {
+      }
+    }
+    seed_offset += r.segments;
+  }
 }
 
 void Background::to_center_from_game_origin() {
