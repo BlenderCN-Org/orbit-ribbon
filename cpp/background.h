@@ -45,9 +45,11 @@ class Background {
       unsigned int total_count;
       float rad_min;
       float rad_max;
+      float d_sigma;
+      float y_sigma;
 
-      RandomStuffDensityRange(unsigned int s, unsigned int tc, float rmin, float rmax)
-        : segments(s), total_count(tc), rad_min(rmin), rad_max(rmax)
+      RandomStuffDensityRange(unsigned int s, unsigned int tc, float rmin, float rmax, float ds, float ys)
+        : segments(s), total_count(tc), rad_min(rmin), rad_max(rmax), d_sigma(ds), y_sigma(ys)
       {}
     };
     

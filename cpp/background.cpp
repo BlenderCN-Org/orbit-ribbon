@@ -22,6 +22,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <cmath>
 #include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/random.hpp>
 #include <GL/glew.h>
 #include <GL/gl.h>
@@ -49,9 +50,8 @@ const float AMB_LIGHT_DIFFUSE[4] = {0.1, 0.1, 0.1, 1.0}; // Diffuse color of the
 const float STARBOX_DIST = 1e12;
 
 // Settings for generation of ribbon background stuff (i.e. distant bubbles)
-const unsigned int RANDOM_STUFF_SEED = 0;
-const float RANDOM_STUFF_D_RANGE = 1e9; // FIXME: Probably too narrow
-const float RANDOM_STUFF_Y_RANGE = 1e9;
+const unsigned int RANDOM_STUFF_MASTER_SEED = 827342;
+const unsigned int RANDOM_STUFF_SEED_COEF = 67344;
 std::vector<Background::RandomStuffDensityRange> Background::density_ranges;
 
 void Background::init() {
@@ -62,7 +62,7 @@ void Background::init() {
   glEnable(GL_LIGHT5); glLightfv(GL_LIGHT5, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
   
   density_ranges.empty();
-  density_ranges.push_back(RandomStuffDensityRange(100, 200, 2e8, 4e8));
+  density_ranges.push_back(RandomStuffDensityRange(100, 200, 2e8, 4e8, 1e9, 1e9));
 }
 
 Background::Background() : _quadric(gluNewQuadric()) {
@@ -153,32 +153,52 @@ void Background::draw() {
   glLightfv(GL_LIGHT5, GL_POSITION, pos6);
 
   // Draw distant objects
-  unsigned int seed_offset = RANDOM_STUFF_SEED;
+  glDisable(GL_TEXTURE_2D);
+  unsigned int seed_offset = RANDOM_STUFF_MASTER_SEED;
   BOOST_FOREACH(const RandomStuffDensityRange& r, density_ranges) {
     boost::binomial_distribution<unsigned int, float> count_dist(r.segments, float(r.segments)/r.total_count);
     boost::variate_generator<boost::taus88&, boost::binomial_distribution<unsigned int, float> > count_die(_random_gen, count_dist);
-      
+
     boost::uniform_real<float> radius_dist(r.rad_min, r.rad_max);
     boost::variate_generator<boost::taus88&, boost::uniform_real<float> > radius_die(_random_gen, radius_dist);
+
+    boost::uniform_real<float> pos_dist(0.0, 1.0/r.segments);
+    boost::variate_generator<boost::taus88&, boost::uniform_real<float> > pos_die(_random_gen, pos_dist);
+
+    boost::normal_distribution<float> d_offset_dist(0, r.d_sigma);
+    boost::variate_generator<boost::taus88&, boost::normal_distribution<float> > d_offset_die(_random_gen, d_offset_dist);
+    
+    boost::normal_distribution<float> y_offset_dist(0, r.d_sigma);
+    boost::variate_generator<boost::taus88&, boost::normal_distribution<float> > y_offset_die(_random_gen, y_offset_dist);
 
     static const boost::uniform_real<float> angle_dist(0, 1);
     static const boost::variate_generator<boost::taus88&, boost::uniform_real<float> > angle_die(_random_gen, angle_dist);
     
+    glColor3f(0.5, 1.0, 0.5);
     for (unsigned int s = 0; s < r.segments; ++s) {
-      _random_gen.seed(seed_offset + s);
-      unsigned int count = std::floor(count_die() + 0.5);
+      _random_gen.seed((seed_offset + s)*RANDOM_STUFF_SEED_COEF);
+      //unsigned int count = std::floor(count_die() + 0.5);
+      //Debug::debug_msg("COUNT: " + boost::lexical_cast<std::string>(count));
+      unsigned int count = 2;
+      float start_angle = s*(1.0/r.segments);
       for (unsigned int i = 0; i < count; ++i) {
+        GLOOPushedMatrix pm;
+        float pos_angle = rev2rad(start_angle + pos_die());
+        float d = STAR_DIST + d_offset_die();
+        glTranslatef(d*std::sin(pos_angle), y_offset_die(), d*std::cos(pos_angle));
+        gluSphere(_quadric, radius_die(), 4, 4);
       }
     }
     seed_offset += r.segments;
   }
+  glEnable(GL_TEXTURE_2D);
 }
 
 void Background::to_center_from_game_origin() {
   if (!_sky) {
     throw GameException("Unable to locate game origin, no SkySettings available");
   }
-  const float d = STAR_DIST + _sky->orbitDOffset();
+  float d = STAR_DIST + _sky->orbitDOffset();
   glTranslatef(d*std::sin(-rev2rad(_sky->orbitAngle())), _sky->orbitYOffset(), d*std::cos(-rev2rad(_sky->orbitAngle())));
   // TODO Implement tilt
 }
