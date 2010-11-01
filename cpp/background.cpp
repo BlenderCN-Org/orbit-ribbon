@@ -22,7 +22,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <cmath>
 #include <boost/foreach.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/random.hpp>
 #include <GL/glew.h>
 #include <GL/gl.h>
@@ -30,7 +29,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "autoxsd/orepkgdesc.h"
 #include "background.h"
-#include "debug.h"
 #include "except.h"
 #include "geometry.h"
 #include "gloo.h"
@@ -156,7 +154,7 @@ void Background::draw() {
   glDisable(GL_TEXTURE_2D);
   unsigned int seed_offset = RANDOM_STUFF_MASTER_SEED;
   BOOST_FOREACH(const RandomStuffDensityRange& r, density_ranges) {
-    boost::binomial_distribution<unsigned int, float> count_dist(r.segments, float(r.segments)/r.total_count);
+    boost::binomial_distribution<unsigned int, float> count_dist(r.total_count, 1.0/r.segments);
     boost::variate_generator<boost::taus88&, boost::binomial_distribution<unsigned int, float> > count_die(_random_gen, count_dist);
 
     boost::uniform_real<float> radius_dist(r.rad_min, r.rad_max);
@@ -177,9 +175,8 @@ void Background::draw() {
     glColor3f(0.5, 1.0, 0.5);
     for (unsigned int s = 0; s < r.segments; ++s) {
       _random_gen.seed((seed_offset + s)*RANDOM_STUFF_SEED_COEF);
-      //unsigned int count = std::floor(count_die() + 0.5);
-      //Debug::debug_msg("COUNT: " + boost::lexical_cast<std::string>(count));
-      unsigned int count = 2;
+      unsigned int count = count_die();
+      //unsigned int count = 2;
       float start_angle = s*(1.0/r.segments);
       for (unsigned int i = 0; i < count; ++i) {
         GLOOPushedMatrix pm;
