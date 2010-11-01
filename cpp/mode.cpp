@@ -109,7 +109,7 @@ void ModeStack::execute_draw_phase(bool top) {
   // Projection mode for distant objects
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(FOV, Display::get_screen_ratio(), 0.1, SKY_CLIP_DIST);
+  gluPerspective(FOV, Display::get_screen_ratio(), GAMEPLAY_CLIP_DIST/2.0, SKY_CLIP_DIST);
   glMatrixMode(GL_MODELVIEW);
   
   cur_mode.mode->draw_3d_far(top);
