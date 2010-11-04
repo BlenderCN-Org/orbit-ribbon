@@ -25,13 +25,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/random.hpp>
 #include <GL/glew.h>
 #include <GL/gl.h>
-#include <GL/glu.h>
 
 #include "autoxsd/orepkgdesc.h"
 #include "background.h"
 #include "except.h"
 #include "geometry.h"
 #include "gloo.h"
+#include "mesh.h"
 
 // Settings for the main star
 const float STAR_DIST = 5e10; // Distance from center of star to densest part of the Ribbon belt 
@@ -63,7 +63,7 @@ void Background::init() {
   density_ranges.push_back(RandomStuffDensityRange(100, 200, 2e8, 4e8, 1e9, 1e9));
 }
 
-Background::Background() : _quadric(gluNewQuadric()) {
+Background::Background() : _distant_bubble(MeshAnimation::load("mesh-LIBDistantBubble")) {
   _starbox_faces.push_back(GLOOTexture::load("starmap1.png"));
   _starbox_faces.push_back(GLOOTexture::load("starmap2.png"));
   _starbox_faces.push_back(GLOOTexture::load("starmap3.png"));
@@ -130,7 +130,7 @@ void Background::draw() {
   // Draw this system's star
   glDisable(GL_TEXTURE_2D);
   glColor4fv(STAR_COLOR);
-  gluSphere(_quadric, STAR_RADIUS, 16, 16);
+  //gluSphere(_quadric, STAR_RADIUS, 16, 16);
   glEnable(GL_TEXTURE_2D);
 
   glEnable(GL_DEPTH_TEST);
@@ -151,7 +151,7 @@ void Background::draw() {
   glLightfv(GL_LIGHT5, GL_POSITION, pos6);
 
   // Draw distant objects
-  glDisable(GL_TEXTURE_2D);
+  glEnable(GL_RESCALE_NORMAL);
   unsigned int seed_offset = RANDOM_STUFF_MASTER_SEED;
   BOOST_FOREACH(const RandomStuffDensityRange& r, density_ranges) {
     boost::binomial_distribution<unsigned int, float> count_dist(r.total_count, 1.0/r.segments);
@@ -183,12 +183,14 @@ void Background::draw() {
         float pos_angle = rev2rad(start_angle + pos_die());
         float d = STAR_DIST + d_offset_die();
         glTranslatef(d*std::sin(pos_angle), y_offset_die(), d*std::cos(pos_angle));
-        gluSphere(_quadric, radius_die(), 4, 4);
+        float scale = radius_die();
+        glScalef(scale, scale, scale);
+        _distant_bubble->draw();
       }
     }
     seed_offset += r.segments;
   }
-  glEnable(GL_TEXTURE_2D);
+  glDisable(GL_RESCALE_NORMAL);
 }
 
 void Background::to_center_from_game_origin() {
