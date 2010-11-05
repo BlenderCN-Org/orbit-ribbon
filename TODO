@@ -16,6 +16,9 @@
 * Inside/outside effect (HDR?), with light shining through leaves nicely if possible
 ---> Release as alpha2. Try to reach this point by end of service.
 
+* Maybe fix the blinky star problem and also the apparent-star-size changing problem at once:
+  - Have star generator use larger dots near the edge of the image, smaller in the middle
+
 == OTHER STUFF TO DO ==
 Thinh's ideas:
 - FOV on acceleration

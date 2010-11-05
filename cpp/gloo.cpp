@@ -69,8 +69,7 @@ struct SDLSurf {
 
 boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
   try {
-    boost::shared_ptr<GLOOTexture> tex(new GLOOTexture());
-    tex->_load_name = id;
+    boost::shared_ptr<GLOOTexture> tex(new GLOOTexture(id));
     
     // Create an SDL surface from the requested ORE image file
     boost::shared_ptr<OreFileHandle> fh = Globals::ore->get_fh(std::string("image-") + id);
@@ -99,11 +98,12 @@ boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
     glBindTexture(GL_TEXTURE_2D, tex->_tex_name);
     if (surf->format->BitsPerPixel == 8) {
       glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_LUMINANCE, surf->w, surf->h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, surf->pixels);
+      tex->_mipmapped = false;
     } else {
       GLenum img_format = (surf->format->BitsPerPixel == 24 ? GL_RGB : GL_RGBA);
       glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA, surf->w, surf->h, 0, img_format, GL_UNSIGNED_BYTE, surf->pixels);
+      glGenerateMipmap(GL_TEXTURE_2D);
     }
-    glGenerateMipmap(GL_TEXTURE_2D);
     
     if (glGetError()) {
       throw GameException("GL error while loading texture");
@@ -123,6 +123,7 @@ boost::shared_ptr<GLOOTexture> GLOOTexture::load(const std::string& name) {
 
 void GLOOTexture::bind() {
   glBindTexture(GL_TEXTURE_2D, _tex_name);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, _mipmapped ? GL_NEAREST_MIPMAP_LINEAR : GL_LINEAR);
 }
 
 void GLOOTexture::draw_2d(const Point& pos) {
