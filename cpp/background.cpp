@@ -79,7 +79,7 @@ void Background::set_sky(const ORE1::SkySettingsType& sky) {
   _sky.reset(new ORE1::SkySettingsType(sky));
 }
 
-void Background::draw() {
+void Background::draw_starbox() {
   glDisable(GL_LIGHTING);
   glDisable(GL_DEPTH_TEST);
 
@@ -129,7 +129,12 @@ void Background::draw() {
     glVertex3f(-d, -d, +d);
     glEnd();
   }
- 
+
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_LIGHTING);
+}
+
+void Background::draw_objects() {
   // Draw this system's star
   /*
   _star_tex->bind();
@@ -140,9 +145,6 @@ void Background::draw() {
   glEnd();
   glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_FALSE);
   */
-
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_LIGHTING);
 
   // Set up lighting for the star
   float star_pos[4] = {0.0, 0.0, 0.0, 1.0};

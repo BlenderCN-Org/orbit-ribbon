@@ -63,7 +63,8 @@ class Background {
 
     void set_sky(const ORE1::SkySettingsType& sky);
     
-    void draw();
+    void draw_starbox();
+    void draw_objects();
     void to_center_from_game_origin();
 };
 

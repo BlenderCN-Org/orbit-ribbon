@@ -105,8 +105,9 @@ void GameplayMode::pre_3d(bool top __attribute__ ((unused))) {
 void GameplayMode::draw_3d_far(bool top __attribute__ ((unused))) {
   // Draw all the background objects and setup lights
   GLOOPushedMatrix pm;
+  Globals::bg->draw_starbox();
   Globals::bg->to_center_from_game_origin();
-  Globals::bg->draw();
+  Globals::bg->draw_objects();
 }
 
 void GameplayMode::draw_3d_near(bool top __attribute__ ((unused))) {

@@ -64,7 +64,8 @@ void MenuMode::draw_3d_far(bool top __attribute__ ((unused))) {
   if (_draw_background) {
     GLOOPushedMatrix pm;
     glTranslatef(0, -5e9, -7e10);
-    Globals::bg->draw();
+    Globals::bg->draw_starbox();
+    Globals::bg->draw_objects();
   }
 }
 
