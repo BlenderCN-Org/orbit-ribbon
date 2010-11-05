@@ -136,15 +136,15 @@ void Background::draw_starbox() {
 
 void Background::draw_objects() {
   // Draw this system's star
-  /*
+  glDisable(GL_LIGHTING);
+  glEnable(GL_POINT_SPRITE);
   _star_tex->bind();
-  glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
   glPointSize(STAR_RADIUS);
   glBegin(GL_POINTS);
-  glVertex3f(0,0,0);
+  //glVertex3f(0,0,0);
   glEnd();
-  glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_FALSE);
-  */
+  glDisable(GL_POINT_SPRITE);
+  glEnable(GL_LIGHTING);
 
   // Set up lighting for the star
   float star_pos[4] = {0.0, 0.0, 0.0, 1.0};
