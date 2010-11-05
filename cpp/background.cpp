@@ -176,7 +176,6 @@ void Background::draw() {
     for (unsigned int s = 0; s < r.segments; ++s) {
       _random_gen.seed((seed_offset + s)*RANDOM_STUFF_SEED_COEF);
       unsigned int count = count_die();
-      //unsigned int count = 2;
       float start_angle = s*(1.0/r.segments);
       for (unsigned int i = 0; i < count; ++i) {
         GLOOPushedMatrix pm;
