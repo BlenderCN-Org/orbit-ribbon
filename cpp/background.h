@@ -38,6 +38,7 @@ class Background {
     boost::shared_ptr<ORE1::SkySettingsType> _sky;
     boost::taus88 _random_gen;
     std::vector<boost::shared_ptr<GLOOTexture> > _starbox_faces;
+    boost::shared_ptr<GLOOTexture> _star_tex;
     boost::shared_ptr<MeshAnimation> _distant_bubble;
 
     struct RandomStuffDensityRange {

@@ -132,6 +132,17 @@ void Display::init() {
   if (!GLEW_ARB_map_buffer_range) {
     throw GameException(std::string("Need OpenGL extension ARB_map_buffer_range"));
   }
+
+  /*
+  glEnable(GL_POINT_SPRITE);
+  float sprite_quadratic[] = { 1.0, 0.0, 0.01 };
+  glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, sprite_quadratic);
+  glPointParameterf(GL_POINT_FADE_THRESHOLD_SIZE, 60.0);
+  GLfloat sprite_sizes[2];
+  glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, sprite_sizes);
+  glPointParameterf(GL_POINT_SIZE_MIN, sprite_sizes[0]);
+  glPointParameterf(GL_POINT_SIZE_MAX, sprite_sizes[1]);
+  */
   
   glEnable(GL_TEXTURE_2D);
   

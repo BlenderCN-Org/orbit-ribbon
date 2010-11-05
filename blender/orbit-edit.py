@@ -259,6 +259,7 @@ def do_export():
   
   # There will be many more "standard UI images", need a way of including them all
   zfh.write("../images/cursor.png", "image-cursor.png", zipfile.ZIP_STORED)
+  zfh.write("../images/star.png", "image-star.png", zipfile.ZIP_STORED)
   zfh.write("../images/starmap-1.png", "image-starmap1.png", zipfile.ZIP_STORED)
   zfh.write("../images/starmap-2.png", "image-starmap2.png", zipfile.ZIP_STORED)
   zfh.write("../images/starmap-3.png", "image-starmap3.png", zipfile.ZIP_STORED)

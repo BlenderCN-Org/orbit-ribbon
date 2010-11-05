@@ -63,7 +63,10 @@ void Background::init() {
   density_ranges.push_back(RandomStuffDensityRange(100, 200, 2e8, 4e8, 1e9, 1e9));
 }
 
-Background::Background() : _distant_bubble(MeshAnimation::load("mesh-LIBDistantBubble")) {
+Background::Background() :
+  _star_tex(GLOOTexture::load("star.png")),
+  _distant_bubble(MeshAnimation::load("mesh-LIBDistantBubble"))
+{
   _starbox_faces.push_back(GLOOTexture::load("starmap1.png"));
   _starbox_faces.push_back(GLOOTexture::load("starmap2.png"));
   _starbox_faces.push_back(GLOOTexture::load("starmap3.png"));
@@ -128,10 +131,15 @@ void Background::draw() {
   }
  
   // Draw this system's star
-  glDisable(GL_TEXTURE_2D);
-  glColor4fv(STAR_COLOR);
-  //gluSphere(_quadric, STAR_RADIUS, 16, 16);
-  glEnable(GL_TEXTURE_2D);
+  /*
+  _star_tex->bind();
+  glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
+  glPointSize(STAR_RADIUS);
+  glBegin(GL_POINTS);
+  glVertex3f(0,0,0);
+  glEnd();
+  glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_FALSE);
+  */
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING);
