@@ -354,14 +354,13 @@ void GLOOBufferedMesh::draw() {
     glDisable(GL_TEXTURE_2D);
   }
   
-  const char* offset = 0;
   glDrawRangeElements(
     GL_TRIANGLES,
     (_vertices_alloc->offset())/sizeof(GLOOVertex),
     (_vertices_alloc->offset() + _vertices_alloc->bytes())/sizeof(GLOOVertex),
     _faces_alloc->bytes()/GLOOFace::elem_bytes(),
     GLOOFace::gl_type(),
-    offset + _faces_alloc->offset()
+    (const char*)(0) + _faces_alloc->offset()
   );
   
   if (!_tex) {
