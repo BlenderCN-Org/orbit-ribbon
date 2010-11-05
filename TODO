@@ -18,6 +18,7 @@
 
 * Maybe fix the blinky star problem and also the apparent-star-size changing problem at once:
   - Have star generator use larger dots near the edge of the image, smaller in the middle
+  - Alternately, just use a very simple sphere-like shape instead of a box
 
 == OTHER STUFF TO DO ==
 Thinh's ideas:
