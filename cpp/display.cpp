@@ -133,13 +133,13 @@ void Display::init() {
     throw GameException(std::string("Need OpenGL extension ARB_map_buffer_range"));
   }
 
-  float sprite_quadratic[] = { 1.0, 0.0, 0.0 };
+  // Quadratic value arrived at emperically, I don't think it's realistic
+  float sprite_quadratic[] = { 0.0, 0.0, 0.0000001 };
   glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, sprite_quadratic);
   GLfloat sprite_sizes[2];
   glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, sprite_sizes);
   glPointParameterf(GL_POINT_SIZE_MIN, sprite_sizes[0]);
   glPointParameterf(GL_POINT_SIZE_MAX, sprite_sizes[1]);
-  glPointParameterf(GL_POINT_FADE_THRESHOLD_SIZE, sprite_sizes[1]);
   glTexEnvi(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
   
   glEnable(GL_TEXTURE_2D);

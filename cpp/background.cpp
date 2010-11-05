@@ -141,7 +141,7 @@ void Background::draw_objects() {
   _star_tex->bind();
   glPointSize(STAR_RADIUS);
   glBegin(GL_POINTS);
-  //glVertex3f(0,0,0);
+  glVertex3f(0,0,0);
   glEnd();
   glDisable(GL_POINT_SPRITE);
   glEnable(GL_LIGHTING);
