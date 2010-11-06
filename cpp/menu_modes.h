@@ -39,7 +39,7 @@ class MenuMode : public Mode {
     void add_entry(const std::string& name, const std::string& label);
   
   public:
-    MenuMode(bool draw_background, int menu_width, int btn_height, int padding);
+    MenuMode(bool draw_background, int menu_width, int btn_height, int padding, Vector center_offset = Vector(0,0,0));
     
     bool simulation_disabled() { return true; }
     bool mouse_cursor_enabled() { return true; }
@@ -54,9 +54,13 @@ class MenuMode : public Mode {
 };
 
 class MainMenuMode : public MenuMode {
+  private:
+    boost::shared_ptr<GLOOTexture> _title_tex;
+
   public:
     MainMenuMode();
     void handle_menu_selection(const std::string& item);
+    void draw_2d(bool top);
 };
 
 class AreaSelectMenuMode : public MenuMode {

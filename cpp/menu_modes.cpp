@@ -39,9 +39,9 @@ void MenuMode::add_entry(const std::string& name, const std::string& label) {
   _simple_menu.add_button(name, label);
 }
 
-MenuMode::MenuMode(bool draw_background, int menu_width, int btn_height, int padding) :
+MenuMode::MenuMode(bool draw_background, int menu_width, int btn_height, int padding, Vector center_offset) :
   _draw_background(draw_background),
-  _simple_menu(menu_width, btn_height, padding)
+  _simple_menu(menu_width, btn_height, padding, center_offset)
 {
 }
 
@@ -77,7 +77,10 @@ void MenuMode::pushed_below_top() {
   _simple_menu.reset_activation();
 }
 
-MainMenuMode::MainMenuMode() : MenuMode(true, 180, 22, 8) {
+MainMenuMode::MainMenuMode() :
+  MenuMode(true, 180, 22, 8, Vector(0, 0.3, 0)),
+  _title_tex(GLOOTexture::load("title.png"))
+{
   add_entry("play", "Play");
   add_entry("credits", "Credits");
   add_entry("options", "Options");
@@ -90,6 +93,16 @@ void MainMenuMode::handle_menu_selection(const std::string& item) {
   } else if (item == "quit" or item == "CANCEL") {
     Globals::mode_stack.next_frame_pop_mode();
   }
+}
+
+void MainMenuMode::draw_2d(bool top __attribute__ ((unused))) {
+  MenuMode::draw_2d(top);
+  
+  static const Point title_pos(
+    Display::get_screen_width()/2 - _title_tex->get_width()/2,
+    Display::get_screen_height()*0.3 - _title_tex->get_height()/2
+  );
+  _title_tex->draw_2d(title_pos); 
 }
 
 AreaSelectMenuMode::AreaSelectMenuMode() : MenuMode(true, 300, 22, 8) {

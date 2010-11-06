@@ -58,12 +58,13 @@ namespace GUI {
       int _width, _btn_height, _padding;
       FocusTracker _focus_tracker;
       bool _filled_focus_tracker;
+      Vector _center_offset;
       std::list<std::pair<std::string, std::string> > _entries;
       std::string _activated_entry;
     
     public:
-      SimpleMenu(int width, int btn_height, int padding) :
-        _width(width), _btn_height(btn_height), _padding(padding), _filled_focus_tracker(false) {}
+      SimpleMenu(int width, int btn_height, int padding, Vector center_offset = Vector(0,0,0)) :
+        _width(width), _btn_height(btn_height), _padding(padding), _filled_focus_tracker(false), _center_offset(center_offset) {}
       
       void add_button(const std::string& name, const std::string& label);
       

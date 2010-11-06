@@ -128,10 +128,10 @@ void GLOOTexture::bind() {
 
 void GLOOTexture::draw_2d(const Point& pos) {
   const static GLfloat uv_points[8] = {
-    0.0, 0.0,
-    1.0, 0.0,
+    0.0, 1.0,
     1.0, 1.0,
-    0.0, 1.0
+    1.0, 0.0,
+    0.0, 0.0
   };
   
   GLfloat points[8] = {

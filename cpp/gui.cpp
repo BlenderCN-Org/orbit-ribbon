@@ -140,6 +140,7 @@ void SimpleMenu::process() {
   if (!_filled_focus_tracker) {
     int full_height = _entries.size() * (_btn_height + _padding) - _padding; // Subtract one padding for fencepost error
     Point pos((Display::get_screen_width() - _width)/2, (Display::get_screen_height() - full_height)/2);
+    pos += _center_offset * Display::get_screen_size();
     for (std::list<std::pair<std::string, std::string> >::const_iterator i = _entries.begin(); i != _entries.end(); ++i) {
       _focus_tracker.add_region(i->first, Box(pos, Size(_width, _btn_height)));
       pos.y += _btn_height + _padding;
@@ -187,9 +188,9 @@ void SimpleMenu::draw() {
       );
     }
     
-    glColor3f(1.0, 1.0, 1.0);
     int font_height = _btn_height - DIAMOND_BOX_BORDER.y*2;
     int text_width = Globals::sys_font->get_width(font_height, i->second);
+    glColor3f(1.0, 1.0, 1.0);
     Globals::sys_font->draw(region->top_left + (_width - text_width)/2, font_height, i->second);
   }
 }
