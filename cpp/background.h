@@ -40,6 +40,7 @@ class Background {
     std::vector<boost::shared_ptr<GLOOTexture> > _starbox_faces;
     boost::shared_ptr<GLOOTexture> _star_tex;
     boost::shared_ptr<MeshAnimation> _distant_bubble;
+    Vector _sky_offset;
 
     struct RandomStuffDensityRange {
       unsigned int segments;

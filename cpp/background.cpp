@@ -77,6 +77,10 @@ Background::Background() :
 
 void Background::set_sky(const ORE1::SkySettingsType& sky) {
   _sky.reset(new ORE1::SkySettingsType(sky));
+  float d = STAR_DIST + sky.orbitDOffset();
+  _sky_offset.x = d*std::sin(-rev2rad(sky.orbitAngle()));
+  _sky_offset.y = sky.orbitYOffset();
+  _sky_offset.z = d*std::cos(-rev2rad(sky.orbitAngle()));
 }
 
 void Background::draw_starbox() {
@@ -206,7 +210,6 @@ void Background::to_center_from_game_origin() {
   if (!_sky) {
     throw GameException("Unable to locate game origin, no SkySettings available");
   }
-  float d = STAR_DIST + _sky->orbitDOffset();
-  glTranslatef(d*std::sin(-rev2rad(_sky->orbitAngle())), _sky->orbitYOffset(), d*std::cos(-rev2rad(_sky->orbitAngle())));
+  glTranslatef(_sky_offset.x, _sky_offset.y, _sky_offset.z);
   // TODO Implement tilt
 }
