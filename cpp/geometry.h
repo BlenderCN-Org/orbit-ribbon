@@ -22,8 +22,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_GEOMETRY_H
 #define ORBIT_RIBBON_GEOMETRY_H
 
-#include <GL/glew.h>
-#include <GL/gl.h>
 #include <string>
 #include <ode/ode.h>
 
@@ -34,15 +32,15 @@ typedef Point Size;
 
 class Point {
   public:
-    GLfloat x;
-    GLfloat y;
-    GLfloat z;
+    float x;
+    float y;
+    float z;
     
     Point(const dReal* s) : x(s[0]), y(s[1]), z(s[2]) {}
-    Point(GLfloat nx = 0.0, GLfloat ny = 0.0, GLfloat nz = 0.0) : x(nx), y(ny), z(nz) {}
+    Point(float nx = 0.0, float ny = 0.0, float nz = 0.0) : x(nx), y(ny), z(nz) {}
     Point(const Point& other) : x(other.x), y(other.y), z(other.z) {}
     
-    GLfloat operator[](int i) const { return (i == 0 ? x : (i == 1 ? y : z)); }
+    float operator[](int i) const { return (i == 0 ? x : (i == 1 ? y : z)); }
     
     Point& operator=(const Point& other);
     
@@ -53,14 +51,14 @@ class Point {
     void operator-=(const Point& other);
     
     Point operator*(const Point& other) const;
-    Point operator*(GLfloat f) const;
+    Point operator*(float f) const;
     void operator*=(const Point& other);
-    void operator*=(GLfloat f);
+    void operator*=(float f);
     
     Point operator/(const Point& other) const;
-    Point operator/(GLfloat f) const;
+    Point operator/(float f) const;
     void operator/=(const Point& other);
-    void operator/=(GLfloat f);
+    void operator/=(float f);
     
     bool operator==(const Point& other) const;
     bool operator!=(const Point& other) const { return !(*this == other); }
@@ -68,12 +66,12 @@ class Point {
     Point operator-() const;
     
     bool near_to(const Point& other) const;
-    GLfloat dot_prod(const Point& other) const;
+    float dot_prod(const Point& other) const;
     Point cross_prod(const Point& other) const;
-    GLfloat mag() const;
-    GLfloat dist_to(const Point& other) const;
-    GLfloat sq_dist_to(const Point& other) const;
-    GLfloat ang_to(const Point& other) const;
+    float mag() const;
+    float dist_to(const Point& other) const;
+    float sq_dist_to(const Point& other) const;
+    float ang_to(const Point& other) const;
     Point to_length(float len) const;
     Point project_onto(const Point& other) const;
     Point project_onto(const Plane& other) const;
@@ -83,9 +81,9 @@ class Point {
 
 class Plane {
   public:
-    GLfloat a, b, c, d;
+    float a, b, c, d;
     
-    Plane(GLfloat na, GLfloat nb, GLfloat nc, GLfloat nd);
+    Plane(float na, float nb, float nc, float nd);
     Plane(const Point& p0, const Point& p1, const Point& p2);
     
     Vector normal() const;
@@ -101,12 +99,12 @@ struct Box {
   bool contains_point(const Point& pt) const;
 };
 
-GLfloat rev2rad(GLfloat ang); // FIXME: In old version, this also converted cw to ccw. Make sure everything that needed that does it itself!
-GLfloat rad2rev(GLfloat ang);
-GLfloat rev2deg(GLfloat ang);
-GLfloat deg2rev(GLfloat ang);
-GLfloat rad2deg(GLfloat ang);
-GLfloat deg2rad(GLfloat ang);
+float rev2rad(float ang); // FIXME: In old version, this also converted cw to ccw. Make sure everything that needed that does it itself!
+float rad2rev(float ang);
+float rev2deg(float ang);
+float deg2rev(float ang);
+float rad2deg(float ang);
+float deg2rad(float ang);
 bool similar(float a, float b);
 float limit_abs(float x, float max);
 Vector get_barycentric(const Point& p, const Point& a, const Point& b, const Point& c);

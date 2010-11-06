@@ -21,6 +21,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
 #include <boost/lexical_cast.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "menu_modes.h"
 
@@ -32,6 +33,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gloo.h"
 #include "gui.h"
 #include "input.h"
+#include "interpolation.h"
+#include "interp_mode.h"
 #include "ore.h"
 #include "saving.h"
 
@@ -90,7 +93,11 @@ MainMenuMode::MainMenuMode() :
 
 void MainMenuMode::handle_menu_selection(const std::string& item) {
   if (item == "play") {
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new AreaSelectMenuMode()));
+    ;
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(
+      new InterpolationMode<CosineInterpolator>(500, boost::shared_ptr<Mode>(
+      new AreaSelectMenuMode())
+    )));
   } else if (item == "quit" or item == "CANCEL") {
     Globals::mode_stack.next_frame_pop_mode();
   }

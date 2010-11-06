@@ -53,6 +53,8 @@ class Mode {
     
     virtual void pushed_below_top() {}
     virtual void now_at_top() {}
+
+    virtual bool absorb_prior_top(const boost::shared_ptr<Mode>& m __attribute__ ((unused))) { return false; }
 };
 
 class ModeStack {

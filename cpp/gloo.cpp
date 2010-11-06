@@ -423,6 +423,18 @@ void GLOOCamera::setup() const {
   );
 }
 
+void GLOOCamera::operator*=(float n) {
+  pos *= n;
+  tgt *= n;
+  up *= n;
+}
+
+void GLOOCamera::operator+=(const GLOOCamera& other) {
+  pos += other.pos;
+  tgt += other.tgt;
+  up += other.up;
+}
+
 GLOOFont::GLOOFont(const std::string& path, unsigned int native_size) :
   _native_size(native_size)
 {
