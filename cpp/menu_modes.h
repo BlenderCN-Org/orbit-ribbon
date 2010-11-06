@@ -56,25 +56,33 @@ class MenuMode : public Mode {
 class MainMenuMode : public MenuMode {
  private:
     boost::shared_ptr<GLOOTexture> _title_tex;
+    GLOOCamera _camera;
 
   public:
     MainMenuMode();
+    const GLOOCamera* get_camera() { return &_camera; }
     void handle_menu_selection(const std::string& item);
     void draw_2d(bool top);
 };
 
 class AreaSelectMenuMode : public MenuMode {
+  private:
+    GLOOCamera _camera;
+
   public:
     AreaSelectMenuMode();
+    const GLOOCamera* get_camera() { return &_camera; }
     void handle_menu_selection(const std::string& item);
 };
 
 class MissionSelectMenuMode : public MenuMode {
   private:
     unsigned int _area_num;
+    GLOOCamera _camera;
   
   public:
     MissionSelectMenuMode(unsigned int area_num);
+    const GLOOCamera* get_camera() { return &_camera; }
     void handle_menu_selection(const std::string& item);
 };
 

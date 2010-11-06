@@ -63,7 +63,6 @@ bool MenuMode::handle_input() {
 void MenuMode::draw_3d_far(bool top __attribute__ ((unused))) {
   if (_draw_background) {
     GLOOPushedMatrix pm;
-    glTranslatef(0, -5e9, -7e10);
     Globals::bg->draw_starbox();
     Globals::bg->draw_objects();
   }
@@ -85,6 +84,8 @@ MainMenuMode::MainMenuMode() :
   add_entry("credits", "Credits");
   add_entry("options", "Options");
   add_entry("quit", "Quit");
+  
+  _camera.pos = Point(0, -5e9, -7e10);
 }
 
 void MainMenuMode::handle_menu_selection(const std::string& item) {
@@ -116,6 +117,8 @@ AreaSelectMenuMode::AreaSelectMenuMode() : MenuMode(true, 300, 22, 8) {
   }
   
   add_entry("back", "Back");
+  
+  _camera.pos = Point(0, 5e9, -7e10);
 }
 
 void AreaSelectMenuMode::handle_menu_selection(const std::string& item) {
@@ -139,6 +142,8 @@ MissionSelectMenuMode::MissionSelectMenuMode(unsigned int area_num) : MenuMode(t
   }
   
   add_entry("back", "Back");
+  
+  _camera.pos = Point(0, 5e9, -7e10);
 }
 
 void MissionSelectMenuMode::handle_menu_selection(const std::string& item) {

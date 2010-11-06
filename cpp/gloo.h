@@ -202,7 +202,7 @@ struct GLOOCamera {
   Point tgt;
   Vector up;
 
-  GLOOCamera() {}
+  GLOOCamera() : up(0, 1, 0) {}
   GLOOCamera(const Point& p, const Point& t, const Vector& u) : pos(p), tgt(t), up(u) {}
   void setup() const;
 };
