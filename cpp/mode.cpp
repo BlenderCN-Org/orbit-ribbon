@@ -32,9 +32,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 void ModeStack::PushOperation::apply(ModeStack& mode_stack) {
   if (!mode_stack._stack.empty()) {
     mode_stack._stack.top()->pushed_below_top();
-    if (_mode_to_push->absorb_prior_top(mode_stack._stack.top())) {
-      mode_stack._stack.pop();
-    }
+    _mode_to_push->prior_top(mode_stack._stack.top());
   }
   _mode_to_push->now_at_top();
   mode_stack._stack.push(_mode_to_push);
