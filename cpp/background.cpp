@@ -206,10 +206,9 @@ void Background::draw_objects() {
   glDisable(GL_RESCALE_NORMAL);
 }
 
-void Background::to_center_from_game_origin() {
+Vector Background::to_center_from_game_origin() {
   if (!_sky) {
     throw GameException("Unable to locate game origin, no SkySettings available");
   }
-  glTranslatef(_sky_offset.x, _sky_offset.y, _sky_offset.z);
-  // TODO Implement tilt
+  return _sky_offset;
 }

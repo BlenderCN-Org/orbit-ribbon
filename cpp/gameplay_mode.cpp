@@ -106,7 +106,8 @@ void GameplayMode::draw_3d_far(bool top __attribute__ ((unused))) {
   // Draw all the background objects and setup lights
   GLOOPushedMatrix pm;
   Globals::bg->draw_starbox();
-  Globals::bg->to_center_from_game_origin();
+  Vector offset = Globals::bg->to_center_from_game_origin();
+  glTranslatef(offset.x, offset.y, offset.z);
   Globals::bg->draw_objects();
 }
 

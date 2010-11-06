@@ -66,7 +66,7 @@ class Background {
     
     void draw_starbox();
     void draw_objects();
-    void to_center_from_game_origin();
+    Vector to_center_from_game_origin();
 };
 
 #endif
