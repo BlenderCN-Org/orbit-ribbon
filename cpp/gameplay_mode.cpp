@@ -90,16 +90,12 @@ bool GameplayMode::handle_input() {
   return true;
 }
 
-void GameplayMode::pre_3d(bool top __attribute__ ((unused))) {
+const GLOOCamera* GameplayMode::get_camera() {
   AvatarGameObj* avatar = find_avatar();
-  Point cam_pos = avatar->get_rel_point_pos(CAMERA_POS_OFFSET);
-  Point cam_tgt = avatar->get_rel_point_pos(CAMERA_TGT_OFFSET);
-  Vector up_vec = avatar->vector_to_world(CAMERA_UP_VECTOR);
-  gluLookAt(
-    cam_pos.x, cam_pos.y, cam_pos.z,
-    cam_tgt.x, cam_tgt.y, cam_tgt.z,
-     up_vec.x,  up_vec.y,  up_vec.z
-  );
+  _camera.pos = avatar->get_rel_point_pos(CAMERA_POS_OFFSET);
+  _camera.tgt = avatar->get_rel_point_pos(CAMERA_TGT_OFFSET);
+  _camera.up = avatar->vector_to_world(CAMERA_UP_VECTOR);
+  return &_camera;
 }
 
 void GameplayMode::draw_3d_far(bool top __attribute__ ((unused))) {

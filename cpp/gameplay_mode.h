@@ -24,6 +24,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_GAMEPLAY_MODE_H
 
 #include "geometry.h"
+#include "gloo.h"
 #include "mode.h"
 #include "mission_fsm.h"
 
@@ -34,6 +35,7 @@ class GameplayMode : public Mode {
     MissionFSM _fsm;
     std::string _avatar_key;
     Point _condition_widget_cursor;
+    GLOOCamera _camera;
     
   public:
     GameplayMode();
@@ -45,7 +47,7 @@ class GameplayMode : public Mode {
     
     bool handle_input();
     
-    void pre_3d(bool top);
+    const GLOOCamera* get_camera();
     void draw_3d_far(bool top);
     void draw_3d_near(bool top);
     void draw_2d(bool top);

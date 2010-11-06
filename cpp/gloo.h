@@ -197,6 +197,16 @@ class GLOOBufferedMesh : boost::noncopyable {
     virtual ~GLOOBufferedMesh();
 };
 
+struct GLOOCamera {
+  Point pos;
+  Point tgt;
+  Vector up;
+
+  GLOOCamera() {}
+  GLOOCamera(const Point& p, const Point& t, const Vector& u) : pos(p), tgt(t), up(u) {}
+  void setup() const;
+};
+
 class FTFont;
 class Point;
 class GLOOFont {

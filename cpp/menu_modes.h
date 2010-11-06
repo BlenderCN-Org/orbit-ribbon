@@ -54,7 +54,7 @@ class MenuMode : public Mode {
 };
 
 class MainMenuMode : public MenuMode {
-  private:
+ private:
     boost::shared_ptr<GLOOTexture> _title_tex;
 
   public:

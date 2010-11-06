@@ -415,6 +415,14 @@ GLOOBufferedMesh::~GLOOBufferedMesh() {
   finish_loading();
 }
 
+void GLOOCamera::setup() const {
+  gluLookAt(
+    pos.x, pos.y, pos.z,
+    tgt.x, tgt.y, tgt.z,
+     up.x,  up.y,  up.z
+  );
+}
+
 GLOOFont::GLOOFont(const std::string& path, unsigned int native_size) :
   _native_size(native_size)
 {
