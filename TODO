@@ -31,6 +31,7 @@ Thinh's ideas:
 	- Builds the entire project at once to see if g++'s unit-at-a-time thing helps
 	- Uses g++'s profiling mechanism with some kind of demo
 
+- Fix star-zooming problem; maybe can strip translation from model matrix before drawing?
 - Speed cap enforced with non-linear drag
 - After generating packed textures, VBOs, etc, save to local system and restore for quick loading
   - Need to make sure to discard cache if video card/driver changes, or if source data is updated
