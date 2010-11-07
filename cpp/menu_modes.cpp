@@ -125,7 +125,8 @@ AreaSelectMenuMode::AreaSelectMenuMode() : MenuMode(true, 300, 22, 8) {
   
   add_entry("back", "Back");
   
-  _camera.pos = Point(0, 2e10, 0);
+  _camera.pos = Point(0, 1e11, 0);
+  _camera.up = Point(0, 0, 1);
 }
 
 void AreaSelectMenuMode::handle_menu_selection(const std::string& item) {
