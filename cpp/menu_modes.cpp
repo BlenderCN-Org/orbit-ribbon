@@ -191,7 +191,10 @@ void MissionSelectMenuMode::handle_menu_selection(const std::string& item) {
   } else {
     unsigned int mission_num = boost::lexical_cast<unsigned int>(item);
     App::load_mission(_area_num, mission_num);
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new GameplayMode()));
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(
+      new InterpolationMode<CosineInterpolator>(5000, boost::shared_ptr<Mode>(
+      new GameplayMode()
+    ))));
   }
 }
 
