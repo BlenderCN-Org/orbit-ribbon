@@ -95,7 +95,7 @@ void MainMenuMode::handle_menu_selection(const std::string& item) {
   if (item == "play") {
     ;
     Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(
-      new InterpolationMode<CosineInterpolator>(500, boost::shared_ptr<Mode>(
+      new InterpolationMode<CosineInterpolator>(1000, boost::shared_ptr<Mode>(
       new AreaSelectMenuMode())
     )));
   } else if (item == "quit" or item == "CANCEL") {
@@ -126,7 +126,7 @@ AreaSelectMenuMode::AreaSelectMenuMode() : MenuMode(true, 300, 22, 8) {
   add_entry("back", "Back");
   
   _camera.pos = Point(0, 1e11, 0);
-  _camera.up = Point(0, 0, 1);
+  _camera.up = Point(1, 0, 0);
 }
 
 void AreaSelectMenuMode::handle_menu_selection(const std::string& item) {
