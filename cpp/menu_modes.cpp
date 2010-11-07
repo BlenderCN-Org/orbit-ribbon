@@ -96,8 +96,8 @@ void MainMenuMode::handle_menu_selection(const std::string& item) {
     ;
     Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(
       new InterpolationMode<CosineInterpolator>(1000, boost::shared_ptr<Mode>(
-      new AreaSelectMenuMode())
-    )));
+      new AreaSelectMenuMode()
+    ))));
   } else if (item == "quit" or item == "CANCEL") {
     Globals::mode_stack.next_frame_pop_mode();
   }
@@ -134,7 +134,11 @@ void AreaSelectMenuMode::handle_menu_selection(const std::string& item) {
     Globals::mode_stack.next_frame_pop_mode();
   } else {
     unsigned int area_num = boost::lexical_cast<unsigned int>(item);
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MissionSelectMenuMode(area_num)));
+    App::load_mission(area_num, 0);
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(
+      new InterpolationMode<CosineInterpolator>(1000, boost::shared_ptr<Mode>(
+      new MissionSelectMenuMode(area_num)
+    ))));
   }
 }
 
@@ -151,7 +155,10 @@ MissionSelectMenuMode::MissionSelectMenuMode(unsigned int area_num) : MenuMode(t
   
   add_entry("back", "Back");
   
-  _camera.pos = Point(0, 5e9, -7e10);
+  Vector offset = -Globals::bg->to_center_from_game_origin();
+  _camera.pos = Point(0, 1e10, 0) + offset;
+  _camera.tgt = offset;
+  _camera.up = Point(1, 0, 0);
 }
 
 void MissionSelectMenuMode::handle_menu_selection(const std::string& item) {

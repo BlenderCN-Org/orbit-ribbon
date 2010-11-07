@@ -30,8 +30,7 @@ class App {
   public:
     static void run(const std::vector<std::string>& arguments);
     
-    // To just load the base objects for an area, specify 0 for mission
-    // TODO Implement above feature
+    // To just load the base objects and sky for an area, specify 0 for mission
     static void load_mission(unsigned int area_num, unsigned int mission);
     
   private:

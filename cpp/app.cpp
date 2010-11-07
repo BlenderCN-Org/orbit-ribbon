@@ -242,10 +242,17 @@ void App::run(const std::vector<std::string>& args) {
     if (vm.count("area") and vm.count("mission")) {
       unsigned int area = vm["area"].as<unsigned int>();
       unsigned int mission = vm["mission"].as<unsigned int>();
+      if (area < 1 || mission < 1) {
+        throw GameException("Area and mission numbers must be positive integers");
+      }
       load_mission(area, mission);
       Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new GameplayMode()));
     } else if (vm.count("area")) {
       unsigned int area = vm["area"].as<unsigned int>();
+      if (area < 1) {
+        throw GameException("Area and mission numbers must be positive integers");
+      }
+      load_mission(area, 0);
       Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MainMenuMode()));
       Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new AreaSelectMenuMode()));
       Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MissionSelectMenuMode(area)));
@@ -273,10 +280,14 @@ void App::run(const std::vector<std::string>& args) {
 }
 
 void App::load_mission(unsigned int area_num, unsigned int mission_num) {
-  Debug::status_msg(
-    "Loading area " + boost::lexical_cast<std::string>(area_num) +
-    ", mission " + boost::lexical_cast<std::string>(mission_num)
-  );
+  if (mission_num > 0) {
+    Debug::status_msg(
+      "Loading area " + boost::lexical_cast<std::string>(area_num) +
+      ", mission " + boost::lexical_cast<std::string>(mission_num)
+    );
+  } else {
+    Debug::status_msg("Loading area " + boost::lexical_cast<std::string>(area_num));
+  }
   
   const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
   
@@ -294,25 +305,36 @@ void App::load_mission(unsigned int area_num, unsigned int mission_num) {
   }
   
   const ORE1::MissionType* mission = NULL;
-  for (ORE1::AreaType::MissionConstIterator i = area->mission().begin(); i != area->mission().end(); ++i) {
-    if (i->n() == mission_num) {
-      mission = &(*i);
-      break;
+  if (mission_num > 0) {
+    for (ORE1::AreaType::MissionConstIterator i = area->mission().begin(); i != area->mission().end(); ++i) {
+      if (i->n() == mission_num) {
+        mission = &(*i);
+        break;
+      }
+    }
+    if (!mission) {
+      throw GameException(
+        "Unable to load mission " + boost::lexical_cast<std::string>(mission_num) + " from area " + boost::lexical_cast<std::string>(area_num)
+      );
     }
   }
-  if (!mission) {
-    throw GameException(
-      "Unable to load mission " + boost::lexical_cast<std::string>(mission_num) + " from area " + boost::lexical_cast<std::string>(area_num)
-    );
-  }
   
-  // Okay, we're now sure we have the area and mission we want. Let's load all the objects.
+  // TODO: Instead of clearing gameobjs, maybe keep the old one around a while so that meshes and textures stay loaded.
+  // Though, watch out for running out of video memory at point where both lists fully loaded...
+  // Also watch out for fragmentation of VBO space; at the moment GLOO doesn't have any way of dealing with that.
+  // Easiest solution: Notice if we are changing missions within an area, then keep all objs temp loaded, and...
+  // If we are reloading the same area and mission, keep everything temp loaded.
+  // NOTE: Cannot just leave objects in gameobjs, they may have changed state during gameplay.
+  // Another possible idea: Have orbit-edit.py notice common objects/textures among all or nearly all missions, then we
+  // can load them on ORE load.
   Globals::gameobjs.clear();
   for (ORE1::AreaType::ObjConstIterator i = area->obj().begin(); i != area->obj().end(); ++i) {
     Globals::gameobjs.insert(GOMap::value_type(i->objName(), get_factory<GameObjFactorySpec>().create(*i)));
   }
-  for (ORE1::MissionType::ObjConstIterator i = mission->obj().begin(); i != mission->obj().end(); ++i) {
-    Globals::gameobjs.insert(GOMap::value_type(i->objName(), get_factory<GameObjFactorySpec>().create(*i)));
+  if (mission) {
+    for (ORE1::MissionType::ObjConstIterator i = mission->obj().begin(); i != mission->obj().end(); ++i) {
+      Globals::gameobjs.insert(GOMap::value_type(i->objName(), get_factory<GameObjFactorySpec>().create(*i)));
+    }
   }
   
   Globals::bg->set_sky(area->sky());
