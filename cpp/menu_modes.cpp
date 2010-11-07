@@ -108,7 +108,7 @@ void MainMenuMode::draw_2d(bool top __attribute__ ((unused))) {
   
   static const Point title_pos(
     Display::get_screen_width()/2 - _title_tex->get_width()/2,
-    Display::get_screen_height()*0.3 - _title_tex->get_height()/2
+    Display::get_screen_height()*0.25 - _title_tex->get_height()/2
   );
   _title_tex->draw_2d(title_pos); 
 }
