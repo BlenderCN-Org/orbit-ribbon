@@ -90,7 +90,7 @@ bool GameplayMode::handle_input() {
   return true;
 }
 
-const GLOOCamera* GameplayMode::get_camera() {
+const GLOOCamera* GameplayMode::get_camera(bool top __attribute__ ((unused))) {
   AvatarGameObj* avatar = find_avatar();
   _camera.pos = avatar->get_rel_point_pos(CAMERA_POS_OFFSET);
   _camera.tgt = avatar->get_rel_point_pos(CAMERA_TGT_OFFSET);

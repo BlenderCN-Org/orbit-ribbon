@@ -47,7 +47,7 @@ class GameplayMode : public Mode {
     
     bool handle_input();
     
-    const GLOOCamera* get_camera();
+    const GLOOCamera* get_camera(bool top);
     void draw_3d_far(bool top);
     void draw_3d_near(bool top);
     void draw_2d(bool top);

@@ -155,10 +155,34 @@ MissionSelectMenuMode::MissionSelectMenuMode(unsigned int area_num) : MenuMode(t
   
   add_entry("back", "Back");
   
-  Vector offset = -Globals::bg->to_center_from_game_origin();
-  _camera.pos = Point(0, 1e10, 0) + offset;
-  _camera.tgt = offset;
   _camera.up = Point(1, 0, 0);
+}
+
+void MissionSelectMenuMode::draw_3d_far(bool top) {
+  if (top) {
+    GLOOPushedMatrix pm;
+    Vector offset(Globals::bg->to_center_from_game_origin());
+    glTranslatef(offset.x, offset.y, offset.z);
+    MenuMode::draw_3d_far(top);
+  } else {
+    // Looks like a duplicate of above, but notice that above call is under the scope of the PushedMatrix
+    MenuMode::draw_3d_far(top);
+  }
+}
+
+const GLOOCamera* MissionSelectMenuMode::get_camera(bool top) {
+  _camera.pos = Point(0, 1e10, 0);
+  if (top) {
+    // If we're at top, then draw_3d_far will use translate to offset visible objects
+    // Otherwise, we do it with camera
+    // This is where we transition from thinking of the star as being origin to thinking of game bubble as origin
+    _camera.tgt = Point(0,0,0);
+  } else {
+    Vector offset(-Globals::bg->to_center_from_game_origin());
+    _camera.pos += offset;
+    _camera.tgt = offset;
+  }
+  return &_camera;
 }
 
 void MissionSelectMenuMode::handle_menu_selection(const std::string& item) {

@@ -60,7 +60,7 @@ class MainMenuMode : public MenuMode {
 
   public:
     MainMenuMode();
-    const GLOOCamera* get_camera() { return &_camera; }
+    const GLOOCamera* get_camera(bool top __attribute__ ((unused))) { return &_camera; }
     void handle_menu_selection(const std::string& item);
     void draw_2d(bool top);
 };
@@ -71,7 +71,7 @@ class AreaSelectMenuMode : public MenuMode {
 
   public:
     AreaSelectMenuMode();
-    const GLOOCamera* get_camera() { return &_camera; }
+    const GLOOCamera* get_camera(bool top __attribute__ ((unused))) { return &_camera; }
     void handle_menu_selection(const std::string& item);
 };
 
@@ -82,7 +82,8 @@ class MissionSelectMenuMode : public MenuMode {
   
   public:
     MissionSelectMenuMode(unsigned int area_num);
-    const GLOOCamera* get_camera() { return &_camera; }
+    void draw_3d_far(bool top);
+    const GLOOCamera* get_camera(bool top);
     void handle_menu_selection(const std::string& item);
 };
 

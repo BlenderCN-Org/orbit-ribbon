@@ -41,7 +41,7 @@ template <template <typename> class InterpFunctor> class InterpolationMode : pub
   public:
     InterpolationMode(unsigned int ms, const boost::shared_ptr<Mode>& tgt) : _tgt(tgt), _ms(ms), _started(false), _reverse(false) {}
 
-    const GLOOCamera* get_camera() {
+    const GLOOCamera* get_camera(bool top __attribute__ ((unused))) {
       if (!_started) {
         _started = true;
         _start = SDL_GetTicks();
@@ -51,23 +51,23 @@ template <template <typename> class InterpFunctor> class InterpolationMode : pub
       if (mu >= 1.0) {
         if (_reverse) {
           Globals::mode_stack.next_frame_pop_mode();
-          _camera = *(_src->get_camera());
+          _camera = *(_src->get_camera(false));
         } else {
           Globals::mode_stack.next_frame_push_mode(_tgt);
-          _camera = *(_tgt->get_camera());
+          _camera = *(_tgt->get_camera(false));
         }
       } else {
-        _camera = _camera_interpolator(*(_src->get_camera()), *(_tgt->get_camera()), _reverse ? 1.0 - mu : mu);
+        _camera = _camera_interpolator(*(_src->get_camera(false)), *(_tgt->get_camera(false)), _reverse ? 1.0 - mu : mu);
       }
       return &_camera;
     }
 
     void draw_3d_far(bool top __attribute__ ((unused))) {
-      _tgt->draw_3d_far(top);
+      _tgt->draw_3d_far(false);
     }
 
     void draw_3d_near(bool top __attribute__ ((unused))) {
-      _tgt->draw_3d_near(top);
+      _tgt->draw_3d_near(false);
     }
 
     void pushed_below_top() {

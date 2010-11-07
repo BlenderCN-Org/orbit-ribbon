@@ -93,14 +93,14 @@ void ModeStack::execute_simulation_phase(unsigned int steps_elapsed) {
   }
 }
 
-void ModeStack::execute_camera_phase() {
+void ModeStack::execute_camera_phase(bool top) {
   PoppedModeStackItem cur_mode(*this);
-  const GLOOCamera* cam = cur_mode.mode->get_camera();
+  const GLOOCamera* cam = cur_mode.mode->get_camera(top);
   if (cam) {
     cam->setup();
   } else if (!_stack.empty()) {
     // Descend recursively until we get a camera or hit stack bottom
-    execute_camera_phase();
+    execute_camera_phase(false);
   }
 }
 
@@ -169,7 +169,7 @@ void ModeStack::execute_frame(unsigned int steps_elapsed) {
     execute_input_handling_phase();
     execute_simulation_phase(steps_elapsed);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    execute_camera_phase();
+    execute_camera_phase(true);
     execute_draw_phase(true);
   }
 }
