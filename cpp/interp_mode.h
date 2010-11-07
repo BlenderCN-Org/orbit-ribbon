@@ -64,6 +64,7 @@ template <template <typename> class InterpFunctor> class InterpolationMode : pub
 
     void draw_3d_far(bool top __attribute__ ((unused))) {
       _tgt->draw_3d_far(false);
+      _tgt->draw_3d_near(false);
     }
 
     void draw_3d_near(bool top __attribute__ ((unused))) {

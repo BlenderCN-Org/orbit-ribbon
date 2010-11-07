@@ -27,8 +27,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "app.h"
 #include "background.h"
+#include "debug.h"
 #include "display.h"
 #include "gameplay_mode.h"
+#include "gameobj.h"
 #include "globals.h"
 #include "gloo.h"
 #include "gui.h"
@@ -80,7 +82,7 @@ void MenuMode::pushed_below_top() {
 }
 
 MainMenuMode::MainMenuMode() :
-  MenuMode(true, 180, 22, 8, Vector(0, 0.3, 0)),
+  MenuMode(true, 180, 22, 8, Vector(0, 0.3)),
   _title_tex(GLOOTexture::load("title.png"))
 {
   add_entry("play", "Play");
@@ -142,7 +144,7 @@ void AreaSelectMenuMode::handle_menu_selection(const std::string& item) {
   }
 }
 
-MissionSelectMenuMode::MissionSelectMenuMode(unsigned int area_num) : MenuMode(true, 450, 22, 8), _area_num(area_num) {
+MissionSelectMenuMode::MissionSelectMenuMode(unsigned int area_num) : MenuMode(true, 450, 22, 8, Vector(0.1, 0.2)), _area_num(area_num) {
   const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
   const ORE1::AreaType* area = &(desc->area().at(area_num-1));
   unsigned int n = 1;
@@ -159,19 +161,20 @@ MissionSelectMenuMode::MissionSelectMenuMode(unsigned int area_num) : MenuMode(t
 }
 
 void MissionSelectMenuMode::draw_3d_far(bool top) {
+  GLOOPushedMatrix pm;
   if (top) {
-    GLOOPushedMatrix pm;
     Vector offset(Globals::bg->to_center_from_game_origin());
     glTranslatef(offset.x, offset.y, offset.z);
-    MenuMode::draw_3d_far(top);
-  } else {
-    // Looks like a duplicate of above, but notice that above call is under the scope of the PushedMatrix
-    MenuMode::draw_3d_far(top);
+  }
+  MenuMode::draw_3d_far(top);
+  // Draw every game object in far mode
+  for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
+    i->second->draw(false);
   }
 }
 
 const GLOOCamera* MissionSelectMenuMode::get_camera(bool top) {
-  _camera.pos = Point(0, 1e10, 0);
+  _camera.pos = Point(0, 1e4, 0);
   if (top) {
     // If we're at top, then draw_3d_far will use translate to offset visible objects
     // Otherwise, we do it with camera
