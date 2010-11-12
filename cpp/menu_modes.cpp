@@ -162,22 +162,28 @@ MissionSelectMenuMode::MissionSelectMenuMode(unsigned int area_num) : MenuMode(t
 
 void MissionSelectMenuMode::draw_3d_far(bool top) {
   GLOOPushedMatrix pm;
+  Vector offset(Globals::bg->to_center_from_game_origin());
   if (top) {
-    Vector offset(Globals::bg->to_center_from_game_origin());
-    glTranslatef(offset.x, offset.y, offset.z);
-  }
-  MenuMode::draw_3d_far(top);
-  // Draw every game object in far mode
-  for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
-    i->second->draw(false);
+    {
+      GLOOPushedMatrix pm;
+      glTranslatef(offset.x, offset.y, offset.z);
+      MenuMode::draw_3d_far(top);
+    }
+    for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
+      i->second->draw(false);
+    }
+  } else {
+    MenuMode::draw_3d_far(top);
+    glTranslatef(-offset.x, -offset.y, -offset.z);
+    for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
+      i->second->draw(false);
+    }
   }
 }
 
 const GLOOCamera* MissionSelectMenuMode::get_camera(bool top) {
   _camera.pos = Point(0, 1e4, 0);
   if (top) {
-    // If we're at top, then draw_3d_far will use translate to offset visible objects
-    // Otherwise, we do it with camera
     // This is where we transition from thinking of the star as being origin to thinking of game bubble as origin
     _camera.tgt = Point(0,0,0);
   } else {
