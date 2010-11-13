@@ -37,7 +37,7 @@ template <template <typename> class InterpFunctor> class InterpolationMode : pub
     boost::shared_ptr<Mode> _src, _tgt;
     unsigned int _ms, _start;
     bool _started, _reverse;
-  
+
   public:
     InterpolationMode(unsigned int ms, const boost::shared_ptr<Mode>& tgt) : _tgt(tgt), _ms(ms), _started(false), _reverse(false) {}
 

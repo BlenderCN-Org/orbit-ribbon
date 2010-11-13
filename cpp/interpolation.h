@@ -43,16 +43,13 @@ template <typename T> struct CosineInterpolator : public Interpolator<T> {
   }
 };
 
-template <typename T> struct SquareInterpolator : public Interpolator<T> {
-  T operator()(T y0, T y1, float mu) {
-    return Interpolator<T>::operator()(y0, y1, 1 - mu*mu);
-  }
-};
-
-template <typename T> struct QuadInterpolator : public Interpolator<T> {
-  T operator()(T y0, T y1, float mu) {
-    return Interpolator<T>::operator()(y0, y1, 1 - mu*mu*mu*mu);
-  }
+template <int P> struct ExponentialInterpolation {
+  template <typename T> struct Interp {
+    Interpolator<T> i;
+    T operator()(T y0, T y1, float mu) {
+      return i(y0, y1, 1 - std::pow(mu, float(P)));
+    }
+  };
 };
 
 template <template <typename> class I> struct Reverser {
