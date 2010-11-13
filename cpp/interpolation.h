@@ -27,8 +27,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 // This takes advantage of how annoying it would be to make this general to accept references.
 // The in-place linear interpolation makes internal copies, but this version takes advantage of the copies being made anyways.
-template <typename T> struct LinearInterpolator {
+template <typename T> struct Interpolator {
   T operator()(T y0, T y1, float mu) {
+    // Default implementation is linear interpolation
     y0 *= (1-mu);
     y1 *= mu;
     y0 += y1;
@@ -36,9 +37,35 @@ template <typename T> struct LinearInterpolator {
   }
 };
 
-template <typename T> struct CosineInterpolator : public LinearInterpolator<T> {
+template <typename T> struct CosineInterpolator : public Interpolator<T> {
   T operator()(T y0, T y1, float mu) {
-    return LinearInterpolator<T>::operator()(y0, y1, (1-std::cos(mu*M_PI))/2);
+    return Interpolator<T>::operator()(y0, y1, (1-std::cos(mu*M_PI))/2);
+  }
+};
+
+template <typename T> struct SquareInterpolator : public Interpolator<T> {
+  T operator()(T y0, T y1, float mu) {
+    return Interpolator<T>::operator()(y0, y1, 1 - mu*mu);
+  }
+};
+
+template <typename T> struct InverseSquareInterpolator : public Interpolator<T> {
+  T operator()(T y0, T y1, float mu) {
+    mu -= 1;
+    return Interpolator<T>::operator()(y0, y1, 1 - mu*mu);
+  }
+};
+
+template <typename T> struct QuadInterpolator : public Interpolator<T> {
+  T operator()(T y0, T y1, float mu) {
+    return Interpolator<T>::operator()(y0, y1, 1 - mu*mu*mu*mu);
+  }
+};
+
+template <typename T> struct InverseQuadInterpolator : public Interpolator<T> {
+  T operator()(T y0, T y1, float mu) {
+    mu -= 1;
+    return Interpolator<T>::operator()(y0, y1, 1 - mu*mu*mu*mu);
   }
 };
 
