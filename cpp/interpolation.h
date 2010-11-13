@@ -49,24 +49,19 @@ template <typename T> struct SquareInterpolator : public Interpolator<T> {
   }
 };
 
-template <typename T> struct InverseSquareInterpolator : public Interpolator<T> {
-  T operator()(T y0, T y1, float mu) {
-    mu -= 1;
-    return Interpolator<T>::operator()(y0, y1, 1 - mu*mu);
-  }
-};
-
 template <typename T> struct QuadInterpolator : public Interpolator<T> {
   T operator()(T y0, T y1, float mu) {
     return Interpolator<T>::operator()(y0, y1, 1 - mu*mu*mu*mu);
   }
 };
 
-template <typename T> struct InverseQuadInterpolator : public Interpolator<T> {
-  T operator()(T y0, T y1, float mu) {
-    mu -= 1;
-    return Interpolator<T>::operator()(y0, y1, 1 - mu*mu*mu*mu);
-  }
+template <template <typename> class I> struct Reverser {
+  template <typename T> struct Reversed {
+    I<T> orig;
+    T operator()(T y0, T y1, float mu) {
+      return orig(y0, y1, 1 - mu);
+    }
+  };
 };
 
 #endif

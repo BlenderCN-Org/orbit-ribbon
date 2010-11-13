@@ -127,7 +127,7 @@ AreaSelectMenuMode::AreaSelectMenuMode() : MenuMode(true, 300, 22, 8) {
   
   add_entry("back", "Back");
   
-  _camera.pos = Point(0, 1e11, 0);
+  _camera.pos = Point(0, 1.7e11, 0);
   _camera.up = Point(1, 0, 0);
 }
 
@@ -138,7 +138,7 @@ void AreaSelectMenuMode::handle_menu_selection(const std::string& item) {
     unsigned int area_num = boost::lexical_cast<unsigned int>(item);
     App::load_mission(area_num, 0);
     Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(
-      new InterpolationMode<InverseQuadInterpolator>(1000, boost::shared_ptr<Mode>(
+      new InterpolationMode< Reverser<QuadInterpolator>::Reversed >(1000, boost::shared_ptr<Mode>(
       new MissionSelectMenuMode(area_num)
     ))));
   }
@@ -201,7 +201,7 @@ void MissionSelectMenuMode::handle_menu_selection(const std::string& item) {
     unsigned int mission_num = boost::lexical_cast<unsigned int>(item);
     App::load_mission(_area_num, mission_num);
     Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(
-      new InterpolationMode<InverseQuadInterpolator>(5000, boost::shared_ptr<Mode>(
+      new InterpolationMode< Reverser<QuadInterpolator>::Reversed >(5000, boost::shared_ptr<Mode>(
       new GameplayMode()
     ))));
   }
