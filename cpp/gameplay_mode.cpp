@@ -102,7 +102,7 @@ void GameplayMode::draw_3d_far(bool top __attribute__ ((unused))) {
   // Draw all the background objects and setup lights
   GLOOPushedMatrix pm;
   Globals::bg->draw_starbox();
-  Vector offset = Globals::bg->to_center_from_game_origin();
+  Vector offset = -Globals::bg->to_center_from_game_origin();
   glTranslatef(offset.x, offset.y, offset.z);
   Globals::bg->draw_objects();
 }
@@ -112,7 +112,6 @@ void GameplayMode::draw_3d_near(bool top __attribute__ ((unused))) {
   for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
     i->second->draw(true);
   }
-  
 }
 
 void GameplayMode::draw_2d(bool top __attribute__ ((unused))) {

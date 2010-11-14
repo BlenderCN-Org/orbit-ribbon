@@ -51,13 +51,13 @@ template <template <typename> class InterpFunctor> class InterpolationMode : pub
       if (mu >= 1.0) {
         if (_reverse) {
           Globals::mode_stack.next_frame_pop_mode();
-          _camera = *(_src->get_camera(false));
+          _camera = *(_src->get_camera(true));
         } else {
           Globals::mode_stack.next_frame_push_mode(_tgt);
           _camera = *(_tgt->get_camera(false));
         }
       } else {
-        _camera = _camera_interpolator(*(_src->get_camera(false)), *(_tgt->get_camera(false)), _reverse ? 1.0 - mu : mu);
+        _camera = _camera_interpolator(*(_src->get_camera(true)), *(_tgt->get_camera(false)), _reverse ? 1.0 - mu : mu);
       }
       return &_camera;
     }
