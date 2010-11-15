@@ -92,6 +92,7 @@ class PauseMenuMode : public MenuMode {
     bool execute_after_lower_mode() { return true; }
     
     PauseMenuMode();
+    bool handle_input();
     void handle_menu_selection(const std::string& item);
 };
 

@@ -212,6 +212,15 @@ PauseMenuMode::PauseMenuMode() : MenuMode(false, 150, 22, 30) {
   add_entry("quit", "Quit Mission");
 }
 
+bool PauseMenuMode::handle_input() {
+  if (Input::get_button_ch(ORSave::ButtonBoundAction::Pause).matches_frame_events()) {
+    handle_menu_selection("CANCEL");
+  } else {
+    MenuMode::handle_input();
+  }
+  return true;
+}
+
 void PauseMenuMode::handle_menu_selection(const std::string& item) {
   if (item == "resume" or item == "CANCEL") {
     Globals::mode_stack.next_frame_pop_mode();
