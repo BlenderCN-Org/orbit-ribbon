@@ -194,7 +194,6 @@ void Background::draw_objects() {
     static const boost::uniform_real<float> angle_dist(0, 1);
     static const boost::variate_generator<boost::taus88&, boost::uniform_real<float> > angle_die(_random_gen, angle_dist);
     
-    glColor3f(0.5, 1.0, 0.5);
     for (unsigned int s = 0; s < r.segments; ++s) {
       _random_gen.seed((seed_offset + s)*RANDOM_STUFF_SEED_COEF);
       unsigned int count = count_die();

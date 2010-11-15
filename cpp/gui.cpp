@@ -60,6 +60,7 @@ void draw_diamond_box(const Box& box, float r, float g, float b, float a) {
   glColor4f(r, g, b, a);
   glVertexPointer(2, GL_FLOAT, 0, points);
   glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_SHORT, indices);
+  glColor3f(1.0, 1.0, 1.0);
   
   glPopClientAttrib();
   glEnable(GL_TEXTURE_2D);
@@ -190,7 +191,6 @@ void SimpleMenu::draw() {
     
     int font_height = _btn_height - DIAMOND_BOX_BORDER.y*2;
     int text_width = Globals::sys_font->get_width(font_height, i->second);
-    glColor3f(1.0, 1.0, 1.0);
     Globals::sys_font->draw(region->top_left + (_width - text_width)/2, font_height, i->second);
   }
 }
