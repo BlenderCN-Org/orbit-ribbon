@@ -1,5 +1,4 @@
 == ROADMAP ==
-* Add background stuff
 * Get it to build on Windows
 * Seperate out the ORE file into its own package
 * Include build date & top commit id in version (seperate into its own tiny TU so that compilation time isn't affected)
@@ -15,6 +14,8 @@
 * Do a Shadow-of-the-Colossus type of effect on jungle-leaf textures
 * Inside/outside effect (HDR?), with light shining through leaves nicely if possible
 ---> Release as alpha2. Try to reach this point by end of service.
+* Improve background stuff (as it is now orbiting stuff is ludicrously oversized)
+  - Alternately; find a way to make large objects part of the canon, so we get neat ring effect
 
 * Maybe fix the blinky star problem and also the apparent-star-size changing problem at once:
   - Have star generator use larger dots near the edge of the image, smaller in the middle

@@ -84,6 +84,14 @@ void Background::set_sky(const ORE1::SkySettingsType& sky) {
 }
 
 void Background::draw_starbox() {
+  GLOOPushedMatrix pm;
+
+  // Remove translation; stars are so far away that movement shouldn't change their apparent location
+  float modelview[16];
+  glGetFloatv(GL_MODELVIEW_MATRIX, modelview);
+  modelview[12] = modelview[13] = modelview[14] = 0.0;
+  glLoadMatrixf(modelview);
+
   glDisable(GL_LIGHTING);
   glDisable(GL_DEPTH_TEST);
 
