@@ -1,12 +1,12 @@
 == ROADMAP ==
-* Get it to build on Windows
-* Seperate out the ORE file into its own package
+* Skeletal animation (implement only basic running and fly-to-run anims at first)
 * Include build date & top commit id in version (seperate into its own tiny TU so that compilation time isn't affected)
   * Rebuild this TU in SConstruct when either commit id or date changes from prior value
-* Skeletal animation (implement only running and fly-to-run transition at first)
+  * Show this on the main menu in text in the corner, along with the version
+* Get it to build on Windows
 ---> Release as alpha1. Dan can try it out at this stage.
 * Music & sound effects
-* Implement more animations
+* Implement more animations, and smooth animation merging
 * Make the HUD better
 * Shadows
 * Particles
