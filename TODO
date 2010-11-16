@@ -32,6 +32,8 @@ Thinh's ideas:
 	- Builds the entire project at once to see if g++'s unit-at-a-time thing helps
 	- Uses g++'s profiling mechanism with some kind of demo
 
+- In all the places in the program that show a copyright notice, also mention the font license.
+
 - Fix star-zooming problem; maybe can strip translation from model matrix before drawing?
 - Speed cap enforced with non-linear drag
 - After generating packed textures, VBOs, etc, save to local system and restore for quick loading
