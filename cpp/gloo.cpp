@@ -48,6 +48,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 const int VERTICES_BUFFER_ALLOCATED_SIZE = 4096;
 const int FACES_BUFFER_ALLOCATED_SIZE = 2048;
 
+const char* FONT_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()-=_+`~[]{}\\|;':,.<>/?";
+
 GLOOPushedMatrix::GLOOPushedMatrix() {
   glPushMatrix();
 }
