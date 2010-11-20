@@ -3,6 +3,9 @@ buildtmp
 cpp/autoxsd/*.cpp
 cpp/autoxsd/*.h
 cpp/autoxsd/*.o
+cpp/autofont/*.cpp
+cpp/autofont/*.h
+cpp/autofont/*.o
 .sconsign.dblite
 *.swp
 *.blend1

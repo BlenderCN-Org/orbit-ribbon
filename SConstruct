@@ -47,7 +47,21 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 const char* %s =
 """ 
 
-import os
+import os, Image, cStringIO
+
+def pow2le(n):
+  r = 1
+  while r < n:
+    r *= 2
+  return r
+
+
+def png_to_c_array(img, name):
+  sio = cStringIO.StringIO()
+  img.save(sio, 'png')
+  sio.seek(0)
+  return "unsigned char " + name + "[" + str(len(sio.getvalue())) + "] = {" + ",".join([str(ord(c)) for c in sio.read()]) + "};"
+
 
 def build_capsulate(source, target, env):
 	src_list = []
@@ -106,6 +120,48 @@ def build_capsulate(source, target, env):
 	for s in src_list:
 		if Execute(Action(lambda target, source, env: capsulize(s, matches[s]), "%s encapsulated into header %s" % (str(s), str(matches[s])))):
 			raise RuntimeError("build_capsulate: construction failed")
+
+
+def build_font(source, target, env):
+  fonts_to_build = {}
+  for s in source:
+    f = os.path.basename(os.path.dirname(str(s)))
+    if f not in fonts_to_build:
+      fonts_to_build[f] = []
+    fonts_to_build[f].append(s)
+
+  for f, srclist in fonts_to_build.iteritems():
+    print "Generating fontdata %s from %s" % (f, ",".join([str(s) for s in srclist]))
+    srcimgs = []
+    for s in srclist:
+      img = Image.open(str(s))
+      srcimgs.append(img.convert('L'))
+    tgtimg = Image.new(mode = 'L', size = (pow2le(max([i.size[0] for i in srcimgs])), pow2le(sum([i.size[1] for i in srcimgs]))), color = 255)
+    y = 0
+    for s in srcimgs:
+      tgtimg.paste(s, (0, y))
+      y += s.size[1]
+
+    sym_name = "FONTDATA_" + f.upper()
+    guard_name = "ORBIT_RIBBON_" + sym_name + "_H"
+
+    header_fh = open("cpp/autofont/" + f + ".h", "w")
+    header_fh.close()
+    impl_fh = open("cpp/autofont/" + f + ".cpp", "w")
+    impl_fh.close()
+
+def font_emitter(target, source, env):
+  fontnames = []
+  for s in source:
+    f = os.path.basename(os.path.dirname(str(s)))
+    if f not in fontnames:
+      fontnames.append(f)
+
+  targets = []
+  for f in fontnames:
+    targets.append("cpp/autofont/%s.h" % f)
+    targets.append("cpp/autofont/%s.cpp" % f)
+  return (targets, source)
 
 
 def build_xsd(mode, source, target, env):
@@ -199,6 +255,10 @@ env['BUILDERS']['Capsulate'] = Builder(
 	action = Action(build_capsulate, "Encapsulating to headers: $SOURCES"),
 	suffix = {'.xsd' : '.h', '.xml' : '.h'}
 )
+env['BUILDERS']['CompileFonts'] = Builder(
+  action = Action(build_font, "Generating font data from: $SOURCES"),
+  emitter = font_emitter
+)
 
 tree_xsds = ['orepkgdesc', 'save']
 parser_xsds = ['oreanim']
@@ -216,6 +276,9 @@ parser_built = env.XSDParser(
 capsulate_built = env.Capsulate(
 	['%s/%s.h' % (cpp_gen_dir, os.path.basename(str(n))) for n in capsulated_files],
 	capsulated_files
+)
+fonts_built = env.CompileFonts(
+  Glob('images/fonts/latinmodern/*.png', strings = True)
 )
 env.Program(
 	'orbit-ribbon',

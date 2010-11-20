@@ -453,7 +453,7 @@ float GLOOFont::get_width(float height, const std::string& str) {
 
 void GLOOFont::draw(const Point& upper_left, float height, const std::string& str) {
   GLOOPushedMatrix pm;
-  
+
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glTranslatef(upper_left.x, upper_left.y + height + _font->Descender(), 0);
   const float ratio = height/_native_size;
