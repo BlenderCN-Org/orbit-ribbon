@@ -37,7 +37,7 @@ class Font {
     boost::shared_ptr<GLOOTexture> _tex;
 
     // Key is max glyph height, value maps input char to offset and width, or to one of the SPECIAL_GLYPH_* values and 0.
-    std::map<unsigned int, std::map<char, std::pair<short, unsigned char> > > _glyph_data;
+    std::map<unsigned char, std::map<char, std::pair<short, unsigned char> > > _glyph_data;
   
   public:
     Font(unsigned char* img_data, unsigned int img_data_len, unsigned char* glyph_desc);

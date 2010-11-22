@@ -270,7 +270,7 @@ env['BUILDERS']['CompileFonts'] = Builder(
   emitter = font_emitter
 )
 
-tree_xsds = ['orepkgdesc', 'save']
+tree_xsds = ['orepkgdesc', 'save', 'fontdesc']
 parser_xsds = ['oreanim']
 capsulated_files = Glob('xml/*.xsd', strings = True) + Glob('xml/*.xml', strings = True)
 cpp_gen_dir = 'cpp/autoxsd/'

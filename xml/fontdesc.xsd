@@ -1,0 +1,50 @@
+<xsd:schema
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns="http://www.orbit-ribbon.org/ORFontDesc"
+  targetNamespace="http://www.orbit-ribbon.org/ORFontDesc">
+
+  <xsd:annotation>
+    <xsd:documentation xml:lang="en">
+    Schema for the Orbit Ribbon font description format.
+    
+    Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+    
+    This file is part of Orbit Ribbon.
+    
+    Orbit Ribbon is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    Orbit Ribbon is distributed in the hope that it will be awesome,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License
+    along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
+    </xsd:documentation>
+  </xsd:annotation>
+
+  <xsd:element name="fontdesc" type="FontDescType" />
+
+  <xsd:complexType name="FontDescType">
+    <xsd:sequence>
+      <xsd:element name="sizedesc" type="SizeDescType" minOccurs="0" maxOccurs="unbounded" />
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="SizeDescType">
+    <xsd:sequence>
+      <xsd:element name="glyph" type="GlyphType" minOccurs="0" maxOccurs="unbounded" />
+    </xsd:sequence>
+    <xsd:attribute name="height" type="xsd:unsignedByte" use="required" />
+  </xsd:complexType>
+
+  <xsd:complexType name="GlyphType">
+    <xsd:attribute name="character" type="xsd:string" use="required" />
+    <xsd:attribute name="offset" type="xsd:unsignedShort" use="required" />
+    <xsd:attribute name="width" type="xsd:unsignedByte" use="required" />
+  </xsd:complexType>
+
+</xsd:schema>
