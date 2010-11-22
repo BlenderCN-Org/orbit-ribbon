@@ -42,7 +42,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 """ 
 
-import os, Image, cStringIO
+import os, Image, cStringIO, lxml.etree
 
 def pow2le(n):
   r = 1
@@ -50,12 +50,18 @@ def pow2le(n):
     r *= 2
   return r
 
-
 def img_to_png_char_array(img):
   sio = cStringIO.StringIO()
   img.save(sio, 'png')
   sio.seek(0)
   return [str(ord(c)) for c in sio.read()]
+
+def write_c_string(fh, name, s):
+  fh.write("const char* %s =\n" % name)
+  for line in s:
+    fh.write('"' + line.replace('\\', '\\\\').replace('"', '\\"').replace("\n", "") + '\\n"')
+    fh.write("\n")
+  fh.write(";\n")
 
 
 def build_capsulate(source, target, env):
@@ -101,11 +107,9 @@ def build_capsulate(source, target, env):
     fh.write(preamble_pattern % (os.path.basename(tgt), "Automatically generated from %s" % os.path.basename(src)))
     fh.write("#ifndef %s\n" % guard_name)
     fh.write("#define %s\n" % guard_name)
-    fh.write("\nconst char* %s =" % sym_name)
-    for line in input_fh:
-      fh.write('"' + line.replace('\\', '\\\\').replace('"', '\\"').replace("\n", "") + '\\n"')
-      fh.write("\n")
-    fh.write(";\n\n#endif\n")
+    fh.write("\n")
+    write_c_string(fh, sym_name, input_fh)
+    fh.write("\n#endif\n")
 
     input_fh.close()
     fh.close()
@@ -125,17 +129,60 @@ def build_font(source, target, env):
       fonts_to_build[f] = []
     fonts_to_build[f].append(s)
 
+  font_desc_schema = lxml.etree.XMLSchema(lxml.etree.parse(os.path.join("xml", "fontdesc.xsd")))
+
   for f, srclist in fonts_to_build.iteritems():
     print "Generating fontdata %s from %s" % (f, ",".join([str(s) for s in srclist]))
+
+    # TODO: Figure out how to set the namespace properly, the ns0 stuff lxml generates as-is is kind of ugly
+    desc_doc = lxml.etree.Element("fontdesc")
+
     srcimgs = []
     for s in srclist:
       img = Image.open(str(s))
       srcimgs.append(img.convert('L'))
     tgtimg = Image.new(mode = 'L', size = (pow2le(max([i.size[0] for i in srcimgs])), pow2le(sum([i.size[1] for i in srcimgs]))), color = 255)
-    y = 0
+    tgt_y = 0
     for s in srcimgs:
-      tgtimg.paste(s, (0, y))
-      y += s.size[1]
+      # Copy the source image into a blank part of the target image
+      tgtimg.paste(s, (0, tgt_y))
+      tgt_y += s.size[1]
+
+      # Divide up the source image into glyphs
+      size_desc = lxml.etree.SubElement(desc_doc, "sizedesc", height=str(s.size[1]))
+      x = 0
+      for character in FONT_GLYPHS:
+        # Advance until we see a non-blank row
+        char_start = None
+        while char_start is None:
+          for y in xrange(0, s.size[1]):
+            if s.getpixel((x, y)) < 250:
+              char_start = x
+              break
+          x += 1
+          if x == s.size[0]:
+            raise RuntimeError("Size %u, Ran out of horizontal image space looking for start of char %s" % (s.size[1], character))
+
+        # Now advance further until we see a blank row
+        char_end = None
+        while char_end is None:
+          blank = True
+          for y in xrange(0, s.size[1]):
+            if s.getpixel((x, y)) < 250:
+              blank = False
+              break
+          if blank:
+            char_end = x-1
+            break
+          x += 1
+          if x == s.size[0]:
+            raise RuntimeError("Size %u, Ran out of horizontal image space looking for end of char %s" % (s.size[1], character))
+
+        # Add this character
+        glyph = lxml.etree.SubElement(size_desc, "glyph", character = character, offset = str(char_start), width = str(char_end - char_start))
+        print "Size %u, Char %s, Offset %u, Width %u" % (s.size[1], character, char_start, char_end - char_start)
+
+    font_desc_schema.assertValid(desc_doc)
 
     sym_name = "FONTDATA_" + f.upper()
     guard_name = "ORBIT_RIBBON_" + sym_name + "_H"
@@ -148,6 +195,7 @@ def build_font(source, target, env):
     header_fh.write("\n")
     header_fh.write("const unsigned int %s_LEN = %u;\n" % (sym_name, len(char_array)))
     header_fh.write("extern const unsigned char %s[%u];\n" % (sym_name, len(char_array)))
+    header_fh.write("extern const char* %s;\n" % (sym_name + "_DESC"))
     header_fh.write("\n")
     header_fh.write("#endif\n")
     header_fh.close()
@@ -155,6 +203,8 @@ def build_font(source, target, env):
     impl_fh = open("cpp/autofont/" + f + ".cpp", "w")
     impl_fh.write(preamble_pattern % (f + ".h", "Automatically generated data file for font %s" % f))
     impl_fh.write("#include \"%s.h\"\n" % f)
+    impl_fh.write("\n")
+    write_c_string(impl_fh, sym_name + "_DESC", lxml.etree.tostring(desc_doc, xml_declaration=True).split("\n"))
     impl_fh.write("\n")
     impl_fh.write("const unsigned char %s[%u] = {%s};\n" % (sym_name, len(char_array), ",".join(char_array)))
     impl_fh.close()
