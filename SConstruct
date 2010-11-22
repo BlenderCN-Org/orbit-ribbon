@@ -116,6 +116,7 @@ def build_capsulate(source, target, env):
       raise RuntimeError("build_capsulate: construction failed")
 
 
+FONT_GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()-=_+`~[]{}\\|;':,.<>/?"
 def build_font(source, target, env):
   fonts_to_build = {}
   for s in source:
@@ -145,8 +146,8 @@ def build_font(source, target, env):
     header_fh.write("#ifndef %s\n" % guard_name)
     header_fh.write("#define %s\n" % guard_name)
     header_fh.write("\n")
-    header_fh.write("const unsigned int %s_LEN = %u;\n" % (sym_name, len(char_array)));
-    header_fh.write("extern const unsigned char %s[%u];\n" % (sym_name, len(char_array)));
+    header_fh.write("const unsigned int %s_LEN = %u;\n" % (sym_name, len(char_array)))
+    header_fh.write("extern const unsigned char %s[%u];\n" % (sym_name, len(char_array)))
     header_fh.write("\n")
     header_fh.write("#endif\n")
     header_fh.close()
