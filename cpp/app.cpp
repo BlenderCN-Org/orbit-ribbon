@@ -32,12 +32,15 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <vector>
 #include <algorithm>
 
+#include "autofont/latinmodern.h"
+
 #include "app.h"
 #include "background.h"
 #include "constants.h"
 #include "debug.h"
 #include "display.h"
 #include "except.h"
+#include "font.h"
 #include "gameplay_mode.h"
 #include "geometry.h"
 #include "globals.h"
@@ -236,6 +239,7 @@ void App::run(const std::vector<std::string>& args) {
     
     // TODO Load font from the ORE package
     Globals::sys_font.reset(new GLOOFont("/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf", 15));
+    Globals::sys_font_2.reset(new Font(FONTDATA_LATINMODERN, FONTDATA_LATINMODERN_LEN, FONTDATA_LATINMODERN_DESC));
     Globals::bg.reset(new Background);
     Globals::mouse_cursor.reset(new MouseCursor());
     

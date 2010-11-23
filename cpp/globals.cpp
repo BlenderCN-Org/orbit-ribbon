@@ -22,6 +22,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <SDL/SDL.h>
 
 #include "background.h"
+#include "font.h"
 #include "gameobj.h"
 #include "globals.h"
 #include "gloo.h"
@@ -37,6 +38,7 @@ GOMap Globals::gameobjs;
 ModeStack Globals::mode_stack;
 boost::scoped_ptr<Background> Globals::bg;
 boost::scoped_ptr<GLOOFont> Globals::sys_font;
+boost::scoped_ptr<Font> Globals::sys_font_2;
 boost::scoped_ptr<OrePackage> Globals::ore;
 boost::scoped_ptr<MouseCursor> Globals::mouse_cursor;
 const ORE1::AreaType* Globals::current_area = NULL;

@@ -38,6 +38,7 @@ class Background;
 class GameObj;
 class Mode;
 class GLOOFont;
+class Font;
 class GLOOTexture;
 class OrePackage;
 class MouseCursor;
@@ -55,6 +56,7 @@ class Globals {
     static ModeStack mode_stack;
     static boost::scoped_ptr<Background> bg;
     static boost::scoped_ptr<GLOOFont> sys_font;
+    static boost::scoped_ptr<Font> sys_font_2;
     static boost::scoped_ptr<OrePackage> ore;
     static boost::scoped_ptr<MouseCursor> mouse_cursor;
     static const ORE1::AreaType* current_area;

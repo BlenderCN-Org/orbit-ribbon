@@ -19,13 +19,104 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
-#include "font.h"
+#include <boost/iostreams/stream.hpp>
+#include <boost/iostreams/device/array.hpp>
+#include <cstring>
+#include <memory>
+#include <SDL/SDL.h>
+#include <vector>
 
-Font::Font(unsigned char* img_data, unsigned int img_data_len, unsigned char* glyph_desc) {
+#include "font.h"
+#include "gloo.h"
+
+#include "autoxsd/fontdesc.h"
+
+std::pair<unsigned char, short> Font::get_glyph_height_and_y_offset(float height) {
+  std::pair<unsigned char, short> r(0, 0);
+  for (std::map<unsigned char, std::map<char, std::pair<short, unsigned char> > >::iterator i = _glyph_data.begin(); i != _glyph_data.end(); ++i) {
+    if (i->first > height) {
+      break;
+    }
+    r.first = i->first;
+    r.second += i->first;
+  }
+  r.second -= r.first;
+  return r;
+}
+
+Font::Font(const unsigned char* img_data, unsigned int img_data_len, const char* font_desc_str) {
+  boost::iostreams::array_source font_desc_src(font_desc_str, std::strlen(font_desc_str));
+  boost::iostreams::stream<boost::iostreams::array_source> font_desc_stream(font_desc_src);
+  std::auto_ptr<ORFontDesc::FontDescType> font_desc = ORFontDesc::fontdesc(font_desc_stream, "font-desc", xsd::cxx::tree::flags::dont_validate);
+  for (ORFontDesc::FontDescType::SizedescConstIterator sd = font_desc->sizedesc().begin(); sd != font_desc->sizedesc().end(); ++sd) {
+    std::map<char, std::pair<short, unsigned char> >& glyphmap = _glyph_data[sd->height()];
+    for (ORFontDesc::SizeDescType::GlyphConstIterator gd = sd->glyph().begin(); gd != sd->glyph().end(); ++gd) {
+      glyphmap[gd->character()[0]] = std::pair<short, unsigned char>(gd->offset(), gd->width());
+    }
+    glyphmap[' '] = std::pair<short, unsigned char>(-1, glyphmap['v'].second); // Make spaces as wide as the letter 'v'
+  }
+
+  SDL_RWops* img_rw_ops(SDL_RWFromConstMem(img_data, img_data_len));
+  _tex.reset(new GLOOTexture(*img_rw_ops));
 }
 
 float Font::get_width(float height, const std::string& str) {
+  unsigned char h = get_glyph_height_and_y_offset(height).first;
+  std::map<char, std::pair<short, unsigned char> >& glyphmap = _glyph_data[h];
+
+  float width = 0.0;
+  for (std::string::const_iterator c = str.begin(); c != str.end(); ++c) {
+    std::map<char, std::pair<short, unsigned char> >::iterator g = glyphmap.find(*c);
+    if (g != glyphmap.end()) {
+      width += g->second.second + 1;
+    }
+  }
+  return width;
 }
 
 void Font::draw(const Point& upper_left, float height, const std::string& str) {
+  std::pair<unsigned char, short> hy = get_glyph_height_and_y_offset(height);
+  std::map<char, std::pair<short, unsigned char> >& glyphmap = _glyph_data[hy.first];
+
+  std::vector<GLfloat> points, uv_points;
+  points.reserve(str.length()*4);
+  uv_points.reserve(str.length()*4);
+  float x = 0.0;
+  for (std::string::const_iterator c = str.begin(); c != str.end(); ++c) {
+    std::map<char, std::pair<short, unsigned char> >::iterator g = glyphmap.find(*c);
+    if (g != glyphmap.end()) {
+      if (g->second.first >= 0) {
+        // 0 1
+        points.push_back(x); points.push_back(hy.first);
+        uv_points.push_back(g->second.first); uv_points.push_back(hy.second + hy.first);
+
+        // 1 1
+        points.push_back(x + g->second.second); points.push_back(hy.first);
+        uv_points.push_back(g->second.first + g->second.second); uv_points.push_back(hy.second + hy.first);
+
+        // 1 0
+        points.push_back(x + g->second.second); points.push_back(0.0);
+        uv_points.push_back(g->second.first + g->second.second); uv_points.push_back(hy.second);
+
+        // 0 0
+        points.push_back(x); points.push_back(0.0);
+        uv_points.push_back(g->second.first); uv_points.push_back(hy.second);
+      }
+      x += g->second.second + 1;
+    }
+  }
+
+  GLOOPushedMatrix pm;
+  glTranslatef(upper_left.x, upper_left.y - (height - hy.first)/2, 0);
+  _tex->bind();
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glDisableClientState(GL_NORMAL_ARRAY);
+  glVertexPointer(2, GL_FLOAT, 0, &(points[0]));
+  glTexCoordPointer(2, GL_FLOAT, 0, &(uv_points[0]));
+  glDrawArrays(GL_QUADS, 0, 8);
+  glPopClientAttrib();
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }

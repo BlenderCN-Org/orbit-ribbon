@@ -25,22 +25,20 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/shared_ptr.hpp>
 #include <map>
 
-#include "geometry.h"
-#include "gloo.h"
-
-// Special glyph values, to do something other than display the given offset image
-const short SPECIAL_GLYPH_SPACE = -1; // Advance the cursor by average glyph width
-const short SPECIAL_GLYPH_DOUBLE_QUOTE = -2; // Display two single-quote characters
+class Point;
+class GLOOTexture;
 
 class Font {
   private:
     boost::shared_ptr<GLOOTexture> _tex;
 
-    // Key is max glyph height, value maps input char to offset and width, or to one of the SPECIAL_GLYPH_* values and 0.
+    // Key is max glyph height, value maps input char to offset and width. Offset is -1 for no character (i.e. space)
     std::map<unsigned char, std::map<char, std::pair<short, unsigned char> > > _glyph_data;
+
+    std::pair<unsigned char, short> get_glyph_height_and_y_offset(float height);
   
   public:
-    Font(unsigned char* img_data, unsigned int img_data_len, unsigned char* glyph_desc);
+    Font(const unsigned char* img_data, unsigned int img_data_len, const char* font_desc);
     
     float get_width(float height, const std::string& str);
     void draw(const Point& upper_left, float height, const std::string& str);
