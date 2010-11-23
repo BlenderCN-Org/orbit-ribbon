@@ -135,7 +135,7 @@ def build_font(source, target, env):
     print "Generating fontdata %s from %s" % (f, ",".join([str(s) for s in srclist]))
 
     # TODO: Figure out how to set the namespace properly, the ns0 stuff lxml generates as-is is kind of ugly
-    desc_doc = lxml.etree.Element("fontdesc")
+    desc_doc = lxml.etree.Element("{http://www.orbit-ribbon.org/ORFontDesc}fontdesc")
 
     srcimgs = []
     for s in srclist:
@@ -180,7 +180,7 @@ def build_font(source, target, env):
 
         # Add this character
         glyph = lxml.etree.SubElement(size_desc, "glyph", character = character, offset = str(char_start), width = str(char_end - char_start))
-        print "Size %u, Char %s, Offset %u, Width %u" % (s.size[1], character, char_start, char_end - char_start)
+        #print "Size %u, Char %s, Offset %u, Width %u" % (s.size[1], character, char_start, char_end - char_start)
 
     font_desc_schema.assertValid(desc_doc)
 
