@@ -25,6 +25,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "autoxsd/orepkgdesc.h"
 #include "avatar.h"
 #include "constants.h"
+#include "font.h"
 #include "gameplay_mode.h"
 #include "globals.h"
 #include "gloo.h"

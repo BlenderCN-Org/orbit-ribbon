@@ -31,6 +31,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "constants.h"
 #include "display.h"
 #include "except.h"
+#include "font.h"
 #include "gameplay_mode.h"
 #include "globals.h"
 #include "gameobj.h"

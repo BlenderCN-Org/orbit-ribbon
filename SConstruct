@@ -343,6 +343,6 @@ fonts_built = env.CompileFonts(
 env.Program(
   'orbit-ribbon',
   [b for b in (tree_built + parser_built + fonts_built) if str(b).endswith(".cpp")] + Glob('buildtmp/*.cpp'),
-  LIBS=['GL', 'GLU', 'GLEW', 'ode', 'SDL', 'SDL_image', 'zzip', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c', 'ftgl'],
+  LIBS=['GL', 'GLU', 'GLEW', 'ode', 'SDL', 'SDL_image', 'zzip', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c'],
   CCFLAGS='-Wall -Wextra -pedantic-errors -DdDOUBLE -I/usr/include/freetype2/'
 )

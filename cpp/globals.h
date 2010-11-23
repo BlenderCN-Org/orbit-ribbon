@@ -55,8 +55,7 @@ class Globals {
     static GOMap gameobjs;
     static ModeStack mode_stack;
     static boost::scoped_ptr<Background> bg;
-    static boost::scoped_ptr<GLOOFont> sys_font;
-    static boost::scoped_ptr<Font> sys_font_2;
+    static boost::scoped_ptr<Font> sys_font;
     static boost::scoped_ptr<OrePackage> ore;
     static boost::scoped_ptr<MouseCursor> mouse_cursor;
     static const ORE1::AreaType* current_area;

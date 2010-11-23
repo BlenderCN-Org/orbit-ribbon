@@ -116,7 +116,7 @@ void Font::draw(const Point& upper_left, float height, const std::string& str) {
   glDisableClientState(GL_NORMAL_ARRAY);
   glVertexPointer(2, GL_FLOAT, 0, &(points[0]));
   glTexCoordPointer(2, GL_FLOAT, 0, &(uv_points[0]));
-  glDrawArrays(GL_QUADS, 0, 8);
+  glDrawArrays(GL_QUADS, 0, points.size());
   glPopClientAttrib();
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }

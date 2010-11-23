@@ -435,28 +435,3 @@ void GLOOCamera::operator+=(const GLOOCamera& other) {
   tgt += other.tgt;
   up += other.up;
 }
-
-GLOOFont::GLOOFont(const std::string& path, unsigned int native_size) :
-  _native_size(native_size)
-{
-  _font.reset(new FTBufferFont(path.c_str()));
-  if (!_font) {
-    throw GameException("Unable to load TTF font from " + path);
-  }
-  _font->FaceSize(native_size);
-}
-
-float GLOOFont::get_width(float height, const std::string& str) {
-  return _font->Advance(str.c_str(), str.size())*(height/_native_size);
-}
-
-void GLOOFont::draw(const Point& upper_left, float height, const std::string& str) {
-  GLOOPushedMatrix pm;
-
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  glTranslatef(upper_left.x, upper_left.y + height + _font->Descender(), 0);
-  const float ratio = height/_native_size;
-  glScalef(ratio, -ratio, 1);
-  _font->Render(str.c_str(), str.size());
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-}

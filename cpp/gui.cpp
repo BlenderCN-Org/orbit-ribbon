@@ -27,6 +27,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "display.h"
 #include "input.h"
+#include "font.h"
 #include "globals.h"
 #include "gloo.h"
 #include "mouse_cursor.h"

@@ -209,17 +209,4 @@ struct GLOOCamera {
   void operator+=(const GLOOCamera& other);
 };
 
-class FTFont;
-class Point;
-class GLOOFont {
-  private:
-    boost::scoped_ptr<FTFont> _font;
-    unsigned int _native_size;
-  
-  public:
-    GLOOFont(const std::string& path, unsigned int native_size);
-    float get_width(float height, const std::string& str);
-    void draw(const Point& upper_left, float height, const std::string& str);
-};
-
 #endif
