@@ -69,53 +69,54 @@ struct SDLSurf {
 
 boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
   try {
-    boost::shared_ptr<GLOOTexture> tex(new GLOOTexture(id));
     
     // Create an SDL surface from the requested ORE image file
     boost::shared_ptr<OreFileHandle> fh = Globals::ore->get_fh(std::string("image-") + id);
-    SDL_RWops sdl_rwops = fh->get_sdl_rwops();
-    SDLSurf surf(IMG_Load_RW(&sdl_rwops, 0)); //SDLSurf takes care of locking surface now and later unlocking/freeing it
-    if (
-      surf->format->Rshift != 0 ||
-      surf->format->Gshift != 8 ||
-      surf->format->Bshift != 16 ||
-      (surf->format->BitsPerPixel != 8 && surf->format->BitsPerPixel != 24 && surf->format->BitsPerPixel != 32)
-    ) {
-      throw OreException(
-        std::string("Unknown pixel format :") +
-        " BPP " + boost::lexical_cast<std::string>((unsigned int)surf->format->BitsPerPixel) +
-        " Rs " + boost::lexical_cast<std::string>((unsigned int)surf->format->Rshift) + 
-        " Gs " + boost::lexical_cast<std::string>((unsigned int)surf->format->Gshift) +
-        " Bs " + boost::lexical_cast<std::string>((unsigned int)surf->format->Bshift) +
-        " As" + boost::lexical_cast<std::string>((unsigned int)surf->format->Ashift)
-      );
-    }
-    
-    // Load the texture with the image
-    tex->_width = surf->w;
-    tex->_height = surf->h;
-    glGenTextures(1, &(tex->_tex_name));
-    glBindTexture(GL_TEXTURE_2D, tex->_tex_name);
-    if (surf->format->BitsPerPixel == 8) {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_LUMINANCE, surf->w, surf->h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, surf->pixels);
-      tex->_mipmapped = false;
-    } else {
-      GLenum img_format = (surf->format->BitsPerPixel == 24 ? GL_RGB : GL_RGBA);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA, surf->w, surf->h, 0, img_format, GL_UNSIGNED_BYTE, surf->pixels);
-      glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    
-    if (glGetError()) {
-      throw GameException("GL error while loading texture");
-    }
-    
-    return tex;
+    SDL_RWops rwops = fh->get_sdl_rwops();
+    return boost::shared_ptr<GLOOTexture>(new GLOOTexture(rwops));
   } catch (const std::exception& e) {
     throw GameException("Unable to load texture " + id + " : " + e.what());
   }
 }
 
 _TextureCache cache;
+
+GLOOTexture::GLOOTexture(SDL_RWops& rwops) {
+  SDLSurf surf(IMG_Load_RW(&rwops, 0)); //SDLSurf takes care of locking surface now and later unlocking/freeing it
+  if (
+    surf->format->Rshift != 0 ||
+    surf->format->Gshift != 8 ||
+    surf->format->Bshift != 16 ||
+    (surf->format->BitsPerPixel != 8 && surf->format->BitsPerPixel != 24 && surf->format->BitsPerPixel != 32)
+  ) {
+    throw OreException(
+      std::string("Unknown pixel format :") +
+      " BPP " + boost::lexical_cast<std::string>((unsigned int)surf->format->BitsPerPixel) +
+      " Rs " + boost::lexical_cast<std::string>((unsigned int)surf->format->Rshift) + 
+      " Gs " + boost::lexical_cast<std::string>((unsigned int)surf->format->Gshift) +
+      " Bs " + boost::lexical_cast<std::string>((unsigned int)surf->format->Bshift) +
+      " As" + boost::lexical_cast<std::string>((unsigned int)surf->format->Ashift)
+    );
+  }
+
+  _width = surf->w;
+  _height = surf->h;
+  glGenTextures(1, &(_tex_name));
+  glBindTexture(GL_TEXTURE_2D, _tex_name);
+  if (surf->format->BitsPerPixel == 8) {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_LUMINANCE, surf->w, surf->h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, surf->pixels);
+    _mipmapped = false;
+  } else {
+    GLenum img_format = (surf->format->BitsPerPixel == 24 ? GL_RGB : GL_RGBA);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA, surf->w, surf->h, 0, img_format, GL_UNSIGNED_BYTE, surf->pixels);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    _mipmapped = true;
+  }
+
+  if (glGetError()) {
+    throw GameException("GL error while loading texture");
+  }
+}
 
 boost::shared_ptr<GLOOTexture> GLOOTexture::load(const std::string& name) {
   return cache.get(name);
