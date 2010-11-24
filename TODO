@@ -1,7 +1,4 @@
 == ROADMAP ==
-* Include build date & top commit id in version (seperate into its own tiny TU so that compilation time isn't affected)
-  * Rebuild this TU in SConstruct when either commit id or date changes from prior value
-  * Show this on the main menu in text in the corner, along with the version
 * Get it to build on Windows
 ---> Release as alpha1. Dan can try it out at this stage.
 * Skeletal animation (implement only basic running and fly-to-run anims at first)
