@@ -1,10 +1,10 @@
 == ROADMAP ==
-* Skeletal animation (implement only basic running and fly-to-run anims at first)
 * Include build date & top commit id in version (seperate into its own tiny TU so that compilation time isn't affected)
   * Rebuild this TU in SConstruct when either commit id or date changes from prior value
   * Show this on the main menu in text in the corner, along with the version
 * Get it to build on Windows
 ---> Release as alpha1. Dan can try it out at this stage.
+* Skeletal animation (implement only basic running and fly-to-run anims at first)
 * Music & sound effects
 * Implement more animations, and smooth animation merging
 * Make the HUD better
@@ -18,13 +18,11 @@
   - Alternately; find a way to make large objects part of the canon, so we get neat ring effect
 
 * Maybe fix the blinky star problem and also the apparent-star-size changing problem at once:
-  - Have star generator use larger dots near the edge of the image, smaller in the middle
-  - Alternately, just use a very simple sphere-like shape instead of a box
+  - Just use a very simple sphere-like shape instead of a box
 
 == OTHER STUFF TO DO ==
 Thinh's ideas:
 - FOV on acceleration
-- More stuff in the sky for orientation
 - Reduced rotation speed, cap
 
 - Consider having an optimized-output build mode that does some of the following:
@@ -34,13 +32,11 @@ Thinh's ideas:
 
 - In all the places in the program that show a copyright notice, also mention the font license.
 
-- Fix star-zooming problem; maybe can strip translation from model matrix before drawing?
 - Speed cap enforced with non-linear drag
-- After generating packed textures, VBOs, etc, save to local system and restore for quick loading
-  - Need to make sure to discard cache if video card/driver changes, or if source data is updated
+- After generating meshes in memory from XML, save to raw local system cache for faster loading later 
+  - Need to make sure to discard cache if environment changes, or if source data is updated
 - Generate a log file with all debug messages
 - For the sake of UI juiciness and following the theme, give the mouse cursor a little bit of momentum ala Per.Oxyd
-- FTGL sucks, implement a simple texture-submap-based font system to use instead, bundle fonts into executable
 - Come up with a simple way to do documentation; doxygen's usual format is a pain in the ass
 - Pass boost::shared_ptr by const reference wherever possible
 - Make the naming of variables consistent (in particular, use underscore prefix for members)

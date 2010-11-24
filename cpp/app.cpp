@@ -124,6 +124,7 @@ void App::frame_loop() {
     }
     
     // The time that this frame took to run needs to pass in the simulator next frame
+    // TODO: Put a maximum cap on how much can be added to this each frame prevent runaway simulation
     unsimulated_ticks += SDL_GetTicks() - frame_start;
     
     // Put this frame's timing data into the FPS calculations
