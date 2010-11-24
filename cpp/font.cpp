@@ -54,11 +54,11 @@ Font::Font(const unsigned char* img_data, unsigned int img_data_len, const char*
     for (ORFontDesc::SizeDescType::GlyphConstIterator gd = sd->glyph().begin(); gd != sd->glyph().end(); ++gd) {
       glyphmap[gd->character()[0]] = std::pair<short, unsigned char>(gd->offset(), gd->width());
     }
-    glyphmap[' '] = std::pair<short, unsigned char>(-1, glyphmap['v'].second); // Make spaces as wide as the letter 'v'
+    glyphmap[' '] = std::pair<short, unsigned char>(-1, glyphmap['h'].second/2); // Make spaces half as wide as the letter 'h'
   }
 
   SDL_RWops* img_rw_ops(SDL_RWFromConstMem(img_data, img_data_len));
-  _tex.reset(new GLOOTexture(*img_rw_ops));
+  _tex.reset(new GLOOTexture(*img_rw_ops, true));
 }
 
 float Font::get_width(float height, const std::string& str) {
@@ -123,7 +123,13 @@ void Font::draw(const Point& upper_left, float height, const std::string& str) {
   GLOOPushedMatrix pm;
   _tex->bind();
   glTranslatef(upper_left.x, upper_left.y + (height - hy.first)/2, 0);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+  glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
+  glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PRIMARY_COLOR);
+  glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+  glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+  glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE);
+  glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);

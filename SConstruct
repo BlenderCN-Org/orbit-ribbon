@@ -179,7 +179,7 @@ def build_font(source, target, env):
             raise RuntimeError("Size %u, Ran out of horizontal image space looking for end of char %s" % (s.size[1], character))
 
         # Add this character
-        glyph = lxml.etree.SubElement(size_desc, "glyph", character = character, offset = str(char_start), width = str(char_end - char_start))
+        glyph = lxml.etree.SubElement(size_desc, "glyph", character = character, offset = str(char_start), width = str(char_end - char_start + 1))
         #print "Size %u, Char %s, Offset %u, Width %u" % (s.size[1], character, char_start, char_end - char_start)
 
     font_desc_schema.assertValid(desc_doc)

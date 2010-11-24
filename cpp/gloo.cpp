@@ -81,7 +81,7 @@ boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
 
 _TextureCache cache;
 
-GLOOTexture::GLOOTexture(SDL_RWops& rwops) {
+GLOOTexture::GLOOTexture(SDL_RWops& rwops, bool alpha_tex) {
   SDLSurf surf(IMG_Load_RW(&rwops, 0)); //SDLSurf takes care of locking surface now and later unlocking/freeing it
   if (
     surf->format->Rshift != 0 ||
@@ -104,9 +104,16 @@ GLOOTexture::GLOOTexture(SDL_RWops& rwops) {
   glGenTextures(1, &(_tex_name));
   glBindTexture(GL_TEXTURE_2D, _tex_name);
   if (surf->format->BitsPerPixel == 8) {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_LUMINANCE, surf->w, surf->h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, surf->pixels);
+    if (alpha_tex) {
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_ALPHA, surf->w, surf->h, 0, GL_ALPHA, GL_UNSIGNED_BYTE, surf->pixels);
+    } else {
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_LUMINANCE, surf->w, surf->h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, surf->pixels);
+    }
     _mipmapped = false;
   } else {
+    if (alpha_tex) {
+      throw GameException("Cannot use multi-channel texture as alpha texture");
+    }
     GLenum img_format = (surf->format->BitsPerPixel == 24 ? GL_RGB : GL_RGBA);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA, surf->w, surf->h, 0, img_format, GL_UNSIGNED_BYTE, surf->pixels);
     glGenerateMipmap(GL_TEXTURE_2D);

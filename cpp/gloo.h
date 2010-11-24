@@ -62,7 +62,7 @@ class GLOOTexture : boost::noncopyable {
     friend class _TextureCache;
   
   public:
-    GLOOTexture(SDL_RWops& rwops);
+    GLOOTexture(SDL_RWops& rwops, bool alpha_tex = false);
 
     static boost::shared_ptr<GLOOTexture> load(const std::string& name);
     
