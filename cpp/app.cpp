@@ -27,6 +27,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
 #include <string>
+#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -176,6 +177,12 @@ void App::run(const std::vector<std::string>& args) {
         visible_opt_desc.print(ss);
         Debug::status_msg(ss.str());
       } else {
+        Debug::status_msg(std::string("Compiled: ") + BUILD_DATE);
+        if (std::strlen(COMMIT_HASH) > 0) {
+          Debug::status_msg(std::string("Commit Hash: ") + COMMIT_HASH);
+          Debug::status_msg(std::string("Commit Date: ") + COMMIT_DATE);
+        }
+        Debug::status_msg("");
         Debug::status_msg("Copyright 2009 David Simon, who can be reached at <david.mike.simon@gmail.com>.");
         Debug::status_msg("License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.");
         Debug::status_msg("This is free software: you are free to change and redistribute it.");
