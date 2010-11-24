@@ -24,12 +24,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <cstring>
 #include <memory>
 #include <SDL/SDL.h>
-#include <vector>
 
 #include "font.h"
 #include "gloo.h"
 
 #include "autoxsd/fontdesc.h"
+
+const unsigned int FONT_MAX_STR_LENGTH = 512;
 
 std::pair<unsigned char, short> Font::get_glyph_height_and_y_offset(float height) {
   std::pair<unsigned char, short> r(0, 0);
@@ -65,10 +66,17 @@ float Font::get_width(float height, const std::string& str) {
   std::map<char, std::pair<short, unsigned char> >& glyphmap = _glyph_data[h];
 
   float width = 0.0;
+  unsigned int glyphs = 0;
   for (std::string::const_iterator c = str.begin(); c != str.end(); ++c) {
     std::map<char, std::pair<short, unsigned char> >::iterator g = glyphmap.find(*c);
     if (g != glyphmap.end()) {
       width += g->second.second + 1;
+      if (g->second.first >= 0) {
+        ++glyphs;
+        if (glyphs == FONT_MAX_STR_LENGTH) {
+          break;
+        }
+      }
     }
   }
   return width;
@@ -78,45 +86,50 @@ void Font::draw(const Point& upper_left, float height, const std::string& str) {
   std::pair<unsigned char, short> hy = get_glyph_height_and_y_offset(height);
   std::map<char, std::pair<short, unsigned char> >& glyphmap = _glyph_data[hy.first];
 
-  std::vector<GLfloat> points, uv_points;
-  points.reserve(str.length()*4);
-  uv_points.reserve(str.length()*4);
+  static GLfloat points[FONT_MAX_STR_LENGTH*8];
+  static GLfloat uv_points[FONT_MAX_STR_LENGTH*8];
   float x = 0.0;
+  unsigned int glyphs = 0;
   for (std::string::const_iterator c = str.begin(); c != str.end(); ++c) {
     std::map<char, std::pair<short, unsigned char> >::iterator g = glyphmap.find(*c);
     if (g != glyphmap.end()) {
       if (g->second.first >= 0) {
         // 0 1
-        points.push_back(x); points.push_back(hy.first);
-        uv_points.push_back(g->second.first); uv_points.push_back(hy.second + hy.first);
+        points[glyphs*8 + 0] = x; points[glyphs*8 + 1] = hy.first;
+        uv_points[glyphs*8 + 0] = g->second.first; uv_points[glyphs*8 + 1] = hy.second + hy.first;
 
         // 1 1
-        points.push_back(x + g->second.second); points.push_back(hy.first);
-        uv_points.push_back(g->second.first + g->second.second); uv_points.push_back(hy.second + hy.first);
+        points[glyphs*8 + 2] = x + g->second.second; points[glyphs*8 + 3] = hy.first;
+        uv_points[glyphs*8 + 2] = g->second.first + g->second.second; uv_points[glyphs*8 + 3] = hy.second + hy.first;
 
         // 1 0
-        points.push_back(x + g->second.second); points.push_back(0.0);
-        uv_points.push_back(g->second.first + g->second.second); uv_points.push_back(hy.second);
+        points[glyphs*8 + 4] = x + g->second.second; points[glyphs*8 + 5] = 0.0;
+        uv_points[glyphs*8 + 4] = g->second.first + g->second.second; uv_points[glyphs*8 + 5] = hy.second;
 
         // 0 0
-        points.push_back(x); points.push_back(0.0);
-        uv_points.push_back(g->second.first); uv_points.push_back(hy.second);
+        points[glyphs*8 + 6] = x; points[glyphs*8 + 7] = 0.0;
+        uv_points[glyphs*8 + 6] = g->second.first; uv_points[glyphs*8 + 7] = hy.second;
+        
+        ++glyphs;
+        if (glyphs == FONT_MAX_STR_LENGTH) {
+          break;
+        }
       }
       x += g->second.second + 1;
     }
   }
 
   GLOOPushedMatrix pm;
-  glTranslatef(upper_left.x, upper_left.y - (height - hy.first)/2, 0);
+  glTranslatef(upper_left.x, upper_left.y + (height - hy.first)/2, 0);
   _tex->bind();
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glDisableClientState(GL_NORMAL_ARRAY);
-  glVertexPointer(2, GL_FLOAT, 0, &(points[0]));
-  glTexCoordPointer(2, GL_FLOAT, 0, &(uv_points[0]));
-  glDrawArrays(GL_QUADS, 0, points.size());
+  glVertexPointer(2, GL_FLOAT, 0, points);
+  glTexCoordPointer(2, GL_FLOAT, 0, uv_points);
+  glDrawArrays(GL_QUADS, 0, glyphs*4);
   glPopClientAttrib();
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }
