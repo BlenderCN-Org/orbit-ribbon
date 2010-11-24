@@ -22,6 +22,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
+#include <cstring>
 
 #include "menu_modes.h"
 
@@ -120,7 +121,7 @@ void MainMenuMode::draw_2d(bool top __attribute__ ((unused))) {
   float x = 3;
   Globals::sys_font->draw(Point(x, Display::get_screen_height() - font_height*1), font_height, std::string("Version: ") + APP_VERSION);
   Globals::sys_font->draw(Point(x, Display::get_screen_height() - font_height*2), font_height, std::string("Compiled: ") + BUILD_DATE);
-  if (strlen(COMMIT_HASH) > 0) {
+  if (std::strlen(COMMIT_HASH) > 0) {
     Globals::sys_font->draw(Point(x, Display::get_screen_height() - font_height*3), font_height, std::string("Commit Hash: ") + COMMIT_HASH);
     Globals::sys_font->draw(Point(x, Display::get_screen_height() - font_height*4), font_height, std::string("Commit Date: ") + COMMIT_DATE);
   }
