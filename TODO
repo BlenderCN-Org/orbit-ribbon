@@ -20,6 +20,8 @@
 * Maybe fix the blinky star problem and also the apparent-star-size changing problem at once:
   - Just use a very simple sphere-like shape instead of a box
 
+* Make all custom SConstruct actions work like capsulate, so that scons -Q can be used safely
+
 == OTHER STUFF TO DO ==
 Thinh's ideas:
 - FOV on acceleration
