@@ -89,6 +89,7 @@ void Font::draw(const Point& upper_left, float height, const std::string& str) {
   static GLfloat points[FONT_MAX_STR_LENGTH*8];
   static GLfloat uv_points[FONT_MAX_STR_LENGTH*8];
   float x = 0.0;
+  Size t = _tex->get_size();
   unsigned int glyphs = 0;
   for (std::string::const_iterator c = str.begin(); c != str.end(); ++c) {
     std::map<char, std::pair<short, unsigned char> >::iterator g = glyphmap.find(*c);
@@ -96,19 +97,19 @@ void Font::draw(const Point& upper_left, float height, const std::string& str) {
       if (g->second.first >= 0) {
         // 0 1
         points[glyphs*8 + 0] = x; points[glyphs*8 + 1] = hy.first;
-        uv_points[glyphs*8 + 0] = g->second.first; uv_points[glyphs*8 + 1] = hy.second + hy.first;
+        uv_points[glyphs*8 + 0] = float(g->second.first)/t.x; uv_points[glyphs*8 + 1] = float(hy.second + hy.first)/t.y;
 
         // 1 1
         points[glyphs*8 + 2] = x + g->second.second; points[glyphs*8 + 3] = hy.first;
-        uv_points[glyphs*8 + 2] = g->second.first + g->second.second; uv_points[glyphs*8 + 3] = hy.second + hy.first;
+        uv_points[glyphs*8 + 2] = float(g->second.first + g->second.second)/t.x; uv_points[glyphs*8 + 3] = float(hy.second + hy.first)/t.y;
 
         // 1 0
         points[glyphs*8 + 4] = x + g->second.second; points[glyphs*8 + 5] = 0.0;
-        uv_points[glyphs*8 + 4] = g->second.first + g->second.second; uv_points[glyphs*8 + 5] = hy.second;
+        uv_points[glyphs*8 + 4] = float(g->second.first + g->second.second)/t.x; uv_points[glyphs*8 + 5] = float(hy.second)/t.y;
 
         // 0 0
         points[glyphs*8 + 6] = x; points[glyphs*8 + 7] = 0.0;
-        uv_points[glyphs*8 + 6] = g->second.first; uv_points[glyphs*8 + 7] = hy.second;
+        uv_points[glyphs*8 + 6] = float(g->second.first)/t.x; uv_points[glyphs*8 + 7] = float(hy.second)/t.y;
         
         ++glyphs;
         if (glyphs == FONT_MAX_STR_LENGTH) {
@@ -120,8 +121,8 @@ void Font::draw(const Point& upper_left, float height, const std::string& str) {
   }
 
   GLOOPushedMatrix pm;
-  glTranslatef(upper_left.x, upper_left.y + (height - hy.first)/2, 0);
   _tex->bind();
+  glTranslatef(upper_left.x, upper_left.y + (height - hy.first)/2, 0);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
