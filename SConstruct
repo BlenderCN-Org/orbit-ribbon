@@ -321,8 +321,7 @@ def build_verinfo(source, target, env):
   impl_fh.close()
 
 def verinfo_emitter(target, source, env):
-  return ([os.path.join("cpp", "autoinfo", "version.h"), os.path.join("cpp", "autoinfo", "version.cpp")], [])
-
+  return ((os.path.join("cpp", "autoinfo", "version.h"), os.path.join("cpp", "autoinfo", "version.cpp")), ())
 
 VariantDir('buildtmp', 'cpp', duplicate=0)
 env = Environment()
@@ -371,6 +370,7 @@ fonts_built = env.CompileFonts(
   Glob('images/fonts/latinmodern/*.png', strings = True)
 )
 verinfo_built = env.VersionInfo()
+AlwaysBuild(verinfo_built)
 
 env.Program(
   'orbit-ribbon',
