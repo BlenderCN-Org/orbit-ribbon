@@ -6,6 +6,9 @@ cpp/autoxsd/*.o
 cpp/autofont/*.cpp
 cpp/autofont/*.h
 cpp/autofont/*.o
+cpp/autoinfo/*.cpp
+cpp/autoinfo/*.h
+cpp/autoinfo/*.o
 .sconsign.dblite
 *.swp
 *.blend1

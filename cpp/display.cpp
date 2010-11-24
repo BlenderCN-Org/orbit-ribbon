@@ -26,6 +26,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <GL/glu.h>
 #include <SDL/SDL.h>
 
+#include "autoinfo/version.h"
 #include "background.h"
 #include "constants.h"
 #include "debug.h"

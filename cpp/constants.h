@@ -24,9 +24,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "geometry.h"
 
-// String describing the current version of Orbit Ribbon
-const char* const APP_VERSION = "prealpha";
-
 // Maximum number of frames per second, and the base number of simulated steps per second
 const unsigned int MAX_FPS = 60;
 

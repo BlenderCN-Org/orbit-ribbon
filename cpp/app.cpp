@@ -33,7 +33,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <algorithm>
 
 #include "autofont/latinmodern.h"
-
+#include "autoinfo/version.h"
 #include "app.h"
 #include "background.h"
 #include "constants.h"

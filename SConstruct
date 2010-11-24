@@ -19,6 +19,8 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 """
 
+ORBIT_RIBBON_VERSION = "prealpha"
+
 preamble_pattern = """/*
 %s: %s.
 
@@ -298,6 +300,30 @@ def xsd_emitter(target, source, env):
   return (target + added, source)
 
 
+def build_verinfo(source, target, env):
+  guard_name = "ORBIT_RIBBON_AUTOINFO_RELEASE_H"
+  
+  header_fh = open(os.path.join("cpp", "autoinfo", "version.h"), "w")
+  header_fh.write(preamble_pattern % ("version.h", "Automatically generated header for Orbit Ribbon version/release info"))
+  header_fh.write("#ifndef %s\n" % guard_name)
+  header_fh.write("#define %s\n" % guard_name)
+  header_fh.write("\n")
+  header_fh.write("extern const char* const APP_VERSION;\n")
+  header_fh.write("\n")
+  header_fh.write("#endif\n")
+  header_fh.close()
+
+  impl_fh = open(os.path.join("cpp", "autoinfo", "version.cpp"), "w")
+  impl_fh.write(preamble_pattern % ("version.cpp", "Automatically generated source file for Orbit Ribbon version/release info"))
+  impl_fh.write("#include \"version.h\"\n")
+  impl_fh.write("\n")
+  impl_fh.write("const char* const APP_VERSION = \"%s\";\n" % ORBIT_RIBBON_VERSION)
+  impl_fh.close()
+
+def verinfo_emitter(target, source, env):
+  return ([os.path.join("cpp", "autoinfo", "version.h"), os.path.join("cpp", "autoinfo", "version.cpp")], [])
+
+
 VariantDir('buildtmp', 'cpp', duplicate=0)
 env = Environment()
 
@@ -318,6 +344,10 @@ env['BUILDERS']['Capsulate'] = Builder(
 env['BUILDERS']['CompileFonts'] = Builder(
   action = Action(build_font, "Generating font data from: $SOURCES"),
   emitter = font_emitter
+)
+env['BUILDERS']['VersionInfo'] = Builder(
+  action = Action(build_verinfo, "Writing version info"),
+  emitter = verinfo_emitter
 )
 
 tree_xsds = ['orepkgdesc', 'save', 'fontdesc']
@@ -340,9 +370,11 @@ capsulate_built = env.Capsulate(
 fonts_built = env.CompileFonts(
   Glob('images/fonts/latinmodern/*.png', strings = True)
 )
+verinfo_built = env.VersionInfo()
+
 env.Program(
   'orbit-ribbon',
-  [b for b in (tree_built + parser_built + fonts_built) if str(b).endswith(".cpp")] + Glob('buildtmp/*.cpp'),
+  [b for b in (tree_built + parser_built + fonts_built + verinfo_built) if str(b).endswith(".cpp")] + Glob('buildtmp/*.cpp'),
   LIBS=['GL', 'GLU', 'GLEW', 'ode', 'SDL', 'SDL_image', 'zzip', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c'],
   CCFLAGS='-Wall -Wextra -pedantic-errors -DdDOUBLE -I/usr/include/freetype2/'
 )
