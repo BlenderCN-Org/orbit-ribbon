@@ -65,6 +65,15 @@ def write_c_string(fh, name, s):
     fh.write("\n")
   fh.write(";\n")
 
+def file_sub(fn, s, t):
+  contents = []
+  fh = file(fn)
+  for line in fh:
+    contents.append(line.replace(s, t))
+  fh.close()
+  fh = file(fn, "w")
+  for line in contents:
+    fh.write(line)
 
 def build_capsulate(source, target, env):
   src_list = []
@@ -282,11 +291,8 @@ def build_xsd(mode, source, target, env):
   if Execute(Action([["xsdcxx"] + args])):
     raise RuntimeError("build_xsd: xsdcxx call failed")
   for t in tgt_list:
-    tmpfn = t + ".tmp"
-    if Execute(Action([["sed", "-n", "s/long long/long/; w %s" % tmpfn, t]])):
-      raise RuntimeError("build_xsd: sed call failed")
-    if Execute(Move(t, tmpfn)):
-      raise RuntimeError("build_xsd: post-sed move failed")
+    if Execute(Action(lambda target, source, env: file_sub(t, "long long", "long"), "%s updated to remove long long type" % (str(t)))):
+      raise RuntimeError("build_xsd: long long removal failed")
 
 
 def xsd_emitter(target, source, env):
