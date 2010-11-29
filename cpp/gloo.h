@@ -33,7 +33,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <SDL/SDL.h>
 #include <GL/glew.h>
 #include <GL/gl.h>
-#include <FTGL/ftgl.h>
 #include <ode/ode.h>
 
 #include "cache.h"

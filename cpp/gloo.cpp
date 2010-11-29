@@ -30,7 +30,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/shared_ptr.hpp>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
-#include <FTGL/ftgl.h>
 #include <ode/ode.h>
 
 #include "cache.h"
