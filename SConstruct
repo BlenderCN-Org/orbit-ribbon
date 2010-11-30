@@ -393,6 +393,9 @@ AlwaysBuild(verinfo_built)
 env.Program(
   'orbit-ribbon',
   [b for b in (tree_built + parser_built + fonts_built + verinfo_built) if str(b).endswith(".cpp")] + Glob('buildtmp/*.cpp'),
-  LIBS=['GL', 'GLU', 'GLEW', 'ode', 'SDL', 'SDL_image', 'zzip', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c'],
-  CCFLAGS='-Wall -Wextra -pedantic-errors -DdDOUBLE'
+  LIBS=['glew32', 'opengl32', 'glu32', 'ode', 'SDL', 'SDL_image', 'z', 'zzip', 'boost_system', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c'],
+  #LIBS=['GL', 'GLU', 'GLEW', 'ode', 'SDL', 'SDL_image', 'zzip', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c'],
+  CCFLAGS='-Wall -Wextra -pedantic-errors -DdDOUBLE -static',
+  #CCFLAGS='-Wall -Wextra -pedantic-errors -DdDOUBLE'
+  LINKFLAGS='-static'
 )
