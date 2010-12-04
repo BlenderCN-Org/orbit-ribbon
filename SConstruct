@@ -46,6 +46,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 import os, Image, cStringIO, lxml.etree, datetime, commands
 
+env = Environment(ENV = {'PATH' : os.environ['PATH']})
+
 def pow2le(n):
   r = 1
   while r < n:
@@ -127,7 +129,7 @@ def build_capsulate(source, target, env):
     return 0
 
   for s in src_list:
-    if Execute(Action(lambda target, source, env: capsulize(s, matches[s]), "%s encapsulated into header %s" % (str(s), str(matches[s])))):
+    if env.Execute(env.Action(lambda target, source, env: capsulize(s, matches[s]), "%s encapsulated into header %s" % (str(s), str(matches[s])))):
       raise RuntimeError("build_capsulate: construction failed")
 
 
@@ -288,10 +290,10 @@ def build_xsd(mode, source, target, env):
         raise RuntimeError("build_xsd: No file with extension %s in target list corresponding with source file %s" % (ext, s))
     args.append(s)
 
-  if Execute(Action([["xsdcxx"] + args])):
+  if env.Execute(env.Action([["xsdcxx"] + args])):
     raise RuntimeError("build_xsd: xsdcxx call failed")
   for t in tgt_list:
-    if Execute(Action(lambda target, source, env: file_sub(t, "long long", "long"), "%s updated to remove long long type" % (str(t)))):
+    if env.Execute(env.Action(lambda target, source, env: file_sub(t, "long long", "long"), "%s updated to remove long long type" % (str(t)))):
       raise RuntimeError("build_xsd: long long removal failed")
 
 
@@ -341,28 +343,27 @@ def build_verinfo(source, target, env):
 def verinfo_emitter(target, source, env):
   return ((os.path.join("cpp", "autoinfo", "version.h"), os.path.join("cpp", "autoinfo", "version.cpp")), ())
 
-VariantDir('buildtmp', 'cpp', duplicate=0)
-env = Environment()
+env.VariantDir('buildtmp', 'cpp', duplicate=0)
 
-env['BUILDERS']['XSDTree'] = Builder(
+env['BUILDERS']['XSDTree'] = env.Builder(
   action = Action(lambda source, target, env: build_xsd('cxx-tree', source, target, env), "C++/Tree for XML schemas: $SOURCES"),
   suffix = {'.xsd' : '.cpp'},
   emitter = xsd_emitter
 )
-env['BUILDERS']['XSDParser'] = Builder(
+env['BUILDERS']['XSDParser'] = env.Builder(
   action = Action(lambda source, target, env: build_xsd('cxx-parser', source, target, env), "C++/Parser for XML schemas: $SOURCES"),
   suffix = {'.xsd' : '-pskel.cpp'},
   emitter = xsd_emitter
 )
-env['BUILDERS']['Capsulate'] = Builder(
+env['BUILDERS']['Capsulate'] = env.Builder(
   action = Action(build_capsulate, "Encapsulating to headers: $SOURCES"),
   suffix = {'.xsd' : '.h', '.xml' : '.h'}
 )
-env['BUILDERS']['CompileFonts'] = Builder(
+env['BUILDERS']['CompileFonts'] = env.Builder(
   action = Action(build_font, "Generating font data from: $SOURCES"),
   emitter = font_emitter
 )
-env['BUILDERS']['VersionInfo'] = Builder(
+env['BUILDERS']['VersionInfo'] = env.Builder(
   action = Action(build_verinfo, "Writing version info"),
   emitter = verinfo_emitter
 )
@@ -393,7 +394,7 @@ AlwaysBuild(verinfo_built)
 env.Program(
   'orbit-ribbon',
   [b for b in (tree_built + parser_built + fonts_built + verinfo_built) if str(b).endswith(".cpp")] + Glob('buildtmp/*.cpp'),
-  LIBS=['glew32', 'opengl32', 'glu32', 'ode', 'SDL', 'SDL_image', 'z', 'zzip', 'boost_system', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c'],
+  LIBS=['ode', 'SDL_image', 'zzip', 'z', 'boost_system', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c', 'SDL', 'glew32', 'opengl32', 'glu32', 'm', 'user32', 'gdi32', 'winmm'],
   #LIBS=['GL', 'GLU', 'GLEW', 'ode', 'SDL', 'SDL_image', 'zzip', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c'],
   CCFLAGS='-Wall -Wextra -pedantic-errors -DdDOUBLE -static',
   #CCFLAGS='-Wall -Wextra -pedantic-errors -DdDOUBLE'
