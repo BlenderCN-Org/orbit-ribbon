@@ -1,5 +1,5 @@
 == ROADMAP ==
-* Get it to build on Windows
+* Get it to build on Windows (get commit version inclusion working again)
 ---> Release as alpha1. Dan can try it out at this stage.
 * Skeletal animation (implement only basic running and fly-to-run anims at first)
 * Music & sound effects
