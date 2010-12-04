@@ -89,7 +89,7 @@ void Saving::load() {
   ORSave::ConfigType* conf = &(_save->config());
   conf_dflt(conf->lastOre(), "main.ore");
   conf_dflt(conf->showFps(), false);
-  conf_dflt(conf->fullScreen(), true);
+  conf_dflt(conf->fullScreen(), false);
   conf_dflt(conf->vSync(), true);
   conf_dflt(conf->debugPhysics(), false);
   conf_dflt(conf->soundEffectVolume(), 0.8);
