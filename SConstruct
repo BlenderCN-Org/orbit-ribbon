@@ -46,10 +46,15 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 import os, Image, cStringIO, lxml.etree, datetime, commands
 
+
 env = Environment(ENV = {'PATH' : os.environ['PATH']}, tools = ['mingw'])
 CCFLAGS = '-Wall -Wextra -pedantic-errors -DdDOUBLE'
 if 'win' in env['HOST_OS']:
   CCFLAGS += ' -DIN_WINDOWS'
+
+debug = ARGUMENTS.get('debug', 0)
+if int(debug):
+  CCFLAGS += ' -g'
 
 def pow2le(n):
   r = 1
