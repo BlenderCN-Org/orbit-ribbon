@@ -32,7 +32,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <map>
 #include <SDL/SDL.h>
 #include <GL/glew.h>
-#include <GL/gl.h>
 #include <ode/ode.h>
 
 #include "cache.h"

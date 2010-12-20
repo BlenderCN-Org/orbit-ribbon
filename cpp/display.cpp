@@ -22,8 +22,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <boost/lexical_cast.hpp>
 #include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
 #include <SDL/SDL.h>
 
 #include "autoinfo/version.h"

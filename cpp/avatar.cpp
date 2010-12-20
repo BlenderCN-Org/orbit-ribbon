@@ -24,8 +24,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <ode/ode.h>
 #include <cmath>
 #include <GL/glew.h>
-#include <GL/glu.h>
-#include <GL/gl.h>
 
 #include "autoxsd/orepkgdesc.h"
 #include "avatar.h"
