@@ -119,6 +119,7 @@ void Display::init() {
   SDL_ShowCursor(SDL_DISABLE);
   SDL_WM_GrabInput(SDL_GRAB_ON); // "Captain! Scanners are detecting a Grabon warship in the area!" "Fire photon torpedoes!"
   
+  glewExperimental = GL_TRUE; // My video card doesn't report ARB_map_buffer_range even though it's available
   GLenum glew_err = glewInit();
   if (glew_err != GLEW_OK) {
     throw GameException(std::string("GLEW init failed: " ) + std::string((const char*)glewGetErrorString((glew_err))));
