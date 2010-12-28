@@ -107,7 +107,8 @@ template<class FactorySpec, class C> class AutoRegistration {
 };
 
 template<class FactorySpec, class C> class AutoDefaultRegistration :
-  public AutoRegistration<FactorySpec, C> {};
+  public AutoRegistration<FactorySpec, C> {
+};
 
 template<class FactorySpec, class C, class S> class AutoRegistrationBySourceTypename {
   public:
