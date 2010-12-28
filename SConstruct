@@ -48,7 +48,8 @@ import os, Image, cStringIO, lxml.etree, datetime, commands
 
 
 env = Environment(ENV = {'PATH' : os.environ['PATH']}, tools = ['mingw'])
-# FIXME: Later need to figure out how to compile only minizip with lenient options
+# FIXME: Later need to figure out how to compile only minizip and autoxsd with lenient options
+# Then, can disable the "long long" fix for xsd
 #CCFLAGS = '-Wall -Wextra -pedantic-errors -DdDOUBLE'
 CCFLAGS = '-Wall -DdDOUBLE'
 if 'win' in env['HOST_OS']:
