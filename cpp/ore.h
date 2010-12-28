@@ -30,10 +30,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <istream>
 #include <string>
 #include <vector>
-#include <zzip/zzip.h>
 #include <SDL/SDL.h>
 
 #include "autoxsd/orepkgdesc.h"
+#include "minizip/unzip.h"
 #include "except.h"
 #include "constants.h"
 
@@ -68,16 +68,16 @@ class OreFileHandle : boost::noncopyable, public std::istream {
         int underflow();
     };
     
-    ZZIP_FILE* fp;
     OFHStreamBuf sb;
+    OrePackage& _pkg;
     
-    OreFileHandle(const OrePackage& pkg, const std::string& name);
+    OreFileHandle(OrePackage& pkg, const std::string& name);
     
     friend class OFHStreamBuf;
     friend class OrePackage;
   
   public:
-    SDL_RWops get_sdl_rwops(); // Do not mix SDL usage with istream usage of in one filehandle!
+    SDL_RWops get_sdl_rwops(); // Do not mix SDL usage with istream usage in one filehandle!
     
     virtual ~OreFileHandle();
 };
@@ -87,15 +87,16 @@ class OrePackage : boost::noncopyable {
   private:
     boost::filesystem::path path;
     std::vector<boost::shared_ptr<OrePackage> > base_pkgs;
-    ZZIP_DIR* zzip_h;
+    unzFile uf;
     boost::shared_ptr<ORE1::PkgDescType> pkg_desc;
+    bool locked; // Cannot have more than one active OreFileHandle per OrePackage
     
     friend class OreFileHandle;
   public:
     OrePackage(const boost::filesystem::path& p);
     ~OrePackage();
     
-    boost::shared_ptr<OreFileHandle> get_fh(const std::string& name) const;
+    boost::shared_ptr<OreFileHandle> get_fh(const std::string& name);
     const ORE1::PkgDescType& get_pkg_desc() const { return *pkg_desc; }
 };
 

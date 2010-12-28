@@ -48,7 +48,9 @@ import os, Image, cStringIO, lxml.etree, datetime, commands
 
 
 env = Environment(ENV = {'PATH' : os.environ['PATH']}, tools = ['mingw'])
-CCFLAGS = '-Wall -Wextra -pedantic-errors -DdDOUBLE'
+# FIXME: Later need to figure out how to compile only minizip with lenient options
+#CCFLAGS = '-Wall -Wextra -pedantic-errors -DdDOUBLE'
+CCFLAGS = '-Wall -DdDOUBLE'
 if 'win' in env['HOST_OS']:
   CCFLAGS += ' -DIN_WINDOWS'
 
@@ -401,8 +403,8 @@ AlwaysBuild(verinfo_built)
 
 env.Program(
   'orbit-ribbon',
-  [b for b in (tree_built + parser_built + fonts_built + verinfo_built) if str(b).endswith(".cpp")] + Glob('buildtmp/*.cpp'),
-  LIBS=['ode', 'SDL', 'SDL_image', 'zzip', 'z', 'boost_system', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c', 'glew32', 'opengl32', 'glu32', 'm', 'user32', 'gdi32', 'winmm'],
+  [b for b in (tree_built + parser_built + fonts_built + verinfo_built) if str(b).endswith(".cpp")] + Glob('buildtmp/*.cpp') + Glob('cpp/minizip/*.c'),
+  LIBS=['ode', 'SDL', 'SDL_image', 'z', 'boost_system', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c', 'glew32', 'opengl32', 'glu32', 'm', 'user32', 'gdi32', 'winmm'],
   CCFLAGS=CCFLAGS,
   LINKFLAGS='-static'
   #LIBS=['GL', 'GLU', 'GLEW', 'ode', 'SDL', 'SDL_image', 'zzip', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c'],

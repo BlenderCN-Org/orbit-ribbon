@@ -10,6 +10,7 @@ cpp/autofont/*.o
 cpp/autoinfo/*.cpp
 cpp/autoinfo/*.h
 cpp/autoinfo/*.o
+cpp/minizip/*.o
 .sconsign.dblite
 *.swp
 *.blend1
