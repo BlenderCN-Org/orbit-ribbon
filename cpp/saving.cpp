@@ -56,13 +56,16 @@ void Saving::load() {
   if (!_save_path) {
 #ifdef IN_WINDOWS
     const char* home_loc = std::getenv("APPDATA");
+    const char* conf_name = "orbit-ribbon.conf";
 #else
     const char* home_loc = std::getenv("HOME");
+    const char* conf_name = ".orbit-ribbon";
 #endif
     if (!home_loc) {
       throw GameException("Unable to figure directory to locate save file");
     }
-    _save_path.reset(new boost::filesystem::path(std::string(home_loc) + "/.orbit-ribbon"));
+    // FIXME: Yeah, Windows deals with the "/" seperator, but ought to do this portably anyways
+    _save_path.reset(new boost::filesystem::path(std::string(home_loc) + "/" + conf_name));
   }
   
   std::ifstream ifs(_save_path->string().c_str());
