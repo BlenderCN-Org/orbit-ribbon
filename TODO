@@ -1,14 +1,16 @@
 == ROADMAP ==
-* Get it to build on Windows (get commit version inclusion working again)
+* Get it to build on Windows
+* More verbose output, and a log file that records output
+* Get it to run on Windows in -mwindows mode (may require i.e. a seperate main function)
 ---> Release as alpha1. Dan can try it out at this stage.
 * Skeletal animation (implement only basic running and fly-to-run anims at first)
 * Music & sound effects
-* Implement more animations, and smooth animation merging
+* More animations, and smooth animation merging
+* Create simple versions of some of the story missions
 * Make the HUD better
 * Shadows
 * Particles
-* Implement simple versions of some of the story missions
-* Do a Shadow-of-the-Colossus type of effect on jungle-leaf textures
+* Do a Shadow-of-the-Colossus texture-parallax effect
 * Inside/outside effect (HDR?), with light shining through leaves nicely if possible
 ---> Release as alpha2. Try to reach this point by end of service.
 * Improve background stuff (as it is now orbiting stuff is ludicrously oversized)
@@ -16,6 +18,7 @@
 
 * Maybe fix the blinky star problem and also the apparent-star-size changing problem at once:
   - Just use a very simple sphere-like shape instead of a box
+  - Or, you know, a significantly more sphere-like shape than the current shape
 
 * Make all custom SConstruct actions work like capsulate, so that scons -Q can be used safely
 
@@ -34,12 +37,15 @@ Thinh's ideas:
 - Speed cap enforced with non-linear drag
 - After generating meshes in memory from XML, save to raw local system cache for faster loading later 
   - Need to make sure to discard cache if environment changes, or if source data is updated
+  - Maybe can also cache textures this way? Probably not going to get much faster than PNG, tho...
 - Generate a log file with all debug messages
 - For the sake of UI juiciness and following the theme, give the mouse cursor a little bit of momentum ala Per.Oxyd
 - Come up with a simple way to do documentation; doxygen's usual format is a pain in the ass
+  - Can probably also disable xsdcxx's doxygen doc generation
 - Pass boost::shared_ptr by const reference wherever possible
 - Make the naming of variables consistent (in particular, use underscore prefix for members)
 - Make sure mipmapping and texture compression are both actually working
+  - Do mipmapping in advance, when generating ORE file; maybe also switch to faster-loading image format?
 - Use a test texture instead of a test color for untextured faces
 - Consider using texture packing
 - Have the ORE file include pre-calculated information about how much memory must be allocated for the VBOs
