@@ -259,6 +259,7 @@ def build_xsd(mode, source, target, env):
     args.extend(["--generate-doxygen"])
     args.extend(["--generate-serialization"])
     args.extend(["--generate-polymorphic"])
+    args.extend(["--polymorphic-type-all"])
     args.extend(["--root-element-all"])
   elif mode == 'cxx-parser':
     args.extend(["--type-map", "xml/types.map"])
