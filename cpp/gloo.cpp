@@ -69,9 +69,8 @@ struct SDLSurf {
 
 boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
   try {
-    
     // Create an SDL surface from the requested ORE image file
-    boost::shared_ptr<OreFileHandle> fh = Globals::ore->get_fh(std::string("image-") + id);
+    boost::shared_ptr<OreFileHandle> fh = Globals::ore->get_fh(std::string("image-") + id + ".tga");
     SDL_RWops rwops = fh->get_sdl_rwops();
     return boost::shared_ptr<GLOOTexture>(new GLOOTexture(rwops));
   } catch (const std::exception& e) {
@@ -82,20 +81,22 @@ boost::shared_ptr<GLOOTexture> _TextureCache::generate(const std::string& id) {
 _TextureCache cache;
 
 GLOOTexture::GLOOTexture(SDL_RWops& rwops, bool alpha_tex) {
-  SDLSurf surf(IMG_Load_RW(&rwops, 0)); //SDLSurf takes care of locking surface now and later unlocking/freeing it
-  if (
-    surf->format->Rshift != 0 ||
-    surf->format->Gshift != 8 ||
-    surf->format->Bshift != 16 ||
-    (surf->format->BitsPerPixel != 8 && surf->format->BitsPerPixel != 24 && surf->format->BitsPerPixel != 32)
-  ) {
+  SDLSurf surf(IMG_LoadTGA_RW(&rwops)); //SDLSurf takes care of locking surface now and later unlocking/freeing it
+  if (!(
+    surf->format->BitsPerPixel == 8 || (
+      surf->format->Bshift == 0 &&
+      surf->format->Gshift == 8 &&
+      surf->format->Rshift == 16 &&
+      (surf->format->BitsPerPixel == 24 || surf->format->Ashift == 24)
+    )
+    )) {
     throw OreException(
       std::string("Unknown pixel format :") +
       " BPP " + boost::lexical_cast<std::string>((unsigned int)surf->format->BitsPerPixel) +
       " Rs " + boost::lexical_cast<std::string>((unsigned int)surf->format->Rshift) + 
       " Gs " + boost::lexical_cast<std::string>((unsigned int)surf->format->Gshift) +
       " Bs " + boost::lexical_cast<std::string>((unsigned int)surf->format->Bshift) +
-      " As" + boost::lexical_cast<std::string>((unsigned int)surf->format->Ashift)
+      " As " + boost::lexical_cast<std::string>((unsigned int)surf->format->Ashift)
     );
   }
 
@@ -114,7 +115,7 @@ GLOOTexture::GLOOTexture(SDL_RWops& rwops, bool alpha_tex) {
     if (alpha_tex) {
       throw GameException("Cannot use multi-channel texture as alpha texture");
     }
-    GLenum img_format = (surf->format->BitsPerPixel == 24 ? GL_RGB : GL_RGBA);
+    GLenum img_format = (surf->format->BitsPerPixel == 24 ? GL_BGR : GL_BGRA);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA, surf->w, surf->h, 0, img_format, GL_UNSIGNED_BYTE, surf->pixels);
     glGenerateMipmap(GL_TEXTURE_2D);
     _mipmapped = true;

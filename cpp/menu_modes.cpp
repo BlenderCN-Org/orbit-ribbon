@@ -86,7 +86,7 @@ void MenuMode::pushed_below_top() {
 
 MainMenuMode::MainMenuMode() :
   MenuMode(true, 180, 22, 8, Vector(0, 0.3)),
-  _title_tex(GLOOTexture::load("title.png"))
+  _title_tex(GLOOTexture::load("title"))
 {
   add_entry("play", "Play");
   add_entry("credits", "Credits");

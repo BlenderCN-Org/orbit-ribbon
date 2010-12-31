@@ -52,9 +52,9 @@ def pow2le(n):
     r *= 2
   return r
 
-def img_to_png_char_array(img):
+def img_to_tga_char_array(img):
   sio = cStringIO.StringIO()
-  img.save(sio, 'png')
+  img.save(sio, 'tga')
   sio.seek(0)
   return [str(ord(c)) for c in sio.read()]
 
@@ -188,7 +188,7 @@ def build_font(source, target, env):
 
     sym_name = "FONTDATA_" + f.upper()
     guard_name = "ORBIT_RIBBON_" + sym_name + "_H"
-    char_array = img_to_png_char_array(tgtimg)
+    char_array = img_to_tga_char_array(tgtimg)
 
     header_fh = open("cpp/autofont/" + f + ".h", "w")
     header_fh.write(preamble_pattern % (f + ".h", "Automatically generated header for font %s" % f))
