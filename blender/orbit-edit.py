@@ -22,7 +22,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 """
 
 import Blender, BPyMesh, bpy
-import re, os, sys, zipfile, datetime, lxml.etree, traceback
+import re, os, sys, zipfile, datetime, lxml.etree, traceback, Image, StringIO
 from math import *
 
 WORKING_DIR = os.path.dirname(Blender.Get("filename"))
@@ -66,6 +66,13 @@ def pup_error(msg):
   r = Blender.Draw.PupMenu("Error: %s%%t|OK" % msg)
   Blender.Redraw()
   raise RuntimeError(msg)
+
+
+def zip_image_as_targa(zfh, path):
+  src = Image.open(path)
+  sio = StringIO.StringIO()
+  src.save(sio, "tga")
+  zfh.writestr("image-%s.tga" % re.sub(r"\....$", "", os.path.basename(path)), sio.getvalue())
 
 
 def do_add_libobject():
@@ -257,16 +264,16 @@ def do_export():
   descSchema.assertValid(descDoc)
   zfh.writestr("ore-desc", lxml.etree.tostring(descDoc, xml_declaration=True))
   
-  # There will be many more "standard UI images", need a way of including them all automatically
-  zfh.write("../images/cursor.png", "image-cursor.png", zipfile.ZIP_STORED)
-  zfh.write("../images/star.png", "image-star.png", zipfile.ZIP_STORED)
-  zfh.write("../images/title.png", "image-title.png", zipfile.ZIP_STORED)
-  zfh.write("../images/starmap-1.png", "image-starmap1.png", zipfile.ZIP_STORED)
-  zfh.write("../images/starmap-2.png", "image-starmap2.png", zipfile.ZIP_STORED)
-  zfh.write("../images/starmap-3.png", "image-starmap3.png", zipfile.ZIP_STORED)
-  zfh.write("../images/starmap-4.png", "image-starmap4.png", zipfile.ZIP_STORED)
-  zfh.write("../images/starmap-5.png", "image-starmap5.png", zipfile.ZIP_STORED)
-  zfh.write("../images/starmap-6.png", "image-starmap6.png", zipfile.ZIP_STORED)
+  # TODO: There will be many more "standard UI images", need a way of including them all automatically
+  zip_image_as_targa(zfh, "../images/cursor.png")
+  zip_image_as_targa(zfh, "../images/star.png")
+  zip_image_as_targa(zfh, "../images/title.png")
+  zip_image_as_targa(zfh, "../images/starmap-1.png")
+  zip_image_as_targa(zfh, "../images/starmap-2.png")
+  zip_image_as_targa(zfh, "../images/starmap-3.png")
+  zip_image_as_targa(zfh, "../images/starmap-4.png")
+  zip_image_as_targa(zfh, "../images/starmap-5.png")
+  zip_image_as_targa(zfh, "../images/starmap-6.png")
   
   copiedImages = set() # Set of image names that have already been copied into the zipfile
   def populateMeshNode(meshNode, mesh):
@@ -312,14 +319,14 @@ def do_export():
     
     # If this mesh has a texture image, specify it in the node and make sure the image is in the ORE file
     if imgName != None:
-      meshNode.set("texture", imgName)
+      # Remove the extension; we'll be converting image to targa anyways
+      meshNode.set("texture", re.sub(r"\....$", "", imgName))
       if imgName is not "" and imgName not in copiedImages:
         copiedImages.add(imgName)
-        # ZIP_STORED disables compression, it is used here because PNG images are already compressed
         path = f.image.filename
         if path[:4] == "//..":
           path = path[2:]
-        zfh.write(path, "image-%s" % imgName, zipfile.ZIP_STORED)
+        zip_image_as_targa(zfh, path)
     
     # Load the vertices into the node
     vertexList = vertices.items()
