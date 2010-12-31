@@ -1,6 +1,7 @@
 == ROADMAP ==
 * Get it to build on Windows (get commit version inclusion working again)
 ---> Release as alpha1. Dan can try it out at this stage.
+* Port orbit-edit to Blender 2.5, for exclusive use
 * Skeletal animation (implement only basic running and fly-to-run anims at first)
 * Music & sound effects
 * Implement more animations, and smooth animation merging
