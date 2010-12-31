@@ -24,7 +24,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_GAMEOBJ_H
 
 #include <GL/glew.h>
-#include <GL/gl.h>
 #include <ode/ode.h>
 #include <boost/array.hpp>
 #include <boost/utility.hpp>

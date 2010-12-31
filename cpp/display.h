@@ -24,7 +24,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_DISPLAY_H
 
 #include <GL/glew.h>
-#include <GL/gl.h>
 
 #include "geometry.h"
 

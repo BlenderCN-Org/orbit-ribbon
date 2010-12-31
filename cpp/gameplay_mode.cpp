@@ -21,8 +21,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
 #include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
 #include <boost/format.hpp>
 #include <cmath>
 

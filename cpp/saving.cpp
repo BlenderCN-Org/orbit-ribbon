@@ -54,10 +54,13 @@ template<typename AT, typename VT> void conf_dflt(AT& optional_attr, const VT& d
 
 void Saving::load() {
   if (!_save_path) {
-    // TODO Choose different locations on other OSes
+#ifdef IN_WINDOWS
+    const char* home_loc = std::getenv("APPDATA");
+#else
     const char* home_loc = std::getenv("HOME");
+#endif
     if (!home_loc) {
-      throw GameException("Unable to find HOME environment to locate save file");
+      throw GameException("Unable to figure directory to locate save file");
     }
     _save_path.reset(new boost::filesystem::path(std::string(home_loc) + "/.orbit-ribbon"));
   }
@@ -85,8 +88,8 @@ void Saving::load() {
   // Load default config values for anything unspecified
   ORSave::ConfigType* conf = &(_save->config());
   conf_dflt(conf->lastOre(), "main.ore");
-  conf_dflt(conf->showFps(), false);
-  conf_dflt(conf->fullScreen(), true);
+  conf_dflt(conf->showFps(), true);
+  conf_dflt(conf->fullScreen(), false);
   conf_dflt(conf->vSync(), true);
   conf_dflt(conf->debugPhysics(), false);
   conf_dflt(conf->soundEffectVolume(), 0.8);

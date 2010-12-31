@@ -21,7 +21,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
 #include <GL/glew.h>
-#include <GL/gl.h>
 #include <ode/ode.h>
 #include <boost/array.hpp>
 #include <boost/foreach.hpp>

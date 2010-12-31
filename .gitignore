@@ -1,4 +1,5 @@
 orbit-ribbon
+orbit-ribbon.exe
 buildtmp
 cpp/autoxsd/*.cpp
 cpp/autoxsd/*.h
@@ -12,3 +13,5 @@ cpp/autoinfo/*.o
 .sconsign.dblite
 *.swp
 *.blend1
+*~
+*.ore

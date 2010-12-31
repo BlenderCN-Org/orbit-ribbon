@@ -24,7 +24,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/foreach.hpp>
 #include <boost/random.hpp>
 #include <GL/glew.h>
-#include <GL/gl.h>
 
 #include "autoxsd/orepkgdesc.h"
 #include "background.h"

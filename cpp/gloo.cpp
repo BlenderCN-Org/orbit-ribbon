@@ -24,13 +24,11 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <string>
 #include <sstream>
 #include <GL/glew.h>
-#include <GL/gl.h>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
-#include <FTGL/ftgl.h>
 #include <ode/ode.h>
 
 #include "cache.h"
