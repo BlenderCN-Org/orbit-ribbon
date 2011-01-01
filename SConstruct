@@ -52,7 +52,7 @@ env = Environment(ENV = {'PATH' : os.environ['PATH']}, tools = ['mingw'])
 # Then, can disable the "long long" fix for xsd
 #CCFLAGS = '-Wall -Wextra -pedantic-errors -DdDOUBLE'
 CCFLAGS = '-Wall -DdDOUBLE'
-if 'win' in env['HOST_OS']:
+if env['HOST_OS'] and 'win' in env['HOST_OS']:
   CCFLAGS += ' -DIN_WINDOWS'
 
 debug = ARGUMENTS.get('debug', 0)
