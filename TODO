@@ -35,6 +35,7 @@ Thinh's ideas:
 
 - In all the places in the program that show a copyright notice, also mention the font license.
 
+- Maybe use XSD/e instead of regular XSD to reduce executable size and eliminate xerces dependency
 - Speed cap enforced with non-linear drag
 - After generating meshes in memory from XML, save to raw local system cache for faster loading later 
   - Need to make sure to discard cache if environment changes, or if source data is updated
