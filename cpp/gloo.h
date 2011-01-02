@@ -47,17 +47,18 @@ class GLOOPushedMatrix : boost::noncopyable {
 
 class GLOOTexture;
 
-class _TextureCache : public CacheBase<GLOOTexture> {
-  boost::shared_ptr<GLOOTexture> generate(const std::string& id);
-};
-
 class GLOOTexture : boost::noncopyable {
   private:
     GLuint _tex_name;
     int _width, _height;
     bool _mipmapped;
+
+    class TextureCache : public CacheBase<GLOOTexture> {
+      boost::shared_ptr<GLOOTexture> generate(const std::string& id);
+    };
     
-    friend class _TextureCache;
+    friend class TextureCache;
+    static TextureCache _cache;
   
   public:
     GLOOTexture(SDL_RWops& rwops, bool alpha_tex = false);

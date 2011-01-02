@@ -37,6 +37,7 @@ Thinh's ideas:
 
 - Maybe use XSD/e instead of regular XSD to reduce executable size and eliminate xerces dependency
 - Speed cap enforced with non-linear drag
+- Use a pool of minizip handles to make loading faster
 - After generating meshes in memory from XML, save to raw local system cache for faster loading later 
   - Need to make sure to discard cache if environment changes, or if source data is updated
   - Maybe can also cache textures this way? Probably not going to get much faster than PNG, tho...

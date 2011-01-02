@@ -37,24 +37,36 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "autoxsd/orepkgdesc.h"
 
 // Functions to allow OreFileHandle to work with SDL_RWops
-int sdl_rwops_seek(
-  SDL_RWops* context __attribute__ ((unused)),
-  int offset __attribute__ ((unused)),
-  int whence __attribute__ ((unused))
-) {
-  /*
-  zzip_seek((ZZIP_FILE*)context->hidden.unknown.data1, offset, whence);
-  return zzip_tell((ZZIP_FILE*)context->hidden.unknown.data1);
-  */
-  throw OreException("Attempted to seek ORE filehandle via SDL RWops");
-}
-
 int sdl_rwops_read(SDL_RWops* context, void* ptr, int size, int maxnum) {
   int read_amt = unzReadCurrentFile((unzFile)context->hidden.unknown.data1, ptr, size*maxnum);
   if (read_amt < 0) {
     throw OreException("Error while reading file from ORE in sdl_rwops_read");
   }
   return read_amt;
+}
+
+int sdl_rwops_seek(SDL_RWops* context, int offset, int whence) {
+  if (whence == RW_SEEK_CUR) {
+    if (offset < 0) {
+      throw OreException("Cannot seek backwards");
+    } else if (offset > 0) {
+      // Read offset bytes from the file into a garbage buffer
+      const int BUF_SIZE = 512;
+      static char buf[BUF_SIZE];
+      int remaining = offset;
+      while (remaining > 0) {
+        int readlen = remaining;
+        if (readlen > BUF_SIZE) {
+          readlen = BUF_SIZE;
+        }
+        sdl_rwops_read(context, (void*)buf, readlen, 1);
+        remaining -= readlen;
+      }
+    }
+  } else {
+    throw OreException("Invalid whence value");
+  }
+  return unztell((unzFile)context->hidden.unknown.data1);
 }
 
 int sdl_rwops_write(
@@ -92,7 +104,7 @@ int OreFileHandle::OFHStreamBuf::underflow() {
     throw OreException("Attempted to read from uninitialized OFHStreamBuf");
   }
   
-  int read_amt = unzReadCurrentFile(_ofhp->_pkg.uf, &_in_buf, ORE_CHUNK_SIZE);
+  int read_amt = unzReadCurrentFile(_ofhp->uf, &_in_buf, ORE_CHUNK_SIZE);
   if (read_amt < 0) {
     throw OreException("Error while reading file from ORE in underflow");
   }
@@ -108,18 +120,19 @@ OreFileHandle::OreFileHandle(OrePackage& pkg, const std::string& name) :
   std::istream(&sb),
   _pkg(pkg)
 {
+  uf = unzOpen64(_pkg.path.string().c_str());
+  if (!uf) {
+    throw OreException("Unable to open ORE package '" + _pkg.path.string() + "' with minizip library");
+  }
+
   sb.set_ofh(*this);
   exceptions(std::istream::badbit | std::istream::failbit); // Have istream throw an exception if it has any problems
   
-  if (_pkg.locked) {
-    throw OreException("Unable to request file '" + name + "' from ORE package, as another file handle is already open");
-  }
-  _pkg.locked = true;
-  int err = unzLocateFile(_pkg.uf, name.c_str(), 1);
+  int err = unzLocateFile(uf, name.c_str(), 1);
   if (err != UNZ_OK) {
     throw OreException("Unable to locate file '" + name + "' from ORE package");
   }
-  err = unzOpenCurrentFile(_pkg.uf);
+  err = unzOpenCurrentFile(uf);
   if (err != UNZ_OK) {
     throw OreException("Error opening file '" + name + "' from ORE package");
   }
@@ -131,48 +144,35 @@ SDL_RWops OreFileHandle::get_sdl_rwops() {
   ret.read = &sdl_rwops_read;
   ret.write = &sdl_rwops_write;
   ret.close = &sdl_rwops_close;
-  ret.hidden.unknown.data1 = (void*)(_pkg.uf);
+  ret.hidden.unknown.data1 = (void*)(uf);
   return ret;
 }
 
 OreFileHandle::~OreFileHandle() {
-  unzCloseCurrentFile(_pkg.uf);
-  _pkg.locked = false;
+  unzCloseCurrentFile(uf);
+  unzClose(uf);
 }
 
-OrePackage::OrePackage(const boost::filesystem::path& p) : path(p), locked(false) {
-  uf = unzOpen64(p.string().c_str());
-  if (!uf) {
-    throw OreException("Unable to open ORE package '" + p.string() + "' with minizip library");
-  }
-  
+OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
   try {
-    {
-      OreFileHandle fh(*this, "ore-version");
-      int ver;
-      fh >> ver;
-      if (ver != 1) {
-        throw OreException(
-          std::string("Unrecognized ORE package version '") +
-          boost::lexical_cast<std::string>(ver) +
-          "'. Install a newer version of Orbit Ribbon!"
-        );
-      }
-      // Here fh goes out of scope and unlocks the package to open another file 
+    OreFileHandle fh(*this, "ore-version");
+    int ver;
+    fh >> ver;
+    if (ver != 1) {
+      throw OreException(
+        std::string("Unrecognized ORE package version '") +
+        boost::lexical_cast<std::string>(ver) +
+        "'. Install a newer version of Orbit Ribbon!"
+      );
     }
     
     OreFileHandle pdesc_fh(*this, "ore-desc");
     pkg_desc = boost::shared_ptr<ORE1::PkgDescType>(ORE1::pkgDesc(pdesc_fh, "ore-desc", xsd::cxx::tree::flags::dont_validate));
   } catch (const std::exception& e) {
-    unzClose(uf);
     throw OreException(std::string("Error while opening ORE package : ") + e.what());
   }
   
   // TODO Implement looking in other OrePackages for files not found in this one ("base packages")
-}
-
-OrePackage::~OrePackage() {
-  unzClose(uf);
 }
 
 boost::shared_ptr<OreFileHandle> OrePackage::get_fh(const std::string& name) {

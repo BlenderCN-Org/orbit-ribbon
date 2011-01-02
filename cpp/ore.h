@@ -68,6 +68,7 @@ class OreFileHandle : boost::noncopyable, public std::istream {
         int underflow();
     };
     
+    unzFile uf;
     OFHStreamBuf sb;
     OrePackage& _pkg;
     
@@ -87,14 +88,11 @@ class OrePackage : boost::noncopyable {
   private:
     boost::filesystem::path path;
     std::vector<boost::shared_ptr<OrePackage> > base_pkgs;
-    unzFile uf;
     boost::shared_ptr<ORE1::PkgDescType> pkg_desc;
-    bool locked; // Cannot have more than one active OreFileHandle per OrePackage
     
     friend class OreFileHandle;
   public:
     OrePackage(const boost::filesystem::path& p);
-    ~OrePackage();
     
     boost::shared_ptr<OreFileHandle> get_fh(const std::string& name);
     const ORE1::PkgDescType& get_pkg_desc() const { return *pkg_desc; }
