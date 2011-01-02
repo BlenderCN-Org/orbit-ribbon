@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 """
 
-ORBIT_RIBBON_VERSION = "prealpha"
+ORBIT_RIBBON_VERSION = "alpha1"
 
 preamble_pattern = """/*
 %s: %s.
