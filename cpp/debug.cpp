@@ -31,7 +31,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 bool Debug::_logging = false;
 
 void Debug::print(const std::string& msg) {
+#ifndef IN_WINDOWS
   std::cout << msg << std::endl << std::flush;
+#endif
 
   if (_logging) {
     boost::filesystem::ofstream f(Globals::save_dir / LOG_FILENAME, std::ios_base::app | std::ios_base::out);

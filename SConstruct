@@ -408,6 +408,6 @@ env.Program(
   [b for b in (tree_built + parser_built + fonts_built + verinfo_built) if str(b).endswith(".cpp")] + Glob('buildtmp/*.cpp') + Glob('cpp/minizip/*.c'),
   LIBS=['ode', 'SDL', 'SDL_image', 'z', 'boost_system', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c', 'glew32', 'opengl32', 'glu32', 'm', 'user32', 'gdi32', 'winmm'],
   CCFLAGS=CCFLAGS,
-  LINKFLAGS='-static'
+  LINKFLAGS='-static -mwindows'
   #LIBS=['GL', 'GLU', 'GLEW', 'ode', 'SDL', 'SDL_image', 'zzip', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c'],
 )
