@@ -29,8 +29,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 class Saving {
   private:
-    static boost::scoped_ptr<boost::filesystem::path> _save_path;
     static boost::scoped_ptr<ORSave::SaveType> _save;
+
+    static boost::filesystem::path save_path();
     
   public:
     static ORSave::SaveType& get();

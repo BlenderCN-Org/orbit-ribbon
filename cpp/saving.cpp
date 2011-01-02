@@ -20,17 +20,20 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
 #include <boost/foreach.hpp>
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
+#include <boost/filesystem/fstream.hpp>
 #include <sstream>
 
+#include "constants.h"
 #include "debug.h"
 #include "except.h"
+#include "globals.h"
 #include "saving.h"
 
-boost::scoped_ptr<boost::filesystem::path> Saving::_save_path;
 boost::scoped_ptr<ORSave::SaveType> Saving::_save;
+
+boost::filesystem::path Saving::save_path() {
+  return Globals::save_dir / SAVE_FILENAME;
+}
 
 ORSave::SaveType& Saving::get() {
   if (_save) { return *_save; }
@@ -53,25 +56,10 @@ template<typename AT, typename VT> void conf_dflt(AT& optional_attr, const VT& d
 }
 
 void Saving::load() {
-  if (!_save_path) {
-#ifdef IN_WINDOWS
-    const char* home_loc = std::getenv("APPDATA");
-    const char* conf_name = "orbit-ribbon.conf";
-#else
-    const char* home_loc = std::getenv("HOME");
-    const char* conf_name = ".orbit-ribbon";
-#endif
-    if (!home_loc) {
-      throw GameException("Unable to figure directory to locate save file");
-    }
-    // FIXME: Yeah, Windows deals with the "/" seperator, but ought to do this portably anyways
-    _save_path.reset(new boost::filesystem::path(std::string(home_loc) + "/" + conf_name));
-  }
-  
-  std::ifstream ifs(_save_path->string().c_str());
+  boost::filesystem::ifstream ifs(save_path());
   if (ifs) {
     // Load the save data from this file
-    Debug::status_msg("Loading save data from '" + _save_path->string() + "'");
+    Debug::status_msg("Loading save data from '" + save_path().string() + "'");
     try {
       // TODO Turn on validation
       _save.reset(ORSave::save(ifs, xsd::cxx::tree::flags::dont_validate).release());
@@ -107,9 +95,9 @@ void Saving::save() {
     throw GameException("Attempted to save when no save data was available");
   }
   
-  Debug::status_msg("Writing save data to '" + _save_path->string() + "'");
+  Debug::status_msg("Writing save data to '" + save_path().string() + "'");
   xml_schema::NamespaceInfomap map;
   map["orsave"].name = "http://www.orbit-ribbon.org/ORSave";
-  std::ofstream ofs(_save_path->string().c_str());
+  boost::filesystem::ofstream ofs(save_path());
   ORSave::save(ofs, *_save, map);
 }
