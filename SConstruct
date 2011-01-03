@@ -48,12 +48,6 @@ import os, Image, cStringIO, lxml.etree, datetime, commands
 
 
 env = Environment(ENV = {'PATH' : os.environ['PATH']}, tools = ['mingw'])
-# FIXME: Later need to figure out how to compile only minizip and autoxsd with lenient options
-# Then, can disable the "long long" fix for xsd
-#CCFLAGS = '-Wall -Wextra -pedantic-errors -DdDOUBLE'
-CCFLAGS = '-Wall -DdDOUBLE'
-if env['HOST_OS'] and 'win' in env['HOST_OS']:
-  CCFLAGS += ' -DIN_WINDOWS'
 
 debug = ARGUMENTS.get('debug', 0)
 if int(debug):
@@ -403,11 +397,25 @@ fonts_built = env.CompileFonts(
 verinfo_built = env.VersionInfo()
 AlwaysBuild(verinfo_built)
 
+# FIXME: Later need to figure out how to compile only minizip and autoxsd with lenient options
+# Then, can disable the "long long" fix for xsd
+#CCFLAGS = '-Wall -Wextra -pedantic-errors -DdDOUBLE'
+CCFLAGS = '-Wall -DdDOUBLE'
+LINKFLAGS = ''
+LIBS = ['ode', 'SDL', 'SDL_image', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c']
+if env['HOST_OS'] and 'win' in env['HOST_OS']:
+  CCFLAGS += ' -DIN_WINDOWS'
+  LINKFLAGS += ' -static'
+  LIBS.insert(0, 'z')
+  LIBS.insert(0, 'boost_system')
+  LIBS.extend(['glew32', 'opengl32', 'glu32', 'm', 'user32', 'gdi32', 'winmm'])
+else:
+  LIBS.extend(['GL', 'GLU', 'GLEW'])
+
 env.Program(
   'orbit-ribbon',
   [b for b in (tree_built + parser_built + fonts_built + verinfo_built) if str(b).endswith(".cpp")] + Glob('buildtmp/*.cpp') + Glob('cpp/minizip/*.c'),
-  LIBS=['ode', 'SDL', 'SDL_image', 'z', 'boost_system', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c', 'glew32', 'opengl32', 'glu32', 'm', 'user32', 'gdi32', 'winmm'],
   CCFLAGS=CCFLAGS,
-  LINKFLAGS='-static'
-  #LIBS=['GL', 'GLU', 'GLEW', 'ode', 'SDL', 'SDL_image', 'zzip', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c'],
+  LIBS=LIBS,
+  LINKFLAGS=LINKFLAGS
 )
