@@ -35,6 +35,7 @@ Thinh's ideas:
 
 - In all the places in the program that show a copyright notice, also mention the font license.
 
+- Use a dialog box to show fatal errors in Windows
 - Speed cap enforced with non-linear drag
 - Use a pool of minizip handles to make loading faster
 - After generating meshes in memory from XML, save to raw local system cache for faster loading later 
