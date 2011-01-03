@@ -40,4 +40,13 @@ const float FOV = 45;
 // Number of na'ananvi (year-billionths) per second
 const float NANVI_PER_SECOND = 0.6;
 
+// What to name the save and log files
+#ifdef IN_WINDOWS
+#define SAVE_FILENAME "orbit-ribbon.conf"
+#define LOG_FILENAME "orbit-ribbon-log.txt"
+#else
+#define SAVE_FILENAME ".orbit-ribbon"
+#define LOG_FILENAME ".orbit-ribbon-log"
+#endif
+
 #endif

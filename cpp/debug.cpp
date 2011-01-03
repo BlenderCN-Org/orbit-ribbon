@@ -20,19 +20,40 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
+#include <boost/filesystem/fstream.hpp>
 #include <string>
 #include <iostream>
 
+#include "constants.h"
 #include "debug.h"
+#include "globals.h"
+
+bool Debug::_logging = false;
+
+void Debug::print(const std::string& msg) {
+#ifndef IN_WINDOWS
+  std::cout << msg << std::endl << std::flush;
+#endif
+
+  if (_logging) {
+    boost::filesystem::ofstream f(Globals::save_dir / LOG_FILENAME, std::ios_base::app | std::ios_base::out);
+    f << msg << std::endl;
+    f.close();
+  }
+}
+
+void Debug::enable_logging() {
+  _logging = true;
+}
 
 void Debug::debug_msg(const std::string& msg) {
-  std::cout << "DEBUG: " << msg << std::endl << std::flush;
+  print("DEBUG: " + msg);
 }
 
 void Debug::error_msg(const std::string& msg) {
-  std::cout << "ERROR: " << msg << std::endl << std::flush;
+  print("ERROR: " + msg);
 }
 
 void Debug::status_msg(const std::string& msg) {
-  std::cout << msg << std::endl << std::flush;
+  print(msg);
 }

@@ -26,8 +26,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <vector>
 #include <string>
 #include <map>
-#include <boost/shared_ptr.hpp>
 #include <boost/array.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <ode/ode.h>
 
@@ -54,6 +55,7 @@ class Globals {
     static unsigned int total_steps;
     static GOMap gameobjs;
     static ModeStack mode_stack;
+    static boost::filesystem::path save_dir;
     static boost::scoped_ptr<Background> bg;
     static boost::scoped_ptr<Font> sys_font;
     static boost::scoped_ptr<OrePackage> ore;

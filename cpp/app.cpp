@@ -27,6 +27,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/program_options.hpp>
 #include <string>
 #include <cstring>
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -195,6 +196,22 @@ void App::run(const std::vector<std::string>& args) {
       return;
     }
     
+    // Locate the directory where our save and log files will be
+#ifdef IN_WINDOWS
+    const char* tgt_path = std::getenv("APPDATA");
+#else
+    const char* tgt_path = std::getenv("HOME");
+#endif
+    if (!tgt_path) {
+      Debug::error_msg("Unable to find home directory");
+      return;
+    }
+    Globals::save_dir = boost::filesystem::path(tgt_path);
+
+    Debug::enable_logging();
+    Debug::status_msg("");
+    Debug::status_msg(std::string("Orbit Ribbon ") + APP_VERSION + " starting...");
+
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
       throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
