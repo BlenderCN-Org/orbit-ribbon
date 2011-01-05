@@ -59,7 +59,7 @@ void Saving::load() {
     Debug::status_msg("Loading save data from '" + save_path().string() + "'");
     try {
       ORSave::save_paggr save_p;
-      xml_schema::document_pimpl doc_p(save_p.root_parser(), save_p.root_name());
+      xml_schema::document_pimpl doc_p(save_p.root_parser(), save_p.root_namespace(), save_p.root_name());
       save_p.pre();
       doc_p.parse(ifs);
       _save.reset(save_p.post());
@@ -70,6 +70,7 @@ void Saving::load() {
     // Create a new, empty save
     Debug::status_msg("Creating new save data");
     _save.reset(new ORSave::SaveType());
+    _save->config(new ORSave::ConfigType());
   }
   
   // Load default config values for anything unspecified
@@ -95,7 +96,8 @@ void Saving::save() {
   Debug::status_msg("Writing save data to '" + save_path().string() + "'");
   boost::filesystem::ofstream ofs(save_path());
   ORSave::save_saggr save_s;
-  xml_schema::document_simpl doc_s(save_s.root_serializer(), save_s.root_name());
+  // TODO: It would be nice to have it shorten namespace to "orsave" instead of "g1", but no biggie
+  xml_schema::document_simpl doc_s(save_s.root_serializer(), save_s.root_namespace(), save_s.root_name());
   save_s.pre(*_save);
   doc_s.serialize(ofs);
   save_s.post();
