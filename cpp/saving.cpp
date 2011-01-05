@@ -99,6 +99,6 @@ void Saving::save() {
   // TODO: It would be nice to have it shorten namespace to "orsave" instead of "g1", but no biggie
   xml_schema::document_simpl doc_s(save_s.root_serializer(), save_s.root_namespace(), save_s.root_name());
   save_s.pre(*_save);
-  doc_s.serialize(ofs);
+  doc_s.serialize(ofs, xml_schema::document_simpl::pretty_print);
   save_s.post();
 }
