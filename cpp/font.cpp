@@ -50,7 +50,7 @@ Font::Font(const unsigned char* img_data, unsigned int img_data_len, const char*
   boost::iostreams::array_source font_desc_src(font_desc_str, std::strlen(font_desc_str));
   boost::iostreams::stream<boost::iostreams::array_source> font_desc_stream(font_desc_src);
   ORFontDesc::fontdesc_paggr fontdesc_p;
-  xml_schema::document_pimpl doc_p(fontdesc_p.root_parser(), "font-desc");
+  xml_schema::document_pimpl doc_p(fontdesc_p.root_parser(), fontdesc_p.root_namespace(), fontdesc_p.root_name());
   fontdesc_p.pre();
   doc_p.parse(font_desc_stream);
   std::auto_ptr<ORFontDesc::FontDescType> font_desc(fontdesc_p.post());
