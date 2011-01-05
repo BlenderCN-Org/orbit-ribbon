@@ -72,16 +72,6 @@ def write_c_string(fh, name, s):
     fh.write("\n")
   fh.write(";\n")
 
-def file_sub(fn, s, t):
-  contents = []
-  fh = file(fn)
-  for line in fh:
-    contents.append(line.replace(s, t))
-  fh.close()
-  fh = file(fn, "w")
-  for line in contents:
-    fh.write(line)
-
 def build_capsulate(source, target, env):
   src_list = []
   if isinstance(source, list):
@@ -243,20 +233,23 @@ def font_emitter(target, source, env):
 
 
 def build_xsd(mode, source, target, env):
-  args = [mode]
-  args.extend(["--guard-prefix", "ORBIT_RIBBON_AUTOXSD"])
-  args.extend(["--hxx-suffix", ".h"])
-  args.extend(["--cxx-suffix", ".cpp"])
+  cmd = ["./xsde/bin/xsde", mode]
+  cmd.extend(["--guard-prefix", "ORBIT_RIBBON_AUTOXSDE"])
+  cmd.extend(["--hxx-suffix", ".h"])
+  cmd.extend(["--cxx-suffix", ".cpp"])
+  cmd.extend(["--no-long-long"])
+  cmd.extend(["--suppress-validation"])
 
-  if mode == 'cxx-tree':
-    args.extend(["--type-naming", "ucc"])
-    args.extend(["--generate-doxygen"])
-    args.extend(["--generate-serialization"])
-    args.extend(["--generate-polymorphic"])
-    args.extend(["--polymorphic-type-all"])
-    args.extend(["--root-element-all"])
+  if mode == 'cxx-hybrid':
+    cmd.extend(["--generate-parser"])
+    cmd.extend(["--generate-serializer"])
+    cmd.extend(["--generate-aggregate"])
+    cmd.extend(["--generate-polymorphic"])
+    cmd.extend(["--generate-clone"])
+    cmd.extend(["--root-element-all"])
   elif mode == 'cxx-parser':
-    args.extend(["--type-map", "xml/types.map"])
+    cmd.extend(["--runtime-polymorphic"])
+    cmd.extend(["--type-map", "xml/types.map"])
   else:
     raise RuntimeError("build_xsd: Unknown mode %s" % mode)
 
@@ -272,8 +265,9 @@ def build_xsd(mode, source, target, env):
   else:
     tgt_list = [str(target)]
 
-  if len(src_list)*2 != len(tgt_list):
-    raise RuntimeError("build_xsd: Source and target lists mismatched on length")
+  # FIXME: Put this back later (maybe)
+  #if len(src_list)*2 != len(tgt_list):
+  #  raise RuntimeError("build_xsd: Source and target lists mismatched on length")
 
   output_dir = None
   for t in tgt_list:
@@ -281,7 +275,7 @@ def build_xsd(mode, source, target, env):
       output_dir = os.path.dirname(t)
     elif output_dir != os.path.dirname(t):
       raise RuntimeError("build_xsd: Output files not all in the same directory")
-  args.extend(["--output-dir", output_dir])
+  cmd.extend(["--output-dir", output_dir])
 
   for s in src_list:
     if not s.endswith(".xsd"):
@@ -294,13 +288,10 @@ def build_xsd(mode, source, target, env):
     for ext in ("cpp", "h"):
       if (tgt_base + "." + ext) not in [os.path.basename(t) for t in tgt_list]:
         raise RuntimeError("build_xsd: No file with extension %s in target list corresponding with source file %s" % (ext, s))
-    args.append(s)
-
-  if env.Execute(env.Action([["xsdcxx"] + args])):
+    cmd.append(s)
+  
+  if env.Execute([cmd]):
     raise RuntimeError("build_xsd: xsdcxx call failed")
-  for t in tgt_list:
-    if env.Execute(env.Action(lambda target, source, env: file_sub(t, "long long", "long"), "%s updated to remove long long type" % (str(t)))):
-      raise RuntimeError("build_xsd: long long removal failed")
 
 
 def xsd_emitter(target, source, env):
@@ -351,8 +342,8 @@ def verinfo_emitter(target, source, env):
 
 env.VariantDir('buildtmp', 'cpp', duplicate=0)
 
-env['BUILDERS']['XSDTree'] = env.Builder(
-  action = Action(lambda source, target, env: build_xsd('cxx-tree', source, target, env), "C++/Tree for XML schemas: $SOURCES"),
+env['BUILDERS']['XSDEHybrid'] = env.Builder(
+  action = Action(lambda source, target, env: build_xsd('cxx-hybrid', source, target, env), "C++/Hybrid for XML schemas: $SOURCES"),
   suffix = {'.xsd' : '.cpp'},
   emitter = xsd_emitter
 )
@@ -374,14 +365,18 @@ env['BUILDERS']['VersionInfo'] = env.Builder(
   emitter = verinfo_emitter
 )
 
-tree_xsds = ['orepkgdesc', 'save', 'fontdesc']
+hybrid_xsds = ['orepkgdesc', 'save', 'fontdesc']
 parser_xsds = ['oreanim']
-capsulated_files = Glob('xml/*.xsd', strings = True) + Glob('xml/*.xml', strings = True)
+capsulated_files = Glob('xml/*.xml', strings = True)
 cpp_gen_dir = 'cpp/autoxsd/'
 
-tree_built = env.XSDTree(
-  ['%s/%s.cpp' % (cpp_gen_dir, n) for n in tree_xsds],
-  ['xml/%s.xsd' % n for n in tree_xsds]
+hybrid_built = env.XSDEHybrid(
+  ['%s/%s.cpp' % (cpp_gen_dir, n) for n in hybrid_xsds] +
+  ['%s/%s-pskel.cpp' % (cpp_gen_dir, n) for n in hybrid_xsds] + # FIXME: Should be done in emitter
+  ['%s/%s-sskel.cpp' % (cpp_gen_dir, n) for n in hybrid_xsds] + # FIXME: Should be done in emitter
+  ['%s/%s-pimpl.cpp' % (cpp_gen_dir, n) for n in hybrid_xsds] + # FIXME: Should be done in emitter
+  ['%s/%s-simpl.cpp' % (cpp_gen_dir, n) for n in hybrid_xsds], # FIXME: Should be done in emitter
+  ['xml/%s.xsd' % n for n in hybrid_xsds]
 )
 parser_built = env.XSDParser(
   ['%s/%s-pskel.cpp' % (cpp_gen_dir, n) for n in parser_xsds],
@@ -398,11 +393,10 @@ verinfo_built = env.VersionInfo()
 AlwaysBuild(verinfo_built)
 
 # FIXME: Later need to figure out how to compile only minizip and autoxsd with lenient options
-# Then, can disable the "long long" fix for xsd
 #CCFLAGS = '-Wall -Wextra -pedantic-errors -DdDOUBLE'
-CCFLAGS = '-Wall -DdDOUBLE'
+CCFLAGS = '-Wall -DdDOUBLE -Ixsde/libxsde'
 LINKFLAGS = ''
-LIBS = ['ode', 'SDL', 'SDL_image', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'xerces-c']
+LIBS = ['ode', 'SDL', 'SDL_image', 'boost_filesystem', 'boost_program_options', 'boost_iostreams']
 if env['HOST_OS'] and 'win' in env['HOST_OS']:
   CCFLAGS += ' -DIN_WINDOWS'
   LINKFLAGS += ' -static'
@@ -414,7 +408,9 @@ else:
 
 env.Program(
   'orbit-ribbon',
-  [b for b in (tree_built + parser_built + fonts_built + verinfo_built) if str(b).endswith(".cpp")] + Glob('buildtmp/*.cpp') + Glob('cpp/minizip/*.c'),
+  [b for b in (hybrid_built + parser_built + fonts_built + verinfo_built) if str(b).endswith(".cpp")] +
+  Glob('buildtmp/*.cpp') + Glob('cpp/minizip/*.c') +
+  ['xsde/libxsde/xsde/libxsde.a'],
   CCFLAGS=CCFLAGS,
   LIBS=LIBS,
   LINKFLAGS=LINKFLAGS

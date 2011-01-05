@@ -35,6 +35,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "except.h"
 #include "ore.h"
 #include "autoxsd/orepkgdesc.h"
+#include "autoxsd/orepkgdesc-pimpl.h"
 
 // Functions to allow OreFileHandle to work with SDL_RWops
 int sdl_rwops_read(SDL_RWops* context, void* ptr, int size, int maxnum) {
@@ -167,7 +168,11 @@ OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
     }
     
     OreFileHandle pdesc_fh(*this, "ore-desc");
-    pkg_desc = boost::shared_ptr<ORE1::PkgDescType>(ORE1::pkgDesc(pdesc_fh, "ore-desc", xsd::cxx::tree::flags::dont_validate));
+    ORE1::pkgDesc_paggr pkgDesc_p;
+    xml_schema::document_pimpl doc_p(pkgDesc_p.root_parser(), "ore-desc");
+    pkgDesc_p.pre();
+    doc_p.parse(pdesc_fh);
+    pkg_desc = boost::shared_ptr<ORE1::PkgDescType>(pkgDesc_p.post());
   } catch (const std::exception& e) {
     throw OreException(std::string("Error while opening ORE package : ") + e.what());
   }

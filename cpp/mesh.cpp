@@ -35,7 +35,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "ore.h"
 #include "sim.h"
 
-class _MeshAnimationParser : public ORE1::AnimationType_pskel {
+class _MeshAnimationParser : public OREAnim1::AnimationType_pskel {
   private:
     boost::shared_ptr<MeshAnimation> _anim_p;
   
@@ -59,7 +59,7 @@ class _MeshAnimationParser : public ORE1::AnimationType_pskel {
     }
 };
 
-class _MeshParser : public ORE1::MeshType_pskel {
+class _MeshParser : public OREAnim1::MeshType_pskel {
   private:
     boost::shared_ptr<GLOOBufferedMesh> _mesh;
     unsigned int _verts, _faces;
@@ -116,12 +116,14 @@ class _MeshParser : public ORE1::MeshType_pskel {
     }
 };
 
-class _FaceParser : public ORE1::FaceType_pskel {
+class _FaceParser : public OREAnim1::FaceType_pskel {
   private:
     GLOOFace _face;
     unsigned int _idx;
   
   public:
+    _FaceParser() : OREAnim1::FaceType_pskel(0) { }
+
     void pre() {
       _idx = 0;
     }
@@ -148,7 +150,7 @@ class _FaceParser : public ORE1::FaceType_pskel {
     }
 };
 
-class _VertexParser : public ORE1::VertexType_pskel {
+class _VertexParser : public OREAnim1::VertexType_pskel {
   private:
     GLOOVertex _vert;
     
@@ -175,12 +177,14 @@ class _VertexParser : public ORE1::VertexType_pskel {
     }
 };
 
-class _Coord3DParser : public ORE1::Coord3DType_pskel {
+class _Coord3DParser : public OREAnim1::Coord3DType_pskel {
   private:
     boost::array<GLfloat,3> _data;
     unsigned int _idx;
   
   public:
+    _Coord3DParser() : OREAnim1::Coord3DType_pskel(0) { }
+    
     void pre() {
       _idx = 0;
     }
@@ -195,12 +199,14 @@ class _Coord3DParser : public ORE1::Coord3DType_pskel {
     }
 };
 
-class _UvParser : public ORE1::Coord2DType_pskel {
+class _UvParser : public OREAnim1::Coord2DType_pskel {
   private:
     boost::array<GLfloat,2> _data;
     unsigned int _idx;
   
   public:
+    _UvParser() : OREAnim1::Coord2DType_pskel(0) { }
+    
     void pre() {
       _idx = 0;
     }
@@ -229,8 +235,8 @@ class _MeshParsingRig {
   
   public:
     _MeshParsingRig() {
-      anim_parser.parsers(mesh_parser, string_parser);
-      mesh_parser.parsers(face_parser, vertex_parser, string_parser, uint_parser, uint_parser);
+      anim_parser.parsers(string_parser, mesh_parser);
+      mesh_parser.parsers(string_parser, uint_parser, uint_parser, face_parser, vertex_parser);
       face_parser.parsers(uint_parser);
       vertex_parser.parsers(coord3d_parser, coord3d_parser, uv_parser);
       coord3d_parser.parsers(float_parser);
@@ -238,9 +244,9 @@ class _MeshParsingRig {
     }
     
     boost::shared_ptr<MeshAnimation> parse(OreFileHandle& fh) {
-      xml_schema::document doc_p(anim_parser, "http://www.orbit-ribbon.org/ORE1", "animation");
+      xml_schema::document_pimpl doc_p(anim_parser, "animation");
       anim_parser.pre();
-      doc_p.parse(fh, xsd::cxx::parser::xerces::flags::dont_validate);
+      doc_p.parse(fh);
       return anim_parser.post_AnimationType();
     }
 };
@@ -252,10 +258,8 @@ class MeshAnimationCache : public CacheBase<MeshAnimation> {
     boost::shared_ptr<OreFileHandle> fh = Globals::ore->get_fh(id);
     try {
       return parsing_rig.parse(*fh);
-    } catch (const xml_schema::parsing& e) {
-      std::stringstream ss;
-      ss << e;
-      throw GameException("Unable to parse MeshAnimation " + id + " : " + ss.str());
+    } catch (const std::exception& e) {
+      throw GameException("Unable to parse MeshAnimation " + id + " : " + e.what());
     }
   }
 };

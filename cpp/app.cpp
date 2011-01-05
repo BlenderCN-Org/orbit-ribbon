@@ -103,7 +103,7 @@ void App::frame_loop() {
     unsimulated_ticks -= steps_to_simulate * MIN_TICKS_PER_FRAME;
     
     // If showFps config flag is enabled, calculate and display recent FPS
-    if (Saving::get().config().showFps().get()) {
+    if (Saving::get().config().showFps()) {
       if (perf_info == "" or SDL_GetTicks() - last_perf_info >= MAX_PERF_INFO_AGE) {
         last_perf_info = SDL_GetTicks();
         perf_info = Performance::get_perf_info() + " " + GLOOBufferedMesh::get_usage_info();
@@ -217,15 +217,15 @@ void App::run(const std::vector<std::string>& args) {
       throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
     }
  
-    Saving::load();
+    Saving::load(); // No need to check 'present' from here on out; this fills in all unspecified values with their defaults
 
     // Set to windowed or fullscreen if the appropriate command line arguments were given
     if (vm.count("fullscreen") or vm.count("windowed")) {
-      Saving::get().config().fullScreen().set((bool)vm.count("fullscreen"));
+      Saving::get().config().fullScreen((bool)vm.count("fullscreen"));
       
       // This forces Display::init to pick a new, sane resolution
-      Saving::get().config().screenWidth().set(0);
-      Saving::get().config().screenHeight().set(0);
+      Saving::get().config().screenWidth(0);
+      Saving::get().config().screenHeight(0);
     }
     
     Display::init();
@@ -237,7 +237,7 @@ void App::run(const std::vector<std::string>& args) {
       orePathSave = true;
       orePath = boost::filesystem::system_complete(vm["ore"].as<std::string>());
     } else {
-      orePath = boost::filesystem::path(Saving::get().config().lastOre().get());
+      orePath = boost::filesystem::path(Saving::get().config().lastOre());
     }
     try {
       Debug::status_msg("Loading ORE package '" + orePath.file_string() + "'");
@@ -248,13 +248,13 @@ void App::run(const std::vector<std::string>& args) {
     }
     if (orePathSave) {
       //If a different ORE file was successfully loaded, save that path to the config
-      Saving::get().config().lastOre().set(orePath.file_string());
+      Saving::get().config().lastOre(orePath.file_string());
       Saving::save();
     }
 
     // Find all the libscenes in this ore and let them be easily accessible by name
     const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
-    for (ORE1::PkgDescType::LibsceneConstIterator i = desc->libscene().begin(); i != desc->libscene().end(); ++i) {
+    for (ORE1::PkgDescType::libscene_const_iterator i = desc->libscene().begin(); i != desc->libscene().end(); ++i) {
       Globals::libscenes.insert(LSMap::value_type(i->name(), *i));
     }
     
@@ -318,7 +318,7 @@ void App::load_mission(unsigned int area_num, unsigned int mission_num) {
   const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
   
   const ORE1::AreaType* area = NULL;
-  for (ORE1::PkgDescType::AreaConstIterator i = desc->area().begin(); i != desc->area().end(); ++i) {
+  for (ORE1::PkgDescType::area_const_iterator i = desc->area().begin(); i != desc->area().end(); ++i) {
     if (i->n() == area_num) {
       area = &(*i);
       break;
@@ -332,7 +332,7 @@ void App::load_mission(unsigned int area_num, unsigned int mission_num) {
   
   const ORE1::MissionType* mission = NULL;
   if (mission_num > 0) {
-    for (ORE1::AreaType::MissionConstIterator i = area->mission().begin(); i != area->mission().end(); ++i) {
+    for (ORE1::AreaType::mission_const_iterator i = area->mission().begin(); i != area->mission().end(); ++i) {
       if (i->n() == mission_num) {
         mission = &(*i);
         break;
@@ -354,11 +354,11 @@ void App::load_mission(unsigned int area_num, unsigned int mission_num) {
   // Another possible idea: Have orbit-edit.py notice common objects/textures among all or nearly all missions, then we
   // can load them on ORE load.
   Globals::gameobjs.clear();
-  for (ORE1::AreaType::ObjConstIterator i = area->obj().begin(); i != area->obj().end(); ++i) {
+  for (ORE1::AreaType::obj_const_iterator i = area->obj().begin(); i != area->obj().end(); ++i) {
     Globals::gameobjs.insert(GOMap::value_type(i->objName(), get_factory<GameObjFactorySpec>().create(*i)));
   }
   if (mission) {
-    for (ORE1::MissionType::ObjConstIterator i = mission->obj().begin(); i != mission->obj().end(); ++i) {
+    for (ORE1::MissionType::obj_const_iterator i = mission->obj().begin(); i != mission->obj().end(); ++i) {
       Globals::gameobjs.insert(GOMap::value_type(i->objName(), get_factory<GameObjFactorySpec>().create(*i)));
     }
   }

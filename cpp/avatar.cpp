@@ -199,7 +199,7 @@ void AvatarGameObj::step_impl() {
   chn = &Input::get_axis_ch(ORSave::AxisBoundAction::TranslateY);
   if (chn->is_on()) {
     float v = (chn->get_value())*(MAX_STRAFE/MAX_FPS);
-    if (Saving::get().config().invertTranslateY().get()) {
+    if (Saving::get().config().invertTranslateY()) {
       v = -v;
     }
     dBodyAddRelForce(body, 0.0, -v, 0.0);
@@ -232,7 +232,7 @@ void AvatarGameObj::step_impl() {
   chn = &Input::get_axis_ch(ORSave::AxisBoundAction::RotateX);
   if (chn->is_on()) {
     float v = (chn->get_value())*(MAX_TURN/MAX_FPS);
-    if (Saving::get().config().invertRotateY().get()) {
+    if (Saving::get().config().invertRotateY()) {
       v = -v;
     }
     dBodyAddRelTorque(body, v, 0.0, 0.0);

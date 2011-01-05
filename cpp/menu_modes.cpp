@@ -130,7 +130,7 @@ void MainMenuMode::draw_2d(bool top __attribute__ ((unused))) {
 AreaSelectMenuMode::AreaSelectMenuMode() : MenuMode(true, 300, 22, 8) {
   const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
   unsigned int n = 1;
-  for (ORE1::PkgDescType::AreaConstIterator i = desc->area().begin(); i != desc->area().end(); ++i) {
+  for (ORE1::PkgDescType::area_const_iterator i = desc->area().begin(); i != desc->area().end(); ++i) {
     const std::string n_as_str = boost::lexical_cast<std::string>(n);
     const ORE1::AreaType* area = &(*i);
     add_entry(n_as_str, n_as_str + ". " + area->niceName());
@@ -158,9 +158,9 @@ void AreaSelectMenuMode::handle_menu_selection(const std::string& item) {
 
 MissionSelectMenuMode::MissionSelectMenuMode(unsigned int area_num) : MenuMode(true, 450, 22, 8, Vector(0.1, 0.2)), _area_num(area_num) {
   const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
-  const ORE1::AreaType* area = &(desc->area().at(area_num-1));
+  const ORE1::AreaType* area = &(desc->area()[area_num-1]);
   unsigned int n = 1;
-  for (ORE1::AreaType::MissionConstIterator i = area->mission().begin(); i != area->mission().end(); ++i) {
+  for (ORE1::AreaType::mission_const_iterator i = area->mission().begin(); i != area->mission().end(); ++i) {
     const std::string n_as_str = boost::lexical_cast<std::string>(n);
     const ORE1::MissionType* mission = &*i;
     add_entry(n_as_str, n_as_str + ". " + mission->niceName());

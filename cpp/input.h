@@ -300,8 +300,8 @@ class Input {
     static boost::shared_ptr<GamepadManager> _gp_man;
     static std::vector<ChannelSource*> _sources;
     
-    static std::map<ORSave::AxisBoundAction::Value, boost::shared_ptr<Channel> > _axis_action_map;
-    static std::map<ORSave::ButtonBoundAction::Value, boost::shared_ptr<Channel> > _button_action_map;
+    static std::map<ORSave::AxisBoundAction::value_type, boost::shared_ptr<Channel> > _axis_action_map;
+    static std::map<ORSave::ButtonBoundAction::value_type, boost::shared_ptr<Channel> > _button_action_map;
     static boost::scoped_ptr<ORSave::PresetListType> _preset_list;
     
     static void init();
@@ -318,8 +318,8 @@ class Input {
     static const ORSave::PresetListType& get_preset_list() { return *_preset_list; }
     
     static void set_channels_from_config();
-    static const Channel& get_axis_ch(ORSave::AxisBoundAction::Value action);
-    static const Channel& get_button_ch(ORSave::ButtonBoundAction::Value action);
+    static const Channel& get_axis_ch(ORSave::AxisBoundAction::value_type action);
+    static const Channel& get_button_ch(ORSave::ButtonBoundAction::value_type action);
 };
 
 #endif

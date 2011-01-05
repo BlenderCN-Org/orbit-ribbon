@@ -29,6 +29,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gloo.h"
 
 #include "autoxsd/fontdesc.h"
+#include "autoxsd/fontdesc-pimpl.h"
 
 const unsigned int FONT_MAX_STR_LENGTH = 512;
 
@@ -48,10 +49,15 @@ std::pair<unsigned char, short> Font::get_glyph_height_and_y_offset(float height
 Font::Font(const unsigned char* img_data, unsigned int img_data_len, const char* font_desc_str) {
   boost::iostreams::array_source font_desc_src(font_desc_str, std::strlen(font_desc_str));
   boost::iostreams::stream<boost::iostreams::array_source> font_desc_stream(font_desc_src);
-  std::auto_ptr<ORFontDesc::FontDescType> font_desc = ORFontDesc::fontdesc(font_desc_stream, "font-desc", xsd::cxx::tree::flags::dont_validate);
-  for (ORFontDesc::FontDescType::SizedescConstIterator sd = font_desc->sizedesc().begin(); sd != font_desc->sizedesc().end(); ++sd) {
+  ORFontDesc::fontdesc_paggr fontdesc_p;
+  xml_schema::document_pimpl doc_p(fontdesc_p.root_parser(), "font-desc");
+  fontdesc_p.pre();
+  doc_p.parse(font_desc_stream);
+  std::auto_ptr<ORFontDesc::FontDescType> font_desc(fontdesc_p.post());
+  
+  for (ORFontDesc::FontDescType::sizedesc_const_iterator sd = font_desc->sizedesc().begin(); sd != font_desc->sizedesc().end(); ++sd) {
     std::map<char, std::pair<short, unsigned char> >& glyphmap = _glyph_data[sd->height()];
-    for (ORFontDesc::SizeDescType::GlyphConstIterator gd = sd->glyph().begin(); gd != sd->glyph().end(); ++gd) {
+    for (ORFontDesc::SizeDescType::glyph_const_iterator gd = sd->glyph().begin(); gd != sd->glyph().end(); ++gd) {
       glyphmap[gd->character()[0]] = std::pair<short, unsigned char>(gd->offset(), gd->width());
     }
     glyphmap[' '] = std::pair<short, unsigned char>(-1, glyphmap['h'].second/2); // Make spaces half as wide as the letter 'h'

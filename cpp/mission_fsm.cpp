@@ -42,7 +42,7 @@ MissionStateTransitionCondition::MissionStateTransitionCondition(const ORE1::Mis
 MissionStateTransition::MissionStateTransition(const ORE1::MissionStateTransitionType& transition) :
   _target_name(transition.target())
 {
-  ORE1::MissionStateTransitionType::CondConstIterator i;
+  ORE1::MissionStateTransitionType::cond_const_iterator i;
   for (i = transition.cond().begin(); i != transition.cond().end(); ++i) {
     _conditions.push_back(get_factory<MissionStateTransitionConditionFactorySpec>().create(*i));
   }
@@ -64,12 +64,12 @@ void MissionStateTransition::draw(const GameplayMode& gameplay_mode) {
 }
 
 MissionState::MissionState(const ORE1::MissionStateType& state) {
-  ORE1::MissionStateType::EffectConstIterator i;
+  ORE1::MissionStateType::effect_const_iterator i;
   for (i = state.effect().begin(); i != state.effect().end(); ++i) {
     _effects.push_back(get_factory<MissionEffectFactorySpec>().create(*i));
   }
   
-  ORE1::MissionStateType::TransitionConstIterator j;
+  ORE1::MissionStateType::transition_const_iterator j;
   for (j = state.transition().begin(); j != state.transition().end(); ++j) {
     _transitions.push_back(MissionStateTransition(*j));
   }
@@ -124,7 +124,7 @@ void MissionFSM::transition_to_state(const std::string& name) {
     return;
   }
 
-  ORE1::MissionType::StateConstIterator i;
+  ORE1::MissionType::state_const_iterator i;
   for (i = _mission.state().begin(); i != _mission.state().end(); ++i) {
     if (i->name() == name) { break; }
   }

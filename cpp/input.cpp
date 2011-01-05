@@ -30,6 +30,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "autoxsd/presets.xml.h"
 #include "autoxsd/save.h"
+#include "autoxsd/save-pimpl.h"
 #include "constants.h"
 #include "debug.h"
 #include "except.h"
@@ -254,7 +255,7 @@ bool MouseMovementChannel::matches_frame_events() const {
 float MouseMovementChannel::get_value() const {
   int v = (_axis == 0) ? _mouse->_rel_x : _mouse->_rel_y;
   if (v == 0) { return 0.0; }
-  float s = Saving::get().config().mouseSensitivity().get();
+  float s = Saving::get().config().mouseSensitivity();
   float f = MIN_MOUSE_SENSITIVITY_FULL + s*(MAX_MOUSE_SENSITIVITY_FULL - MIN_MOUSE_SENSITIVITY_FULL);
   return fmax(-1.0, fmin(1.0, v/f));
 }
@@ -536,8 +537,8 @@ boost::shared_ptr<Mouse> Input::_mouse;
 boost::shared_ptr<GamepadManager> Input::_gp_man;
 std::vector<ChannelSource*> Input::_sources;
 
-std::map<ORSave::AxisBoundAction::Value, boost::shared_ptr<Channel> > Input::_axis_action_map;
-std::map<ORSave::ButtonBoundAction::Value, boost::shared_ptr<Channel> > Input::_button_action_map;
+std::map<ORSave::AxisBoundAction::value_type, boost::shared_ptr<Channel> > Input::_axis_action_map;
+std::map<ORSave::ButtonBoundAction::value_type, boost::shared_ptr<Channel> > Input::_button_action_map;
 boost::scoped_ptr<ORSave::PresetListType> Input::_preset_list;
 
 void Input::init() {
@@ -545,7 +546,11 @@ void Input::init() {
   
   // Load the encapsulated presets list
   std::stringstream ss(CAPSULE_PRESETS_XML);
-  _preset_list.reset(ORSave::presets(ss, xsd::cxx::tree::flags::dont_validate).release());
+  ORSave::presets_paggr presets_p;
+  xml_schema::document_pimpl doc_p(presets_p.root_parser(), presets_p.root_name());
+  presets_p.pre();
+  doc_p.parse(ss);
+  _preset_list.reset(presets_p.post());
   
   bool config_dirty = false;
   
@@ -556,7 +561,7 @@ void Input::init() {
     Saving::get_input_device(ORSave::InputDeviceNameType::Keyboard);
   } catch (const GameException& e) {
     Debug::status_msg("Loading default input configuration for keyboard");
-    Saving::get().config().inputDevice().push_back(get_preset("Default Keyboard Mapping").inputDevice());
+    Saving::get().config().inputDevice().push_back(get_preset("Default Keyboard Mapping").inputDevice()._clone());
     config_dirty = true;
   }
   
@@ -567,7 +572,7 @@ void Input::init() {
     Saving::get_input_device(ORSave::InputDeviceNameType::Mouse);
   } catch (const GameException& e) {
     Debug::status_msg("Loading default input configuration for mouse");
-    Saving::get().config().inputDevice().push_back(get_preset("Default Mouse Mapping").inputDevice());
+    Saving::get().config().inputDevice().push_back(get_preset("Default Mouse Mapping").inputDevice()._clone());
     config_dirty = true;
   }
   
@@ -588,7 +593,7 @@ void Input::init() {
         BOOST_FOREACH(const std::string& match_name, preset.deviceMatchString()) {
           if (gp_name.find(match_name) != std::string::npos) {
             Debug::status_msg("Loaded gamepad input configuration: '" + preset.presetName() + "'");
-            Saving::get().config().inputDevice().push_back(preset.inputDevice());
+            Saving::get().config().inputDevice().push_back(preset.inputDevice()._clone());
             found = true;
             config_dirty = true;
             break;
@@ -747,7 +752,7 @@ void Input::set_channels_from_config() {
   insert_binding(ORSave::ButtonBoundAction::Confirm, _mouse->button_channel(3), _button_action_map);
   
   // Alias gameplay motion bindings to UI movement for convenience
-  std::map<ORSave::AxisBoundAction::Value, boost::shared_ptr<Channel> >::iterator i;
+  std::map<ORSave::AxisBoundAction::value_type, boost::shared_ptr<Channel> >::iterator i;
   i = _axis_action_map.find(ORSave::AxisBoundAction::TranslateX);
   if (i != _axis_action_map.end()) { insert_binding(ORSave::AxisBoundAction::UIX, i->second, _axis_action_map); }
   i = _axis_action_map.find(ORSave::AxisBoundAction::TranslateY);
@@ -763,16 +768,16 @@ const ORSave::PresetType& Input::get_preset(const std::string& name) {
   throw GameException("Unable to load preset named '" + name + "'");
 }
 
-const Channel& Input::get_axis_ch(ORSave::AxisBoundAction::Value action) {
-  std::map<ORSave::AxisBoundAction::Value, boost::shared_ptr<Channel> >::iterator i = _axis_action_map.find(action);
+const Channel& Input::get_axis_ch(ORSave::AxisBoundAction::value_type action) {
+  std::map<ORSave::AxisBoundAction::value_type, boost::shared_ptr<Channel> >::iterator i = _axis_action_map.find(action);
   if (i != _axis_action_map.end()) {
     return *(i->second);
   }
   return *_null_channel;
 }
 
-const Channel& Input::get_button_ch(ORSave::ButtonBoundAction::Value action) {
-  std::map<ORSave::ButtonBoundAction::Value, boost::shared_ptr<Channel> >::iterator i = _button_action_map.find(action);
+const Channel& Input::get_button_ch(ORSave::ButtonBoundAction::value_type action) {
+  std::map<ORSave::ButtonBoundAction::value_type, boost::shared_ptr<Channel> >::iterator i = _button_action_map.find(action);
   if (i != _button_action_map.end()) {
     return *(i->second);
   }

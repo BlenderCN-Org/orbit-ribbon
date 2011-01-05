@@ -1,8 +1,9 @@
 Orbit Ribbon is a game simulating a world where there is little ground and even less gravity.
 
-To build the program, run 'scons' in this directory.
-
-If you don't have SCons installed, it's only one apt-get or one Google away!
+To build the program:
+1. Download xsde and build it with the configuration in xml/xsde-X-config.make
+1. Copy the contents of that directory to the xsde directory here
+3. Run scons in this directory
 
 ko klama ca le nu cusku li no
 ci

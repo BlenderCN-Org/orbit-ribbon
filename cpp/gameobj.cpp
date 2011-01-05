@@ -68,7 +68,7 @@ GameObj::GameObj(const ORE1::ObjType& obj, std::auto_ptr<OdeEntity> entity) :
     LSMap::const_iterator scene_iter = Globals::libscenes.find("LIB" + obj.implName());
     if (scene_iter != Globals::libscenes.end()) {
       const ORE1::SubsceneType& libscene = scene_iter->second;
-      for (ORE1::SubsceneType::ObjConstIterator i = libscene.obj().begin(); i != libscene.obj().end(); ++i) {
+      for (ORE1::SubsceneType::obj_const_iterator i = libscene.obj().begin(); i != libscene.obj().end(); ++i) {
         _scene_objs.insert(std::pair<std::string, const ORE1::ObjType&>(i->objName(), *i));
       }
     }

@@ -118,7 +118,7 @@ void GameplayMode::draw_2d(bool top __attribute__ ((unused))) {
 
   AvatarGameObj* av = find_avatar();
   
-  if (Saving::get().config().debugPhysics().get()) {
+  if (Saving::get().config().debugPhysics()) {
     Point p(
       Display::get_screen_width()/2 - PHYS_DEBUG_BOX_SIZE.x/2,
       Display::get_screen_height()/2 - PHYS_DEBUG_BOX_SIZE.y/2 + PHYS_DEBUG_BOX_Y

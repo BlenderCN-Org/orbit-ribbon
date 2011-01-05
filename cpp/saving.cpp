@@ -23,6 +23,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/filesystem/fstream.hpp>
 #include <sstream>
 
+#include "autoxsd/save-pimpl.h"
+#include "autoxsd/save-simpl.h"
 #include "constants.h"
 #include "debug.h"
 #include "except.h"
@@ -40,7 +42,7 @@ ORSave::SaveType& Saving::get() {
   throw GameException("Attempted to get save data before it had been loaded.");
 }
 
-ORSave::InputDeviceType& Saving::get_input_device(ORSave::InputDeviceNameType::Value dev_type) {
+ORSave::InputDeviceType& Saving::get_input_device(ORSave::InputDeviceNameType::value_type dev_type) {
   BOOST_FOREACH(ORSave::InputDeviceType& idev, get().config().inputDevice()) {
     if (idev.device() == dev_type) {
       return idev;
@@ -49,6 +51,7 @@ ORSave::InputDeviceType& Saving::get_input_device(ORSave::InputDeviceNameType::V
   throw GameException("Unable to locate input device config in save file matching requested type");
 }
 
+#define CONF_DFLT(C, P, A, V) if (!C->P()) { C->A(V); }
 template<typename AT, typename VT> void conf_dflt(AT& optional_attr, const VT& default_value) {
   if (!optional_attr.present()) {
     optional_attr.set(default_value);
@@ -61,33 +64,33 @@ void Saving::load() {
     // Load the save data from this file
     Debug::status_msg("Loading save data from '" + save_path().string() + "'");
     try {
-      // TODO Turn on validation
-      _save.reset(ORSave::save(ifs, xsd::cxx::tree::flags::dont_validate).release());
-    } catch (const xml_schema::Exception& e) {
-      std::stringstream ss;
-      ss << e;
-      throw GameException(std::string("XML error while loading save data : ") + ss.str());
+      ORSave::save_paggr save_p;
+      xml_schema::document_pimpl doc_p(save_p.root_parser(), save_p.root_name());
+      save_p.pre();
+      doc_p.parse(ifs);
+      _save.reset(save_p.post());
     } catch (const std::exception& e) {
       throw GameException(std::string("Error while loading save data : ") + e.what());
     }  
   } else {
     // Create a new, empty save
     Debug::status_msg("Creating new save data");
-    _save.reset(new ORSave::SaveType(ORSave::ConfigType()));
+    _save.reset(new ORSave::SaveType());
   }
   
   // Load default config values for anything unspecified
+  // TODO: See if it is possible to do this in the xsd instead
   ORSave::ConfigType* conf = &(_save->config());
-  conf_dflt(conf->lastOre(), "main.ore");
-  conf_dflt(conf->showFps(), true);
-  conf_dflt(conf->fullScreen(), false);
-  conf_dflt(conf->vSync(), true);
-  conf_dflt(conf->debugPhysics(), false);
-  conf_dflt(conf->soundEffectVolume(), 0.8);
-  conf_dflt(conf->musicVolume(), 0.5);
-  conf_dflt(conf->mouseSensitivity(), 0.5);
-  conf_dflt(conf->invertTranslateY(), false);
-  conf_dflt(conf->invertRotateY(), false);
+  CONF_DFLT(conf, lastOre_present, lastOre, "main.ore");
+  CONF_DFLT(conf, showFps_present, showFps, true);
+  CONF_DFLT(conf, fullScreen_present, fullScreen, false);
+  CONF_DFLT(conf, vSync_present, vSync, true);
+  CONF_DFLT(conf, debugPhysics_present, debugPhysics, false);
+  CONF_DFLT(conf, soundEffectVolume_present, soundEffectVolume, 0.8);
+  CONF_DFLT(conf, musicVolume_present, musicVolume, 0.5);
+  CONF_DFLT(conf, mouseSensitivity_present, mouseSensitivity, 0.5);
+  CONF_DFLT(conf, invertTranslateY_present, invertTranslateY, false);
+  CONF_DFLT(conf, invertRotateY_present, invertRotateY, false);
 }
 
 void Saving::save() {
@@ -96,8 +99,10 @@ void Saving::save() {
   }
   
   Debug::status_msg("Writing save data to '" + save_path().string() + "'");
-  xml_schema::NamespaceInfomap map;
-  map["orsave"].name = "http://www.orbit-ribbon.org/ORSave";
   boost::filesystem::ofstream ofs(save_path());
-  ORSave::save(ofs, *_save, map);
+  ORSave::save_saggr save_s;
+  xml_schema::document_simpl doc_s(save_s.root_serializer(), save_s.root_name());
+  save_s.pre(*_save);
+  doc_s.serialize(ofs);
+  save_s.post();
 }

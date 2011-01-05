@@ -45,7 +45,7 @@ int Display::screen_height = 0;
 GLfloat Display::screen_ratio = 0;
 
 void Display::init() {
-  bool full_screen = Saving::get().config().fullScreen().get();
+  bool full_screen = Saving::get().config().fullScreen();
   
   const SDL_VideoInfo* vid_info = SDL_GetVideoInfo();
   if (!vid_info) {
@@ -56,9 +56,9 @@ void Display::init() {
   videoFlags  = SDL_OPENGL;
   videoFlags |= SDL_GL_DOUBLEBUFFER;
   
-  if (Saving::get().config().screenWidth().present() && Saving::get().config().screenHeight().present()) {
-    screen_width = Saving::get().config().screenWidth().get();
-    screen_height = Saving::get().config().screenHeight().get();
+  if (Saving::get().config().screenWidth_present() && Saving::get().config().screenHeight_present()) {
+    screen_width = Saving::get().config().screenWidth();
+    screen_height = Saving::get().config().screenHeight();
   }
   
   if (screen_width == 0 || screen_height == 0 || !SDL_VideoModeOK(screen_width, screen_height, vid_info->vfmt->BitsPerPixel, videoFlags)) {
@@ -87,16 +87,16 @@ void Display::init() {
       screen_height = 600;
     }
     
-    Saving::get().config().screenWidth().set(screen_width);
-    Saving::get().config().screenHeight().set(screen_height);
-    Saving::get().config().fullScreen().set(full_screen);
+    Saving::get().config().screenWidth(screen_width);
+    Saving::get().config().screenHeight(screen_height);
+    Saving::get().config().fullScreen(full_screen);
     Saving::save();
   }
   
   screen_ratio = screen_width/screen_height;
   
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-  if (Saving::get().config().vSync().get()) {
+  if (Saving::get().config().vSync()) {
     SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
   }
   std::string win_title = std::string("Orbit Ribbon (") + APP_VERSION + std::string(")");

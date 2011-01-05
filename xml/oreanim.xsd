@@ -1,7 +1,7 @@
 <xsd:schema
   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns="http://www.orbit-ribbon.org/ORE1"
-  targetNamespace="http://www.orbit-ribbon.org/ORE1">
+  xmlns="http://www.orbit-ribbon.org/OREAnim1"
+  targetNamespace="http://www.orbit-ribbon.org/OREAnim1">
   
   <xsd:annotation>
     <xsd:documentation xml:lang="en">

@@ -1,4 +1,4 @@
-namespace http://www.orbit-ribbon.org/ORE1 {
+namespace http://www.orbit-ribbon.org/OREAnim1 {
 	include "../mesh.h";
 	include "../gloo.h";
 	include <boost/shared_ptr.hpp>;

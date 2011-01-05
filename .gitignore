@@ -16,3 +16,4 @@ cpp/minizip/*.o
 *.blend1
 *~
 *.ore
+xsde/*
