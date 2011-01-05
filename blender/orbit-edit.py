@@ -208,7 +208,7 @@ def do_export():
   # Create a new ORE zip file
   target_fn = BLENDER_FILENAME[:-6] + ".ore" # Replace ".blend" with ".ore" for output filename (ore = Orbit Ribbon Export)
   zfh = zipfile.ZipFile(
-    file = os.path.join(WORKING_DIR, os.path.pardir, "orefiles", target_fn),
+    file = os.path.join(WORKING_DIR, os.path.pardir, target_fn),
     mode = "w",
     compression = zipfile.ZIP_DEFLATED
   )
