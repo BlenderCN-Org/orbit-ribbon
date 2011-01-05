@@ -214,7 +214,7 @@ def do_export():
   )
   zfh.writestr("ore-version", "1") # ORE file format version (this will be 1 until the first backwards-incompatible change after release)
   zfh.writestr("ore-name", descDoc.xpath("niceName/text()")[0]) # The nice name of the ORE package, separate so that we can get it without XML
-  
+
   # Add the scene information to the desc document
   for scene in bpy.data.scenes:
     name = scene.name
@@ -259,11 +259,11 @@ def do_export():
             objNode.attrib["implName"] = libDataMatch.group(1)
         except Exception, e:
           pup_error("Problem exporting object %s: %s" % (obj.name, str(e)))
-  
+
   # Verify and write out the description now that all the scene information has been added in
   descSchema.assertValid(descDoc)
-  zfh.writestr("ore-desc", lxml.etree.tostring(descDoc, xml_declaration=True))
-  
+  zfh.writestr("ore-desc", lxml.etree.tostring(descDoc, xml_declaration=True, encoding='UTF-8'))
+
   # TODO: There will be many more "standard UI images", need a way of including them all automatically
   zip_image_as_targa(zfh, "../images/cursor.png")
   zip_image_as_targa(zfh, "../images/star.png")
@@ -274,7 +274,7 @@ def do_export():
   zip_image_as_targa(zfh, "../images/starmap-4.png")
   zip_image_as_targa(zfh, "../images/starmap-5.png")
   zip_image_as_targa(zfh, "../images/starmap-6.png")
-  
+
   copiedImages = set() # Set of image names that have already been copied into the zipfile
   def populateMeshNode(meshNode, mesh):
     faceCount = 0
@@ -353,7 +353,7 @@ def do_export():
     meshNode = lxml.etree.SubElement(animNode, "frame")
     populateMeshNode(meshNode, mesh)
     #animSchema.assertValid(animNode)
-    zfh.writestr("mesh-%s" % mesh.name, lxml.etree.tostring(animNode, xml_declaration=True))
+    zfh.writestr("mesh-%s" % mesh.name, lxml.etree.tostring(animNode, xml_declaration=True, encoding='UTF-8'))
   
   for action in bpy.data.actions:
     if not action.name.startswith("LIB"):
@@ -378,7 +378,7 @@ def do_export():
     orig_action.setActive(bpy.data.objects[arm_name]) # Restore the saved action
     
     #animSchema.assertValid(animNode)
-    zfh.writestr("action-%s" % action.name, lxml.etree.tostring(animNode, xml_declaration=True))
+    zfh.writestr("action-%s" % action.name, lxml.etree.tostring(animNode, xml_declaration=True, encoding='UTF-8'))
   
   Blender.Window.DrawProgressBar(1.0, "Closing ORE file")
   zfh.close()

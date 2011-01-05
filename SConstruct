@@ -212,7 +212,7 @@ def build_font(source, target, env):
     impl_fh.write(preamble_pattern % (f + ".h", "Automatically generated data file for font %s" % f))
     impl_fh.write("#include \"%s.h\"\n" % f)
     impl_fh.write("\n")
-    write_c_string(impl_fh, sym_name + "_DESC", lxml.etree.tostring(desc_doc, xml_declaration=True).split("\n"))
+    write_c_string(impl_fh, sym_name + "_DESC", lxml.etree.tostring(desc_doc, xml_declaration=True, encoding="UTF-8").split("\n"))
     impl_fh.write("\n")
     impl_fh.write("const unsigned char %s[%u] = {%s};\n" % (sym_name, len(char_array), ",".join(char_array)))
     impl_fh.close()
