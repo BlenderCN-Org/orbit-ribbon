@@ -51,13 +51,7 @@ ORSave::InputDeviceType& Saving::get_input_device(ORSave::InputDeviceNameType::v
   throw GameException("Unable to locate input device config in save file matching requested type");
 }
 
-#define CONF_DFLT(C, P, A, V) if (!C->P()) { C->A(V); }
-template<typename AT, typename VT> void conf_dflt(AT& optional_attr, const VT& default_value) {
-  if (!optional_attr.present()) {
-    optional_attr.set(default_value);
-  }
-}
-
+#define CONF_DFLT(C, P, A, V) if (!C.P()) { C.A(V); }
 void Saving::load() {
   boost::filesystem::ifstream ifs(save_path());
   if (ifs) {
@@ -80,7 +74,7 @@ void Saving::load() {
   
   // Load default config values for anything unspecified
   // TODO: See if it is possible to do this in the xsd instead
-  ORSave::ConfigType* conf = &(_save->config());
+  ORSave::ConfigType& conf = _save->config();
   CONF_DFLT(conf, lastOre_present, lastOre, "main.ore");
   CONF_DFLT(conf, showFps_present, showFps, true);
   CONF_DFLT(conf, fullScreen_present, fullScreen, false);
