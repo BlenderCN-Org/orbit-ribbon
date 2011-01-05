@@ -545,12 +545,18 @@ void Input::init() {
   _null_channel = boost::shared_ptr<Channel>(new NullChannel);
   
   // Load the encapsulated presets list
-  std::stringstream ss(CAPSULE_PRESETS_XML);
-  ORSave::presets_paggr presets_p;
-  xml_schema::document_pimpl doc_p(presets_p.root_parser(), presets_p.root_namespace(), presets_p.root_name());
-  presets_p.pre();
-  doc_p.parse(ss);
-  _preset_list.reset(presets_p.post());
+  try {
+    std::stringstream ss(CAPSULE_PRESETS_XML);
+    ORSave::presets_paggr presets_p;
+    xml_schema::document_pimpl doc_p(presets_p.root_parser(), presets_p.root_namespace(), presets_p.root_name());
+    presets_p.pre();
+    doc_p.parse(ss);
+    _preset_list.reset(presets_p.post());
+  } catch (const xml_schema::parser_exception& e) {
+    throw GameException(std::string("Parsing problem while loading presets data : ") + e.text());
+  } catch (const std::exception& e) {
+    throw GameException(std::string("Error while loading presets data : ") + e.what());
+  }
   
   bool config_dirty = false;
   

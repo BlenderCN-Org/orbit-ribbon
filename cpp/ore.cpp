@@ -23,6 +23,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <algorithm>
 #include <vector>
 #include <string>
+#include <sstream>
 #include <memory>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
@@ -173,6 +174,8 @@ OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
     pkgDesc_p.pre();
     doc_p.parse(pdesc_fh);
     pkg_desc = boost::shared_ptr<ORE1::PkgDescType>(pkgDesc_p.post());
+  } catch (const xml_schema::parser_exception& e) {
+    throw OreException(std::string("Parsing problem while opening ORE package : ") + e.text());
   } catch (const std::exception& e) {
     throw OreException(std::string("Error while opening ORE package : ") + e.what());
   }

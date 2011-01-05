@@ -25,6 +25,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <memory>
 #include <SDL/SDL.h>
 
+#include "except.h"
 #include "font.h"
 #include "gloo.h"
 
@@ -47,24 +48,30 @@ std::pair<unsigned char, short> Font::get_glyph_height_and_y_offset(float height
 }
 
 Font::Font(const unsigned char* img_data, unsigned int img_data_len, const char* font_desc_str) {
-  boost::iostreams::array_source font_desc_src(font_desc_str, std::strlen(font_desc_str));
-  boost::iostreams::stream<boost::iostreams::array_source> font_desc_stream(font_desc_src);
-  ORFontDesc::fontdesc_paggr fontdesc_p;
-  xml_schema::document_pimpl doc_p(fontdesc_p.root_parser(), fontdesc_p.root_namespace(), fontdesc_p.root_name());
-  fontdesc_p.pre();
-  doc_p.parse(font_desc_stream);
-  std::auto_ptr<ORFontDesc::FontDescType> font_desc(fontdesc_p.post());
+  try {
+    boost::iostreams::array_source font_desc_src(font_desc_str, std::strlen(font_desc_str));
+    boost::iostreams::stream<boost::iostreams::array_source> font_desc_stream(font_desc_src);
+    ORFontDesc::fontdesc_paggr fontdesc_p;
+    xml_schema::document_pimpl doc_p(fontdesc_p.root_parser(), fontdesc_p.root_namespace(), fontdesc_p.root_name());
+    fontdesc_p.pre();
+    doc_p.parse(font_desc_stream);
+    std::auto_ptr<ORFontDesc::FontDescType> font_desc(fontdesc_p.post());
   
-  for (ORFontDesc::FontDescType::sizedesc_const_iterator sd = font_desc->sizedesc().begin(); sd != font_desc->sizedesc().end(); ++sd) {
-    std::map<char, std::pair<short, unsigned char> >& glyphmap = _glyph_data[sd->height()];
-    for (ORFontDesc::SizeDescType::glyph_const_iterator gd = sd->glyph().begin(); gd != sd->glyph().end(); ++gd) {
-      glyphmap[gd->character()[0]] = std::pair<short, unsigned char>(gd->offset(), gd->width());
+    for (ORFontDesc::FontDescType::sizedesc_const_iterator sd = font_desc->sizedesc().begin(); sd != font_desc->sizedesc().end(); ++sd) {
+      std::map<char, std::pair<short, unsigned char> >& glyphmap = _glyph_data[sd->height()];
+      for (ORFontDesc::SizeDescType::glyph_const_iterator gd = sd->glyph().begin(); gd != sd->glyph().end(); ++gd) {
+        glyphmap[gd->character()[0]] = std::pair<short, unsigned char>(gd->offset(), gd->width());
+      }
+      glyphmap[' '] = std::pair<short, unsigned char>(-1, glyphmap['h'].second/2); // Make spaces half as wide as the letter 'h'
     }
-    glyphmap[' '] = std::pair<short, unsigned char>(-1, glyphmap['h'].second/2); // Make spaces half as wide as the letter 'h'
-  }
 
-  SDL_RWops* img_rw_ops(SDL_RWFromConstMem(img_data, img_data_len));
-  _tex.reset(new GLOOTexture(*img_rw_ops, true));
+    SDL_RWops* img_rw_ops(SDL_RWFromConstMem(img_data, img_data_len));
+    _tex.reset(new GLOOTexture(*img_rw_ops, true));
+  } catch (const xml_schema::parser_exception& e) {
+    throw GameException(std::string("Parsing problem while reading font description : ") + e.text());
+  } catch (const std::exception& e) {
+    throw GameException(std::string("Error while loading font : ") + e.what());
+  }
 }
 
 float Font::get_width(float height, const std::string& str) {

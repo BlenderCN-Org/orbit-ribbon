@@ -63,6 +63,8 @@ void Saving::load() {
       save_p.pre();
       doc_p.parse(ifs);
       _save.reset(save_p.post());
+    } catch (const xml_schema::parser_exception& e) {
+      throw GameException(std::string("Parsing problem while loading save data : ") + e.text());
     } catch (const std::exception& e) {
       throw GameException(std::string("Error while loading save data : ") + e.what());
     }  
@@ -96,8 +98,8 @@ void Saving::save() {
   Debug::status_msg("Writing save data to '" + save_path().string() + "'");
   boost::filesystem::ofstream ofs(save_path());
   ORSave::save_saggr save_s;
-  // TODO: It would be nice to have it shorten namespace to "orsave" instead of "g1", but no biggie
   xml_schema::document_simpl doc_s(save_s.root_serializer(), save_s.root_namespace(), save_s.root_name());
+  doc_s.add_prefix("orsave", save_s.root_namespace());
   save_s.pre(*_save);
   doc_s.serialize(ofs, xml_schema::document_simpl::pretty_print);
   save_s.post();
