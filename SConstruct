@@ -232,7 +232,7 @@ def font_emitter(target, source, env):
   return (targets, source)
 
 
-def build_xsd(mode, source, target, env):
+def build_xsde(mode, source, target, env):
   cmd = ["./xsde/bin/xsde", mode]
   cmd.extend(["--guard-prefix", "ORBIT_RIBBON_AUTOXSDE"])
   cmd.extend(["--hxx-suffix", ".h"])
@@ -242,16 +242,19 @@ def build_xsd(mode, source, target, env):
 
   if mode == 'cxx-hybrid':
     cmd.extend(["--generate-parser"])
-    cmd.extend(["--generate-serializer"])
+    cmd.extend(["--generate-serializer"]) # TODO: Only do this for the save type
     cmd.extend(["--generate-aggregate"])
     cmd.extend(["--generate-polymorphic"])
     cmd.extend(["--generate-clone"])
+    if env.has_key('XML_POLY_BASES'):
+      for b in env['XML_POLY_BASES']:
+        cmd.extend(["--polymorphic-type", b])
     cmd.extend(["--root-element-all"])
   elif mode == 'cxx-parser':
     cmd.extend(["--runtime-polymorphic"])
     cmd.extend(["--type-map", "xml/types.map"])
   else:
-    raise RuntimeError("build_xsd: Unknown mode %s" % mode)
+    raise RuntimeError("build_xsde: Unknown mode %s" % mode)
 
   src_list = []
   if isinstance(source, list):
@@ -267,31 +270,31 @@ def build_xsd(mode, source, target, env):
 
   # FIXME: Put this back later (maybe)
   #if len(src_list)*2 != len(tgt_list):
-  #  raise RuntimeError("build_xsd: Source and target lists mismatched on length")
+  #  raise RuntimeError("build_xsde: Source and target lists mismatched on length")
 
   output_dir = None
   for t in tgt_list:
     if output_dir == None:
       output_dir = os.path.dirname(t)
     elif output_dir != os.path.dirname(t):
-      raise RuntimeError("build_xsd: Output files not all in the same directory")
+      raise RuntimeError("build_xsde: Output files not all in the same directory")
   cmd.extend(["--output-dir", output_dir])
 
   for s in src_list:
     if not s.endswith(".xsd"):
-      raise RuntimeError("build_xsd: Unknown extension on source file %s" % s)
+      raise RuntimeError("build_xsde: Unknown extension on source file %s" % s)
     if not os.path.isfile(s):
-      raise RuntimeError("build_xsd: Unable to find source file at %s" % s)
+      raise RuntimeError("build_xsde: Unable to find source file at %s" % s)
     tgt_base = os.path.basename(s)[:-4]
     if mode == 'cxx-parser':
       tgt_base += "-pskel"
     for ext in ("cpp", "h"):
       if (tgt_base + "." + ext) not in [os.path.basename(t) for t in tgt_list]:
-        raise RuntimeError("build_xsd: No file with extension %s in target list corresponding with source file %s" % (ext, s))
+        raise RuntimeError("build_xsde: No file with extension %s in target list corresponding with source file %s" % (ext, s))
     cmd.append(s)
   
   if env.Execute([cmd]):
-    raise RuntimeError("build_xsd: xsdcxx call failed")
+    raise RuntimeError("build_xsde: xsdcxx call failed")
 
 
 def xsd_emitter(target, source, env):
@@ -343,12 +346,12 @@ def verinfo_emitter(target, source, env):
 env.VariantDir('buildtmp', 'cpp', duplicate=0)
 
 env['BUILDERS']['XSDEHybrid'] = env.Builder(
-  action = Action(lambda source, target, env: build_xsd('cxx-hybrid', source, target, env), "C++/Hybrid for XML schemas: $SOURCES"),
+  action = Action(lambda source, target, env: build_xsde('cxx-hybrid', source, target, env), "C++/Hybrid for XML schemas: $SOURCES"),
   suffix = {'.xsd' : '.cpp'},
   emitter = xsd_emitter
 )
-env['BUILDERS']['XSDParser'] = env.Builder(
-  action = Action(lambda source, target, env: build_xsd('cxx-parser', source, target, env), "C++/Parser for XML schemas: $SOURCES"),
+env['BUILDERS']['XSDEParser'] = env.Builder(
+  action = Action(lambda source, target, env: build_xsde('cxx-parser', source, target, env), "C++/Parser for XML schemas: $SOURCES"),
   suffix = {'.xsd' : '-pskel.cpp'},
   emitter = xsd_emitter
 )
@@ -376,9 +379,10 @@ hybrid_built = env.XSDEHybrid(
   ['%s/%s-sskel.cpp' % (cpp_gen_dir, n) for n in hybrid_xsds] + # FIXME: Should be done in emitter
   ['%s/%s-pimpl.cpp' % (cpp_gen_dir, n) for n in hybrid_xsds] + # FIXME: Should be done in emitter
   ['%s/%s-simpl.cpp' % (cpp_gen_dir, n) for n in hybrid_xsds], # FIXME: Should be done in emitter
-  ['xml/%s.xsd' % n for n in hybrid_xsds]
+  ['xml/%s.xsd' % n for n in hybrid_xsds],
+  XML_POLY_BASES = ['MissionConditionType', 'MissionEffectType', 'BoundInputType']
 )
-parser_built = env.XSDParser(
+parser_built = env.XSDEParser(
   ['%s/%s-pskel.cpp' % (cpp_gen_dir, n) for n in parser_xsds],
   ['xml/%s.xsd' % n for n in parser_xsds]
 )
