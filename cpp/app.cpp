@@ -183,9 +183,12 @@ void App::run(const std::vector<std::string>& args) {
           Debug::status_msg(std::string("Commit Date: ") + COMMIT_DATE);
         }
         Debug::status_msg("");
-        Debug::status_msg("Copyright 2009 David Simon, who can be reached at <david.mike.simon@gmail.com>.");
-        Debug::status_msg("License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.");
-        Debug::status_msg("This is free software: you are free to change and redistribute it.");
+        Debug::status_msg("Copyright 2009 David Simon <david.mike.simon@gmail.com>");
+        Debug::status_msg("");
+        Debug::status_msg("Orbit Ribbon is free software: you can redistribute it and/or modify");
+        Debug::status_msg("it under the terms of the GNU General Public License as published by");
+        Debug::status_msg("the Free Software Foundation, either version 3 of the License, or");
+        Debug::status_msg("(at your option) any later version.");
         Debug::status_msg("");
         Debug::status_msg("Orbit Ribbon is distributed in the hope that it will be awesome,");
         Debug::status_msg("but WITHOUT ANY WARRANTY; without even the implied warranty of");
