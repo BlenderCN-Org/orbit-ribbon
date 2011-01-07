@@ -233,7 +233,7 @@ def font_emitter(target, source, env):
 
 
 def build_xsde(mode, source, target, env):
-  cmd = ["./xsde/bin/xsde", mode]
+  cmd = [os.path.join(os.curdir, "xsde", "bin", "xsde"), mode]
   cmd.extend(["--guard-prefix", "ORBIT_RIBBON_AUTOXSDE"])
   cmd.extend(["--hxx-suffix", ".h"])
   cmd.extend(["--cxx-suffix", ".cpp"])
