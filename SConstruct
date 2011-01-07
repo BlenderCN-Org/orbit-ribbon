@@ -294,7 +294,7 @@ def build_xsde(mode, source, target, env):
     cmd.append(s)
   
   if env.Execute([cmd]):
-    raise RuntimeError("build_xsde: xsdcxx call failed")
+    raise RuntimeError("build_xsde: xsde call failed")
 
 
 def xsd_emitter(target, source, env):
