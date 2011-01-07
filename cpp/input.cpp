@@ -548,7 +548,7 @@ void Input::init() {
   try {
     std::stringstream ss(CAPSULE_PRESETS_XML);
     ORSave::presets_paggr presets_p;
-    xml_schema::document_pimpl doc_p(presets_p.root_parser(), presets_p.root_namespace(), presets_p.root_name());
+    xml_schema::document_pimpl doc_p(presets_p.root_parser(), presets_p.root_namespace(), presets_p.root_name(), true);
     presets_p.pre();
     doc_p.parse(ss);
     _preset_list.reset(presets_p.post());

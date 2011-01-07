@@ -59,7 +59,7 @@ void Saving::load() {
     Debug::status_msg("Loading save data from '" + save_path().string() + "'");
     try {
       ORSave::save_paggr save_p;
-      xml_schema::document_pimpl doc_p(save_p.root_parser(), save_p.root_namespace(), save_p.root_name());
+      xml_schema::document_pimpl doc_p(save_p.root_parser(), save_p.root_namespace(), save_p.root_name(), true);
       save_p.pre();
       doc_p.parse(ifs);
       _save.reset(save_p.post());
@@ -98,7 +98,7 @@ void Saving::save() {
   Debug::status_msg("Writing save data to '" + save_path().string() + "'");
   boost::filesystem::ofstream ofs(save_path());
   ORSave::save_saggr save_s;
-  xml_schema::document_simpl doc_s(save_s.root_serializer(), save_s.root_namespace(), save_s.root_name());
+  xml_schema::document_simpl doc_s(save_s.root_serializer(), save_s.root_namespace(), save_s.root_name(), true);
   doc_s.add_prefix("orsave", save_s.root_namespace());
   save_s.pre(*_save);
   doc_s.serialize(ofs, xml_schema::document_simpl::pretty_print);

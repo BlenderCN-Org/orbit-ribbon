@@ -170,7 +170,7 @@ OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
     
     OreFileHandle pdesc_fh(*this, "ore-desc");
     ORE1::pkgDesc_paggr pkgDesc_p;
-    xml_schema::document_pimpl doc_p(pkgDesc_p.root_parser(), pkgDesc_p.root_namespace(), pkgDesc_p.root_name());
+    xml_schema::document_pimpl doc_p(pkgDesc_p.root_parser(), pkgDesc_p.root_namespace(), pkgDesc_p.root_name(), true);
     pkgDesc_p.pre();
     doc_p.parse(pdesc_fh);
     pkg_desc = boost::shared_ptr<ORE1::PkgDescType>(pkgDesc_p.post());
