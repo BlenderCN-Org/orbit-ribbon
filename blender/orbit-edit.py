@@ -32,8 +32,10 @@ MATRIX_BLEN2ORE = Blender.Mathutils.RotationMatrix(-90, 4, 'x')
 MATRIX_INV_BLEN2ORE = MATRIX_BLEN2ORE.copy().invert()
 
 ORE_NAMESPACE = "http://www.orbit-ribbon.org/ORE1"
+OREANIM_NAMESPACE = "http://www.orbit-ribbon.org/OREAnim1"
 ORE_NS_PREFIX = "{%s}" % ORE_NAMESPACE
-NSMAP = {"ore" : ORE_NAMESPACE}
+OREANIM_NS_PREFIX = "{%s}" % OREANIM_NAMESPACE
+NSMAP = {"ore" : ORE_NAMESPACE, "oreanim" : OREANIM_NAMESPACE}
 
 os.chdir(WORKING_DIR)
 
@@ -349,7 +351,7 @@ def do_export():
     Blender.Window.DrawProgressBar(progress, "Exporting object meshes and images")
     progress += progressInc
     
-    animNode = lxml.etree.Element(ORE_NS_PREFIX + "animation", name=mesh.name, nsmap=NSMAP)
+    animNode = lxml.etree.Element(OREANIM_NS_PREFIX + "animation", name=mesh.name, nsmap=NSMAP)
     meshNode = lxml.etree.SubElement(animNode, "frame")
     populateMeshNode(meshNode, mesh)
     #animSchema.assertValid(animNode)

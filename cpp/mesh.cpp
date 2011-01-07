@@ -244,7 +244,7 @@ class _MeshParsingRig {
     }
     
     boost::shared_ptr<MeshAnimation> parse(OreFileHandle& fh) {
-      xml_schema::document_pimpl doc_p(anim_parser, "animation");
+      xml_schema::document_pimpl doc_p(anim_parser, "http://www.orbit-ribbon.org/OREAnim1", "animation");
       anim_parser.pre();
       doc_p.parse(fh);
       return anim_parser.post_AnimationType();
