@@ -397,6 +397,7 @@ verinfo_built = env.VersionInfo()
 AlwaysBuild(verinfo_built)
 
 # FIXME: Later need to figure out how to compile only minizip and autoxsd with lenient options
+# FIXME: This whole nonsense of setting variables should be done with the SCons convenience methods
 #CCFLAGS = '-Wall -Wextra -pedantic-errors -DdDOUBLE'
 CCFLAGS = '-Wall -DdDOUBLE -Ixsde/libxsde'
 LINKFLAGS = ''
