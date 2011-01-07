@@ -380,7 +380,7 @@ hybrid_built = env.XSDEHybrid(
   ['%s/%s-pimpl.cpp' % (cpp_gen_dir, n) for n in hybrid_xsds] + # FIXME: Should be done in emitter
   ['%s/%s-simpl.cpp' % (cpp_gen_dir, n) for n in hybrid_xsds], # FIXME: Should be done in emitter
   ['xml/%s.xsd' % n for n in hybrid_xsds],
-  XML_POLY_BASES = ['MissionConditionType', 'MissionEffectType', 'BoundInputType']
+  XML_POLY_BASES = ['MissionConditionType', 'MissionEffectType', 'BoundInputType', 'ObjType']
 )
 parser_built = env.XSDEParser(
   ['%s/%s-pskel.cpp' % (cpp_gen_dir, n) for n in parser_xsds],
