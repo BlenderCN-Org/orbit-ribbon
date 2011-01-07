@@ -272,6 +272,9 @@ boost::shared_ptr<MeshAnimation> MeshAnimation::load(const std::string& name) {
 
 void MeshAnimation::draw() {
   //FIXME Advance through the frames
+  if (_frames.size() == 0) {
+    throw GameException("No frames loaded in animation '" + _name + "'!");
+  }
   _frames[0]->draw();
 }
 
