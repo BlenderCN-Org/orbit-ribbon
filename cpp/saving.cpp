@@ -100,6 +100,7 @@ void Saving::save() {
   ORSave::save_saggr save_s;
   xml_schema::document_simpl doc_s(save_s.root_serializer(), save_s.root_namespace(), save_s.root_name(), true);
   doc_s.add_prefix("orsave", save_s.root_namespace());
+  doc_s.add_prefix("xsi", "http://www.w3.org/2001/XMLSchema-instance");
   save_s.pre(*_save);
   doc_s.serialize(ofs, xml_schema::document_simpl::pretty_print);
   save_s.post();
