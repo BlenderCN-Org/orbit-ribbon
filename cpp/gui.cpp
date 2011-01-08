@@ -67,132 +67,124 @@ void draw_diamond_box(const Box& box, float r, float g, float b, float a) {
   glEnable(GL_TEXTURE_2D);
 }
 
-void FocusTracker::add_region(const std::string& name, const Box& box) {
-  _region_order.push_back(name);
-  _focus_regions[name] = box;
+void Widget::emit_event(UIEvent e) {
+  SDL_Event event;
+  event.type = SDL_USEREVENT;
+  event.user.code = e;
+  event.user.data1 = (void*)(this);
+  SDL_PushEvent(&event);
+}
+
+void Button::draw(const Box& box) {
+  const float* color = focused() ? BUTTON_FOCUSED_COLOR : BUTTON_PASSIVE_COLOR;
+  draw_diamond_box(box, color[0], color[1], color[2], color[3]);
+
+  int font_height = box.size.y - DIAMOND_BOX_BORDER.y*2;
+  int text_width = Globals::sys_font->get_width(font_height, _label);
+  Globals::sys_font->draw(box.top_left + (box.size.x - text_width)/2, font_height, _label);
+}
+
+void Button::process(const Box& box) {
+  if (focused()) {
+    if (Input::get_button_ch(ORSave::ButtonBoundAction::Confirm).matches_frame_events()) {
+      emit_event(WIDGET_CLICKED);
+    }
+  }
+}
+
+void SimpleMenu::_set_focus(WidgetList::iterator new_focus) {
+  if (_focus == new_focus) {
+    return;
+  }
+
+  if (_focus != _widgets.end()) {
+    (*_focus)->lost_focus();
+  }
+  _focus = new_focus;
+  if (_focus != _widgets.end()) {
+    (*_focus)->got_focus();
+  }
+}
+
+SimpleMenu::WidgetRegionMap& SimpleMenu::_get_regions() {
+  if (_widget_regions_dirty) {
+    _widget_regions.clear();
+    int full_height = _widgets.size() * (_widget_height + _padding) - _padding; // Subtract one padding for fencepost error
+    Point pos((Display::get_screen_width() - _width)/2, (Display::get_screen_height() - full_height)/2);
+    pos += _center_offset * Display::get_screen_size();
+    for (WidgetList::iterator i = _widgets.begin(); i != _widgets.end(); ++i) {
+      _widget_regions[i] = Box(pos, Size(_width, _widget_height));
+      pos.y += _widget_height + _padding;
+    }
+    _widget_regions_dirty = false;
+  }
+
+  return _widget_regions;
+}
+
+void SimpleMenu::add_widget(const boost::shared_ptr<Widget>& widget) {
+  _widgets.push_back(widget);
+
+  if (_widgets.size() == 1) {
+    // If this is the first widget, it gets default focus
+    _set_focus(_widgets.begin());
+  }
+
+  _widget_regions_dirty = true;
+}
+
+void SimpleMenu::process() {
+  WidgetRegionMap& regions = _get_regions();
+  for (WidgetRegionMap::iterator i = regions.begin(); i != regions.end(); ++i) {
+    (*(i->first))->process(i->second);
+  }
   
-  // If this is the first region being added, make it the default focus
-  if (_focus_regions.size() == 1) {
-    _focus_iter = _focus_regions.begin();
-  }
-}
-
-const Box* FocusTracker::get_region(const std::string& name) const {
-  std::map<std::string, Box>::const_iterator i = _focus_regions.find(name);
-  if (i == _focus_regions.end()) {
-    return NULL;
-  } else {
-    return &(i->second);
-  }
-}
-
-void FocusTracker::process() {
   if (Globals::mouse_cursor->get_visibility()) {
     // If the mouse cursor is visible, put focus where the cursor is
     bool found_match = false;
-    for(std::map<std::string, Box>::const_iterator i = _focus_regions.begin(); i != _focus_regions.end(); ++i) {
+    for (WidgetRegionMap::iterator i = regions.begin(); i != regions.end(); ++i) {
       if (i->second.contains_point(Globals::mouse_cursor->get_pos())) {
         found_match = true;
-        _focus_iter = i;
+        _set_focus(i->first);
         break;
       }
     }
-    if (!found_match) { _focus_iter = _focus_regions.end(); }
+    if (!found_match) {
+      _set_focus(_widgets.end());
+    }
   } else {
     // If the mouse cursor isn't visible, check for UI axis events to change focus
     const Channel& x_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIX);
     const Channel& y_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIY);
     if (x_axis.matches_frame_events() || y_axis.matches_frame_events()) {
-      if (_focus_iter != _focus_regions.end()) {
+      WidgetList::iterator new_focus;
+      if (_focus != _widgets.end()) {
+        new_focus = _focus;
         float val = std::fabs(x_axis.get_value()) > std::fabs(y_axis.get_value()) ? x_axis.get_value() : y_axis.get_value();
-        std::list<std::string>::const_iterator order_iter = std::find(_region_order.begin(), _region_order.end(), _focus_iter->first);
         if (val > 0.0) {
-          ++order_iter;
-          if (order_iter == _region_order.end()) {
-            order_iter = _region_order.begin();
+          ++new_focus;
+          if (new_focus == _widgets.end()) {
+            new_focus = _widgets.begin();
           }
         } else {
-          if (order_iter == _region_order.begin()) {
-            order_iter = _region_order.end();
+          if (new_focus == _widgets.begin()) {
+            new_focus = _widgets.end();
           }
-          --order_iter;
+          --new_focus;
         }
-        _focus_iter = _focus_regions.find(*order_iter);
       } else {
-        // Nothing is currently in focus, so put focus on the default region
-        _focus_iter = _focus_regions.find(_region_order.front());
+        // Nothing is currently in focus, so on input just put focus on the first widget
+        new_focus = _widgets.begin();
       }
+      _set_focus(new_focus);
     }
-  }
-}
-
-std::string FocusTracker::get_current_focus() const {
-  if (_focus_iter == _focus_regions.end()) {
-    return std::string("");
-  } else {
-    return _focus_iter->first;
-  }
-}
-
-void SimpleMenu::add_button(const std::string& name, const std::string& label) {
-  _entries.push_back(std::pair<std::string, std::string>(name, label));
-}
-
-void SimpleMenu::process() {
-  if (!_filled_focus_tracker) {
-    int full_height = _entries.size() * (_btn_height + _padding) - _padding; // Subtract one padding for fencepost error
-    Point pos((Display::get_screen_width() - _width)/2, (Display::get_screen_height() - full_height)/2);
-    pos += _center_offset * Display::get_screen_size();
-    for (std::list<std::pair<std::string, std::string> >::const_iterator i = _entries.begin(); i != _entries.end(); ++i) {
-      _focus_tracker.add_region(i->first, Box(pos, Size(_width, _btn_height)));
-      pos.y += _btn_height + _padding;
-    }
-    
-    _filled_focus_tracker = true;
-  }
-  
-  _focus_tracker.process();
-  
-  if (Input::get_button_ch(ORSave::ButtonBoundAction::Confirm).matches_frame_events()) {
-    _activated_entry = _focus_tracker.get_current_focus();
   }
 }
 
 void SimpleMenu::draw() {
-  std::string cur_activated = get_activated_button();
-  std::string cur_focus = _focus_tracker.get_current_focus();
-  
-  for (std::list<std::pair<std::string, std::string> >::const_iterator i = _entries.begin(); i != _entries.end(); ++i) {
-    const Box* region = _focus_tracker.get_region(i->first);
-    if (cur_activated == i->first) {
-      GUI::draw_diamond_box(
-        *region,
-        BUTTON_ACTIVATED_COLOR[0],
-        BUTTON_ACTIVATED_COLOR[1],
-        BUTTON_ACTIVATED_COLOR[2],
-        BUTTON_ACTIVATED_COLOR[3]
-      );
-    } else if (cur_focus == i->first) {
-      GUI::draw_diamond_box(
-        *region,
-        BUTTON_FOCUSED_COLOR[0],
-        BUTTON_FOCUSED_COLOR[1],
-        BUTTON_FOCUSED_COLOR[2],
-        BUTTON_FOCUSED_COLOR[3]
-      );
-    } else {
-      GUI::draw_diamond_box(
-        *region,
-        BUTTON_PASSIVE_COLOR[0],
-        BUTTON_PASSIVE_COLOR[1],
-        BUTTON_PASSIVE_COLOR[2],
-        BUTTON_PASSIVE_COLOR[3]
-      );
-    }
-    
-    int font_height = _btn_height - DIAMOND_BOX_BORDER.y*2;
-    int text_width = Globals::sys_font->get_width(font_height, i->second);
-    Globals::sys_font->draw(region->top_left + (_width - text_width)/2, font_height, i->second);
+  WidgetRegionMap& regions = _get_regions();
+  for (WidgetRegionMap::iterator i = regions.begin(); i != regions.end(); ++i) {
+    (*(i->first))->draw(i->second);
   }
 }
 
