@@ -34,45 +34,51 @@ namespace GUI {
   const Vector DIAMOND_BOX_BORDER(8, 2); // A diamond box's contents are drawn this number of pixels from the left/right and top/bottom of the box respectively
   void draw_diamond_box(const Box& box, float r = 0.0, float g = 0.0, float b = 0.0, float a = 0.5);
   
-  const float BUTTON_PASSIVE_COLOR[4] = { 0.5, 0.5, 0.8, 0.8 };
-  const float BUTTON_FOCUSED_COLOR[4] = { 0.7, 0.7, 1.0, 1.0 };
-  const float BUTTON_ACTIVATED_COLOR[4] = { 0.5, 0.8, 0.5, 1.0 };
-  
-  class FocusTracker {
+  class Widget {
     private:
-      std::list<std::string> _region_order;
-      std::map<std::string, Box> _focus_regions;
-      std::map<std::string, Box>::const_iterator _focus_iter;
-    
+      bool _focused;
+
     public:
-      FocusTracker() : _focus_regions(), _focus_iter(_focus_regions.end()) {}
-      
-      void add_region(const std::string& name, const Box& box);
-      const Box* get_region(const std::string& name) const;
-      void process();
-      std::string get_current_focus() const;
+      Widget() : _focused(false) {}
+
+      virtual void got_focus() { _focused = true; }
+      virtual void lost_focus() { _focused = false; }
+      bool focused() { return _focused; }
+
+      virtual void draw(const Box& box) =0;
   };
-  
+
+  class Button : public Widget {
+    private:
+      const float BUTTON_PASSIVE_COLOR[4] = { 0.5, 0.5, 0.8, 0.8 };
+      const float BUTTON_FOCUSED_COLOR[4] = { 0.7, 0.7, 1.0, 1.0 };
+
+      std::string _label;
+
+    public:
+      Button(const std::string& label) : _label(label) {}
+      void draw(const Box& box);
+  };
+
   class SimpleMenu {
     private:
-      int _width, _btn_height, _padding;
-      FocusTracker _focus_tracker;
-      bool _filled_focus_tracker;
+      int _width, _widget_height, _padding;
       Vector _center_offset;
-      std::list<std::pair<std::string, std::string> > _entries;
-      std::string _activated_entry;
-    
+
+      typedef std::list<boost::shared_ptr<Widget> > WidgetList;
+      WidgetList _widgets;
+      WidgetList::iterator _focus;
+
     public:
-      SimpleMenu(int width, int btn_height, int padding, Vector center_offset = Vector(0,0,0)) :
-        _width(width), _btn_height(btn_height), _padding(padding), _filled_focus_tracker(false), _center_offset(center_offset) {}
-      
-      void add_button(const std::string& name, const std::string& label);
-      
+      SimpleMenu(int width, int widget_height, int padding, Vector center_offset = Vector(0,0,0)) :
+        _width(width), _widget_height(widget_height), _padding(padding), _center_offset(center_offset), _widgets(), _focus(_widgets.end()) {}
+
+      void add_widget(const Widget& widget);
+
       void process();
       void draw();
-      
-      std::string get_activated_button() { return _activated_entry; }
-      void reset_activation() { _activated_entry = ""; }
+
+      void reset_focus() { _focus = _widgets.end(); }
   };
 }
 
