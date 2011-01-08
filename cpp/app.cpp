@@ -2,7 +2,7 @@
 app.cpp: Implementation of the App class
 App is responsible for the main frame loop and calling all the other parts of the program.
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 
@@ -183,7 +183,7 @@ void App::run(const std::vector<std::string>& args) {
           Debug::status_msg(std::string("Commit Date: ") + COMMIT_DATE);
         }
         Debug::status_msg("");
-        Debug::status_msg("Copyright 2009 David Simon <david.mike.simon@gmail.com>");
+        Debug::status_msg("Copyright 2011 David Simon <david.mike.simon@gmail.com>");
         Debug::status_msg("");
         Debug::status_msg("Orbit Ribbon is free software: you can redistribute it and/or modify");
         Debug::status_msg("it under the terms of the GNU General Public License as published by");

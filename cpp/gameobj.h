@@ -2,7 +2,7 @@
 gameobj.h: Header of the GameObj class
 GameObj is the base class for in-game objects, and handles ODE bodies and geoms.
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

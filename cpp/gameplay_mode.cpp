@@ -2,7 +2,7 @@
 mode.h: Implementation of the Mode class and its subclasses.
 GameMode classes are responsible for handling overall control of gameplay and menu behaviour
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

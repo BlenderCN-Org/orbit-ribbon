@@ -2,7 +2,7 @@
 mission_effects.cpp: Implementation for mission-state effects.
 These determine what happens at any particular state in a mission's FSM.
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

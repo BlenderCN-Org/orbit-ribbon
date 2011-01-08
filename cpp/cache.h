@@ -2,7 +2,7 @@
 cache.h: Header and implementation for cache base class.
 Provides a mechanism to allow re-using objects which have already been loaded.
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

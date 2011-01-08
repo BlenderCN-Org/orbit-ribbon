@@ -2,7 +2,7 @@
 app.h: Header of the App class
 App is responsible for the main frame loop and calling all the other parts of the program.
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

@@ -2,7 +2,7 @@
 display.cpp: Implementation of the Display class
 Display is responsible for interacting with SDL's video capabilities and for drawing each frame.
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

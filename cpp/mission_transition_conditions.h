@@ -2,7 +2,7 @@
 mission_transition_conditions.h: Header for conditions determining mission-state transitions.
 These determine what needs to happen to move from one state to another in a mission's FSM.
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

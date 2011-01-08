@@ -2,7 +2,7 @@
 main_modes.cpp: Header for the various menu mode classes.
 These handle the menu screens used to start the game, choose a level, set options, etc.
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

@@ -2,7 +2,7 @@
 mesh.cpp: Implementation for mesh and animation classes.
 This module handles loading and displaying meshes, animations, and textures
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

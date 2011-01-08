@@ -1,7 +1,7 @@
 /*
 gloo.h: Header for GL Object-Oriented utility classes.
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

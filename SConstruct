@@ -1,7 +1,7 @@
 """
 SConstruct: Build script for Orbit Ribbon.
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 
@@ -24,7 +24,7 @@ ORBIT_RIBBON_VERSION = "alpha1"
 preamble_pattern = """/*
 %s: %s.
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

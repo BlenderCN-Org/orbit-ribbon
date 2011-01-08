@@ -2,7 +2,7 @@
 avatar.cpp: Implementation of the Avatar class
 Avatar is a GameObject representing the player character
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

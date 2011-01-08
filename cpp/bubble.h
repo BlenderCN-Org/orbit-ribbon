@@ -2,7 +2,7 @@
 bubble.h: Header of the Bubble class
 Bubble is a GameObject representing the bubble that contains the atmosphere
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

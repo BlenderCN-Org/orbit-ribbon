@@ -2,7 +2,7 @@
 input.cpp: Implementation of input-management classes.
 These classes are responsible for taking input from the keyboard and gamepad, and binding input to game actions.
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

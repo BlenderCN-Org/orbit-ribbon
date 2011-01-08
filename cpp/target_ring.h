@@ -2,7 +2,7 @@
 target_ring.h: Header of the TargetRing class
 TargetRing is a GameObject representing a ring that the player needs to fly through 
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

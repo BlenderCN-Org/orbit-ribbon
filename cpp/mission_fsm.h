@@ -2,7 +2,7 @@
 mission_fsm.h: Header for mission-related finite state machines.
 The mission FSM handles progression through a mission's objectives.
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 

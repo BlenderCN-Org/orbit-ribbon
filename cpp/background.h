@@ -2,7 +2,7 @@
 background.h: Header of the Background class
 The Background class is responsible for outside lighting and for drawing the Smoke Ring and other distant background objects
 
-Copyright 2009 David Simon. You can reach me at david.mike.simon@gmail.com
+Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
 This file is part of Orbit Ribbon.
 
