@@ -85,7 +85,7 @@ void SimpleMenuMode::draw_3d_far(bool top __attribute__ ((unused))) {
 
 void SimpleMenuMode::draw_2d(bool top) {
   if (top) {
-    _menu.draw();
+    _menu.draw(execute_after_lower_mode());
   }
 }
 
@@ -230,7 +230,7 @@ void MissionSelectMenuMode::handle_menu_selection(const std::string& item) {
   }
 }
 
-PauseMenuMode::PauseMenuMode() : SimpleMenuMode(false, 150, 22, 30) {
+PauseMenuMode::PauseMenuMode() : SimpleMenuMode(false, 150, 30, 15) {
   add_entry("resume", "Resume Game");
   add_entry("options", "Options");
   add_entry("quit", "Quit Mission");

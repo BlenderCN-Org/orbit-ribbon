@@ -34,6 +34,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 namespace GUI {
   
+static const float FRAME_COLOR[4] = { 0.0, 0.0, 0.0, 0.5 };
 static const float PASSIVE_COLOR[4] = { 0.5, 0.5, 0.8, 0.8 };
 static const float FOCUSED_COLOR[4] = { 0.6, 0.6, 0.9, 1.0 };
 static const float CHECKED_COLOR[4] = { 0.2, 0.6, 0.0, 1.0 };
@@ -110,10 +111,7 @@ void Checkbox::draw(const Box& box) {
     Box check_area = checkbox_area;
 
     for (int i = 0; i < 2; ++i) {
-      check_area.top_left.x += checkbox_area.size.x*0.1;
-      check_area.top_left.y += checkbox_area.size.y*0.1;
-      check_area.size.x -= checkbox_area.size.x*0.2;
-      check_area.size.y -= checkbox_area.size.y*0.2;
+      check_area *= 0.8;
       draw_diamond_box(check_area, i == 0 ? CHECKED_COLOR : INNER_CHECKED_COLOR );
     }
   }
@@ -166,6 +164,26 @@ Menu::WidgetRegionMap& Menu::_get_regions() {
   }
 
   return _widget_regions;
+}
+
+Box Menu::coverage() {
+  WidgetRegionMap& regions = _get_regions();
+  WidgetRegionMap::iterator top_region, bottom_region;
+  top_region = regions.end();
+  bottom_region = regions.end();
+  for (WidgetRegionMap::iterator i = regions.begin(); i != regions.end(); ++i) {
+    if (top_region == regions.end() || i->second.top_left.y < top_region->second.top_left.y) {
+      top_region = i;
+    }
+    if (bottom_region == regions.end() || i->second.top_left.y > bottom_region->second.top_left.y) {
+      bottom_region = i;
+    }
+  }
+
+  return Box(
+    top_region->second.top_left,
+    Size(_width, bottom_region->second.top_left.y + bottom_region->second.size.y - top_region->second.top_left.y)
+  );
 }
 
 void Menu::add_widget(const boost::shared_ptr<Widget>& widget) {
@@ -229,7 +247,11 @@ void Menu::process() {
   }
 }
 
-void Menu::draw() {
+void Menu::draw(bool frame) {
+  if (frame) {
+    draw_diamond_box(coverage()*1.2, FRAME_COLOR);
+  }
+
   WidgetRegionMap& regions = _get_regions();
   for (WidgetRegionMap::iterator i = regions.begin(); i != regions.end(); ++i) {
     (*(i->first))->draw(i->second);

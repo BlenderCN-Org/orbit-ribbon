@@ -97,6 +97,9 @@ struct Box {
   Box(const Point& tl, const Size& s) : top_left(tl), size(s) {}
   
   bool contains_point(const Point& pt) const;
+
+  Box operator*(float v) const;
+  void operator*=(float v);
 };
 
 float rev2rad(float ang); // FIXME: In old version, this also converted cw to ccw. Make sure everything that needed that does it itself!

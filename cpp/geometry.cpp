@@ -228,6 +228,17 @@ bool Box::contains_point(const Point& pt) const {
   );
 }
 
+Box Box::operator*(float v) const {
+  Box r = *this;
+  r.size *= v;
+  r.top_left += (size - r.size)/2;
+  return r;
+}
+
+void Box::operator*=(float v) {
+  *this = (*this)*v;
+}
+
 Vector get_barycentric(const Point& p, const Point& a, const Point& b, const Point& c) {
   Plane tri_p(a, b, c);
   Point pp = p.project_onto(tri_p);

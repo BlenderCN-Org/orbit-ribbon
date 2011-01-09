@@ -133,11 +133,13 @@ namespace GUI {
         _widget_regions_dirty(true)
       {}
 
+      Box coverage();
+
       void add_widget(const boost::shared_ptr<Widget>& widget);
       void unfocus() { _set_focus(_widgets.end()); }
 
       void process();
-      void draw();
+      void draw(bool frame);
   };
 }
 
