@@ -27,7 +27,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "except.h"
 #include "gameplay_mode.h"
 #include "globals.h"
-#include "menu_modes.h"
+#include "simple_menu_modes.h"
 
 #include "mission_fsm.h"
 

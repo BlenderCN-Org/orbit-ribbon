@@ -25,7 +25,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/shared_ptr.hpp>
 #include <cstring>
 
-#include "menu_modes.h"
+#include "simple_menu_modes.h"
 
 #include "app.h"
 #include "autoinfo/version.h"

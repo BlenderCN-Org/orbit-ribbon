@@ -36,7 +36,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "geometry.h"
 #include "gui.h"
 #include "input.h"
-#include "menu_modes.h"
+#include "simple_menu_modes.h"
 #include "saving.h"
 
 // Camera positioning relative to avatar's reference frame
