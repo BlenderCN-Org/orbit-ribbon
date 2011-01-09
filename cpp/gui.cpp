@@ -34,7 +34,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 namespace GUI {
   
-static const float PASSIVE_COLOR[4] = { 0.5, 0.5, 0.8, 0.7 };
+static const float PASSIVE_COLOR[4] = { 0.5, 0.5, 0.8, 0.8 };
 static const float FOCUSED_COLOR[4] = { 0.6, 0.6, 0.9, 1.0 };
 static const float CHECKED_COLOR[4] = { 0.2, 0.6, 0.0, 1.0 };
 static const float INNER_CHECKED_COLOR[4] = { 0.4, 0.9, 0.1, 1.0 };

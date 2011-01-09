@@ -80,9 +80,12 @@ namespace GUI {
       bool _value;
 
     public:
-      Checkbox(const std::string& label, bool value) : _label(label), _value(value) {}
+      Checkbox(const std::string& label, bool value = false) : _label(label), _value(value) {}
       void draw(const Box& box);
       void process(const Box& box);
+
+      void set_value(bool value) { _value = value; }
+      bool get_value() { return _value; }
   };
 
   class Slider : public Widget {
@@ -91,12 +94,15 @@ namespace GUI {
       float _value;
 
     public:
-      Slider(const std::string& label, float value) :
+      Slider(const std::string& label, float value = 0.0) :
         _label(label), _value(value)
       {}
 
       void draw(const Box& box);
       void process(const Box& box);
+
+      void set_value(float value) { _value = value; }
+      float get_value() { return _value; }
   };
 
   class Menu {
