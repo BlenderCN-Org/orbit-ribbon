@@ -1,5 +1,5 @@
 /*
-main_modes.cpp: Header for the various simple menu mode classes.
+simpe_menu_modes.h: Header for the various simple menu mode classes.
 These handle the menu screens used to start the game, choose a level, etc.
 
 Copyright 2011 David Simon <david.mike.simon@gmail.com>
@@ -20,8 +20,8 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
-#ifndef ORBIT_RIBBON_MAIN_MENU_MODE_H
-#define ORBIT_RIBBON_MAIN_MENU_MODE_H
+#ifndef ORBIT_RIBBON_SIMPLE_MENU_MODES_H
+#define ORBIT_RIBBON_SIMPLE_MENU_MODES_H
 
 #include <boost/shared_ptr.hpp>
 #include <SDL/SDL.h>

@@ -31,13 +31,12 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gloo.h"
 
 namespace GUI {
-  const float BUTTON_PASSIVE_COLOR[4] = { 0.5, 0.5, 0.8, 0.8 };
-  const float BUTTON_FOCUSED_COLOR[4] = { 0.7, 0.7, 1.0, 1.0 };
   const Vector DIAMOND_BOX_BORDER(8, 2); // A diamond box's contents are drawn this number of pixels from the left/right and top/bottom of the box respectively
   
   void draw_diamond_box(const Box& box, float r = 0.0, float g = 0.0, float b = 0.0, float a = 0.5);
+  void draw_diamond_box(const Box& box, const float* color);
 
-  enum UIEvent { WIDGET_GOT_FOCUS, WIDGET_LOST_FOCUS, WIDGET_CLICKED };
+  enum UIEvent { WIDGET_GOT_FOCUS, WIDGET_LOST_FOCUS, WIDGET_CLICKED, WIDGET_VALUE_CHANGED };
   
   class Widget {
     private:
@@ -52,9 +51,17 @@ namespace GUI {
       virtual void got_focus() { _focused = true; emit_event(WIDGET_GOT_FOCUS); }
       virtual void lost_focus() { _focused = false; emit_event(WIDGET_LOST_FOCUS); }
       bool focused() { return _focused; }
+      virtual bool focusable() { return true; };
 
       virtual void draw(const Box& box) =0;
       virtual void process(const Box& box) =0;
+  };
+
+  class BlankWidget : public Widget {
+    public:
+      void draw(const Box& box) {}
+      void process(const Box& box) {}
+      bool focusable() { return false; }
   };
 
   class Button : public Widget {
@@ -63,6 +70,31 @@ namespace GUI {
 
     public:
       Button(const std::string& label) : _label(label) {}
+      void draw(const Box& box);
+      void process(const Box& box);
+  };
+
+  class Checkbox : public Widget {
+    private:
+      std::string _label;
+      bool _value;
+
+    public:
+      Checkbox(const std::string& label, bool value) : _label(label), _value(value) {}
+      void draw(const Box& box);
+      void process(const Box& box);
+  };
+
+  class Slider : public Widget {
+    private:
+      std::string _label;
+      float _value;
+
+    public:
+      Slider(const std::string& label, float value) :
+        _label(label), _value(value)
+      {}
+
       void draw(const Box& box);
       void process(const Box& box);
   };

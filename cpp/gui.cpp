@@ -33,6 +33,11 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "mouse_cursor.h"
 
 namespace GUI {
+  
+static const float PASSIVE_COLOR[4] = { 0.5, 0.5, 0.8, 0.7 };
+static const float FOCUSED_COLOR[4] = { 0.6, 0.6, 0.9, 1.0 };
+static const float CHECKED_COLOR[4] = { 0.2, 0.6, 0.0, 1.0 };
+static const float INNER_CHECKED_COLOR[4] = { 0.4, 0.9, 0.1, 1.0 };
 
 void draw_diamond_box(const Box& box, float r, float g, float b, float a) {
   const static GLushort indices[12] = {
@@ -67,6 +72,10 @@ void draw_diamond_box(const Box& box, float r, float g, float b, float a) {
   glEnable(GL_TEXTURE_2D);
 }
 
+void draw_diamond_box(const Box& box, const float* color) {
+  draw_diamond_box(box, color[0], color[1], color[2], color[3]);
+}
+
 void Widget::emit_event(UIEvent e) {
   SDL_Event event;
   event.type = SDL_USEREVENT;
@@ -76,8 +85,8 @@ void Widget::emit_event(UIEvent e) {
 }
 
 void Button::draw(const Box& box) {
-  const float* color = focused() ? BUTTON_FOCUSED_COLOR : BUTTON_PASSIVE_COLOR;
-  draw_diamond_box(box, color[0], color[1], color[2], color[3]);
+  const float* color = focused() ? FOCUSED_COLOR : PASSIVE_COLOR;
+  draw_diamond_box(box, color);
 
   int font_height = box.size.y - DIAMOND_BOX_BORDER.y*2;
   int text_width = Globals::sys_font->get_width(font_height, _label);
@@ -90,6 +99,43 @@ void Button::process(const Box& box) {
       emit_event(WIDGET_CLICKED);
     }
   }
+}
+
+void Checkbox::draw(const Box& box) {
+  Box checkbox_area = box;
+  checkbox_area.size.x = checkbox_area.size.y;
+  draw_diamond_box(checkbox_area, focused() ? FOCUSED_COLOR : PASSIVE_COLOR);
+  
+  if (_value) {
+    Box check_area = checkbox_area;
+
+    for (int i = 0; i < 2; ++i) {
+      check_area.top_left.x += checkbox_area.size.x*0.1;
+      check_area.top_left.y += checkbox_area.size.y*0.1;
+      check_area.size.x -= checkbox_area.size.x*0.2;
+      check_area.size.y -= checkbox_area.size.y*0.2;
+      draw_diamond_box(check_area, i == 0 ? CHECKED_COLOR : INNER_CHECKED_COLOR );
+    }
+  }
+  
+  int font_height = box.size.y - DIAMOND_BOX_BORDER.y*2;
+  Globals::sys_font->draw(box.top_left + checkbox_area.size.x*1.2, font_height, _label);
+}
+
+void Checkbox::process(const Box& box) {
+  if (focused()) {
+    if (Input::get_button_ch(ORSave::ButtonBoundAction::Confirm).matches_frame_events()) {
+      _value = !_value;
+      emit_event(WIDGET_CLICKED);
+      emit_event(WIDGET_VALUE_CHANGED);
+    }
+  }
+}
+
+void Slider::draw(const Box& box) {
+}
+
+void Slider::process(const Box& box) {
 }
 
 void Menu::_set_focus(WidgetList::iterator new_focus) {
@@ -144,9 +190,11 @@ void Menu::process() {
     bool found_match = false;
     for (WidgetRegionMap::iterator i = regions.begin(); i != regions.end(); ++i) {
       if (i->second.contains_point(Globals::mouse_cursor->get_pos())) {
-        found_match = true;
-        _set_focus(i->first);
-        break;
+        if ((*(i->first))->focusable()) {
+          found_match = true;
+          _set_focus(i->first);
+          break;
+        }
       }
     }
     if (!found_match) {
@@ -154,24 +202,24 @@ void Menu::process() {
     }
   } else {
     // If the mouse cursor isn't visible, check for UI axis events to change focus
-    const Channel& x_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIX);
     const Channel& y_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIY);
-    if (x_axis.matches_frame_events() || y_axis.matches_frame_events()) {
+    if (y_axis.matches_frame_events()) {
       WidgetList::iterator new_focus;
       if (_focus != _widgets.end()) {
         new_focus = _focus;
-        float val = std::fabs(x_axis.get_value()) > std::fabs(y_axis.get_value()) ? x_axis.get_value() : y_axis.get_value();
-        if (val > 0.0) {
-          ++new_focus;
-          if (new_focus == _widgets.end()) {
-            new_focus = _widgets.begin();
+        do {
+          if (y_axis.get_value() > 0.0) {
+            ++new_focus;
+            if (new_focus == _widgets.end()) {
+              new_focus = _widgets.begin();
+            }
+          } else {
+            if (new_focus == _widgets.begin()) {
+              new_focus = _widgets.end();
+            }
+            --new_focus;
           }
-        } else {
-          if (new_focus == _widgets.begin()) {
-            new_focus = _widgets.end();
-          }
-          --new_focus;
-        }
+        } while (!(*new_focus)->focusable());
       } else {
         // Nothing is currently in focus, so on input just put focus on the first widget
         new_focus = _widgets.begin();

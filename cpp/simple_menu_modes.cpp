@@ -1,5 +1,5 @@
 /*
-main_modes.cpp: Implementation for the various simple menu mode classes.
+simple_menu_modes.cpp: Implementation for the various simple menu mode classes.
 These handle the menu screens used to start the game, choose a level, etc.
 
 Copyright 2011 David Simon <david.mike.simon@gmail.com>
@@ -41,6 +41,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "input.h"
 #include "interpolation.h"
 #include "interp_mode.h"
+#include "options_menu_modes.h"
 #include "ore.h"
 #include "saving.h"
 
@@ -53,8 +54,7 @@ void SimpleMenuMode::add_entry(const std::string& name, const std::string& label
 SimpleMenuMode::SimpleMenuMode(bool draw_background, int menu_width, int btn_height, int padding, Vector center_offset) :
   _draw_background(draw_background),
   _menu(menu_width, btn_height, padding, center_offset)
-{
-}
+{}
 
 bool SimpleMenuMode::handle_input() {
   _menu.process();
@@ -110,6 +110,8 @@ void MainMenuMode::handle_menu_selection(const std::string& item) {
       new InterpolationMode<CosineInterpolator>(1000, boost::shared_ptr<Mode>(
       new AreaSelectMenuMode()
     ))));
+  } else if (item == "options") {
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new OptionsMenuMode(true)));
   } else if (item == "quit" or item == "CANCEL") {
     Globals::mode_stack.next_frame_pop_mode();
   }

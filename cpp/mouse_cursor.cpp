@@ -24,6 +24,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <boost/foreach.hpp>
 
+#include "debug.h"
 #include "display.h"
 #include "geometry.h"
 #include "globals.h"
