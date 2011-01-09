@@ -83,8 +83,10 @@ void SimpleMenuMode::draw_3d_far(bool top __attribute__ ((unused))) {
   }
 }
 
-void SimpleMenuMode::draw_2d(bool top __attribute__ ((unused))) {
-  _menu.draw();
+void SimpleMenuMode::draw_2d(bool top) {
+  if (top) {
+    _menu.draw();
+  }
 }
 
 void SimpleMenuMode::pushed_below_top() {
@@ -230,6 +232,7 @@ void MissionSelectMenuMode::handle_menu_selection(const std::string& item) {
 
 PauseMenuMode::PauseMenuMode() : SimpleMenuMode(false, 150, 22, 30) {
   add_entry("resume", "Resume Game");
+  add_entry("options", "Options");
   add_entry("quit", "Quit Mission");
 }
 
@@ -245,6 +248,8 @@ bool PauseMenuMode::handle_input() {
 void PauseMenuMode::handle_menu_selection(const std::string& item) {
   if (item == "resume" or item == "CANCEL") {
     Globals::mode_stack.next_frame_pop_mode();
+  } else if (item == "options") {
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new OptionsMenuMode(false)));
   } else if (item == "quit") {
     // Pop both the PauseMenuMode and the GameplayMode underneath it
     Globals::mode_stack.next_frame_pop_mode();

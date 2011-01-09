@@ -51,10 +51,10 @@ OptionsMenuMode::OptionsMenuMode(bool draw_background) :
 {
   _add_option(OPTION_INVERT_ROTATE_Y, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Invert vertical look")));
   _add_option(OPTION_INVERT_TRANSLATE_Y, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Invert vertical movement")));
-  _add_option(OPTION_CONTROLS, boost::shared_ptr<GUI::Widget>(new GUI::Button("Control bindings")));
+  _add_option(OPTION_CONTROLS, boost::shared_ptr<GUI::Widget>(new GUI::Button("Control bindings...")));
   _menu.add_widget(boost::shared_ptr<GUI::Widget>(new GUI::BlankWidget()));
   _add_option(OPTION_VSYNC, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Use V-Sync")));
-  _add_option(OPTION_DISPLAY_MODE, boost::shared_ptr<GUI::Widget>(new GUI::Button("Display mode")));
+  _add_option(OPTION_DISPLAY_MODE, boost::shared_ptr<GUI::Widget>(new GUI::Button("Display mode...")));
   _add_option(OPTION_SHOW_FPS, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Show FPS indicator")));
   _add_option(OPTION_DEBUG_PHYSICS, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Show physics debugging info")));
   _menu.add_widget(boost::shared_ptr<GUI::Widget>(new GUI::BlankWidget()));

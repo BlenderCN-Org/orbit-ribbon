@@ -56,6 +56,7 @@ class OptionsMenuMode : public Mode {
   public:
     OptionsMenuMode(bool draw_background);
 
+    bool execute_after_lower_mode() { return !_draw_background; }
     bool simulation_disabled() { return true; }
     bool mouse_cursor_enabled() { return true; }
 
