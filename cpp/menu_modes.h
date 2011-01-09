@@ -1,6 +1,6 @@
 /*
-main_modes.cpp: Header for the various menu mode classes.
-These handle the menu screens used to start the game, choose a level, set options, etc.
+main_modes.cpp: Header for the various simple menu mode classes.
+These handle the menu screens used to start the game, choose a level, etc.
 
 Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
@@ -25,21 +25,24 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <boost/shared_ptr.hpp>
 #include <SDL/SDL.h>
+#include <map>
+#include <string>
 
 #include "gloo.h"
 #include "gui.h"
 #include "mode.h"
 
-class MenuMode : public Mode {
+class SimpleMenuMode : public Mode {
   private:
     bool _draw_background;
-    GUI::SimpleMenu _simple_menu;
+    GUI::Menu _menu;
+    std::map<GUI::Widget*, std::string> _entry_names;
   
   protected:
     void add_entry(const std::string& name, const std::string& label);
   
   public:
-    MenuMode(bool draw_background, int menu_width, int btn_height, int padding, Vector center_offset = Vector(0,0,0));
+    SimpleMenuMode(bool draw_background, int menu_width, int btn_height, int padding, Vector center_offset = Vector(0,0,0));
     
     bool simulation_disabled() { return true; }
     bool mouse_cursor_enabled() { return true; }
@@ -53,7 +56,7 @@ class MenuMode : public Mode {
     virtual void handle_menu_selection(const std::string& item) =0;
 };
 
-class MainMenuMode : public MenuMode {
+class MainMenuMode : public SimpleMenuMode {
  private:
     boost::shared_ptr<GLOOTexture> _title_tex;
     GLOOCamera _camera;
@@ -65,7 +68,7 @@ class MainMenuMode : public MenuMode {
     void draw_2d(bool top);
 };
 
-class AreaSelectMenuMode : public MenuMode {
+class AreaSelectMenuMode : public SimpleMenuMode {
   private:
     GLOOCamera _camera;
 
@@ -75,7 +78,7 @@ class AreaSelectMenuMode : public MenuMode {
     void handle_menu_selection(const std::string& item);
 };
 
-class MissionSelectMenuMode : public MenuMode {
+class MissionSelectMenuMode : public SimpleMenuMode {
   private:
     unsigned int _area_num;
     GLOOCamera _camera;
@@ -87,7 +90,7 @@ class MissionSelectMenuMode : public MenuMode {
     void handle_menu_selection(const std::string& item);
 };
 
-class PauseMenuMode : public MenuMode {
+class PauseMenuMode : public SimpleMenuMode {
   public:
     bool execute_after_lower_mode() { return true; }
     
@@ -96,7 +99,7 @@ class PauseMenuMode : public MenuMode {
     void handle_menu_selection(const std::string& item);
 };
 
-class PostMissionMenuMode : public MenuMode {
+class PostMissionMenuMode : public SimpleMenuMode {
   private:
     bool _won;
 

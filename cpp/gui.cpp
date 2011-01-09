@@ -92,7 +92,7 @@ void Button::process(const Box& box) {
   }
 }
 
-void SimpleMenu::_set_focus(WidgetList::iterator new_focus) {
+void Menu::_set_focus(WidgetList::iterator new_focus) {
   if (_focus == new_focus) {
     return;
   }
@@ -106,7 +106,7 @@ void SimpleMenu::_set_focus(WidgetList::iterator new_focus) {
   }
 }
 
-SimpleMenu::WidgetRegionMap& SimpleMenu::_get_regions() {
+Menu::WidgetRegionMap& Menu::_get_regions() {
   if (_widget_regions_dirty) {
     _widget_regions.clear();
     int full_height = _widgets.size() * (_widget_height + _padding) - _padding; // Subtract one padding for fencepost error
@@ -122,7 +122,7 @@ SimpleMenu::WidgetRegionMap& SimpleMenu::_get_regions() {
   return _widget_regions;
 }
 
-void SimpleMenu::add_widget(const boost::shared_ptr<Widget>& widget) {
+void Menu::add_widget(const boost::shared_ptr<Widget>& widget) {
   _widgets.push_back(widget);
 
   if (_widgets.size() == 1) {
@@ -133,7 +133,7 @@ void SimpleMenu::add_widget(const boost::shared_ptr<Widget>& widget) {
   _widget_regions_dirty = true;
 }
 
-void SimpleMenu::process() {
+void Menu::process() {
   WidgetRegionMap& regions = _get_regions();
   for (WidgetRegionMap::iterator i = regions.begin(); i != regions.end(); ++i) {
     (*(i->first))->process(i->second);
@@ -181,7 +181,7 @@ void SimpleMenu::process() {
   }
 }
 
-void SimpleMenu::draw() {
+void Menu::draw() {
   WidgetRegionMap& regions = _get_regions();
   for (WidgetRegionMap::iterator i = regions.begin(); i != regions.end(); ++i) {
     (*(i->first))->draw(i->second);

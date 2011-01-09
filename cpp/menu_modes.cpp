@@ -1,6 +1,6 @@
 /*
-main_modes.cpp: Implementation for the various menu mode classes.
-These handle the menu screens used to start the game, choose a level, set options, etc.
+main_modes.cpp: Implementation for the various simple menu mode classes.
+These handle the menu screens used to start the game, choose a level, etc.
 
 Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
@@ -20,6 +20,7 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
+#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
 #include <cstring>
@@ -43,32 +44,38 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "ore.h"
 #include "saving.h"
 
-void MenuMode::add_entry(const std::string& name, const std::string& label) {
-  _simple_menu.add_button(name, label);
+void SimpleMenuMode::add_entry(const std::string& name, const std::string& label) {
+  boost::shared_ptr<GUI::Widget> button(new GUI::Button(label));
+  _menu.add_widget(button);
+  _entry_names[&*button] = name;
 }
 
-MenuMode::MenuMode(bool draw_background, int menu_width, int btn_height, int padding, Vector center_offset) :
+SimpleMenuMode::SimpleMenuMode(bool draw_background, int menu_width, int btn_height, int padding, Vector center_offset) :
   _draw_background(draw_background),
-  _simple_menu(menu_width, btn_height, padding, center_offset)
+  _menu(menu_width, btn_height, padding, center_offset)
 {
 }
 
-bool MenuMode::handle_input() {
-  _simple_menu.process();
+bool SimpleMenuMode::handle_input() {
+  _menu.process();
   
   if (Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).matches_frame_events()) {
     handle_menu_selection("CANCEL");
   } else {
-    std::string item = _simple_menu.get_activated_button();
-    if (item != "") {
-      handle_menu_selection(item);
+    BOOST_FOREACH(SDL_Event& e, Globals::frame_events) {
+      if (e.type == SDL_USEREVENT && e.user.code == GUI::WIDGET_CLICKED) {
+        std::map<GUI::Widget*, std::string>::iterator i = _entry_names.find((GUI::Widget*)(e.user.data1));
+        if (i != _entry_names.end()) {
+          handle_menu_selection(i->second);
+        }
+      }
     }
   }
   
   return true;
 }
 
-void MenuMode::draw_3d_far(bool top __attribute__ ((unused))) {
+void SimpleMenuMode::draw_3d_far(bool top __attribute__ ((unused))) {
   if (_draw_background) {
     GLOOPushedMatrix pm;
     Globals::bg->draw_starbox();
@@ -76,16 +83,16 @@ void MenuMode::draw_3d_far(bool top __attribute__ ((unused))) {
   }
 }
 
-void MenuMode::draw_2d(bool top __attribute__ ((unused))) {
-  _simple_menu.draw();
+void SimpleMenuMode::draw_2d(bool top __attribute__ ((unused))) {
+  _menu.draw();
 }
 
-void MenuMode::pushed_below_top() {
-  _simple_menu.reset_activation();
+void SimpleMenuMode::pushed_below_top() {
+  _menu.unfocus();
 }
 
 MainMenuMode::MainMenuMode() :
-  MenuMode(true, 180, 22, 8, Vector(0, 0.3)),
+  SimpleMenuMode(true, 180, 22, 8, Vector(0, 0.3)),
   _title_tex(GLOOTexture::load("title"))
 {
   add_entry("play", "Play");
@@ -109,7 +116,7 @@ void MainMenuMode::handle_menu_selection(const std::string& item) {
 }
 
 void MainMenuMode::draw_2d(bool top __attribute__ ((unused))) {
-  MenuMode::draw_2d(top);
+  SimpleMenuMode::draw_2d(top);
   
   static const Point title_pos(
     Display::get_screen_width()/2 - _title_tex->get_width()/2,
@@ -127,7 +134,7 @@ void MainMenuMode::draw_2d(bool top __attribute__ ((unused))) {
   }
 }
 
-AreaSelectMenuMode::AreaSelectMenuMode() : MenuMode(true, 300, 22, 8) {
+AreaSelectMenuMode::AreaSelectMenuMode() : SimpleMenuMode(true, 300, 22, 8) {
   const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
   unsigned int n = 1;
   for (ORE1::PkgDescType::area_const_iterator i = desc->area().begin(); i != desc->area().end(); ++i) {
@@ -156,7 +163,7 @@ void AreaSelectMenuMode::handle_menu_selection(const std::string& item) {
   }
 }
 
-MissionSelectMenuMode::MissionSelectMenuMode(unsigned int area_num) : MenuMode(true, 450, 22, 8, Vector(0.1, 0.2)), _area_num(area_num) {
+MissionSelectMenuMode::MissionSelectMenuMode(unsigned int area_num) : SimpleMenuMode(true, 450, 22, 8, Vector(0.1, 0.2)), _area_num(area_num) {
   const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
   const ORE1::AreaType* area = &(desc->area()[area_num-1]);
   unsigned int n = 1;
@@ -179,13 +186,13 @@ void MissionSelectMenuMode::draw_3d_far(bool top) {
     {
       GLOOPushedMatrix pm;
       glTranslatef(offset.x, offset.y, offset.z);
-      MenuMode::draw_3d_far(top);
+      SimpleMenuMode::draw_3d_far(top);
     }
     for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
       i->second->draw(false);
     }
   } else {
-    MenuMode::draw_3d_far(top);
+    SimpleMenuMode::draw_3d_far(top);
     glTranslatef(-offset.x, -offset.y, -offset.z);
     for (GOMap::iterator i = Globals::gameobjs.begin(); i != Globals::gameobjs.end(); ++i) {
       i->second->draw(false);
@@ -219,7 +226,7 @@ void MissionSelectMenuMode::handle_menu_selection(const std::string& item) {
   }
 }
 
-PauseMenuMode::PauseMenuMode() : MenuMode(false, 150, 22, 30) {
+PauseMenuMode::PauseMenuMode() : SimpleMenuMode(false, 150, 22, 30) {
   add_entry("resume", "Resume Game");
   add_entry("quit", "Quit Mission");
 }
@@ -227,10 +234,10 @@ PauseMenuMode::PauseMenuMode() : MenuMode(false, 150, 22, 30) {
 bool PauseMenuMode::handle_input() {
   if (Input::get_button_ch(ORSave::ButtonBoundAction::Pause).matches_frame_events()) {
     handle_menu_selection("CANCEL");
+    return true;
   } else {
-    MenuMode::handle_input();
+    return SimpleMenuMode::handle_input();
   }
-  return true;
 }
 
 void PauseMenuMode::handle_menu_selection(const std::string& item) {
@@ -243,7 +250,7 @@ void PauseMenuMode::handle_menu_selection(const std::string& item) {
   }
 }
 
-PostMissionMenuMode::PostMissionMenuMode(bool won) : MenuMode(false, 400, 40, 30), _won(won) {
+PostMissionMenuMode::PostMissionMenuMode(bool won) : SimpleMenuMode(false, 400, 40, 30), _won(won) {
   add_entry("continue", won ? "Rios made it!" : "Didn't make it...");
 }
 

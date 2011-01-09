@@ -67,7 +67,7 @@ namespace GUI {
       void process(const Box& box);
   };
 
-  class SimpleMenu {
+  class Menu {
     private:
       int _width, _widget_height, _padding;
       Vector _center_offset;
@@ -89,13 +89,14 @@ namespace GUI {
       bool _widget_regions_dirty;
 
     public:
-      SimpleMenu(int width, int widget_height, int padding, Vector center_offset = Vector(0,0,0)) :
+      Menu(int width, int widget_height, int padding, Vector center_offset = Vector(0,0,0)) :
         _width(width), _widget_height(widget_height), _padding(padding),
         _center_offset(center_offset), _widgets(), _focus(_widgets.end()),
         _widget_regions_dirty(true)
       {}
 
       void add_widget(const boost::shared_ptr<Widget>& widget);
+      void unfocus() { _set_focus(_widgets.end()); }
 
       void process();
       void draw();
