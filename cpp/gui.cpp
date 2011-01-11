@@ -116,7 +116,7 @@ void Checkbox::draw(const Box& box) {
       draw_diamond_box(check_area, i == 0 ? CHECKED_COLOR : INNER_CHECKED_COLOR );
     }
   }
-  
+
   int font_height = box.size.y - DIAMOND_BOX_BORDER.y*2;
   Globals::sys_font->draw(box.top_left + checkbox_area.size.x*1.2, font_height, _label);
 }
@@ -196,6 +196,11 @@ void Slider::draw(const Box& box) {
 
 void Slider::process(const Box& box) {
   if (focused()) {
+    bool changed = false;
+    Box gauge_area = _gauge_area(box);
+    Box gauge_sense_area = gauge_area * 1.2;
+    Point mouse = Globals::mouse_cursor->get_pos();
+
     if (Input::get_axis_ch(ORSave::AxisBoundAction::UIX).matches_frame_events()) {
       const Channel& x_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIX);
       if (x_axis.get_value() > 0.0) {
@@ -203,12 +208,21 @@ void Slider::process(const Box& box) {
       } else {
         _value -= SLIDER_PUSH_CHANGE;
       }
+      changed = true;
+    } else if (
+      Globals::mouse_cursor->get_visibility() &&
+      Input::get_button_ch(ORSave::ButtonBoundAction::Confirm).is_on() &&
+      gauge_sense_area.contains_point(mouse)
+    ) {
+      _value = (mouse.x - gauge_area.top_left.x)/gauge_area.size.x;
+      changed = true;
     }
 
-    if (_value > 1.0) { _value = 1.0; }
-    else if (_value < 0.0) { _value = 0.0; }
-    emit_event(WIDGET_CLICKED);
-    emit_event(WIDGET_VALUE_CHANGED);
+    if (changed) {
+      if (_value > 1.0) { _value = 1.0; }
+      else if (_value < 0.0) { _value = 0.0; }
+      emit_event(WIDGET_VALUE_CHANGED);
+    }
   }
 }
 
