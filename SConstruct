@@ -430,7 +430,7 @@ LINKFLAGS = ''
 LIBS = ['ode', 'SDL', 'SDL_image', 'boost_filesystem', 'boost_program_options', 'boost_iostreams']
 if env['HOST_OS'] and 'win' in env['HOST_OS']:
   CCFLAGS += ' -DIN_WINDOWS'
-  LINKFLAGS += ' -static'
+  LINKFLAGS += ' -static -mwindows'
   LIBS.insert(0, 'z')
   LIBS.insert(0, 'boost_system')
   LIBS.extend(['glew32', 'opengl32', 'glu32', 'm', 'user32', 'gdi32', 'winmm'])
