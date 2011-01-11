@@ -100,6 +100,8 @@ struct Box {
 
   Box operator*(float v) const;
   void operator*=(float v);
+  Box operator/(float v) const;
+  void operator/=(float v);
 };
 
 float rev2rad(float ang); // FIXME: In old version, this also converted cw to ccw. Make sure everything that needed that does it itself!

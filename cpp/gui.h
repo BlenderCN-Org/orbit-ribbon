@@ -93,6 +93,8 @@ namespace GUI {
       std::string _label;
       float _value;
 
+      Box _gauge_area(const Box& box);
+
     public:
       Slider(const std::string& label, float value = 0.0) :
         _label(label), _value(value)

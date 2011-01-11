@@ -43,6 +43,10 @@ void OptionsMenuMode::_init_widgets_from_config() {
   ((GUI::Checkbox*)_id_widgets[OPTION_DEBUG_PHYSICS])->set_value(c.debugPhysics());
   ((GUI::Checkbox*)_id_widgets[OPTION_INVERT_TRANSLATE_Y])->set_value(c.invertTranslateY());
   ((GUI::Checkbox*)_id_widgets[OPTION_INVERT_ROTATE_Y])->set_value(c.invertRotateY());
+
+  ((GUI::Slider*)_id_widgets[OPTION_SFX_VOLUME])->set_value(c.soundEffectVolume());
+  ((GUI::Slider*)_id_widgets[OPTION_MUSIC_VOLUME])->set_value(c.musicVolume());
+  ((GUI::Slider*)_id_widgets[OPTION_MOUSE_SENSITIVITY])->set_value(c.mouseSensitivity());
 }
 
 OptionsMenuMode::OptionsMenuMode(bool draw_background) :
@@ -52,6 +56,10 @@ OptionsMenuMode::OptionsMenuMode(bool draw_background) :
   _add_option(OPTION_INVERT_ROTATE_Y, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Invert vertical look")));
   _add_option(OPTION_INVERT_TRANSLATE_Y, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Invert vertical movement")));
   _add_option(OPTION_CONTROLS, boost::shared_ptr<GUI::Widget>(new GUI::Button("Control bindings...")));
+  _add_option(OPTION_MOUSE_SENSITIVITY, boost::shared_ptr<GUI::Widget>(new GUI::Slider("Mouse sensitivity in-game")));
+  _menu.add_widget(boost::shared_ptr<GUI::Widget>(new GUI::BlankWidget()));
+  _add_option(OPTION_SFX_VOLUME, boost::shared_ptr<GUI::Widget>(new GUI::Slider("Sound effect volume")));
+  _add_option(OPTION_MUSIC_VOLUME, boost::shared_ptr<GUI::Widget>(new GUI::Slider("Music volume")));
   _menu.add_widget(boost::shared_ptr<GUI::Widget>(new GUI::BlankWidget()));
   _add_option(OPTION_VSYNC, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Use V-Sync")));
   _add_option(OPTION_DISPLAY_MODE, boost::shared_ptr<GUI::Widget>(new GUI::Button("Display mode...")));
@@ -95,10 +103,13 @@ bool OptionsMenuMode::handle_input() {
                 c.debugPhysics(static_cast<GUI::Checkbox*>(e.user.data1)->get_value());
                 break;
               case OPTION_SFX_VOLUME:
+                c.soundEffectVolume(static_cast<GUI::Slider*>(e.user.data1)->get_value());
                 break;
               case OPTION_MUSIC_VOLUME:
+                c.musicVolume(static_cast<GUI::Slider*>(e.user.data1)->get_value());
                 break;
               case OPTION_MOUSE_SENSITIVITY:
+                c.mouseSensitivity(static_cast<GUI::Slider*>(e.user.data1)->get_value());
                 break;
               case OPTION_INVERT_TRANSLATE_Y:
                 c.invertTranslateY(static_cast<GUI::Checkbox*>(e.user.data1)->get_value());

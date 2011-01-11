@@ -21,6 +21,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "gui.h"
 
+#include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 #include <algorithm>
 #include <cmath>
@@ -41,13 +42,6 @@ static const float CHECKED_COLOR[4] = { 0.2, 0.6, 0.0, 1.0 };
 static const float INNER_CHECKED_COLOR[4] = { 0.4, 0.9, 0.1, 1.0 };
 
 void draw_diamond_box(const Box& box, float r, float g, float b, float a) {
-  const static GLushort indices[12] = {
-    0, 1, 2,
-    0, 2, 5,
-    5, 3, 0,
-    5, 4, 3
-  };
-  
   GLfloat points[12] = {
     box.top_left.x + DIAMOND_BOX_BORDER.x/2, box.top_left.y,
     box.top_left.x, box.top_left.y + box.size.y/2,
@@ -57,6 +51,13 @@ void draw_diamond_box(const Box& box, float r, float g, float b, float a) {
     box.top_left.x + box.size.x - DIAMOND_BOX_BORDER.x/2, box.top_left.y + box.size.y
   };
   
+  const static GLushort indices[12] = {
+    0, 1, 2,
+    0, 2, 5,
+    5, 3, 0,
+    5, 4, 3
+  };
+
   glDisable(GL_TEXTURE_2D);
   glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -130,10 +131,85 @@ void Checkbox::process(const Box& box) {
   }
 }
 
+const float SLIDER_GAUGE_SIZE_COEF = 0.7;
+const float SLIDER_PUSH_CHANGE = 0.05;
+
+Box Slider::_gauge_area(const Box& box) {
+  Box r = box;
+  r.size.x = r.size.y*5;
+  r *= SLIDER_GAUGE_SIZE_COEF;
+  return r;
+}
+
 void Slider::draw(const Box& box) {
+  Box gauge_area = _gauge_area(box);
+  Box gauge_dbox_area = gauge_area/SLIDER_GAUGE_SIZE_COEF;
+  gauge_dbox_area.size.x = gauge_dbox_area.size.y*5;
+  draw_diamond_box(gauge_dbox_area, focused() ? FOCUSED_COLOR : PASSIVE_COLOR);
+
+  GLfloat gauge_points[10] = {
+    gauge_area.top_left.x, gauge_area.top_left.y + gauge_area.size.y, // Point 0 : Left tip of triangle
+    gauge_area.top_left.x + _value*gauge_area.size.x, gauge_area.top_left.y + gauge_area.size.y, // Point 1 : Bottom of gauge line
+    gauge_area.top_left.x + _value*gauge_area.size.x, gauge_area.top_left.y + (1-_value)*gauge_area.size.y, // Point 2 : Top of gauge line
+    gauge_area.top_left.x + gauge_area.size.x, gauge_area.top_left.y, // Point 3 : Upper right corner
+    gauge_area.top_left.x + gauge_area.size.x, gauge_area.top_left.y + gauge_area.size.y // Point 4 : Lower right corner
+  };
+
+  glDisable(GL_TEXTURE_2D);
+  glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glDisableClientState(GL_NORMAL_ARRAY);
+  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  glEnableClientState(GL_COLOR_ARRAY);
+  glVertexPointer(2, GL_FLOAT, 0, gauge_points);
+
+  const static GLushort triangle_indices[3] = { 0, 1, 2 };
+  GLfloat triangle_colors[9] = {
+    0.5, 0.5, 0.5, // Color 0 : Left tip of triangle
+    0.3, 0.3+(0.6*_value), 0.3, // Color 1 : Bottom of gauge line
+    0.3, 0.3+(0.6*_value), 0.3 // Color 2 : Top of gauge line
+  };
+  glColorPointer(3, GL_FLOAT, 0, triangle_colors);
+  glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, triangle_indices);
+
+  const static GLushort quad_indices[4] = { 4, 3, 2, 1 };
+  GLfloat quad_colors[15] = { // TODO: Maybe make this area a pretty gradient too
+    0.0, 0.0, 0.0,
+    0.1, 0.1, 0.1,
+    0.1, 0.1, 0.1,
+    0.1, 0.1, 0.1,
+    0.1, 0.1, 0.1
+  };
+  glColorPointer(3, GL_FLOAT, 0, quad_colors);
+  glDrawElements(GL_QUADS, 4, GL_UNSIGNED_SHORT, quad_indices);
+
+  glPopClientAttrib();
+  glEnable(GL_TEXTURE_2D);
+
+  int font_height = box.size.y - DIAMOND_BOX_BORDER.y*2;
+  Globals::sys_font->draw(gauge_dbox_area.top_left + gauge_dbox_area.size.x*1.1, font_height, _label);
+
+  int n_font_height = gauge_dbox_area.size.y*0.8;
+  Globals::sys_font->draw(gauge_dbox_area.top_left + gauge_dbox_area.size * 0.05, n_font_height, boost::lexical_cast<std::string>(std::floor(_value*100 + 0.5)));
 }
 
 void Slider::process(const Box& box) {
+  if (focused()) {
+    if (Input::get_axis_ch(ORSave::AxisBoundAction::UIX).matches_frame_events()) {
+      const Channel& x_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIX);
+      if (x_axis.get_value() > 0.0) {
+        _value += SLIDER_PUSH_CHANGE;
+      } else {
+        _value -= SLIDER_PUSH_CHANGE;
+      }
+    }
+
+    if (_value > 1.0) { _value = 1.0; }
+    else if (_value < 0.0) { _value = 0.0; }
+    emit_event(WIDGET_CLICKED);
+    emit_event(WIDGET_VALUE_CHANGED);
+  }
 }
 
 void Menu::_set_focus(WidgetList::iterator new_focus) {
