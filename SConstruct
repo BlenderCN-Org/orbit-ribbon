@@ -340,20 +340,30 @@ def build_verinfo(source, target, env):
   header_fh.write("#endif\n")
   header_fh.close()
   
+  date_format = "%a %b %d %Y %H:%M:%S"
+  
   commit_hash_result = getstatusoutput('git log -1 --format="format:%h"')
+  commit_hash = commit_hash_result[1] if commit_hash_result[0] == 0 else ""
+  if commit_hash_result[0] == 0:
+    status_result = getstatusoutput('git status --porcelain')
+    if status_result[0] == 0 and status_result[1].strip() != "":
+      commit_hash += "+DIRTY"
+
   commit_ts_result = getstatusoutput('git log -1 --format="format:%at"')
   commit_date = datetime.datetime.fromtimestamp(int(commit_ts_result[1]) if commit_ts_result[0] == 0 else 0)
+  commit_date_str = commit_date.strftime(date_format) if commit_ts_result[0] == 0 else "" 
+  
   build_date = datetime.datetime.now()
-  date_format = "%a %b %d %Y %H:%M:%S"
+  build_date_str = build_date.strftime(date_format)
 
   impl_fh = open(os.path.join("cpp", "autoinfo", "version.cpp"), "w")
   impl_fh.write(preamble_pattern % ("version.cpp", "Automatically generated source file for Orbit Ribbon version/release info"))
   impl_fh.write("#include \"version.h\"\n")
   impl_fh.write("\n")
   impl_fh.write("const char* const APP_VERSION = \"%s\";\n" % ORBIT_RIBBON_VERSION)
-  impl_fh.write("const char* const BUILD_DATE = \"%s\";\n" % build_date.strftime(date_format))
-  impl_fh.write("const char* const COMMIT_DATE = \"%s\";\n" % (commit_date.strftime(date_format) if commit_ts_result[0] == 0 else ""))
-  impl_fh.write("const char* const COMMIT_HASH = \"%s\";\n" % (commit_hash_result[1] if commit_hash_result[0] == 0 else ""))
+  impl_fh.write("const char* const BUILD_DATE = \"%s\";\n" % build_date_str)
+  impl_fh.write("const char* const COMMIT_DATE = \"%s\";\n" % commit_date_str)
+  impl_fh.write("const char* const COMMIT_HASH = \"%s\";\n" % commit_hash)
   impl_fh.close()
 
 def verinfo_emitter(target, source, env):
