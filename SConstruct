@@ -44,7 +44,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 """ 
 
-import os, Image, cStringIO, lxml.etree, datetime, commands
+import os, sys, Image, cStringIO, lxml.etree, datetime
 
 
 env = Environment(ENV = {'PATH' : os.environ['PATH']}, tools = ['mingw'])
@@ -52,6 +52,22 @@ env = Environment(ENV = {'PATH' : os.environ['PATH']}, tools = ['mingw'])
 debug = ARGUMENTS.get('debug', 0)
 if int(debug):
   CCFLAGS += ' -g'
+
+def getstatusoutput(cmd):
+  """Return (status, output) of executing cmd in a shell.
+
+  Portable version by Andrew Reedick.
+  http://mail.python.org/pipermail/python-win32/2008-January/006606.html 
+  """
+  mswindows = (sys.platform == "win32")
+  if not mswindows: cmd = '{ ' + cmd + '; }'
+  pipe = os.popen(cmd + ' 2>&1', 'r')
+  text = pipe.read()
+  sts = pipe.close()
+  if sts is None: sts = 0
+  if text[-1:] == '\n': text = text[:-1]
+  return sts, text
+
 
 def pow2le(n):
   r = 1
@@ -324,8 +340,8 @@ def build_verinfo(source, target, env):
   header_fh.write("#endif\n")
   header_fh.close()
   
-  commit_hash_result = commands.getstatusoutput('git log -1 --format="format:%h"')
-  commit_ts_result = commands.getstatusoutput('git log -1 --format="format:%at"')
+  commit_hash_result = getstatusoutput('git log -1 --format="format:%h"')
+  commit_ts_result = getstatusoutput('git log -1 --format="format:%at"')
   commit_date = datetime.datetime.fromtimestamp(int(commit_ts_result[1]) if commit_ts_result[0] == 0 else 0)
   build_date = datetime.datetime.now()
   date_format = "%a %b %d %Y %H:%M:%S"
