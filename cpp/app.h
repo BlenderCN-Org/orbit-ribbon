@@ -34,6 +34,7 @@ class App {
     static void load_mission(unsigned int area_num, unsigned int mission);
     
   private:
+    static void init(const std::vector<std::string>& arguments);
     static void frame_loop();
 };
 

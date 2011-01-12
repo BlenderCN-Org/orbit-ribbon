@@ -42,4 +42,7 @@ class GameQuitException : public GameException {
     virtual ~GameQuitException() throw() {}
 };
 
+class GameRestartException : public std::exception {
+};
+
 #endif

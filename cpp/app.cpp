@@ -135,177 +135,190 @@ void App::frame_loop() {
 }
 
 void App::run(const std::vector<std::string>& args) {
-  try {
-    // Parse command-line arguments
-    boost::program_options::options_description visible_opt_desc("Command-line options");
-    visible_opt_desc.add_options()
-      ("help,h", "display help message, then exit")
-      ("version,V", "display version and author information, then exit")
-      ("fullscreen,f", "run game in fullscreen mode (defaults to native resolution)")
-      ("windowed,w", "run game in windowed mode (defaults to 800x600)")
-      ("area,a", boost::program_options::value<unsigned int>(), "preselect numbered area to play")
-      ("mission,m", boost::program_options::value<unsigned int>(), "preselect numbered mission to play, you must also specify --area")
-    ;
-    boost::program_options::options_description hidden_opt_desc;
-    hidden_opt_desc.add_options()
-      ("ore", boost::program_options::value<std::string>(), "path to an ore file containing the game data and scenario to use")
-    ;
-    boost::program_options::options_description opt_desc;
-    opt_desc.add(visible_opt_desc).add(hidden_opt_desc);
-    boost::program_options::positional_options_description pos_desc;
-    pos_desc.add("ore", 1);
-    
-    boost::program_options::variables_map vm;
+  bool restarting;
+  do {
+    restarting = false;
+
     try {
-      boost::program_options::store(boost::program_options::command_line_parser(args).options(opt_desc).positional(pos_desc).run(), vm);
-      boost::program_options::notify(vm);
-      if (vm.count("mission") and not vm.count("area")) {
-        throw GameException("mission specified but no area specified");
+      try {
+        init(args);
+      } catch (const std::exception& e) {
+        Debug::error_msg(std::string("Uncaught exception during init: ") + e.what());
+        return;
       }
-    } catch (const std::exception& e) {
-      Debug::error_msg(std::string("Invalid arguments: ") + e.what());
-      return;
-    }
-    
-    // Deal with command-line arguments that cause the program to end right away
-    if (vm.count("help") or vm.count("version")) {
-      Debug::status_msg("");
-      Debug::status_msg(std::string("Orbit Ribbon version ") + APP_VERSION);
-      Debug::status_msg("");
-      if (vm.count("help")) {
-        std::stringstream ss;
-        visible_opt_desc.print(ss);
-        Debug::status_msg(ss.str());
-      } else {
-        Debug::status_msg(std::string("Compiled: ") + BUILD_DATE);
-        if (std::strlen(COMMIT_HASH) > 0) {
-          Debug::status_msg(std::string("Commit Hash: ") + COMMIT_HASH);
-          Debug::status_msg(std::string("Commit Date: ") + COMMIT_DATE);
-        }
-        Debug::status_msg("");
-        Debug::status_msg("Copyright 2011 David Simon <david.mike.simon@gmail.com>");
-        Debug::status_msg("");
-        Debug::status_msg("Orbit Ribbon is free software: you can redistribute it and/or modify");
-        Debug::status_msg("it under the terms of the GNU General Public License as published by");
-        Debug::status_msg("the Free Software Foundation, either version 3 of the License, or");
-        Debug::status_msg("(at your option) any later version.");
-        Debug::status_msg("");
-        Debug::status_msg("Orbit Ribbon is distributed in the hope that it will be awesome,");
-        Debug::status_msg("but WITHOUT ANY WARRANTY; without even the implied warranty of");
-        Debug::status_msg("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
-        Debug::status_msg("GNU General Public License for more details.");
-        Debug::status_msg("");
+
+      try {
+        frame_loop();
+      } catch (const GameQuitException& e) {
+        Debug::status_msg(std::string("Program quitting: ") + e.what());
+      } catch (const GameRestartException& e) {
+        throw;
+      } catch (const std::exception& e) {
+        Debug::error_msg(std::string("Uncaught exception during run: ") + e.what());
       }
-      return;
-    }
-    
-    // Locate the directory where our save and log files will be
-#ifdef IN_WINDOWS
-    const char* tgt_path = std::getenv("APPDATA");
-#else
-    const char* tgt_path = std::getenv("HOME");
-#endif
-    if (!tgt_path) {
-      Debug::error_msg("Unable to find home directory");
-      return;
-    }
-    Globals::save_dir = boost::filesystem::path(tgt_path);
 
-    Debug::enable_logging();
-    Debug::status_msg("");
-    Debug::status_msg(std::string("Orbit Ribbon ") + APP_VERSION + " starting...");
-
-    // Initialize SDL
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
-      throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
-    }
- 
-    Saving::load(); // No need to check 'present' from here on out; this fills in all unspecified values with their defaults
-
-    // Set to windowed or fullscreen if the appropriate command line arguments were given
-    if (vm.count("fullscreen") or vm.count("windowed")) {
-      Saving::get().config().fullScreen((bool)vm.count("fullscreen"));
-      
-      // This forces Display::init to pick a new, sane resolution
-      Saving::get().config().screenWidth(0);
-      Saving::get().config().screenHeight(0);
-    }
-    
-    Display::init();
-    Background::init();
-    
-    boost::filesystem::path orePath;
-    bool orePathSave = false;
-    if (vm.count("ore")) {
-      orePathSave = true;
-      orePath = boost::filesystem::system_complete(vm["ore"].as<std::string>());
-    } else {
-      orePath = boost::filesystem::path(Saving::get().config().lastOre());
-    }
-    try {
-      Debug::status_msg("Loading ORE package '" + orePath.file_string() + "'");
-      Globals::ore.reset(new OrePackage(orePath));
-    } catch (const OreException& e) {
-      // TODO: Display a dialog to the user that lets them pick a different ORE file
-      throw;
-    }
-    if (orePathSave) {
-      //If a different ORE file was successfully loaded, save that path to the config
-      Saving::get().config().lastOre(orePath.file_string());
       Saving::save();
+      // TODO Deinitialize as well as possible here
+    } catch (const GameRestartException& e) {
+      restarting = true;
     }
+  } while (restarting);
+}
 
-    // Find all the libscenes in this ore and let them be easily accessible by name
-    const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
-    for (ORE1::PkgDescType::libscene_const_iterator i = desc->libscene().begin(); i != desc->libscene().end(); ++i) {
-      Globals::libscenes.insert(LSMap::value_type(i->name(), *i));
-    }
-    
-    Sim::init();
-    Input::init();
-    
-    Globals::sys_font.reset(new Font(FONTDATA_LATINMODERN, FONTDATA_LATINMODERN_LEN, FONTDATA_LATINMODERN_DESC));
-    Globals::bg.reset(new Background);
-    Globals::mouse_cursor.reset(new MouseCursor());
-    
-    if (vm.count("area") and vm.count("mission")) {
-      unsigned int area = vm["area"].as<unsigned int>();
-      unsigned int mission = vm["mission"].as<unsigned int>();
-      if (area < 1 || mission < 1) {
-        throw GameException("Area and mission numbers must be positive integers");
-      }
-      load_mission(area, mission);
-      Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new GameplayMode()));
-    } else if (vm.count("area")) {
-      unsigned int area = vm["area"].as<unsigned int>();
-      if (area < 1) {
-        throw GameException("Area and mission numbers must be positive integers");
-      }
-      load_mission(area, 0);
-      Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MainMenuMode()));
-      Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new AreaSelectMenuMode()));
-      Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MissionSelectMenuMode(area)));
-    } else {
-      Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MainMenuMode()));
+void App::init(const std::vector<std::string>& args) {
+  // FIXME: Refactor and clean up this ridiculously long function
+  // Parse command-line arguments
+  boost::program_options::options_description visible_opt_desc("Command-line options");
+  visible_opt_desc.add_options()
+    ("help,h", "display help message, then exit")
+    ("version,V", "display version and author information, then exit")
+    ("fullscreen,f", "run game in fullscreen mode (defaults to native resolution)")
+    ("windowed,w", "run game in windowed mode (defaults to 800x600)")
+    ("area,a", boost::program_options::value<unsigned int>(), "preselect numbered area to play")
+    ("mission,m", boost::program_options::value<unsigned int>(), "preselect numbered mission to play, you must also specify --area")
+  ;
+  boost::program_options::options_description hidden_opt_desc;
+  hidden_opt_desc.add_options()
+    ("ore", boost::program_options::value<std::string>(), "path to an ore file containing the game data and scenario to use")
+  ;
+  boost::program_options::options_description opt_desc;
+  opt_desc.add(visible_opt_desc).add(hidden_opt_desc);
+  boost::program_options::positional_options_description pos_desc;
+  pos_desc.add("ore", 1);
+
+  boost::program_options::variables_map vm;
+  try {
+    boost::program_options::store(boost::program_options::command_line_parser(args).options(opt_desc).positional(pos_desc).run(), vm);
+    boost::program_options::notify(vm);
+    if (vm.count("mission") and not vm.count("area")) {
+      throw GameException("mission specified but no area specified");
     }
   } catch (const std::exception& e) {
-    Debug::error_msg(std::string("Uncaught exception during init: ") + e.what());
+    Debug::error_msg(std::string("Invalid arguments: ") + e.what());
     return;
   }
-  
-  try {
-    frame_loop();
-  } catch (const GameQuitException& e) {
-    Debug::status_msg(std::string("Program quitting: ") + e.what());
-  } catch (const std::exception& e) {
-    Debug::error_msg(std::string("Uncaught exception during run: ") + e.what());
+
+  // Deal with command-line arguments that cause the program to end right away
+  if (vm.count("help") or vm.count("version")) {
+    Debug::status_msg("");
+    Debug::status_msg(std::string("Orbit Ribbon version ") + APP_VERSION);
+    Debug::status_msg("");
+    if (vm.count("help")) {
+      std::stringstream ss;
+      visible_opt_desc.print(ss);
+      Debug::status_msg(ss.str());
+    } else {
+      Debug::status_msg(std::string("Compiled: ") + BUILD_DATE);
+      if (std::strlen(COMMIT_HASH) > 0) {
+        Debug::status_msg(std::string("Commit Hash: ") + COMMIT_HASH);
+        Debug::status_msg(std::string("Commit Date: ") + COMMIT_DATE);
+      }
+      Debug::status_msg("");
+      Debug::status_msg("Copyright 2011 David Simon <david.mike.simon@gmail.com>");
+      Debug::status_msg("");
+      Debug::status_msg("Orbit Ribbon is free software: you can redistribute it and/or modify");
+      Debug::status_msg("it under the terms of the GNU General Public License as published by");
+      Debug::status_msg("the Free Software Foundation, either version 3 of the License, or");
+      Debug::status_msg("(at your option) any later version.");
+      Debug::status_msg("");
+      Debug::status_msg("Orbit Ribbon is distributed in the hope that it will be awesome,");
+      Debug::status_msg("but WITHOUT ANY WARRANTY; without even the implied warranty of");
+      Debug::status_msg("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
+      Debug::status_msg("GNU General Public License for more details.");
+      Debug::status_msg("");
+    }
+    return;
+  }
+
+  // Locate the directory where our save and log files will be
+#ifdef IN_WINDOWS
+  const char* tgt_path = std::getenv("APPDATA");
+#else
+  const char* tgt_path = std::getenv("HOME");
+#endif
+  if (!tgt_path) {
+    Debug::error_msg("Unable to find home directory");
+    return;
+  }
+  Globals::save_dir = boost::filesystem::path(tgt_path);
+
+  Debug::enable_logging();
+  Debug::status_msg("");
+  Debug::status_msg(std::string("Orbit Ribbon ") + APP_VERSION + " starting...");
+
+  // Initialize SDL
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
+    throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
+  }
+
+  Saving::load(); // No need to check 'present' from here on out; this fills in all unspecified values with their defaults
+
+  // Set to windowed or fullscreen if the appropriate command line arguments were given
+  if (vm.count("fullscreen") or vm.count("windowed")) {
+    Saving::get().config().fullScreen((bool)vm.count("fullscreen"));
+    
+    // This forces Display::init to pick a new, sane resolution
+    Saving::get().config().screenWidth(0);
+    Saving::get().config().screenHeight(0);
   }
   
-  Saving::save();
+  Display::init();
+  Background::init();
+
+  boost::filesystem::path orePath;
+  bool orePathSave = false;
+  if (vm.count("ore")) {
+    orePathSave = true;
+    orePath = boost::filesystem::system_complete(vm["ore"].as<std::string>());
+  } else {
+    orePath = boost::filesystem::path(Saving::get().config().lastOre());
+  }
+  try {
+    Debug::status_msg("Loading ORE package '" + orePath.file_string() + "'");
+    Globals::ore.reset(new OrePackage(orePath));
+  } catch (const OreException& e) {
+    // TODO: Display a dialog to the user that lets them pick a different ORE file
+    throw;
+  }
+  if (orePathSave) {
+    //If a different ORE file was successfully loaded, save that path to the config
+    Saving::get().config().lastOre(orePath.file_string());
+    Saving::save();
+  }
+
+  // Find all the libscenes in this ore and let them be easily accessible by name
+  const ORE1::PkgDescType* desc = &Globals::ore->get_pkg_desc();
+  for (ORE1::PkgDescType::libscene_const_iterator i = desc->libscene().begin(); i != desc->libscene().end(); ++i) {
+    Globals::libscenes.insert(LSMap::value_type(i->name(), *i));
+  }
   
-  Debug::status_msg("Thanks for playing!");
+  Sim::init();
+  Input::init();
   
-  // TODO Deinitialize as well as possible here, to reduce possibility of weird error messages on close
+  Globals::sys_font.reset(new Font(FONTDATA_LATINMODERN, FONTDATA_LATINMODERN_LEN, FONTDATA_LATINMODERN_DESC));
+  Globals::bg.reset(new Background);
+  Globals::mouse_cursor.reset(new MouseCursor());
+  
+  if (vm.count("area") and vm.count("mission")) {
+    unsigned int area = vm["area"].as<unsigned int>();
+    unsigned int mission = vm["mission"].as<unsigned int>();
+    if (area < 1 || mission < 1) {
+      throw GameException("Area and mission numbers must be positive integers");
+    }
+    load_mission(area, mission);
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new GameplayMode()));
+  } else if (vm.count("area")) {
+    unsigned int area = vm["area"].as<unsigned int>();
+    if (area < 1) {
+      throw GameException("Area and mission numbers must be positive integers");
+    }
+    load_mission(area, 0);
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MainMenuMode()));
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new AreaSelectMenuMode()));
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MissionSelectMenuMode(area)));
+  } else {
+    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MainMenuMode()));
+  }
 }
 
 void App::load_mission(unsigned int area_num, unsigned int mission_num) {
