@@ -129,12 +129,12 @@ void MainMenuMode::draw_2d(bool top __attribute__ ((unused))) {
   _title_tex->draw_2d(title_pos); 
 
   float font_height = 13.0;
-  float x = 3;
-  Globals::sys_font->draw(Point(x, Display::get_screen_height() - font_height*1), font_height, std::string("Version: ") + APP_VERSION);
-  Globals::sys_font->draw(Point(x, Display::get_screen_height() - font_height*2), font_height, std::string("Compiled: ") + BUILD_DATE);
+  float buf = 3;
+  Globals::sys_font->draw(Point(buf, Display::get_screen_height() - font_height*1 - buf), font_height, std::string("Version: ") + APP_VERSION);
+  Globals::sys_font->draw(Point(buf, Display::get_screen_height() - font_height*2 - buf), font_height, std::string("Compiled: ") + BUILD_DATE);
   if (std::strlen(COMMIT_HASH) > 0) {
-    Globals::sys_font->draw(Point(x, Display::get_screen_height() - font_height*3), font_height, std::string("Commit Hash: ") + COMMIT_HASH);
-    Globals::sys_font->draw(Point(x, Display::get_screen_height() - font_height*4), font_height, std::string("Commit Date: ") + COMMIT_DATE);
+    Globals::sys_font->draw(Point(buf, Display::get_screen_height() - font_height*3 - buf), font_height, std::string("Commit Hash: ") + COMMIT_HASH);
+    Globals::sys_font->draw(Point(buf, Display::get_screen_height() - font_height*4 - buf), font_height, std::string("Commit Date: ") + COMMIT_DATE);
   }
 }
 
