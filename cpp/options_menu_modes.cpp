@@ -39,7 +39,9 @@ void OptionsMenuMode::_init_widgets_from_config() {
   ORSave::ConfigType& c = Saving::get().config();
 
   ((GUI::Checkbox*)_id_widgets[OPTION_SHOW_FPS])->set_value(c.showFps());
-  ((GUI::Checkbox*)_id_widgets[OPTION_VSYNC])->set_value(c.vSync());
+  if (_at_main_menu) {
+    ((GUI::Checkbox*)_id_widgets[OPTION_VSYNC])->set_value(c.vSync());
+  }
   ((GUI::Checkbox*)_id_widgets[OPTION_DEBUG_PHYSICS])->set_value(c.debugPhysics());
   ((GUI::Checkbox*)_id_widgets[OPTION_INVERT_TRANSLATE_Y])->set_value(c.invertTranslateY());
   ((GUI::Checkbox*)_id_widgets[OPTION_INVERT_ROTATE_Y])->set_value(c.invertRotateY());
@@ -49,8 +51,8 @@ void OptionsMenuMode::_init_widgets_from_config() {
   ((GUI::Slider*)_id_widgets[OPTION_MOUSE_SENSITIVITY])->set_value(c.mouseSensitivity());
 }
 
-OptionsMenuMode::OptionsMenuMode(bool draw_background) :
-  _draw_background(draw_background),
+OptionsMenuMode::OptionsMenuMode(bool at_main_menu) :
+  _at_main_menu(at_main_menu),
   _menu(300, 22, 8)
 {
   _add_option(OPTION_INVERT_ROTATE_Y, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Invert vertical look")));
@@ -61,8 +63,10 @@ OptionsMenuMode::OptionsMenuMode(bool draw_background) :
   _add_option(OPTION_SFX_VOLUME, boost::shared_ptr<GUI::Widget>(new GUI::Slider("Sound effect volume")));
   _add_option(OPTION_MUSIC_VOLUME, boost::shared_ptr<GUI::Widget>(new GUI::Slider("Music volume")));
   _menu.add_widget(boost::shared_ptr<GUI::Widget>(new GUI::BlankWidget()));
-  _add_option(OPTION_VSYNC, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Use V-Sync")));
-  _add_option(OPTION_DISPLAY_MODE, boost::shared_ptr<GUI::Widget>(new GUI::Button("Display mode...")));
+  if (_at_main_menu) {
+    _add_option(OPTION_VSYNC, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Use V-Sync")));
+    _add_option(OPTION_DISPLAY_MODE, boost::shared_ptr<GUI::Widget>(new GUI::Button("Display mode...")));
+  }
   _add_option(OPTION_SHOW_FPS, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Show FPS indicator")));
   _add_option(OPTION_DEBUG_PHYSICS, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Show physics debugging info")));
   _menu.add_widget(boost::shared_ptr<GUI::Widget>(new GUI::BlankWidget()));
@@ -130,7 +134,7 @@ bool OptionsMenuMode::handle_input() {
 }
 
 void OptionsMenuMode::draw_3d_far(bool top __attribute__ ((unused))) {
-  if (_draw_background) {
+  if (_at_main_menu) {
     GLOOPushedMatrix pm;
     Globals::bg->draw_starbox();
     Globals::bg->draw_objects();

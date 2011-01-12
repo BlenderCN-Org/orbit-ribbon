@@ -45,7 +45,7 @@ class OptionsMenuMode : public Mode {
       OPTION_CONTROLS
     };
 
-    bool _draw_background;
+    bool _at_main_menu;
     GUI::Menu _menu;
     std::map<GUI::Widget*, OptionWidgetId> _widget_ids;
     std::map<OptionWidgetId, GUI::Widget*> _id_widgets;
@@ -54,9 +54,9 @@ class OptionsMenuMode : public Mode {
     void _init_widgets_from_config();
 
   public:
-    OptionsMenuMode(bool draw_background);
+    OptionsMenuMode(bool at_main_menu);
 
-    bool execute_after_lower_mode() { return !_draw_background; }
+    bool execute_after_lower_mode() { return !_at_main_menu; }
     bool simulation_disabled() { return true; }
     bool mouse_cursor_enabled() { return true; }
 
