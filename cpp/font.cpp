@@ -22,6 +22,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/array.hpp>
 #include <cstring>
+#include <cmath>
 #include <memory>
 #include <SDL/SDL.h>
 
@@ -135,7 +136,7 @@ void Font::draw(const Point& upper_left, float height, const std::string& str) {
 
   GLOOPushedMatrix pm;
   _tex->bind();
-  glTranslatef(upper_left.x, upper_left.y + (height - hy.first)/2 + height*0.12, 0);
+  glTranslatef(upper_left.x, upper_left.y + std::floor((height - hy.first)/2 + height*0.12 + 0.5), 0);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
   glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
   glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PRIMARY_COLOR);
