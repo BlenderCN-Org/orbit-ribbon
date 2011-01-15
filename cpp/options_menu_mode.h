@@ -1,5 +1,5 @@
 /*
-options_menu_modes.h: Header for menu mode classes related to setting options.
+options_menu_mode.h: Header for the menu mode class for setting options.
 These handle the menu screens used to start the game, choose a level, etc.
 
 Copyright 2011 David Simon <david.mike.simon@gmail.com>

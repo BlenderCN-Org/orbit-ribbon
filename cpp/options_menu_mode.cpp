@@ -1,5 +1,5 @@
 /*
-options_menu_modes.cpp: Implementation for menu mode classes related to setting options.
+options_menu_mode.cpp: Implementation for the menu mode class for setting options.
 These handle the menu screens used to start the game, choose a level, etc.
 
 Copyright 2011 David Simon <david.mike.simon@gmail.com>
@@ -26,7 +26,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "debug.h"
 #include "globals.h"
 #include "input.h"
-#include "options_menu_modes.h"
+#include "options_menu_mode.h"
 #include "saving.h"
 
 void OptionsMenuMode::_add_option(OptionWidgetId id, const boost::shared_ptr<GUI::Widget>& w) {

@@ -41,7 +41,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "input.h"
 #include "interpolation.h"
 #include "interp_mode.h"
-#include "options_menu_modes.h"
+#include "options_menu_mode.h"
 #include "ore.h"
 #include "saving.h"
 
