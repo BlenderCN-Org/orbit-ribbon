@@ -224,8 +224,6 @@ void Display::init() {
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
   glEnableClientState(GL_INDEX_ARRAY);
   
-  screen_width = Display::get_screen_width();
-  screen_height = Display::get_screen_height();
   screen_ratio = GLfloat(screen_width)/GLfloat(screen_height);
   
   glViewport(0, 0, screen_width, screen_height);
