@@ -121,7 +121,7 @@ void MainMenuMode::handle_menu_selection(const std::string& item) {
 void MainMenuMode::draw_2d(bool top __attribute__ ((unused))) {
   SimpleMenuMode::draw_2d(top);
   
-  static const Point title_pos(
+  Point title_pos(
     Display::get_screen_width()/2 - _title_tex->get_width()/2,
     Display::get_screen_height()*0.25 - _title_tex->get_height()/2
   );
