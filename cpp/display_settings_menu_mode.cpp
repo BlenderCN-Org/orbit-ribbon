@@ -66,9 +66,38 @@ bool DisplaySettingsMenuMode::handle_input() {
   if (Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).matches_frame_events()) {
     Globals::mode_stack.next_frame_pop_mode();
   } else {
+    bool setting_changed = false;
+    ORSave::ConfigType& c = Saving::get().config();
     BOOST_FOREACH(SDL_Event& e, Globals::frame_events) {
       if (e.type == SDL_USEREVENT) {
+        if (e.user.code == GUI::WIDGET_VALUE_CHANGED) {
+          if ((GUI::Checkbox*)e.user.data1 == &*_vsync_checkbox) {
+            c.vSync(static_cast<GUI::Checkbox*>(e.user.data1)->get_value());
+            setting_changed = true;
+          }
+        } else if (e.user.code == GUI::WIDGET_CLICKED) {
+          if ((GUI::Button*)e.user.data1 == &*_done_button) {
+            Globals::mode_stack.next_frame_pop_mode();
+          } else {
+            std::map<GUI::Button*, VideoMode>::iterator mode_iter = _mode_buttons_map.find((GUI::Button*)(e.user.data1));
+            if (mode_iter != _mode_buttons_map.end()) {
+              VideoMode m = mode_iter->second;
+              bool active = c.screenWidth() == m.size.x && c.screenHeight() == m.size.y && c.fullScreen() == m.fullscreen;
+              if (!active) {
+                // If we clicked on a mode other than the mode that's already active
+                c.screenWidth(m.size.x);
+                c.screenHeight(m.size.y);
+                c.fullScreen(m.fullscreen);
+                setting_changed = true;
+              }
+            }
+          }
+        }
       }
+    }
+
+    if (setting_changed) {
+      Saving::save();
     }
   }
 
