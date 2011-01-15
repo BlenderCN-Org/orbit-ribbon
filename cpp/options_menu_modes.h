@@ -26,6 +26,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <map>
 #include <string>
 
+#include "display.h"
 #include "gui.h"
 #include "mode.h"
 
@@ -64,6 +65,28 @@ class OptionsMenuMode : public Mode {
     void draw_2d(bool top);
 
     void pushed_below_top();
+    void now_at_top();
+};
+
+class DisplaySettingsMenuMode : public Mode {
+  private:
+    GUI::Menu _menu;
+    GUI::Checkbox* _vsync_checkbox;
+    GUI::Button* _done_button;
+    std::map<GUI::Button*, VideoMode> _mode_buttons_map;
+
+    void _init_widgets_from_config();
+
+  public:
+    DisplaySettingsMenuMode();
+
+    bool simulation_disabled() { return true; }
+    bool mouse_cursor_enabled() { return true; }
+
+    bool handle_input();
+    void draw_3d_far(bool top);
+    void draw_2d(bool top);
+
     void now_at_top();
 };
 

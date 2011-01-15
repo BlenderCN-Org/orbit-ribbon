@@ -20,6 +20,8 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
+#include <boost/array.hpp>
+#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <GL/glew.h>
 #include <SDL/SDL.h>
@@ -43,31 +45,69 @@ SDL_Surface* screen;
 int Display::screen_width = 0;
 int Display::screen_height = 0;
 GLfloat Display::screen_ratio = 0;
+const SDL_VideoInfo* Display::vid_info = NULL;
+
+const int SDL_VIDEO_FLAGS = SDL_OPENGL | SDL_GL_DOUBLEBUFFER;
+
+const boost::array<Size, 6> STANDARD_RESOLUTIONS = { {
+  Size(800,600),
+  Size(1024,768),
+  Size(1280,960),
+  Size(1280,1024),
+  Size(1400,1050),
+  Size(1600,1200)
+} };
+
+std::list<VideoMode> Display::get_available_video_modes() {
+  std::list<VideoMode> r;
+
+  unsigned int largest_x = 0;
+  unsigned int largest_y = 0;
+  SDL_Rect** modes = SDL_ListModes(vid_info->vfmt, SDL_VIDEO_FLAGS | SDL_FULLSCREEN);
+  if (modes == (SDL_Rect**)0) {
+    throw GameException("Unable to retrieve video modes");
+  } else if (modes == (SDL_Rect**)-1) {
+    Debug::status_msg("FS video modes unrestricted? Weird. Defaulting to 800x600 windowed.");
+    r.push_back(VideoMode(Size(800,600), false));
+    return r;
+  }
+
+  // Fullscreen modes
+  for (int i = 0; modes[i]; ++i) {
+    r.push_back(VideoMode(Size(modes[i]->w, modes[i]->h), true));
+    if (modes[i]->w > largest_x) { largest_x = modes[i]->w; }
+    if (modes[i]->h > largest_y) { largest_y = modes[i]->h; }
+  }
+
+  // Windowed modes
+  BOOST_FOREACH(const Size& size, STANDARD_RESOLUTIONS) {
+    if (size.x < largest_x && size.y < largest_y) {
+      r.push_back(VideoMode(size, false));
+    }
+  }
+
+  return r;
+}
 
 void Display::init() {
   bool full_screen = Saving::get().config().fullScreen();
   
-  const SDL_VideoInfo* vid_info = SDL_GetVideoInfo();
+  vid_info = SDL_GetVideoInfo();
   if (!vid_info) {
     throw GameException("Unable to query video info: " + std::string(SDL_GetError()));
   }
-  
-  GLint videoFlags;
-  videoFlags  = SDL_OPENGL;
-  videoFlags |= SDL_GL_DOUBLEBUFFER;
   
   if (Saving::get().config().screenWidth_present() && Saving::get().config().screenHeight_present()) {
     screen_width = Saving::get().config().screenWidth();
     screen_height = Saving::get().config().screenHeight();
   }
   
-  if (screen_width == 0 || screen_height == 0 || !SDL_VideoModeOK(screen_width, screen_height, vid_info->vfmt->BitsPerPixel, videoFlags)) {
+  if (screen_width == 0 || screen_height == 0 || !SDL_VideoModeOK(screen_width, screen_height, vid_info->vfmt->BitsPerPixel, SDL_VIDEO_FLAGS)) {
     Debug::status_msg("No acceptable resolution specified in save file, choosing new resolution...");
     
     // Need to come up with default values
     if (full_screen) {
-      SDL_Rect** modes;
-      modes = SDL_ListModes(vid_info->vfmt, videoFlags | SDL_FULLSCREEN );
+      SDL_Rect** modes = SDL_ListModes(vid_info->vfmt, SDL_VIDEO_FLAGS | SDL_FULLSCREEN );
       if (modes == (SDL_Rect**)0) {
         Debug::status_msg("No fullscreen video modes available, disabling fullscreen mode for this run");
         full_screen = false;
@@ -111,7 +151,7 @@ void Display::init() {
     (full_screen ? " fullscreen" : " windowed")
   );
   
-  screen = SDL_SetVideoMode(get_screen_width(), get_screen_height(), vid_info->vfmt->BitsPerPixel, videoFlags | (full_screen ? SDL_FULLSCREEN : 0));
+  screen = SDL_SetVideoMode(get_screen_width(), get_screen_height(), vid_info->vfmt->BitsPerPixel, SDL_VIDEO_FLAGS | (full_screen ? SDL_FULLSCREEN : 0));
   if (!screen) {
     throw GameException(std::string("Video mode set failed: ") + std::string(SDL_GetError()));
   }
@@ -119,7 +159,7 @@ void Display::init() {
   SDL_ShowCursor(SDL_DISABLE);
   SDL_WM_GrabInput(SDL_GRAB_ON); // "Captain! Scanners are detecting a Grabon warship in the area!" "Fire photon torpedoes!"
   
-  glewExperimental = GL_TRUE; // My video card doesn't report ARB_map_buffer_range even though it's available
+  glewExperimental = GL_TRUE; // My video card doesn't report ARB_map_buffer_range even though it's available, unless this is enabled
   GLenum glew_err = glewInit();
   if (glew_err != GLEW_OK) {
     throw GameException(std::string("GLEW init failed: " ) + std::string((const char*)glewGetErrorString((glew_err))));

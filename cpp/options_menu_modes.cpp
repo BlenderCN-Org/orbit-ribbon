@@ -69,6 +69,7 @@ OptionsMenuMode::OptionsMenuMode(bool at_main_menu) :
   _add_option(OPTION_SAVE, boost::shared_ptr<GUI::Widget>(new GUI::Button("Done")));
 }
 
+
 bool OptionsMenuMode::handle_input() {
   _menu.process();
 
@@ -141,5 +142,30 @@ void OptionsMenuMode::pushed_below_top() {
 }
 
 void OptionsMenuMode::now_at_top() {
+  _init_widgets_from_config();
+}
+
+void DisplaySettingsMenuMode::_init_widgets_from_config() {
+  ORSave::ConfigType& c = Saving::get().config();
+}
+
+DisplaySettingsMenuMode::DisplaySettingsMenuMode() : _menu(300, 22, 8) {
+  BOOST_FOREACH(const VideoMode& mode, Display::get_available_video_modes()) {
+  }
+}
+
+bool DisplaySettingsMenuMode::handle_input() {
+}
+
+void DisplaySettingsMenuMode::draw_3d_far(bool top) {
+  Globals::bg->draw_starbox();
+  Globals::bg->draw_objects();
+}
+
+void DisplaySettingsMenuMode::draw_2d(bool top) {
+  _menu.draw(true);
+}
+
+void DisplaySettingsMenuMode::now_at_top() {
   _init_widgets_from_config();
 }

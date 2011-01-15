@@ -23,26 +23,40 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_DISPLAY_H
 #define ORBIT_RIBBON_DISPLAY_H
 
+#include <list>
 #include <GL/glew.h>
 
 #include "geometry.h"
 
 class App;
 
+struct VideoMode {
+  Size size;
+  bool fullscreen;
+
+  VideoMode(Size s, bool fs) : size(s), fullscreen(fs) {}
+};
+
+struct SDL_VideoInfo;
+
 class Display {
   private:
     static int screen_width, screen_height;
     static GLfloat screen_ratio;
-  
+    static const SDL_VideoInfo* vid_info;
+
   public:
     static int get_screen_width() { return screen_width; }
     static int get_screen_height() { return screen_height; }
     static Size get_screen_size() { return Size(screen_width, screen_height); }
     static float get_screen_ratio() { return screen_ratio; }
-  
+    static const SDL_VideoInfo* get_vid_info() { return vid_info; }
+
+    static std::list<VideoMode> get_available_video_modes();
+
   private:
     static void init();
-    
+
     static void screen_resize();
     
     friend class App;
