@@ -45,19 +45,15 @@ Thinh's ideas:
 - After generating meshes in memory from XML, save to raw local system cache for faster loading later 
   - Need to make sure to discard cache if environment changes, or if source data is updated
   - Maybe can also cache textures this way? Probably not going to get much faster than PNG, tho...
-- Generate a log file with all debug messages
+- Use valgrind to check for leaks on display mode changing restart
 - For the sake of UI juiciness and following the theme, give the mouse cursor a little bit of momentum ala Per.Oxyd
 - Come up with a simple way to do documentation; doxygen's usual format is a pain in the ass
-  - Can probably also disable xsdcxx's doxygen doc generation
 - Pass boost::shared_ptr by const reference wherever possible
 - Make the naming of variables consistent (in particular, use underscore prefix for members)
 - Make sure mipmapping and texture compression are both actually working
-  - Do mipmapping in advance, when generating ORE file; maybe also switch to faster-loading image format?
+  - Do mipmapping in advance, when generating ORE file
 - Use a test texture instead of a test color for untextured faces
 - Consider using texture packing
 - Have the ORE file include pre-calculated information about how much memory must be allocated for the VBOs
-- Show the loading animation while loading
-- Include all resources in the ORE file (including loading anim, title screen image, sounds, etc)
-- Separate out the ORE file into its own repository
-- Allow video mode to be changed without having to reinit the entire display module
+- Show a loading animation while loading
 - Maybe when it is necessary to tilt about z axis while running, I should add some x linear force to simulate banking. Banking would actually occur, since one foot would be pushing sideways to adjust orientation, right?
