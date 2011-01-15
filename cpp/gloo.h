@@ -64,6 +64,7 @@ class GLOOTexture : boost::noncopyable {
     GLOOTexture(SDL_RWops& rwops, bool alpha_tex = false);
 
     static boost::shared_ptr<GLOOTexture> load(const std::string& name);
+    static void deinit() { _cache.clear(); }
     
     int get_width() const { return _width; }
     int get_height() const { return _height; }
@@ -161,6 +162,8 @@ class GLOOBufferedMesh : boost::noncopyable {
     GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_count, boost::shared_ptr<GLOOTexture> tex, bool gen_trimesh_data);
   
   public:
+    static void deinit();
+
     static boost::shared_ptr<GLOOBufferedMesh> create(unsigned int vertex_count, unsigned int face_count, boost::shared_ptr<GLOOTexture> tex, bool gen_trimesh_data)
       { return boost::shared_ptr<GLOOBufferedMesh>(new GLOOBufferedMesh(vertex_count, face_count, tex, gen_trimesh_data)); }
       

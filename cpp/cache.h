@@ -46,6 +46,10 @@ template<typename T> class CacheBase {
         return p.lock();
       }
     }
+
+    void clear() {
+      _cache.clear();
+    }
 };
 
 #endif

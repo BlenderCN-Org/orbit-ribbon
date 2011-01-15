@@ -226,6 +226,7 @@ _VBOManager::_VBOManager(GLenum tgt, unsigned int max_bytes) :
 }
 
 _VBOManager::~_VBOManager() {
+  glBindBuffer(_tgt, 0);
   glDeleteBuffers(1, &_buf_id);
 }
 
@@ -281,6 +282,14 @@ GLOOBufferedMesh::GLOOBufferedMesh(unsigned int vertex_count, unsigned int face_
   
   _faces_alloc = _faces_vboman->allocate(_total_faces*sizeof(GLOOFace));
   _next_face = (GLOOFace*)_faces_alloc->map();
+}
+
+void GLOOBufferedMesh::deinit() {
+  if (_initialized) {
+    _vertices_vboman.reset();
+    _faces_vboman.reset();
+    _initialized = false;
+  }
 }
 
 void GLOOBufferedMesh::load_vertex(const GLOOVertex& v) {

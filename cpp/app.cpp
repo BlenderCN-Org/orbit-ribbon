@@ -363,6 +363,9 @@ void App::deinit() {
   Background::deinit();
   Display::deinit();
 
+  GLOOTexture::deinit();
+  GLOOBufferedMesh::deinit();
+
   SDL_Quit();
 
   Debug::disable_logging();
