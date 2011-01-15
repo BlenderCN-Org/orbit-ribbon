@@ -77,7 +77,6 @@ bool SimpleMenuMode::handle_input() {
 
 void SimpleMenuMode::draw_3d_far(bool top __attribute__ ((unused))) {
   if (_draw_background) {
-    GLOOPushedMatrix pm;
     Globals::bg->draw_starbox();
     Globals::bg->draw_objects();
   }

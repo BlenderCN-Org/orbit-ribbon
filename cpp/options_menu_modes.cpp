@@ -127,7 +127,6 @@ bool OptionsMenuMode::handle_input() {
 
 void OptionsMenuMode::draw_3d_far(bool top __attribute__ ((unused))) {
   if (_at_main_menu) {
-    GLOOPushedMatrix pm;
     Globals::bg->draw_starbox();
     Globals::bg->draw_objects();
   }
