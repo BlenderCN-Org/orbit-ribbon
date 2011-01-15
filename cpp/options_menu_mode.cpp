@@ -24,6 +24,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "background.h"
 #include "debug.h"
+#include "display_settings_menu_mode.h"
 #include "globals.h"
 #include "input.h"
 #include "options_menu_mode.h"
@@ -87,6 +88,8 @@ bool OptionsMenuMode::handle_input() {
                 Saving::save();
                 Globals::mode_stack.next_frame_pop_mode();
                 break;
+              case OPTION_DISPLAY_MODE:
+                Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new DisplaySettingsMenuMode));
               default:
                 break;
             }

@@ -23,6 +23,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_DISPLAY_SETTINGS_MENU_MODE_H
 #define ORBIT_RIBBON_DISPLAY_SETTINGS_MENU_MODE_H
 
+#include <boost/shared_ptr.hpp>
 #include <map>
 
 #include "display.h"
@@ -32,11 +33,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 class DisplaySettingsMenuMode : public Mode {
   private:
     GUI::Menu _menu;
-    GUI::Checkbox* _vsync_checkbox;
-    GUI::Button* _done_button;
+    boost::shared_ptr<GUI::Widget> _vsync_checkbox;
+    boost::shared_ptr<GUI::Widget> _done_button;
     std::map<GUI::Button*, VideoMode> _mode_buttons_map;
-
-    void _init_widgets_from_config();
 
   public:
     DisplaySettingsMenuMode();
@@ -47,8 +46,6 @@ class DisplaySettingsMenuMode : public Mode {
     bool handle_input();
     void draw_3d_far(bool top);
     void draw_2d(bool top);
-
-    void now_at_top();
 };
 
 #endif

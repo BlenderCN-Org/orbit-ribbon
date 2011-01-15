@@ -34,6 +34,7 @@ struct VideoMode {
   Size size;
   bool fullscreen;
 
+  VideoMode() {}
   VideoMode(Size s, bool fs) : size(s), fullscreen(fs) {}
 };
 
