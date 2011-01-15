@@ -50,10 +50,10 @@ template <template <typename> class InterpFunctor> class InterpolationMode : pub
       float mu = float(SDL_GetTicks()-_start)/_ms;
       if (mu >= 1.0) {
         if (_reverse) {
-          Globals::mode_stack.next_frame_pop_mode();
+          Globals::mode_stack->next_frame_pop_mode();
           _camera = *(_src->get_camera(true));
         } else {
-          Globals::mode_stack.next_frame_push_mode(_tgt);
+          Globals::mode_stack->next_frame_push_mode(_tgt);
           _camera = *(_tgt->get_camera(false));
         }
       } else {

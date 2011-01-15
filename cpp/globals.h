@@ -54,7 +54,7 @@ class Globals {
     static std::vector<SDL_Event> frame_events;
     static unsigned int total_steps;
     static GOMap gameobjs;
-    static ModeStack mode_stack;
+    static boost::scoped_ptr<ModeStack> mode_stack;
     static boost::filesystem::path save_dir;
     static boost::scoped_ptr<Background> bg;
     static boost::scoped_ptr<Font> sys_font;

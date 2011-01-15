@@ -58,8 +58,17 @@ void Background::init() {
   glEnable(GL_LIGHT4); glLightfv(GL_LIGHT4, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
   glEnable(GL_LIGHT5); glLightfv(GL_LIGHT5, GL_DIFFUSE, AMB_LIGHT_DIFFUSE);
   
-  density_ranges.empty();
   density_ranges.push_back(RandomStuffDensityRange(100, 200, 2e8, 4e8, 1e9, 1e9));
+}
+
+void Background::deinit() {
+  density_ranges.empty();
+  
+  glDisable(GL_LIGHT1);
+  glDisable(GL_LIGHT2);
+  glDisable(GL_LIGHT3);
+  glDisable(GL_LIGHT4);
+  glDisable(GL_LIGHT5);
 }
 
 Background::Background() :

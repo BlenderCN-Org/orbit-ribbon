@@ -84,7 +84,7 @@ bool GameplayMode::handle_input() {
   // There is no avatar control handling here because that's dealt with in avatar step instead
   // If it weren't handled in avatar step, control would be negatively affected by framerate drops
   if (Input::get_button_ch(ORSave::ButtonBoundAction::Pause).matches_frame_events()) {
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new PauseMenuMode()));
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new PauseMenuMode()));
   }
   return true;
 }

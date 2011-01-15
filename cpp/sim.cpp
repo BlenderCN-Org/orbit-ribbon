@@ -94,6 +94,14 @@ void Sim::init() {
   contact_group = dJointGroupCreate(0);
 }
 
+void Sim::deinit() {
+  dJointGroupDestroy(contact_group);
+  dSpaceDestroy(dyn_space);
+  dSpaceDestroy(static_space);
+  dWorldDestroy(ode_world);
+  dCloseODE();
+}
+
 void collision_callback(void* data, dGeomID o1, dGeomID o2) {
   float step_time = *static_cast<float*>(data);
   

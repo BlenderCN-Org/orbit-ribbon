@@ -76,7 +76,7 @@ bool OptionsMenuMode::handle_input() {
 
   if (Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).matches_frame_events()) {
     Saving::save();
-    Globals::mode_stack.next_frame_pop_mode();
+    Globals::mode_stack->next_frame_pop_mode();
   } else {
     BOOST_FOREACH(SDL_Event& e, Globals::frame_events) {
       if (e.type == SDL_USEREVENT) {
@@ -86,10 +86,10 @@ bool OptionsMenuMode::handle_input() {
             switch (id->second) {
               case OPTION_SAVE:
                 Saving::save();
-                Globals::mode_stack.next_frame_pop_mode();
+                Globals::mode_stack->next_frame_pop_mode();
                 break;
               case OPTION_DISPLAY_MODE:
-                Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new DisplaySettingsMenuMode));
+                Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new DisplaySettingsMenuMode));
               default:
                 break;
             }

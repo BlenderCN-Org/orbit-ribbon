@@ -107,14 +107,14 @@ MainMenuMode::MainMenuMode() :
 void MainMenuMode::handle_menu_selection(const std::string& item) {
   if (item == "play") {
     ;
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(
       new InterpolationMode<CosineInterpolator>(1000, boost::shared_ptr<Mode>(
       new AreaSelectMenuMode()
     ))));
   } else if (item == "options") {
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new OptionsMenuMode(true)));
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new OptionsMenuMode(true)));
   } else if (item == "quit" or item == "CANCEL") {
-    Globals::mode_stack.next_frame_pop_mode();
+    Globals::mode_stack->next_frame_pop_mode();
   }
 }
 
@@ -155,11 +155,11 @@ AreaSelectMenuMode::AreaSelectMenuMode() : SimpleMenuMode(true, 300, 22, 8) {
 
 void AreaSelectMenuMode::handle_menu_selection(const std::string& item) {
   if (item == "back" or item == "CANCEL") {
-    Globals::mode_stack.next_frame_pop_mode();
+    Globals::mode_stack->next_frame_pop_mode();
   } else {
     unsigned int area_num = boost::lexical_cast<unsigned int>(item);
     App::load_mission(area_num, 0);
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(
       new InterpolationMode<Reverser<ExponentialInterpolation<4>::Interp>::Reversed>(1000, boost::shared_ptr<Mode>(
       new MissionSelectMenuMode(area_num)
     ))));
@@ -218,11 +218,11 @@ const GLOOCamera* MissionSelectMenuMode::get_camera(bool top) {
 
 void MissionSelectMenuMode::handle_menu_selection(const std::string& item) {
   if (item == "back" or item == "CANCEL") {
-    Globals::mode_stack.next_frame_pop_mode();
+    Globals::mode_stack->next_frame_pop_mode();
   } else {
     unsigned int mission_num = boost::lexical_cast<unsigned int>(item);
     App::load_mission(_area_num, mission_num);
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(
       new InterpolationMode<Reverser<ExponentialInterpolation<4>::Interp>::Reversed>(5000, boost::shared_ptr<Mode>(
       new GameplayMode()
     ))));
@@ -246,13 +246,13 @@ bool PauseMenuMode::handle_input() {
 
 void PauseMenuMode::handle_menu_selection(const std::string& item) {
   if (item == "resume" or item == "CANCEL") {
-    Globals::mode_stack.next_frame_pop_mode();
+    Globals::mode_stack->next_frame_pop_mode();
   } else if (item == "options") {
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new OptionsMenuMode(false)));
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new OptionsMenuMode(false)));
   } else if (item == "quit") {
     // Pop both the PauseMenuMode and the GameplayMode underneath it
-    Globals::mode_stack.next_frame_pop_mode();
-    Globals::mode_stack.next_frame_pop_mode();
+    Globals::mode_stack->next_frame_pop_mode();
+    Globals::mode_stack->next_frame_pop_mode();
   }
 }
 
@@ -263,7 +263,7 @@ PostMissionMenuMode::PostMissionMenuMode(bool won) : SimpleMenuMode(false, 400, 
 void PostMissionMenuMode::handle_menu_selection(const std::string& item) {
   if (item == "continue") {
     // Pop both this mode and the GameplayMode, returning us to the pre-mission screen
-    Globals::mode_stack.next_frame_pop_mode();
-    Globals::mode_stack.next_frame_pop_mode();
+    Globals::mode_stack->next_frame_pop_mode();
+    Globals::mode_stack->next_frame_pop_mode();
   }
 }

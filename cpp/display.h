@@ -65,9 +65,8 @@ class Display {
 
   private:
     static void init();
+    static void deinit();
 
-    static void screen_resize();
-    
     friend class App;
 };
 

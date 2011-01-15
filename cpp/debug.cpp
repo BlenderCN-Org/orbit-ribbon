@@ -46,6 +46,10 @@ void Debug::enable_logging() {
   _logging = true;
 }
 
+void Debug::disable_logging() {
+  _logging = false;
+}
+
 void Debug::debug_msg(const std::string& msg) {
   print("DEBUG: " + msg);
 }

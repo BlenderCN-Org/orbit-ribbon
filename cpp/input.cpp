@@ -110,6 +110,12 @@ GamepadManager::GamepadManager() {
   update();
 }
 
+GamepadManager::~GamepadManager() {
+  for (unsigned int i = 0; i < _gamepads.size(); ++i) {
+    SDL_JoystickClose(_gamepads[i]);
+  }
+}
+
 void GamepadManager::update() {
   SDL_JoystickUpdate();
 }
@@ -624,6 +630,19 @@ void Input::init() {
   
   SDL_Delay(100); // Without this delay we don't always seem to get useful joystick values
   set_neutral();
+}
+
+void Input::deinit() {
+  _axis_action_map.clear();
+  _button_action_map.clear();
+  _preset_list.reset();
+
+  _gp_man.reset();
+  _mouse.reset();
+  _kbd.reset();
+  _null_channel.reset();
+
+  _sources.clear();
 }
 
 void Input::update() {

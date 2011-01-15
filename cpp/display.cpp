@@ -224,10 +224,6 @@ void Display::init() {
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
   glEnableClientState(GL_INDEX_ARRAY);
   
-  screen_resize();
-}
-
-void Display::screen_resize() {
   screen_width = Display::get_screen_width();
   screen_height = Display::get_screen_height();
   screen_ratio = GLfloat(screen_width)/GLfloat(screen_height);
@@ -235,4 +231,10 @@ void Display::screen_resize() {
   glViewport(0, 0, screen_width, screen_height);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
+}
+
+void Display::deinit() {
+  screen_width = screen_height = 0;
+  screen_ratio = 0.0;
+  vid_info = NULL;
 }

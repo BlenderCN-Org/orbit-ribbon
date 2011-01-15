@@ -59,6 +59,7 @@ class Background {
 
   public:
     static void init();
+    static void deinit();
     
     Background();
 

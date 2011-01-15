@@ -93,6 +93,8 @@ class Sim {
   
   private:
     static void init();
+    static void deinit();
+
     friend class App;
 };
 

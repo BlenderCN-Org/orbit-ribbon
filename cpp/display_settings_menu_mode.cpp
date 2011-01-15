@@ -26,6 +26,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "background.h"
 #include "display_settings_menu_mode.h"
+#include "except.h"
 #include "globals.h"
 #include "input.h"
 #include "saving.h"
@@ -64,7 +65,7 @@ bool DisplaySettingsMenuMode::handle_input() {
   _menu.process();
 
   if (Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).matches_frame_events()) {
-    Globals::mode_stack.next_frame_pop_mode();
+    Globals::mode_stack->next_frame_pop_mode();
   } else {
     bool setting_changed = false;
     ORSave::ConfigType& c = Saving::get().config();
@@ -77,7 +78,7 @@ bool DisplaySettingsMenuMode::handle_input() {
           }
         } else if (e.user.code == GUI::WIDGET_CLICKED) {
           if ((GUI::Button*)e.user.data1 == &*_done_button) {
-            Globals::mode_stack.next_frame_pop_mode();
+            Globals::mode_stack->next_frame_pop_mode();
           } else {
             std::map<GUI::Button*, VideoMode>::iterator mode_iter = _mode_buttons_map.find((GUI::Button*)(e.user.data1));
             if (mode_iter != _mode_buttons_map.end()) {
@@ -98,6 +99,7 @@ bool DisplaySettingsMenuMode::handle_input() {
 
     if (setting_changed) {
       Saving::save();
+      throw DisplayModeResetException();
     }
   }
 

@@ -40,6 +40,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "constants.h"
 #include "debug.h"
 #include "display.h"
+#include "display_settings_menu_mode.h"
 #include "except.h"
 #include "font.h"
 #include "gameplay_mode.h"
@@ -51,6 +52,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "mesh.h"
 #include "mode.h"
 #include "mouse_cursor.h"
+#include "options_menu_mode.h"
 #include "performance.h"
 #include "saving.h"
 #include "sim.h"
@@ -58,6 +60,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 // How often in ticks to update the performance info string
 const unsigned int MAX_PERF_INFO_AGE = 200;
+
+const Uint32 INIT_FLAGS_FOR_SDL = SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK;
 
 void App::frame_loop() {
   std::string perf_info;
@@ -99,7 +103,7 @@ void App::frame_loop() {
     
     // This is where the important stuff happens, depending on what mode the game currently is
     unsigned int steps_to_simulate = unsimulated_ticks / MIN_TICKS_PER_FRAME;
-    Globals::mode_stack.execute_frame(steps_to_simulate);
+    Globals::mode_stack->execute_frame(steps_to_simulate);
     unsimulated_ticks -= steps_to_simulate * MIN_TICKS_PER_FRAME;
     
     // If showFps config flag is enabled, calculate and display recent FPS
@@ -135,18 +139,23 @@ void App::frame_loop() {
 }
 
 void App::run(const std::vector<std::string>& args) {
-  bool restarting;
-  bool display_mode_reset = false;
+  bool display_mode_reset;
   do {
-    restarting = false;
-
     try {
       try {
-        init(args, restarting);
+        init(args, display_mode_reset);
+      } catch (const GameQuitException& e) {
+        return;
       } catch (const std::exception& e) {
         Debug::error_msg(std::string("Uncaught exception during init: ") + e.what());
+        if (SDL_WasInit(INIT_FLAGS_FOR_SDL)) {
+          // If init error was after SDL startup, restore anything SDL messed with
+          SDL_Quit();
+        }
         return;
       }
+    
+      display_mode_reset = false;
 
       try {
         frame_loop();
@@ -157,17 +166,22 @@ void App::run(const std::vector<std::string>& args) {
       } catch (const std::exception& e) {
         Debug::error_msg(std::string("Uncaught exception during run: ") + e.what());
       }
-
+      
       Saving::save();
-      // TODO Deinitialize as well as possible here
     } catch (const DisplayModeResetException& e) {
       display_mode_reset = true;
-      restarting = true;
     }
-  } while (restarting);
+
+    try {
+      deinit();
+    } catch (const std::exception& e) {
+      Debug::error_msg(std::string("Uncaught exception during deinit: ") + e.what());
+      return;
+    }
+  } while (display_mode_reset);
 }
 
-void App::init(const std::vector<std::string>& args, bool restarting) {
+void App::init(const std::vector<std::string>& args, bool display_mode_reset) {
   // FIXME: Refactor and clean up this ridiculously long function
   // Parse command-line arguments
   boost::program_options::options_description visible_opt_desc("Command-line options");
@@ -196,8 +210,7 @@ void App::init(const std::vector<std::string>& args, bool restarting) {
       throw GameException("mission specified but no area specified");
     }
   } catch (const std::exception& e) {
-    Debug::error_msg(std::string("Invalid arguments: ") + e.what());
-    return;
+    throw GameException(std::string("Invalid arguments: ") + e.what());
   }
 
   // Deal with command-line arguments that cause the program to end right away
@@ -229,7 +242,7 @@ void App::init(const std::vector<std::string>& args, bool restarting) {
       Debug::status_msg("GNU General Public License for more details.");
       Debug::status_msg("");
     }
-    return;
+    throw GameQuitException("Quitting after printing message");
   }
 
   // Locate the directory where our save and log files will be
@@ -249,7 +262,7 @@ void App::init(const std::vector<std::string>& args, bool restarting) {
   Debug::status_msg(std::string("Orbit Ribbon ") + APP_VERSION + " starting...");
 
   // Initialize SDL
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
+  if (SDL_Init(INIT_FLAGS_FOR_SDL) < 0) {
     throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
   }
 
@@ -293,34 +306,67 @@ void App::init(const std::vector<std::string>& args, bool restarting) {
   for (ORE1::PkgDescType::libscene_const_iterator i = desc->libscene().begin(); i != desc->libscene().end(); ++i) {
     Globals::libscenes.insert(LSMap::value_type(i->name(), *i));
   }
-  
+
   Sim::init();
   Input::init();
-  
+
   Globals::sys_font.reset(new Font(FONTDATA_LATINMODERN, FONTDATA_LATINMODERN_LEN, FONTDATA_LATINMODERN_DESC));
   Globals::bg.reset(new Background);
   Globals::mouse_cursor.reset(new MouseCursor());
-  
-  if (vm.count("area") and vm.count("mission")) {
+  Globals::mode_stack.reset(new ModeStack());
+
+  if (display_mode_reset) {
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new MainMenuMode()));
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new OptionsMenuMode(true)));
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new DisplaySettingsMenuMode()));
+  } else if (vm.count("area") and vm.count("mission")) {
     unsigned int area = vm["area"].as<unsigned int>();
     unsigned int mission = vm["mission"].as<unsigned int>();
     if (area < 1 || mission < 1) {
       throw GameException("Area and mission numbers must be positive integers");
     }
     load_mission(area, mission);
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new GameplayMode()));
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new GameplayMode()));
   } else if (vm.count("area")) {
     unsigned int area = vm["area"].as<unsigned int>();
     if (area < 1) {
       throw GameException("Area and mission numbers must be positive integers");
     }
     load_mission(area, 0);
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MainMenuMode()));
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new AreaSelectMenuMode()));
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MissionSelectMenuMode(area)));
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new MainMenuMode()));
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new AreaSelectMenuMode()));
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new MissionSelectMenuMode(area)));
   } else {
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new MainMenuMode()));
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new MainMenuMode()));
   }
+}
+
+void App::deinit() {
+  Debug::status_msg("Deinitializing");
+
+  Globals::frame_events.clear();
+  Globals::total_steps = 0;
+  Globals::mode_stack.reset(NULL);
+  Globals::current_mission = NULL;
+  Globals::current_area = NULL;
+  Globals::gameobjs.clear();
+  Globals::mouse_cursor.reset(NULL);
+  Globals::bg.reset(NULL);
+  Globals::sys_font.reset(NULL);
+
+  Input::deinit();
+  Sim::deinit();
+  
+  Globals::libscenes.clear();
+  Globals::ore.reset(NULL);
+
+  Background::deinit();
+  Display::deinit();
+
+  SDL_Quit();
+
+  Debug::disable_logging();
+  Globals::save_dir = boost::filesystem::path();
 }
 
 void App::load_mission(unsigned int area_num, unsigned int mission_num) {

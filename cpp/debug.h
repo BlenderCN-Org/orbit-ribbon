@@ -33,6 +33,8 @@ class Debug {
 
   public:
     static void enable_logging();
+    static void disable_logging();
+
     static void debug_msg(const std::string& msg);
     static void error_msg(const std::string& msg);
     static void status_msg(const std::string& msg);

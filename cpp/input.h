@@ -176,11 +176,12 @@ class GamepadManager : public ChannelSource {
     // Outer key is joystick number, inner key is axis/button number, inner value is index into _channels
     std::map<Uint8, std::map<Uint8, unsigned int> > _gamepad_axis_map;
     std::map<Uint8, std::map<Uint8, unsigned int> > _gamepad_button_map;
-    
+
     GamepadManager();
-    // TODO Really should have a dtor that destroys _gamepads, but this would be counterproductive without Input::deinit()
-  
+
   public:
+    ~GamepadManager();
+
     void update();
     unsigned int get_num_gamepads() const { return _gamepads.size(); }
     std::string get_first_gamepad_name() const { return std::string(SDL_JoystickName(0)); }
@@ -305,6 +306,8 @@ class Input {
     static boost::scoped_ptr<ORSave::PresetListType> _preset_list;
     
     static void init();
+    static void deinit();
+
     static void update();
     static void set_neutral();
     static boost::shared_ptr<Channel> xml_to_channel(const ORSave::BoundInputType& i);

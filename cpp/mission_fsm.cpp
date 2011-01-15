@@ -120,7 +120,7 @@ void MissionFSM::transition_to_state(const std::string& name) {
 
   if (name == "win" or name == "fail") {
     _finished = true;
-    Globals::mode_stack.next_frame_push_mode(boost::shared_ptr<Mode>(new PostMissionMenuMode(name == "win")));
+    Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new PostMissionMenuMode(name == "win")));
     return;
   }
 
