@@ -136,12 +136,13 @@ void App::frame_loop() {
 
 void App::run(const std::vector<std::string>& args) {
   bool restarting;
+  bool display_mode_reset = false;
   do {
     restarting = false;
 
     try {
       try {
-        init(args);
+        init(args, restarting);
       } catch (const std::exception& e) {
         Debug::error_msg(std::string("Uncaught exception during init: ") + e.what());
         return;
@@ -151,7 +152,7 @@ void App::run(const std::vector<std::string>& args) {
         frame_loop();
       } catch (const GameQuitException& e) {
         Debug::status_msg(std::string("Program quitting: ") + e.what());
-      } catch (const GameRestartException& e) {
+      } catch (const DisplayModeResetException& e) {
         throw;
       } catch (const std::exception& e) {
         Debug::error_msg(std::string("Uncaught exception during run: ") + e.what());
@@ -159,13 +160,14 @@ void App::run(const std::vector<std::string>& args) {
 
       Saving::save();
       // TODO Deinitialize as well as possible here
-    } catch (const GameRestartException& e) {
+    } catch (const DisplayModeResetException& e) {
+      display_mode_reset = true;
       restarting = true;
     }
   } while (restarting);
 }
 
-void App::init(const std::vector<std::string>& args) {
+void App::init(const std::vector<std::string>& args, bool restarting) {
   // FIXME: Refactor and clean up this ridiculously long function
   // Parse command-line arguments
   boost::program_options::options_description visible_opt_desc("Command-line options");
