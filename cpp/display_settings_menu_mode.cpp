@@ -30,6 +30,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "input.h"
 #include "saving.h"
 
+const unsigned int MAXIMUM_MODES_LISTED = 14;
+
 DisplaySettingsMenuMode::DisplaySettingsMenuMode() : _menu(300, 20, 5) {
   ORSave::ConfigType& c = Saving::get().config();
 
@@ -43,6 +45,10 @@ DisplaySettingsMenuMode::DisplaySettingsMenuMode() : _menu(300, 20, 5) {
     boost::shared_ptr<GUI::Widget> btn(new GUI::Button(fmt.str()));
     _menu.add_widget(btn);
     _mode_buttons_map[static_cast<GUI::Button*>(&*btn)] = mode;
+
+    if (_mode_buttons_map.size() >= MAXIMUM_MODES_LISTED) {
+      break;
+    }
   }
 
   _vsync_checkbox.reset(new GUI::Checkbox("V-Sync (prevents tearing, but can reduce framerate)", c.vSync()));
