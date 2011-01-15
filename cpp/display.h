@@ -34,8 +34,16 @@ struct VideoMode {
   Size size;
   bool fullscreen;
 
-  VideoMode() {}
+  VideoMode() : size(0,0), fullscreen(false) {}
   VideoMode(Size s, bool fs) : size(s), fullscreen(fs) {}
+
+  bool operator==(const VideoMode& other);
+  bool operator!=(const VideoMode& other) { return !(*this == other); }
+
+  bool operator<(const VideoMode& other);
+  bool operator<=(const VideoMode& other) { return *this < other || *this == other; }
+  bool operator>(const VideoMode& other) { return !(*this <= other); }
+  bool operator>=(const VideoMode& other) { return !(*this < other); }
 };
 
 struct SDL_VideoInfo;

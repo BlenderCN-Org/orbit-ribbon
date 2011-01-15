@@ -49,9 +49,28 @@ const SDL_VideoInfo* Display::vid_info = NULL;
 
 const int SDL_VIDEO_FLAGS = SDL_OPENGL | SDL_GL_DOUBLEBUFFER;
 
-const boost::array<Size, 6> STANDARD_RESOLUTIONS = { {
+bool VideoMode::operator==(const VideoMode& other) {
+  return size == other.size && fullscreen == other.fullscreen;
+}
+
+bool VideoMode::operator<(const VideoMode& other) {
+  if (fullscreen != other.fullscreen) {
+    // Windowed modes come before fullscreen modes
+    return !fullscreen;
+  } else {
+    // Sort by horizontal resolution than vertical resolution, higher first
+    if (size.x != other.size.x) {
+      return size.x > other.size.x;
+    } else {
+      return size.y > other.size.y;
+    }
+  }
+}
+
+const boost::array<Size, 7> STANDARD_RESOLUTIONS = { {
   Size(800,600),
   Size(1024,768),
+  Size(1280,800),
   Size(1280,960),
   Size(1280,1024),
   Size(1400,1050),
@@ -74,9 +93,11 @@ std::list<VideoMode> Display::get_available_video_modes() {
 
   // Fullscreen modes
   for (int i = 0; modes[i]; ++i) {
-    r.push_back(VideoMode(Size(modes[i]->w, modes[i]->h), true));
-    if (modes[i]->w > largest_x) { largest_x = modes[i]->w; }
-    if (modes[i]->h > largest_y) { largest_y = modes[i]->h; }
+    if (modes[i]->w >= 800 && modes[i]->h >= 600) {
+      r.push_back(VideoMode(Size(modes[i]->w, modes[i]->h), true));
+      if (modes[i]->w > largest_x) { largest_x = modes[i]->w; }
+      if (modes[i]->h > largest_y) { largest_y = modes[i]->h; }
+    }
   }
 
   // Windowed modes
@@ -86,6 +107,11 @@ std::list<VideoMode> Display::get_available_video_modes() {
     }
   }
 
+  if (r.size() == 0) {
+    throw GameException("No valid video modes found; perhaps your display is worse than 800x600");
+  }
+
+  r.sort();
   return r;
 }
 
