@@ -39,9 +39,6 @@ void OptionsMenuMode::_init_widgets_from_config() {
   ORSave::ConfigType& c = Saving::get().config();
 
   ((GUI::Checkbox*)_id_widgets[OPTION_SHOW_FPS])->set_value(c.showFps());
-  if (_at_main_menu) {
-    ((GUI::Checkbox*)_id_widgets[OPTION_VSYNC])->set_value(c.vSync());
-  }
   ((GUI::Checkbox*)_id_widgets[OPTION_DEBUG_PHYSICS])->set_value(c.debugPhysics());
   ((GUI::Checkbox*)_id_widgets[OPTION_INVERT_TRANSLATE_Y])->set_value(c.invertTranslateY());
   ((GUI::Checkbox*)_id_widgets[OPTION_INVERT_ROTATE_Y])->set_value(c.invertRotateY());
@@ -64,7 +61,6 @@ OptionsMenuMode::OptionsMenuMode(bool at_main_menu) :
   _add_option(OPTION_MUSIC_VOLUME, boost::shared_ptr<GUI::Widget>(new GUI::Slider("Music volume")));
   _menu.add_widget(boost::shared_ptr<GUI::Widget>(new GUI::BlankWidget()));
   if (_at_main_menu) {
-    _add_option(OPTION_VSYNC, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Use V-Sync")));
     _add_option(OPTION_DISPLAY_MODE, boost::shared_ptr<GUI::Widget>(new GUI::Button("Display mode...")));
   }
   _add_option(OPTION_SHOW_FPS, boost::shared_ptr<GUI::Widget>(new GUI::Checkbox("Show FPS indicator")));
@@ -98,10 +94,6 @@ bool OptionsMenuMode::handle_input() {
             switch (id->second) {
               case OPTION_SHOW_FPS:
                 c.showFps(static_cast<GUI::Checkbox*>(e.user.data1)->get_value());
-                break;
-              case OPTION_VSYNC:
-                // TODO: This needs to cause the display to reset when changed
-                c.vSync(static_cast<GUI::Checkbox*>(e.user.data1)->get_value());
                 break;
               case OPTION_DEBUG_PHYSICS:
                 c.debugPhysics(static_cast<GUI::Checkbox*>(e.user.data1)->get_value());

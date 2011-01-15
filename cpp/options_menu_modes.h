@@ -35,7 +35,6 @@ class OptionsMenuMode : public Mode {
       OPTION_SAVE,
       OPTION_SHOW_FPS,
       OPTION_DISPLAY_MODE,
-      OPTION_VSYNC,
       OPTION_DEBUG_PHYSICS,
       OPTION_SFX_VOLUME,
       OPTION_MUSIC_VOLUME,
