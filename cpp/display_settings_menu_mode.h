@@ -1,6 +1,5 @@
 /*
-dispay_settings_menu_mode.h: Header for the menu mode class for setting video mode.
-These handle the menu screens used to start the game, choose a level, etc.
+display_settings_menu_mode.h: Header for the menu mode class for setting video mode.
 
 Copyright 2011 David Simon <david.mike.simon@gmail.com>
 
