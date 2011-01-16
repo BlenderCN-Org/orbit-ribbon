@@ -139,7 +139,8 @@ void App::frame_loop() {
 }
 
 void App::run(const std::vector<std::string>& args) {
-  bool display_mode_reset;
+  bool display_mode_reset = false;
+
   do {
     try {
       try {
