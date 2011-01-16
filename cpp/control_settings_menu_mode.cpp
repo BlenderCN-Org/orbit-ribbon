@@ -37,6 +37,13 @@ ControlSettingsMenuMode::ControlSettingsMenuMode(bool at_main_menu) :
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("Y")));
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("Z")));
 
+  _grid.add_row();
+  _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("1")));
+  _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("2")));
+  _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::BlankWidget()));
+
+  _grid.add_row();
+
   _grid.add_row(true);
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("Done")));
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("Reset All to Defaults")));

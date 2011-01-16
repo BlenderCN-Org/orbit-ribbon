@@ -365,7 +365,7 @@ void Menu::process() {
           }
         } while (!(*focus_iter)->focusable());
 
-        set_focus((*focus_iter).get());
+        set_focus(focus_iter->get());
       } else {
         // Nothing is currently in focus, so just put focus on the first widget
         set_focus(_widgets.front().get());
@@ -379,10 +379,12 @@ void Grid::populate_widget_region_map(WidgetLayout::RegionMap& m) {
   Point row_pos((Display::get_screen_width() - _width)/2, (Display::get_screen_height() - full_height)/2);
   BOOST_FOREACH(const Row& row, _rows) {
     Point cell_pos(row_pos);
-    int cell_width = (_width - (row.cells.size()-1)*_padding)/row.cells.size();
-    BOOST_FOREACH(const boost::shared_ptr<Widget>& cell, row.cells) {
-      m[cell.get()] = Box(cell_pos, Size(cell_width, _row_height));
-      cell_pos.x += cell_width + _padding;
+    if (row.cells.size() > 0) {
+      int cell_width = (_width - (row.cells.size()-1)*_padding)/row.cells.size();
+      BOOST_FOREACH(const boost::shared_ptr<Widget>& cell, row.cells) {
+        m[cell.get()] = Box(cell_pos, Size(cell_width, _row_height));
+        cell_pos.x += cell_width + _padding;
+      }
     }
     row_pos.y += _row_height + _padding;
   }
@@ -398,6 +400,87 @@ void Grid::add_cell(const boost::shared_ptr<Widget>& widget) {
 
 void Grid::process() {
   WidgetLayout::process();
+
+  if (!Globals::mouse_cursor->get_visibility()) {
+    // If the mouse cursor isn't visible, check for UI axis events to change focus
+    const Channel& x_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIX);
+    const Channel& y_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIY);
+
+    bool x_moved = x_axis.matches_frame_events();
+    bool y_moved = y_axis.matches_frame_events();
+
+    if (x_moved || y_moved) {
+      std::list<Row>::iterator row_iter;
+      std::list<boost::shared_ptr<Widget> >::iterator cell_iter;
+      unsigned int cell_index;
+      for (row_iter = _rows.begin(); row_iter != _rows.end(); ++row_iter) {
+        cell_index = 0;
+        for (cell_iter = row_iter->cells.begin(); cell_iter != row_iter->cells.end(); ++cell_iter) {
+          if (cell_iter->get() == get_focus()) {
+            break;
+          }
+          ++cell_index;
+        }
+        if (cell_iter != row_iter->cells.end()) {
+          break;
+        }
+      }
+
+      if (row_iter != _rows.end()) {
+        if (x_moved) {
+          // Move horizontally among cells in the same row
+          do {
+            if (x_axis.get_value() > 0.0) {
+              ++cell_iter;
+              if (cell_iter == row_iter->cells.end()) {
+                cell_iter = row_iter->cells.begin();
+              }
+            } else {
+              if (cell_iter == row_iter->cells.begin()) {
+                cell_iter = row_iter->cells.end();
+              }
+              --cell_iter;
+            }
+          } while (!(*cell_iter)->focusable());
+
+          set_focus(cell_iter->get());
+        } else if (y_moved) {
+          // Move vertically among rows
+          do {
+            if (y_axis.get_value() > 0.0) {
+              ++row_iter;
+              if (row_iter == _rows.end()) {
+                row_iter = _rows.begin();
+              }
+            } else {
+              if (row_iter == _rows.begin()) {
+                row_iter = _rows.end();
+              }
+              --row_iter;
+            }
+          } while (row_iter->cells.size() == 0);
+
+          // Pick a cell in the new row to focus
+          cell_iter = row_iter->cells.begin();
+          if (!row_iter->force_left_focus) {
+            if (cell_index >= row_iter->cells.size()) {
+              cell_index = row_iter->cells.size()-1;
+            }
+            for (unsigned int i = 0; i < cell_index; ++i) {
+              ++cell_iter;
+            }
+          }
+          while (!(*cell_iter)->focusable() && cell_iter != row_iter->cells.begin()) {
+            --cell_iter;
+          }
+          set_focus(cell_iter->get());
+        }
+      } else {
+        // Nothing is currently in focus, so just put focus on the first cell of the first row
+        set_focus(_rows.front().cells.front().get());
+      }
+    }
+  }
 }
 
 }
