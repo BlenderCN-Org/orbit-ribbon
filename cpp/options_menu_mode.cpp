@@ -23,6 +23,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/foreach.hpp>
 
 #include "background.h"
+#include "control_settings_menu_mode.h"
 #include "debug.h"
 #include "display_settings_menu_mode.h"
 #include "globals.h"
@@ -90,6 +91,10 @@ bool OptionsMenuMode::handle_input() {
                 break;
               case OPTION_DISPLAY_MODE:
                 Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new DisplaySettingsMenuMode));
+                break;
+              case OPTION_CONTROLS:
+                Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new ControlSettingsMenuMode(_at_main_menu)));
+                break;
               default:
                 break;
             }
