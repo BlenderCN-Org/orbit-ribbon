@@ -38,11 +38,12 @@ DisplaySettingsMenuMode::DisplaySettingsMenuMode() : _menu(300, 20, 5) {
 
   BOOST_FOREACH(const VideoMode& mode, Display::get_available_video_modes()) {
     bool active = c.screenWidth() == mode.size.x && c.screenHeight() == mode.size.y && c.fullScreen() == mode.fullscreen;
-    boost::format fmt("%1%%2%x%3% %4%");
-    fmt % (active ? "Active --> " : "");
+    boost::format fmt("%1%%2%x%3% %4%%5%");
+    fmt % (active ? "--> " : "");
     fmt % mode.size.x;
     fmt % mode.size.y;
     fmt % (mode.fullscreen ? "Fullscreen" : "Windowed");
+    fmt % (active ? " <--" : "");
     boost::shared_ptr<GUI::Widget> btn(new GUI::Button(fmt.str()));
     _menu.add_widget(btn);
     _mode_buttons_map[static_cast<GUI::Button*>(&*btn)] = mode;
