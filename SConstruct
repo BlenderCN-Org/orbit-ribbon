@@ -68,6 +68,8 @@ def getstatusoutput(cmd):
   if text[-1:] == '\n': text = text[:-1]
   return sts, text
 
+def cpp_files_from(a):
+  return [f for f in a if str(f).endswith(".cpp")]
 
 def pow2le(n):
   r = 1
@@ -396,8 +398,12 @@ env['BUILDERS']['VersionInfo'] = env.Builder(
 
 hybrid_xsds = ['orepkgdesc', 'save', 'fontdesc']
 parser_xsds = ['oreanim']
-capsulated_files = Glob('xml/*.xml', strings = True)
+capsulated_files = env.Glob('xml/*.xml', strings = True)
 cpp_gen_dir = 'cpp/autoxsd/'
+source_files = []
+
+source_files.extend(env.Glob('buildtmp/*.cpp'))
+source_files.extend(env.Glob('cpp/minizip/*.c'))
 
 hybrid_built = env.XSDEHybrid(
   ['%s/%s.cpp' % (cpp_gen_dir, n) for n in hybrid_xsds] +
@@ -408,19 +414,30 @@ hybrid_built = env.XSDEHybrid(
   ['xml/%s.xsd' % n for n in hybrid_xsds],
   XML_POLY_BASES = ['MissionConditionType', 'MissionEffectType', 'BoundInputType', 'ObjType']
 )
+source_files.extend(cpp_files_from(hybrid_built))
+
 parser_built = env.XSDEParser(
   ['%s/%s-pskel.cpp' % (cpp_gen_dir, n) for n in parser_xsds],
   ['xml/%s.xsd' % n for n in parser_xsds]
 )
+source_files.extend(cpp_files_from(parser_built))
+
 capsulate_built = env.Capsulate(
   ['%s/%s.h' % (cpp_gen_dir, os.path.basename(str(n))) for n in capsulated_files],
   capsulated_files
 )
+source_files.extend(cpp_files_from(capsulate_built))
+
 fonts_built = env.CompileFonts(
-  Glob('images/fonts/latinmodern/*.png', strings = True)
+  env.Glob('images/fonts/latinmodern/*.png', strings = True)
 )
+source_files.extend(cpp_files_from(fonts_built))
+
 verinfo_built = env.VersionInfo()
-AlwaysBuild(verinfo_built)
+env.AlwaysBuild(verinfo_built)
+source_files.extend(cpp_files_from(verinfo_built))
+
+source_files.append('xsde/libxsde/xsde/libxsde.a')
 
 # FIXME: Later need to figure out how to compile only minizip and autoxsd with lenient options
 # FIXME: This whole nonsense of setting variables should be done with the SCons convenience methods
@@ -437,12 +454,4 @@ if env['HOST_OS'] and 'win' in env['HOST_OS']:
 else:
   LIBS.extend(['GL', 'GLU', 'GLEW'])
 
-env.Program(
-  'orbit-ribbon',
-  [b for b in (hybrid_built + parser_built + fonts_built + verinfo_built) if str(b).endswith(".cpp")] +
-  Glob('buildtmp/*.cpp') + Glob('cpp/minizip/*.c') +
-  ['xsde/libxsde/xsde/libxsde.a'],
-  CCFLAGS=CCFLAGS,
-  LIBS=LIBS,
-  LINKFLAGS=LINKFLAGS
-)
+env.Program('orbit-ribbon', source_files, CCFLAGS=CCFLAGS, LIBS=LIBS, LINKFLAGS=LINKFLAGS)
