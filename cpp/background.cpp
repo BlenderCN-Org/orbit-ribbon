@@ -62,7 +62,7 @@ void Background::init() {
 }
 
 void Background::deinit() {
-  density_ranges.empty();
+  density_ranges.clear();
   
   glDisable(GL_LIGHT1);
   glDisable(GL_LIGHT2);
