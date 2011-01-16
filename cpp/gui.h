@@ -107,42 +107,66 @@ namespace GUI {
       float get_value() { return _value; }
   };
 
-  class Menu {
+  class WidgetLayout {
+    protected:
+      typedef std::map<Widget*, Box> RegionMap;
+
+      void clear_region_map_cache();
+      virtual void populate_widget_region_map(RegionMap& m) =0;
+
+      const RegionMap& get_regions();
+
+    private:
+      RegionMap _cached_widget_regions;
+      bool _widget_regions_dirty;
+      Widget* _focus;
+
+      bool _coverage_dirty;
+      Box _coverage;
+
+    public:
+      WidgetLayout() : _widget_regions_dirty(true), _focus(NULL), _coverage_dirty(true) {}
+
+      Widget* get_focus() { return _focus; }
+      void set_focus(Widget* new_focus);
+      void unfocus() { set_focus(NULL); }
+      Box coverage();
+
+      virtual void draw(bool frame);
+      virtual void process();
+  };
+
+  class Menu : public WidgetLayout {
     private:
       int _width, _widget_height, _padding;
       Vector _center_offset;
 
       typedef std::list<boost::shared_ptr<Widget> > WidgetList;
       WidgetList _widgets;
-      WidgetList::iterator _focus;
-      void _set_focus(WidgetList::iterator new_focus);
 
-      template <typename P> struct DerefLess {
-        bool operator()(const P& x, const P& y) {
-          return *x < *y;
-        }
-      };
-
-      typedef std::map<WidgetList::iterator, Box, DerefLess<WidgetList::iterator> > WidgetRegionMap;
-      WidgetRegionMap& _get_regions();
-      WidgetRegionMap _widget_regions;
-      bool _widget_regions_dirty;
+    protected:
+      void populate_widget_region_map(WidgetLayout::RegionMap& m);
 
     public:
       Menu(int width, int widget_height, int padding, Vector center_offset = Vector(0,0,0)) :
-        _width(width), _widget_height(widget_height), _padding(padding),
-        _center_offset(center_offset), _widgets(), _focus(_widgets.end()),
-        _widget_regions_dirty(true)
+        _width(width), _widget_height(widget_height), _padding(padding), _center_offset(center_offset)
       {}
 
-      Box coverage();
-
       void add_widget(const boost::shared_ptr<Widget>& widget);
-      void unfocus() { _set_focus(_widgets.end()); }
-
       void process();
-      void draw(bool frame);
   };
+
+  /*
+  class Grid : public WidgetLayout {
+    public:
+      class Row {
+      };
+
+    private:
+      int _width, _row_height, _padding;
+      std::list<Row> _rows;
+  };
+  */
 }
 
 #endif

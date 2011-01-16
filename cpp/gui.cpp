@@ -226,125 +226,151 @@ void Slider::process(const Box& box) {
   }
 }
 
-void Menu::_set_focus(WidgetList::iterator new_focus) {
+void WidgetLayout::clear_region_map_cache() {
+  _widget_regions_dirty = true;
+  _coverage_dirty = true;
+}
+
+const WidgetLayout::RegionMap& WidgetLayout::get_regions() {
+  if (_widget_regions_dirty) {
+    _cached_widget_regions.clear();
+    populate_widget_region_map(_cached_widget_regions);
+    _widget_regions_dirty = false;
+  }
+
+  return _cached_widget_regions;
+}
+
+void WidgetLayout::set_focus(Widget* new_focus) {
   if (_focus == new_focus) {
     return;
   }
 
-  if (_focus != _widgets.end()) {
-    (*_focus)->lost_focus();
+  if (_focus != NULL) {
+    _focus->lost_focus();
   }
   _focus = new_focus;
-  if (_focus != _widgets.end()) {
-    (*_focus)->got_focus();
+  if (_focus != NULL) {
+    _focus->got_focus();
   }
 }
 
-Menu::WidgetRegionMap& Menu::_get_regions() {
-  if (_widget_regions_dirty) {
-    _widget_regions.clear();
-    int full_height = _widgets.size() * (_widget_height + _padding) - _padding; // Subtract one padding for fencepost error
-    Point pos((Display::get_screen_width() - _width)/2, (Display::get_screen_height() - full_height)/2);
-    pos += _center_offset * Display::get_screen_size();
-    for (WidgetList::iterator i = _widgets.begin(); i != _widgets.end(); ++i) {
-      _widget_regions[i] = Box(pos, Size(_width, _widget_height));
-      pos.y += _widget_height + _padding;
+Box WidgetLayout::coverage() {
+  if (_coverage_dirty) {
+    const RegionMap& regions = get_regions();
+    RegionMap::const_iterator top_region, bottom_region, left_region, right_region;
+    top_region = regions.end();
+    bottom_region = regions.end();
+    left_region = regions.end();
+    right_region = regions.end();
+
+    for (RegionMap::const_iterator i = regions.begin(); i != regions.end(); ++i) {
+      if (top_region == regions.end() || i->second.top_left.y < top_region->second.top_left.y) { top_region = i; }
+      if (bottom_region == regions.end() || i->second.top_left.y > bottom_region->second.top_left.y) { bottom_region = i; }
+      if (left_region == regions.end() || i->second.top_left.x < left_region->second.top_left.x) { left_region = i; }
+      if (right_region == regions.end() || i->second.top_left.x > right_region->second.top_left.x) { right_region = i; }
     }
-    _widget_regions_dirty = false;
+
+    _coverage = Box(
+      Point(left_region->second.top_left.x, top_region->second.top_left.y),
+      Size(
+        right_region->second.top_left.x + right_region->second.size.x - left_region->second.top_left.x,
+        bottom_region->second.top_left.y + bottom_region->second.size.y - top_region->second.top_left.y
+      )
+    );
+
+    _coverage_dirty = false;
   }
 
-  return _widget_regions;
+  return _coverage;
 }
 
-Box Menu::coverage() {
-  WidgetRegionMap& regions = _get_regions();
-  WidgetRegionMap::iterator top_region, bottom_region;
-  top_region = regions.end();
-  bottom_region = regions.end();
-  for (WidgetRegionMap::iterator i = regions.begin(); i != regions.end(); ++i) {
-    if (top_region == regions.end() || i->second.top_left.y < top_region->second.top_left.y) {
-      top_region = i;
-    }
-    if (bottom_region == regions.end() || i->second.top_left.y > bottom_region->second.top_left.y) {
-      bottom_region = i;
-    }
+void WidgetLayout::draw(bool frame) {
+  if (frame) {
+    draw_diamond_box(coverage()*1.2, FRAME_COLOR);
   }
 
-  return Box(
-    top_region->second.top_left,
-    Size(_width, bottom_region->second.top_left.y + bottom_region->second.size.y - top_region->second.top_left.y)
-  );
-}
-
-void Menu::add_widget(const boost::shared_ptr<Widget>& widget) {
-  _widgets.push_back(widget);
-
-  if (_widgets.size() == 1) {
-    // If this is the first widget, it gets default focus
-    _set_focus(_widgets.begin());
+  const RegionMap& regions = get_regions();
+  for (RegionMap::const_iterator i = regions.begin(); i != regions.end(); ++i) {
+    i->first->draw(i->second);
   }
-
-  _widget_regions_dirty = true;
 }
 
-void Menu::process() {
-  WidgetRegionMap& regions = _get_regions();
-  for (WidgetRegionMap::iterator i = regions.begin(); i != regions.end(); ++i) {
-    (*(i->first))->process(i->second);
+void WidgetLayout::process() {
+  const RegionMap& regions = get_regions();
+  for (RegionMap::const_iterator i = regions.begin(); i != regions.end(); ++i) {
+    i->first->process(i->second);
   }
   
   if (Globals::mouse_cursor->get_visibility()) {
     // If the mouse cursor is visible, put focus where the cursor is
     bool found_match = false;
-    for (WidgetRegionMap::iterator i = regions.begin(); i != regions.end(); ++i) {
+    for (RegionMap::const_iterator i = regions.begin(); i != regions.end(); ++i) {
       if (i->second.contains_point(Globals::mouse_cursor->get_pos())) {
-        if ((*(i->first))->focusable()) {
+        if (i->first->focusable()) {
           found_match = true;
-          _set_focus(i->first);
+          set_focus(i->first);
           break;
         }
       }
     }
     if (!found_match) {
-      _set_focus(_widgets.end());
-    }
-  } else {
-    // If the mouse cursor isn't visible, check for UI axis events to change focus
-    const Channel& y_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIY);
-    if (y_axis.matches_frame_events()) {
-      WidgetList::iterator new_focus;
-      if (_focus != _widgets.end()) {
-        new_focus = _focus;
-        do {
-          if (y_axis.get_value() > 0.0) {
-            ++new_focus;
-            if (new_focus == _widgets.end()) {
-              new_focus = _widgets.begin();
-            }
-          } else {
-            if (new_focus == _widgets.begin()) {
-              new_focus = _widgets.end();
-            }
-            --new_focus;
-          }
-        } while (!(*new_focus)->focusable());
-      } else {
-        // Nothing is currently in focus, so on input just put focus on the first widget
-        new_focus = _widgets.begin();
-      }
-      _set_focus(new_focus);
+      set_focus(NULL);
     }
   }
 }
 
-void Menu::draw(bool frame) {
-  if (frame) {
-    draw_diamond_box(coverage()*1.2, FRAME_COLOR);
+void Menu::populate_widget_region_map(WidgetLayout::RegionMap& m) {
+  int full_height = _widgets.size() * (_widget_height + _padding) - _padding; // Subtract one padding for fencepost error
+  Point pos((Display::get_screen_width() - _width)/2, (Display::get_screen_height() - full_height)/2);
+  pos += _center_offset * Display::get_screen_size();
+  for (WidgetList::iterator i = _widgets.begin(); i != _widgets.end(); ++i) {
+    m[i->get()] = Box(pos, Size(_width, _widget_height));
+    pos.y += _widget_height + _padding;
   }
+}
 
-  WidgetRegionMap& regions = _get_regions();
-  for (WidgetRegionMap::iterator i = regions.begin(); i != regions.end(); ++i) {
-    (*(i->first))->draw(i->second);
+void Menu::add_widget(const boost::shared_ptr<Widget>& widget) {
+  _widgets.push_back(widget);
+  clear_region_map_cache();
+}
+
+void Menu::process() {
+  WidgetLayout::process();
+
+  if (!Globals::mouse_cursor->get_visibility()) {
+    // If the mouse cursor isn't visible, check for UI axis events to change focus
+    const Channel& y_axis = Input::get_axis_ch(ORSave::AxisBoundAction::UIY);
+    if (y_axis.matches_frame_events()) {
+      WidgetList::iterator focus_iter;
+      for (focus_iter = _widgets.begin(); focus_iter != _widgets.end(); ++focus_iter) {
+        if (focus_iter->get() == get_focus()) {
+          break;
+        }
+      }
+
+      if (focus_iter != _widgets.end()) {
+        // Move the focus along the menu in the player's intended direction
+        do {
+          if (y_axis.get_value() > 0.0) {
+            ++focus_iter;
+            if (focus_iter == _widgets.end()) {
+              focus_iter = _widgets.begin();
+            }
+          } else {
+            if (focus_iter == _widgets.begin()) {
+              focus_iter = _widgets.end();
+            }
+            --focus_iter;
+          }
+        } while (!(*focus_iter)->focusable());
+
+        set_focus((*focus_iter).get());
+      } else {
+        // Nothing is currently in focus, so just put focus on the first widget
+        set_focus(_widgets.front().get());
+      }
+    }
   }
 }
 
