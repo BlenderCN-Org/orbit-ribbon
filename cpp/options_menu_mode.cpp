@@ -141,8 +141,10 @@ void OptionsMenuMode::draw_3d_far(bool top __attribute__ ((unused))) {
   }
 }
 
-void OptionsMenuMode::draw_2d(bool top __attribute__ ((unused))) {
-  _menu.draw(true);
+void OptionsMenuMode::draw_2d(bool top) {
+  if (top) {
+    _menu.draw(true);
+  }
 }
 
 void OptionsMenuMode::pushed_below_top() {
