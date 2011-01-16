@@ -374,4 +374,30 @@ void Menu::process() {
   }
 }
 
+void Grid::populate_widget_region_map(WidgetLayout::RegionMap& m) {
+  int full_height = _rows.size() * (_row_height + _padding) - _padding; // Subtract one padding for fencepost error
+  Point row_pos((Display::get_screen_width() - _width)/2, (Display::get_screen_height() - full_height)/2);
+  BOOST_FOREACH(const Row& row, _rows) {
+    Point cell_pos(row_pos);
+    int cell_width = (_width - (row.cells.size()-1)*_padding)/row.cells.size();
+    BOOST_FOREACH(const boost::shared_ptr<Widget>& cell, row.cells) {
+      m[cell.get()] = Box(cell_pos, Size(cell_width, _row_height));
+      cell_pos.x += cell_width + _padding;
+    }
+    row_pos.y += _row_height + _padding;
+  }
+}
+
+void Grid::add_row(bool force_left_focus) {
+  _rows.push_back(Row(force_left_focus));
+}
+
+void Grid::add_cell(const boost::shared_ptr<Widget>& widget) {
+  _rows.back().cells.push_back(widget);
+}
+
+void Grid::process() {
+  WidgetLayout::process();
+}
+
 }

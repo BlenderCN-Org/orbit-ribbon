@@ -156,17 +156,31 @@ namespace GUI {
       void process();
   };
 
-  /*
   class Grid : public WidgetLayout {
-    public:
-      class Row {
+    private:
+      struct Row {
+        typedef std::list<boost::shared_ptr<Widget> > CellList;
+        CellList cells;
+        bool force_left_focus;
+
+        Row(bool flf) : force_left_focus(flf) {}
       };
 
-    private:
       int _width, _row_height, _padding;
       std::list<Row> _rows;
+
+    protected:
+      void populate_widget_region_map(WidgetLayout::RegionMap& m);
+
+    public:
+      Grid(int width, int row_height, int padding) :
+        _width(width), _row_height(row_height), _padding(padding)
+      {}
+
+      void add_row(bool force_left_focus = false);
+      void add_cell(const boost::shared_ptr<Widget>& widget);
+      void process();
   };
-  */
 }
 
 #endif

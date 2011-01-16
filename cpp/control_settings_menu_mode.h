@@ -27,6 +27,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 class ControlSettingsMenuMode : public Mode {
   private:
+    GUI::Grid _grid;
     bool _at_main_menu;
   
   public:
