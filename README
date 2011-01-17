@@ -1,9 +1,15 @@
 Orbit Ribbon is a game simulating a world where there is little ground and even less gravity.
 
-To build the program:
-1. Download xsde and build it with the configuration in xml/xsde-X-config.make
-1. Copy the contents of your xsde directory to the xsde directory here
-3. Run scons in this directory
+The program depends upon XSDE, the excellent and quite fast XML/C++ binding. XSDE is meant to
+be built custom for each app that uses it. To build xsde according to Orbit Ribbon's usage:
+
+1. Download xsde 3.2.0.b1 for your platform, and put it in a directory here named "xsde"
+2. Copy xml/xsde-3.2.0.b1-config.make over the existing xsde/config/config.make
+3. Run "make" from within the xsde directory
+
+Once you've done that, you can run scons in this directory to build Orbit Ribbon itself.
+
+Have fun!
 
 ko klama ca le nu cusku li no
 ci
