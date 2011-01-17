@@ -56,17 +56,17 @@ class ControlSettingsMenuMode : public Mode {
       _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(binding.name, 0.0)));
 
       if (binding.can_set_kbd_mouse) {
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("ABC123")));
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("ABC123")));
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("")));
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button(chan.desc())));
       } else {
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("ABC123")));
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("ABC123")));
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("")));
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(chan.desc())));
       }
 
       if (binding.can_set_gamepad) {
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("ABC123")));
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("")));
       } else {
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("ABC123")));
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("")));
       }
     }
 
