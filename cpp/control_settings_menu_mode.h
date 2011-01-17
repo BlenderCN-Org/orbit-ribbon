@@ -22,14 +22,54 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_CONTROL_SETTINGS_MENU_MODE_H
 #define ORBIT_RIBBON_CONTROL_SETTINGS_MENU_MODE_H
 
+#include <boost/array.hpp>
+
+#include "autoxsd/save.h"
 #include "gui.h"
+#include "input.h"
 #include "mode.h"
 
 class ControlSettingsMenuMode : public Mode {
   private:
     GUI::Grid _grid;
     bool _at_main_menu;
-  
+
+    template <typename V> struct Binding {
+      V action;
+      std::string name;
+      bool can_set_kbd_mouse;
+      bool can_set_gamepad;
+
+      Binding(const V& a, const std::string& n, bool km = true, bool g = true)
+        : action(a), name(n), can_set_kbd_mouse(km), can_set_gamepad(g)
+      {}
+    };
+
+    typedef ORSave::AxisBoundAction::value_type AAction;
+    typedef ORSave::ButtonBoundAction::value_type BAction;
+
+    static const boost::array<Binding<AAction>, 6> AXIS_BOUND_ACTION_NAMES;
+    static const boost::array<Binding<BAction>, 5> BUTTON_BOUND_ACTION_NAMES;
+
+    template <typename V> void add_row(const Binding<V>& binding, const Channel& chan) {
+      _grid.add_row();
+      _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(binding.name, 0.0)));
+
+      if (binding.can_set_kbd_mouse) {
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("ABC123")));
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("ABC123")));
+      } else {
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("ABC123")));
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("ABC123")));
+      }
+
+      if (binding.can_set_gamepad) {
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("ABC123")));
+      } else {
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("ABC123")));
+      }
+    }
+
   public:
     ControlSettingsMenuMode(bool at_main_menu);
     
