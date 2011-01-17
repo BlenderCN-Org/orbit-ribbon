@@ -452,6 +452,7 @@ void Grid::process() {
           set_focus(cell_iter->get());
         } else if (y_moved) {
           // Move vertically among rows
+          int row_valid_cells;
           do {
             if (y_axis.get_value() > 0.0) {
               ++row_iter;
@@ -464,26 +465,49 @@ void Grid::process() {
               }
               --row_iter;
             }
-          } while (row_iter->cells.size() == 0);
+
+            row_valid_cells = 0;
+            for (cell_iter = row_iter->cells.begin(); cell_iter != row_iter->cells.end(); ++cell_iter) {
+              if ((*cell_iter)->focusable()) {
+                ++row_valid_cells;
+              }
+            }
+          } while (row_valid_cells == 0);
 
           // Pick a cell in the new row to focus
           cell_iter = row_iter->cells.begin();
           if (!row_iter->force_left_focus) {
-            if (cell_index >= row_iter->cells.size()) {
-              cell_index = row_iter->cells.size()-1;
-            }
             for (unsigned int i = 0; i < cell_index; ++i) {
               ++cell_iter;
+              if (cell_iter == row_iter->cells.end()) {
+                --cell_iter;
+                break;
+              }
             }
           }
           while (!(*cell_iter)->focusable() && cell_iter != row_iter->cells.begin()) {
             --cell_iter;
           }
+          while (!(*cell_iter)->focusable() && cell_iter != row_iter->cells.end()) {
+            ++cell_iter;
+          }
           set_focus(cell_iter->get());
         }
       } else {
-        // Nothing is currently in focus, so just put focus on the first cell of the first row
-        set_focus(_rows.front().cells.front().get());
+        // Nothing is currently in focus, so just put focus on the first focusable cell we can find 
+        bool done = false;
+        for (std::list<Row>::iterator row = _rows.begin(); row != _rows.end(); ++row) {
+          for (std::list<boost::shared_ptr<Widget> >::iterator cell = row->cells.begin(); cell != row->cells.end(); ++cell) {
+            if ((*cell)->focusable()) {
+              set_focus(cell->get());
+              done = true;
+              break;
+            }
+          }
+          if (done) {
+            break;
+          }
+        }
       }
     }
   }
