@@ -173,7 +173,7 @@ XSDE_CDR := n
 # resolve this is to disable the use of the long long type in XSD/e (see
 # XSDE_LONGLONG above).
 #
-XSDE_XDR := y
+XSDE_XDR := n
 
 
 # Set to 'y' if you need to handle XML vocabularies that use XML Schema
