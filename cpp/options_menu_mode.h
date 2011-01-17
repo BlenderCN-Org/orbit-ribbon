@@ -50,8 +50,6 @@ class OptionsMenuMode : public Mode {
     std::map<OptionWidgetId, GUI::Widget*> _id_widgets;
     void _add_option(OptionWidgetId id, const boost::shared_ptr<GUI::Widget>& w);
 
-    void _init_widgets_from_config();
-
   public:
     OptionsMenuMode(bool at_main_menu);
 

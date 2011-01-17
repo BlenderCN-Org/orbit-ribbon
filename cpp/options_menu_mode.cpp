@@ -37,19 +37,6 @@ void OptionsMenuMode::_add_option(OptionWidgetId id, const boost::shared_ptr<GUI
   _id_widgets[id] = &*w;
 }
 
-void OptionsMenuMode::_init_widgets_from_config() {
-  ORSave::ConfigType& c = Saving::get().config();
-
-  ((GUI::Checkbox*)_id_widgets[OPTION_SHOW_FPS])->set_value(c.showFps());
-  ((GUI::Checkbox*)_id_widgets[OPTION_DEBUG_PHYSICS])->set_value(c.debugPhysics());
-  ((GUI::Checkbox*)_id_widgets[OPTION_INVERT_TRANSLATE_Y])->set_value(c.invertTranslateY());
-  ((GUI::Checkbox*)_id_widgets[OPTION_INVERT_ROTATE_Y])->set_value(c.invertRotateY());
-
-  ((GUI::Slider*)_id_widgets[OPTION_SFX_VOLUME])->set_value(c.soundEffectVolume());
-  ((GUI::Slider*)_id_widgets[OPTION_MUSIC_VOLUME])->set_value(c.musicVolume());
-  ((GUI::Slider*)_id_widgets[OPTION_MOUSE_SENSITIVITY])->set_value(c.mouseSensitivity());
-}
-
 OptionsMenuMode::OptionsMenuMode(bool at_main_menu) :
   _at_main_menu(at_main_menu),
   _menu(300, 22, 8)
@@ -152,5 +139,14 @@ void OptionsMenuMode::pushed_below_top() {
 }
 
 void OptionsMenuMode::now_at_top() {
-  _init_widgets_from_config();
+  ORSave::ConfigType& c = Saving::get().config();
+
+  ((GUI::Checkbox*)_id_widgets[OPTION_SHOW_FPS])->set_value(c.showFps());
+  ((GUI::Checkbox*)_id_widgets[OPTION_DEBUG_PHYSICS])->set_value(c.debugPhysics());
+  ((GUI::Checkbox*)_id_widgets[OPTION_INVERT_TRANSLATE_Y])->set_value(c.invertTranslateY());
+  ((GUI::Checkbox*)_id_widgets[OPTION_INVERT_ROTATE_Y])->set_value(c.invertRotateY());
+
+  ((GUI::Slider*)_id_widgets[OPTION_SFX_VOLUME])->set_value(c.soundEffectVolume());
+  ((GUI::Slider*)_id_widgets[OPTION_MUSIC_VOLUME])->set_value(c.musicVolume());
+  ((GUI::Slider*)_id_widgets[OPTION_MOUSE_SENSITIVITY])->set_value(c.mouseSensitivity());
 }
