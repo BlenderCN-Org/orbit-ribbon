@@ -86,6 +86,12 @@ void Widget::emit_event(UIEvent e) {
   SDL_PushEvent(&event);
 }
 
+void Label::draw(const Box& box) {
+  int font_height = box.size.y - DIAMOND_BOX_BORDER.y*2;
+  int text_width = Globals::sys_font->get_width(font_height, _label);
+  Globals::sys_font->draw(box.top_left + (box.size.x - text_width)*_x_align, font_height, _label);
+}
+
 void Button::draw(const Box& box) {
   const float* color = focused() ? FOCUSED_COLOR : PASSIVE_COLOR;
   draw_diamond_box(box, color);

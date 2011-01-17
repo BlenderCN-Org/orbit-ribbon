@@ -40,6 +40,8 @@ class ControlSettingsMenuMode : public Mode {
     bool handle_input();
     void draw_3d_far(bool top);
     void draw_2d(bool top);
+
+    void now_at_top();
 };
 
 #endif

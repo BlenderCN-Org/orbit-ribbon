@@ -64,6 +64,18 @@ namespace GUI {
       bool focusable() { return false; }
   };
 
+  class Label : public Widget {
+    private:
+      std::string _label;
+      float _x_align;
+
+    public:
+      Label(const std::string& label, float x_align = 0.5) : _label(label), _x_align(x_align) {}
+      void draw(const Box& box);
+      void process(const Box& box) {}
+      bool focusable() { return false; }
+  };
+
   class Button : public Widget {
     private:
       std::string _label;
