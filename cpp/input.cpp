@@ -241,7 +241,7 @@ void MouseButtonChannel::set_neutral() {
 }
 
 std::string MouseButtonChannel::desc() const {
-  return std::string("MouseBtn") + boost::lexical_cast<std::string>(_btn);
+  return std::string("MouseBtn") + boost::lexical_cast<std::string>((int)_btn);
 }
 
 MouseMovementChannel::MouseMovementChannel(Mouse* mouse, Uint8 axis) :
