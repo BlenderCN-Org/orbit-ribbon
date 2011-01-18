@@ -7,6 +7,9 @@ cpp/autoxsd/*.o
 cpp/autofont/*.cpp
 cpp/autofont/*.h
 cpp/autofont/*.o
+cpp/autoicon/*.cpp
+cpp/autoicon/*.h
+cpp/autoicon/*.o
 cpp/autoinfo/*.cpp
 cpp/autoinfo/*.h
 cpp/autoinfo/*.o

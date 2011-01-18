@@ -25,7 +25,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/lexical_cast.hpp>
 #include <GL/glew.h>
 #include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
 
+#include "autoicon/16.h"
 #include "autoinfo/version.h"
 #include "background.h"
 #include "constants.h"
@@ -167,7 +169,12 @@ void Display::init() {
   }
   std::string win_title = std::string("Orbit Ribbon (") + APP_VERSION + std::string(")");
   SDL_WM_SetCaption(win_title.c_str(), win_title.c_str());
-  //FIXME : Set window icon here
+
+  SDL_RWops* icon_rw_ops(SDL_RWFromConstMem(MINI_ICON_DATA_16, MINI_ICON_DATA_16_LEN));
+  SDL_Surface* icon = IMG_LoadTGA_RW(icon_rw_ops);
+  SDL_WM_SetIcon(icon, NULL);
+  SDL_FreeSurface(icon);
+  SDL_RWclose(icon_rw_ops);
   
   Debug::status_msg(
     "Setting display mode to " +

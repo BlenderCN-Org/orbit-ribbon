@@ -92,6 +92,7 @@ def write_c_string(fh, name, s):
 
 
 def build_windresobj(source, target, env):
+  # TODO: Probably should seperate this into two builders: rc generation and object file generation
   tgt_list = []
   if isinstance(target, list):
     tgt_list = [str(t) for t in target]
@@ -419,6 +420,49 @@ def build_verinfo(source, target, env):
 def verinfo_emitter(target, source, env):
   return ((os.path.join("cpp", "autoinfo", "version.h"), os.path.join("cpp", "autoinfo", "version.cpp")), ())
 
+
+def build_mini_icon(source, target, env):
+  # FIXME: This is mostly cut and paste from the autofont builder. Refactor!
+  for s in source:
+    imgpath = str(s)
+    f = os.path.splitext(os.path.basename(imgpath))[0]
+    sym_name = "MINI_ICON_DATA_" + f.upper()
+    guard_name = "ORBIT_RIBBON_" + sym_name + "_H"
+    img = Image.open(imgpath)
+    char_array = img_to_tga_char_array(img)
+
+    header_fh = open("cpp/autoicon/" + f + ".h", "w")
+    header_fh.write(preamble_pattern % (f + ".h", "Automatically generated header for icon %s" % f))
+    header_fh.write("#ifndef %s\n" % guard_name)
+    header_fh.write("#define %s\n" % guard_name)
+    header_fh.write("\n")
+    header_fh.write("const unsigned int %s_LEN = %u;\n" % (sym_name, len(char_array)))
+    header_fh.write("extern const unsigned char %s[%u];\n" % (sym_name, len(char_array)))
+    header_fh.write("\n")
+    header_fh.write("#endif\n")
+    header_fh.close()
+
+    impl_fh = open("cpp/autoicon/" + f + ".cpp", "w")
+    impl_fh.write(preamble_pattern % (f + ".h", "Automatically generated data file for icon %s" % f))
+    impl_fh.write("#include \"%s.h\"\n" % f)
+    impl_fh.write("\n")
+    impl_fh.write("const unsigned char %s[%u] = {%s};\n" % (sym_name, len(char_array), ",".join(char_array)))
+    impl_fh.close()
+
+def mini_icon_emitter(target, source, env):
+  iconnames = []
+  for s in source:
+    f = os.path.splitext(os.path.basename(str(s)))[0]
+    if f not in iconnames:
+      iconnames.append(f)
+
+  targets = []
+  for f in iconnames:
+    targets.append("cpp/autoicon/%s.h" % f)
+    targets.append("cpp/autoicon/%s.cpp" % f)
+  return (targets, source)
+
+
 env.VariantDir('buildtmp', 'cpp', duplicate=0)
 
 env['BUILDERS']['WindResObj'] = env.Builder(
@@ -441,6 +485,10 @@ env['BUILDERS']['Capsulate'] = env.Builder(
 env['BUILDERS']['CompileFonts'] = env.Builder(
   action = Action(build_font, "Generating font data from: $SOURCES"),
   emitter = font_emitter
+)
+env['BUILDERS']['CapsulateMiniIcons'] = env.Builder(
+  action = Action(build_mini_icon, "Encapsulating icon data: $SOURCES"),
+  emitter = mini_icon_emitter
 )
 env['BUILDERS']['VersionInfo'] = env.Builder(
   action = Action(build_verinfo, "Writing version info"),
@@ -487,6 +535,11 @@ fonts_built = env.CompileFonts(
   env.Glob('images/fonts/latinmodern/*.png', strings = True)
 )
 source_files.extend(cpp_files_from(fonts_built))
+
+mini_icons_built = env.CapsulateMiniIcons(
+  'images/icon/16.png'
+)
+source_files.extend(cpp_files_from(mini_icons_built))
 
 verinfo_built = env.VersionInfo()
 env.AlwaysBuild(verinfo_built)
