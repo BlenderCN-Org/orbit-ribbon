@@ -44,7 +44,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 """ 
 
-import os, sys, Image, cStringIO, lxml.etree, datetime
+import os, sys, Image, cStringIO, lxml.etree, datetime, time
 
 
 env = Environment(ENV = {'PATH' : os.environ['PATH']}, tools = ['mingw'])
@@ -89,6 +89,54 @@ def write_c_string(fh, name, s):
     fh.write('"' + line.replace('\\', '\\\\').replace('"', '\\"').replace("\n", "") + '\\n"')
     fh.write("\n")
   fh.write(";\n")
+
+
+def build_windresobj(source, target, env):
+  tgt_list = []
+  if isinstance(target, list):
+    tgt_list = [str(t) for t in target]
+  else:
+    tgt_list = [str(target)]
+
+  for tgt in tgt_list:
+    temp_rc_path = tgt + ".rc"
+
+    t = int(time.time())
+    parts = []
+    for x in range(4):
+      parts.insert(0, (t/(10**(x*3))) % (10**3))
+    silly_numeric_version = "%u,%u,%u,%u" % tuple(parts)
+
+    fh = open(temp_rc_path, "w")
+    fh.write("1 VERSIONINFO\n")
+    fh.write("FILEVERSION %s\n" % silly_numeric_version)
+    fh.write("PRODUCTVERSION %s\n" % silly_numeric_version)
+    fh.write("BEGIN\n")
+    fh.write("  BLOCK \"StringFileInfo\"\n")
+    fh.write("  BEGIN\n")
+    fh.write("    BLOCK \"040904E4\"\n")
+    fh.write("    BEGIN\n")
+    fh.write("      VALUE \"CompanyName\", \"%s\"\n" % env["COMPANY_NAME"])
+    fh.write("      VALUE \"FileDescription\", \"%s\"\n" % env["PRODUCT_NAME"])
+    fh.write("      VALUE \"FileVersion\", \"%s\"\n" % env["PRODUCT_VERSION"])
+    fh.write("      VALUE \"InternalName\", \"%s\"\n" % env["INTERNAL_NAME"])
+    fh.write("      VALUE \"LegalCopyright\", \"%s\"\n" % env["COPYRIGHT_BLURB"])
+    fh.write("      VALUE \"OriginalFilename\", \"%s\"\n" % (env["INTERNAL_NAME"] + ".exe"))
+    fh.write("      VALUE \"ProductName\", \"%s\"\n" % env["PRODUCT_NAME"])
+    fh.write("      VALUE \"ProductVersion\", \"%s\"\n" % env["PRODUCT_VERSION"])
+    fh.write("    END\n")
+    fh.write("  END\n")
+    fh.write("  BLOCK \"VarFileInfo\"\n")
+    fh.write("  BEGIN\n")
+    fh.write("    VALUE \"Translation\", 0x409, 1252\n")
+    fh.write("  END\n")
+    fh.write("END\n")
+    fh.write("\n")
+    fh.write("2 ICON \"%s\"\n" % env["ICO_FILE"])
+    fh.close();
+
+    env.Execute([['windres', temp_rc_path, '-o', tgt]])
+
 
 def build_capsulate(source, target, env):
   src_list = []
@@ -373,6 +421,9 @@ def verinfo_emitter(target, source, env):
 
 env.VariantDir('buildtmp', 'cpp', duplicate=0)
 
+env['BUILDERS']['WindResObj'] = env.Builder(
+  action = Action(build_windresobj, "Creating windows resource object file")
+)
 env['BUILDERS']['XSDEHybrid'] = env.Builder(
   action = Action(lambda source, target, env: build_xsde('cxx-hybrid', source, target, env), "C++/Hybrid for XML schemas: $SOURCES"),
   suffix = {'.xsd' : '.cpp'},
@@ -395,6 +446,10 @@ env['BUILDERS']['VersionInfo'] = env.Builder(
   action = Action(build_verinfo, "Writing version info"),
   emitter = verinfo_emitter
 )
+
+in_windows = False
+if env['HOST_OS'] and 'win' in env['HOST_OS']:
+  in_windows = True
 
 hybrid_xsds = ['orepkgdesc', 'save', 'fontdesc']
 parser_xsds = ['oreanim']
@@ -437,6 +492,20 @@ verinfo_built = env.VersionInfo()
 env.AlwaysBuild(verinfo_built)
 source_files.extend(cpp_files_from(verinfo_built))
 
+if in_windows:
+  windres_built = env.WindResObj(
+    'buildtmp/win-resource.o',
+    verinfo_built,
+    ICO_FILE='images/icon/orbit-ribbon.ico',
+    COMPANY_NAME="Maintained by David Mike Simon",
+    INTERNAL_NAME="orbit-ribbon",
+    PRODUCT_NAME="Orbit Ribbon %s" % ORBIT_RIBBON_VERSION,
+    PRODUCT_VERSION=ORBIT_RIBBON_VERSION,
+    COPYRIGHT_BLURB="Copyright 2011 David Mike Simon"
+  )
+  env.AlwaysBuild(windres_built)
+  source_files.extend(windres_built)
+
 source_files.append('xsde/libxsde/xsde/libxsde.a')
 
 # FIXME: Later need to figure out how to compile only minizip and autoxsd with lenient options
@@ -445,7 +514,7 @@ source_files.append('xsde/libxsde/xsde/libxsde.a')
 CCFLAGS = '-Wall -DdDOUBLE -Ixsde/libxsde'
 LINKFLAGS = ''
 LIBS = ['ode', 'SDL', 'SDL_image', 'boost_filesystem', 'boost_program_options', 'boost_iostreams']
-if env['HOST_OS'] and 'win' in env['HOST_OS']:
+if in_windows:
   CCFLAGS += ' -DIN_WINDOWS'
   LINKFLAGS += ' -static -mwindows'
   LIBS.insert(0, 'z')
