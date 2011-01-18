@@ -174,7 +174,7 @@ void Display::init() {
   SDL_Surface* icon = IMG_LoadTGA_RW(icon_rw_ops);
   SDL_WM_SetIcon(icon, NULL);
   SDL_FreeSurface(icon);
-  SDL_RWclose(icon_rw_ops);
+  SDL_FreeRW(icon_rw_ops);
   
   Debug::status_msg(
     "Setting display mode to " +
