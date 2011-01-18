@@ -41,9 +41,6 @@
 				<positive xsi:type="orsave:KeyInputType" key="111" />
 			</input>
 		</axis_bind>
-		<button_bind action="Pause">
-			<input xsi:type="orsave:KeyInputType" key="27" />
-		</button_bind>
 	</inputDevice>
 </preset>
 
