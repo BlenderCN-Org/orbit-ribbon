@@ -55,18 +55,22 @@ class ControlSettingsMenuMode : public Mode {
       _grid.add_row();
       _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(binding.name, 0.0)));
 
+      std::string kbd_desc = chan.desc(CHANNEL_DESC_TYPE_KEYBOARD);
+      std::string mouse_desc = chan.desc(CHANNEL_DESC_TYPE_MOUSE);
+      std::string gp_desc = chan.desc(CHANNEL_DESC_TYPE_GAMEPAD);
+
       if (binding.can_set_kbd_mouse) {
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("")));
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button(chan.desc())));
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button(kbd_desc)));
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button(mouse_desc)));
       } else {
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("")));
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(chan.desc())));
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(kbd_desc)));
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(mouse_desc)));
       }
 
       if (binding.can_set_gamepad) {
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("")));
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button(gp_desc)));
       } else {
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("")));
+        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(gp_desc)));
       }
     }
 

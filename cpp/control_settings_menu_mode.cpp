@@ -47,7 +47,7 @@ ControlSettingsMenuMode::BUTTON_BOUND_ACTION_NAMES = { {
 } };
 
 ControlSettingsMenuMode::ControlSettingsMenuMode(bool at_main_menu) :
-  _grid(700, 22, 8), _at_main_menu(at_main_menu)
+  _grid(700, 20, 12), _at_main_menu(at_main_menu)
 {
   _grid.add_row();
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::BlankWidget()));

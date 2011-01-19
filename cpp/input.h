@@ -35,6 +35,11 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 class Input;
 
+const unsigned int CHANNEL_DESC_TYPE_KEYBOARD = 1;
+const unsigned int CHANNEL_DESC_TYPE_MOUSE = 2;
+const unsigned int CHANNEL_DESC_TYPE_GAMEPAD = 4;
+const unsigned int CHANNEL_DESC_TYPE_ALL = CHANNEL_DESC_TYPE_KEYBOARD | CHANNEL_DESC_TYPE_MOUSE | CHANNEL_DESC_TYPE_GAMEPAD;
+
 class Channel : boost::noncopyable {
   public:
     virtual bool is_on() const =0;
@@ -43,7 +48,7 @@ class Channel : boost::noncopyable {
     virtual float get_value() const =0;
     virtual void set_neutral();
     virtual bool is_null() const;
-    virtual std::string desc() const =0;
+    virtual std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const =0;
 };
 
 class NullChannel : public Channel {
@@ -57,7 +62,7 @@ class NullChannel : public Channel {
     bool matches_frame_events() const;
     float get_value() const;
     bool is_null() const;
-    std::string desc() const;
+    std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const;
 };
 
 class ChannelSource : boost::noncopyable {
@@ -102,7 +107,7 @@ class KeyChannel : public Channel {
     bool matches_frame_events() const;
     float get_value() const;
     void set_neutral();
-    std::string desc() const;
+    std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const;
 };
 
 class MouseButtonChannel;
@@ -144,7 +149,7 @@ class MouseButtonChannel : public Channel {
     bool matches_frame_events() const;
     float get_value() const;
     void set_neutral();
-    std::string desc() const;
+    std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const;
 };
 
 class MouseMovementChannel : public Channel {
@@ -160,7 +165,7 @@ class MouseMovementChannel : public Channel {
     bool is_on() const;
     bool matches_frame_events() const;
     float get_value() const;
-    std::string desc() const;
+    std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const;
 };
 
 class GamepadAxisChannel;
@@ -206,7 +211,7 @@ class GamepadAxisChannel : public Channel {
     bool matches_frame_events() const;
     float get_value() const;
     void set_neutral();
-    std::string desc() const;
+    std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const;
 };
 
 class GamepadButtonChannel : public Channel {
@@ -225,7 +230,7 @@ class GamepadButtonChannel : public Channel {
     bool matches_frame_events() const;
     float get_value() const;
     void set_neutral();
-    std::string desc() const;
+    std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const;
 };
 
 class PseudoAxisChannel : public Channel {
@@ -241,7 +246,7 @@ class PseudoAxisChannel : public Channel {
     bool matches_frame_events() const;
     float get_value() const;
     void set_neutral();
-    std::string desc() const;
+    std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const;
 };
 
 class PseudoButtonChannel : public Channel {
@@ -255,7 +260,7 @@ class PseudoButtonChannel : public Channel {
     bool matches_frame_events() const;
     float get_value() const;
     void set_neutral();
-    std::string desc() const;
+    std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const;
 };
 
 class MultiChannel : public Channel {
@@ -269,7 +274,7 @@ class MultiChannel : public Channel {
     bool is_partially_on() const =0;
     float get_value() const =0;
     void set_neutral();
-    std::string desc() const =0;
+    std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const =0;
 };
 
 class MultiOrChannel : public MultiChannel {
@@ -278,7 +283,7 @@ class MultiOrChannel : public MultiChannel {
     bool matches_frame_events() const;
     bool is_partially_on() const;
     float get_value() const;
-    std::string desc() const;  
+    std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const;
 };
 
 class MultiAndChannel : public MultiChannel {
@@ -287,7 +292,7 @@ class MultiAndChannel : public MultiChannel {
     bool matches_frame_events() const;
     bool is_partially_on() const;
     float get_value() const;
-    std::string desc() const;  
+    std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const;
 };
 
 class App;

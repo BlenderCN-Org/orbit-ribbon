@@ -176,8 +176,8 @@ bool NullChannel::is_null() const {
   return true;
 }
 
-std::string NullChannel::desc() const {
-  return std::string("NULL");
+std::string NullChannel::desc(unsigned int desc_type) const {
+  return "";
 }
 
 KeyChannel::KeyChannel(Keyboard* kbd, SDLKey key) :
@@ -206,12 +206,18 @@ void KeyChannel::set_neutral() {
   _neutral_state = _kbd->_sdl_key_state[_key];
 }
 
-std::string KeyChannel::desc() const {
-  std::string upper_name;
-  BOOST_FOREACH(char n, SDL_GetKeyName(_key)) {
-    upper_name.push_back(std::toupper(int(n)));
+std::string KeyChannel::desc(unsigned int desc_type) const {
+  if (desc_type & CHANNEL_DESC_TYPE_KEYBOARD) {
+    std::string upper_name;
+    int i = 0;
+    BOOST_FOREACH(char n, SDL_GetKeyName(_key)) {
+      upper_name.push_back(i == 0 ? std::toupper(int(n)) : std::tolower(int(n)));
+      ++i;
+    }
+    return std::string("[") + upper_name + std::string("]");
+  } else {
+    return "";
   }
-  return std::string("[") + upper_name + std::string("]");
 }
 
 MouseButtonChannel::MouseButtonChannel(Mouse* mouse, Uint8 btn) :
@@ -240,8 +246,12 @@ void MouseButtonChannel::set_neutral() {
   _neutral_state = _mouse->_btn_mask & SDL_BUTTON(_btn);
 }
 
-std::string MouseButtonChannel::desc() const {
-  return std::string("MouseBtn") + boost::lexical_cast<std::string>((int)_btn);
+std::string MouseButtonChannel::desc(unsigned int desc_type) const {
+  if (desc_type & CHANNEL_DESC_TYPE_MOUSE) {
+    return std::string("MouseBtn") + boost::lexical_cast<std::string>((int)_btn);
+  } else {
+    return "";
+  }
 }
 
 MouseMovementChannel::MouseMovementChannel(Mouse* mouse, Uint8 axis) :
@@ -266,11 +276,15 @@ float MouseMovementChannel::get_value() const {
   return fmax(-1.0, fmin(1.0, v/f));
 }
 
-std::string MouseMovementChannel::desc() const {
-  if (_axis == 0) {
-    return std::string("MouseX");
+std::string MouseMovementChannel::desc(unsigned int desc_type) const {
+  if (desc_type & CHANNEL_DESC_TYPE_MOUSE) {
+    if (_axis == 0) {
+      return std::string("MouseX");
+    } else {
+      return std::string("MouseY");
+    }
   } else {
-    return std::string("MouseY");
+    return "";
   }
 }
 
@@ -327,9 +341,13 @@ void GamepadAxisChannel::set_neutral() {
   _neutral_value = sint16_to_axis_float(SDL_JoystickGetAxis(_gamepad_man->_gamepads[_gamepad], _axis));
 }
 
-std::string GamepadAxisChannel::desc() const {
+std::string GamepadAxisChannel::desc(unsigned int desc_type) const {
   // TODO Allow use of human-readable joystick axis names
-  return (boost::format("Gamepad(%u)Axis%u") % (_gamepad+1) % (_axis+1)).str();
+  if (desc_type & CHANNEL_DESC_TYPE_GAMEPAD) {
+    return (boost::format("Gamepad(%u)Axis%u") % (_gamepad+1) % (_axis+1)).str();
+  } else {
+    return "";
+  }
 }
 
 GamepadButtonChannel::GamepadButtonChannel(GamepadManager* gamepad_man, Uint8 gamepad, Uint8 button) :
@@ -362,9 +380,13 @@ void GamepadButtonChannel::set_neutral() {
   _neutral_state = SDL_JoystickGetButton(_gamepad_man->_gamepads[_gamepad], _button);
 }
 
-std::string GamepadButtonChannel::desc() const {
+std::string GamepadButtonChannel::desc(unsigned int desc_type) const {
   // TODO Allow use of human-readable joystick button names
-  return (boost::format("Gamepad(%u)Btn%u") % (_gamepad+1) % (_button+1)).str();
+  if (desc_type & CHANNEL_DESC_TYPE_GAMEPAD) {
+    return (boost::format("Gamepad(%u)Btn%u") % (_gamepad+1) % (_button+1)).str();
+  } else {
+    return "";
+  }
 }
 
 PseudoAxisChannel::PseudoAxisChannel(const boost::shared_ptr<Channel>& neg, const boost::shared_ptr<Channel>& pos, bool neg_invert, bool pos_invert) :
@@ -400,8 +422,14 @@ void PseudoAxisChannel::set_neutral() {
   _pos->set_neutral();
 }
 
-std::string PseudoAxisChannel::desc() const {
-  return _neg->desc() + "-" + _pos->desc();
+std::string PseudoAxisChannel::desc(unsigned int desc_type) const {
+  std::string n = _neg->desc(desc_type);
+  std::string p = _pos->desc(desc_type);
+  if (n.size() > 0 && p.size() > 0) {
+    return n + "-" + p;
+  } else {
+    return "";
+  }
 }
 
 PseudoButtonChannel::PseudoButtonChannel(const boost::shared_ptr<Channel>& chn) :
@@ -424,8 +452,8 @@ void PseudoButtonChannel::set_neutral() {
   _chn->set_neutral();
 }
 
-std::string PseudoButtonChannel::desc() const {
-  return _chn->desc();
+std::string PseudoButtonChannel::desc(unsigned int desc_type) const {
+  return _chn->desc(desc_type);
 }
 
 void MultiChannel::set_neutral() {
@@ -474,13 +502,16 @@ float MultiOrChannel::get_value() const {
   return v;
 }
 
-std::string MultiOrChannel::desc() const {
+std::string MultiOrChannel::desc(unsigned int desc_type) const {
   std::string ret;
   BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
-    if (ret.size() > 0) {
-      ret += "/";
+    std::string subch_desc = ch->desc(desc_type);
+    if (subch_desc.size() > 0) {
+      if (ret.size() > 0) {
+        ret += "/";
+      }
+      ret += subch_desc;
     }
-    ret += ch->desc();
   }
   return ret;
 }
@@ -525,13 +556,16 @@ float MultiAndChannel::get_value() const {
   return v;
 }
 
-std::string MultiAndChannel::desc() const {
+std::string MultiAndChannel::desc(unsigned int desc_type) const {
   std::string ret;
   BOOST_FOREACH(const boost::shared_ptr<Channel>& ch, _channels) {
-    if (ret.size() > 0) {
-      ret += "+";
+    std::string subch_desc = ch->desc(desc_type);
+    if (subch_desc.size() > 0) {
+      if (ret.size() > 0) {
+        ret += "+";
+      }
+      ret += subch_desc;
     }
-    ret += ch->desc();
   }
   return ret;
 }
@@ -773,10 +807,7 @@ void Input::set_channels_from_config() {
   insert_binding(ORSave::ButtonBoundAction::ForceQuit, _kbd->key_channel(SDLK_F4), _button_action_map);
   
   // Bind channels for the fixed default mouse button mappings
-  // Doesn't matter which mouse button you push, it's a confirmation
   insert_binding(ORSave::ButtonBoundAction::Confirm, _mouse->button_channel(1), _button_action_map);
-  insert_binding(ORSave::ButtonBoundAction::Confirm, _mouse->button_channel(2), _button_action_map);
-  insert_binding(ORSave::ButtonBoundAction::Confirm, _mouse->button_channel(3), _button_action_map);
   
   // Alias gameplay motion bindings to UI movement for convenience
   std::map<ORSave::AxisBoundAction::value_type, boost::shared_ptr<Channel> >::iterator i;
