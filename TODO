@@ -35,8 +35,9 @@ Thinh's ideas:
 
 - In all the places in the program that show a copyright notice, also mention the font license.
 
-- Use boost::format instead of lexical_cast wherever it makes sense (which is most places)
+- Put config and log in an orbit ribbon directory ('Orbit Ribbon' on Windows, '.orbit-ribbon' on Linux)
 - When mouse cursor is visible and fullscreen mode is off, allow cursor to leave the window
+- Use boost::format instead of lexical_cast wherever it makes sense (which is most places)
 - Don't hide/reset mouse cursor when in transition between two cursor-showing modes
 - Seperate most of the custom SCons stuff into python files in a site_scons directory
 - Use a dialog box to show fatal errors in Windows
