@@ -35,6 +35,9 @@ Thinh's ideas:
 
 - In all the places in the program that show a copyright notice, also mention the font license.
 
+- Smarter way to deal with inversion settings, so that when inversion is on for an action:
+  - Reverse label in control settings (i.e. "Move down & up", not "Move up & down")
+  - In binding dialog, flip input bindings before saving
 - Put config and log in an orbit ribbon directory ('Orbit Ribbon' on Windows, '.orbit-ribbon' on Linux)
 - When mouse cursor is visible and fullscreen mode is off, allow cursor to leave the window
 - Use boost::format instead of lexical_cast wherever it makes sense (which is most places)
