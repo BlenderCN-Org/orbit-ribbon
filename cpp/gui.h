@@ -147,7 +147,7 @@ namespace GUI {
       virtual void draw(bool frame);
       virtual void process();
 
-      void clear() =0;
+      virtual void clear() =0;
   };
 
   class Menu : public WidgetLayout {

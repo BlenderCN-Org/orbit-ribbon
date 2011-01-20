@@ -343,7 +343,7 @@ void Menu::add_widget(const boost::shared_ptr<Widget>& widget) {
 
 void Menu::clear() {
   _widgets.clear();
-  clear_region_map_cache()
+  clear_region_map_cache();
 }
 
 void Menu::process() {
