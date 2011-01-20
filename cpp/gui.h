@@ -146,6 +146,8 @@ namespace GUI {
 
       virtual void draw(bool frame);
       virtual void process();
+
+      void clear() =0;
   };
 
   class Menu : public WidgetLayout {
@@ -165,6 +167,8 @@ namespace GUI {
       {}
 
       void add_widget(const boost::shared_ptr<Widget>& widget);
+      void clear();
+
       void process();
   };
 
@@ -191,6 +195,8 @@ namespace GUI {
 
       void add_row(bool force_left_focus = false);
       void add_cell(const boost::shared_ptr<Widget>& widget);
+      void clear();
+
       void process();
   };
 }

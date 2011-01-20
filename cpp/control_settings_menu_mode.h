@@ -74,6 +74,8 @@ class ControlSettingsMenuMode : public Mode {
       }
     }
 
+    void setup_grid();
+
   public:
     ControlSettingsMenuMode(bool at_main_menu);
     

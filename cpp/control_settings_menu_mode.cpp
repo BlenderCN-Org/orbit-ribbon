@@ -46,9 +46,7 @@ ControlSettingsMenuMode::BUTTON_BOUND_ACTION_NAMES = { {
   Binding<BAction>(ORSave::ButtonBoundAction::ResetNeutral, "Reset Input Neutrals", false, false),
 } };
 
-ControlSettingsMenuMode::ControlSettingsMenuMode(bool at_main_menu) :
-  _grid(700, 20, 12), _at_main_menu(at_main_menu)
-{
+void ControlSettingsMenuMode::setup_grid() {
   _grid.add_row();
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::BlankWidget()));
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("Keyboard")));
@@ -70,6 +68,12 @@ ControlSettingsMenuMode::ControlSettingsMenuMode(bool at_main_menu) :
   _grid.add_row(true);
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("Done")));
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("Reset All to Defaults")));
+}
+
+ControlSettingsMenuMode::ControlSettingsMenuMode(bool at_main_menu) :
+  _grid(700, 20, 12), _at_main_menu(at_main_menu)
+{
+  setup_grid();
 }
 
 bool ControlSettingsMenuMode::handle_input() {
