@@ -51,6 +51,7 @@ class ControlSettingsMenuMode : public Mode {
     static const boost::array<Binding<AAction>, 6> AXIS_BOUND_ACTION_NAMES;
     static const boost::array<Binding<BAction>, 5> BUTTON_BOUND_ACTION_NAMES;
 
+    // TODO: If I just worked with a parent of the binding classes, I could avoid this silliness
     template <typename V> void add_row(const Binding<V>& binding, const Channel& chan) {
       _grid.add_row();
       _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(binding.name, 0.0)));
@@ -88,6 +89,55 @@ class ControlSettingsMenuMode : public Mode {
     void draw_2d(bool top);
 
     void now_at_top();
+};
+
+class RebindingDialogMenuMode : public Mode {
+  protected:
+    unsigned int _desc_type;
+    std::string _old_value;
+    std::string _binding_desc;
+
+  public:
+    RebindingDialogMenuMode(unsigned int desc_type, const std::string& old_value, const std::string& binding_desc) :
+      _desc_type(desc_type), _old_value(old_value), _binding_desc("Rebinding Action: " +  binding_desc)
+    {}
+
+    bool execute_after_lower_mode() { return true; }
+    bool simulation_disabled() { return true; }
+    bool mouse_cursor_enabled() { return false; }
+
+    bool handle_input();
+    void draw_2d(bool top);
+};
+
+class AxisRebindingDialogMenuMode : public RebindingDialogMenuMode {
+  private:
+    ORSave::AxisBoundAction::value_type _action;
+
+  public:
+    AxisRebindingDialogMenuMode(
+      ORSave::AxisBoundAction::value_type action,
+      unsigned int desc_type, const std::string& old_value, const std::string& binding_desc
+      ) : RebindingDialogMenuMode(desc_type, old_value, binding_desc), _action(action) 
+    {}
+
+    bool handle_input();
+};
+
+class ButtonRebindingDialogMenuMode : public RebindingDialogMenuMode {
+  private:
+    ORSave::ButtonBoundAction::value_type _action;
+    std::string _neg_name, _pos_name;
+
+  public:
+    ButtonRebindingDialogMenuMode(
+      ORSave::ButtonBoundAction::value_type action,
+      const std::string& neg_name, const std::string& pos_name,
+      unsigned int desc_type, const std::string& old_value, const std::string& binding_desc
+      ) : RebindingDialogMenuMode(desc_type, old_value, binding_desc), _action(action), _neg_name(neg_name), _pos_name(pos_name)
+    {}
+
+    bool handle_input();
 };
 
 #endif

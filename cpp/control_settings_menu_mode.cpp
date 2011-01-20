@@ -25,6 +25,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "background.h"
 #include "control_settings_menu_mode.h"
+#include "display.h"
+#include "font.h"
 #include "globals.h"
 
 const boost::array<ControlSettingsMenuMode::Binding<ControlSettingsMenuMode::AAction>, 6>
@@ -47,6 +49,8 @@ ControlSettingsMenuMode::BUTTON_BOUND_ACTION_NAMES = { {
 } };
 
 void ControlSettingsMenuMode::setup_grid() {
+  _grid.clear();
+
   _grid.add_row();
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::BlankWidget()));
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("Keyboard")));
@@ -73,7 +77,6 @@ void ControlSettingsMenuMode::setup_grid() {
 ControlSettingsMenuMode::ControlSettingsMenuMode(bool at_main_menu) :
   _grid(700, 20, 12), _at_main_menu(at_main_menu)
 {
-  setup_grid();
 }
 
 bool ControlSettingsMenuMode::handle_input() {
@@ -81,6 +84,16 @@ bool ControlSettingsMenuMode::handle_input() {
 
   if (Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).matches_frame_events()) {
     Globals::mode_stack->next_frame_pop_mode();
+  } else {
+    BOOST_FOREACH(SDL_Event& e, Globals::frame_events) {
+      if (e.type == SDL_USEREVENT) {
+        if (e.user.code == GUI::WIDGET_CLICKED) {
+          Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new RebindingDialogMenuMode(
+            1, "X", "Shot Web"
+          )));
+        }
+      }
+    }
   }
 
   return true;
@@ -98,4 +111,38 @@ void ControlSettingsMenuMode::draw_2d(bool top __attribute__ ((unused))) {
 }
 
 void ControlSettingsMenuMode::now_at_top() {
+  // FIXME: This clears the focus. Maybe I do need Button::set_value after all.
+  setup_grid();
+}
+
+bool RebindingDialogMenuMode::handle_input() {
+  if (Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).matches_frame_events()) {
+    Globals::mode_stack->next_frame_pop_mode();
+  }
+
+  return true;
+}
+
+const Size REBINDING_DIALOG_SIZE(400,400);
+const int REBINDING_DIALOG_FONT_HEIGHT = 20;
+void RebindingDialogMenuMode::draw_2d(bool top __attribute__ ((unused))) {
+  GUI::draw_box(Box(Point(0,0), Display::get_screen_size()), 0.3, 0.3, 0.3, 0.4);
+
+  Box dialog_area(Point(0,0) + (Display::get_screen_size() - REBINDING_DIALOG_SIZE)/2, REBINDING_DIALOG_SIZE);
+  GUI::draw_diamond_box(dialog_area, 0, 0, 0, 0.95);
+
+  int text_width = Globals::sys_font->get_width(REBINDING_DIALOG_FONT_HEIGHT, _binding_desc);
+  Globals::sys_font->draw(
+    dialog_area.top_left + Vector((dialog_area.size.x - text_width)/2, REBINDING_DIALOG_FONT_HEIGHT/2),
+    REBINDING_DIALOG_FONT_HEIGHT,
+    _binding_desc
+  );
+}
+
+bool AxisRebindingDialogMenuMode::handle_input() {
+  return RebindingDialogMenuMode::handle_input();
+}
+
+bool ButtonRebindingDialogMenuMode::handle_input() {
+  return RebindingDialogMenuMode::handle_input();
 }
