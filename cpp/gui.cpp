@@ -78,6 +78,34 @@ void draw_diamond_box(const Box& box, const float* color) {
   draw_diamond_box(box, color[0], color[1], color[2], color[3]);
 }
 
+void draw_box(const Box& box, float r, float g, float b, float a) {
+  GLfloat points[8] = {
+    box.top_left.x, box.top_left.y,
+    box.top_left.x, box.top_left.y+box.size.y,
+    box.top_left.x+box.size.x, box.top_left.y+box.size.y,
+    box.top_left.x+box.size.x, box.top_left.y,
+  };
+
+  glDisable(GL_TEXTURE_2D);
+  glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glDisableClientState(GL_NORMAL_ARRAY);
+  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+  glColor4f(r, g, b, a);
+  glVertexPointer(2, GL_FLOAT, 0, points);
+  glDrawArrays(GL_QUADS, 0, 8);
+  glColor3f(1.0, 1.0, 1.0);
+
+  glPopClientAttrib();
+  glEnable(GL_TEXTURE_2D);
+}
+
+void draw_box(const Box& box, const float* color) {
+  draw_box(box, color[0], color[1], color[2], color[3]);
+}
+
 void Widget::emit_event(UIEvent e) {
   SDL_Event event;
   event.type = SDL_USEREVENT;

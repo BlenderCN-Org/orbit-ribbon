@@ -32,12 +32,15 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 namespace GUI {
   const Vector DIAMOND_BOX_BORDER(8, 2); // A diamond box's contents are drawn this number of pixels from the left/right and top/bottom of the box respectively
-  
+
   void draw_diamond_box(const Box& box, float r = 0.0, float g = 0.0, float b = 0.0, float a = 0.5);
   void draw_diamond_box(const Box& box, const float* color);
 
+  void draw_box(const Box& box, float r = 0.0, float g = 0.0, float b = 0.0, float a = 0.5);
+  void draw_box(const Box& box, const float* color);
+
   enum UIEvent { WIDGET_GOT_FOCUS, WIDGET_LOST_FOCUS, WIDGET_CLICKED, WIDGET_VALUE_CHANGED };
-  
+
   class Widget {
     private:
       bool _focused;
