@@ -34,48 +34,38 @@ class ControlSettingsMenuMode : public Mode {
     GUI::Grid _grid;
     bool _at_main_menu;
 
-    template <typename V> struct Binding {
-      V action;
+    struct Binding {
       std::string name;
       bool can_set_kbd_mouse;
       bool can_set_gamepad;
-
-      Binding(const V& a, const std::string& n, bool km = true, bool g = true)
-        : action(a), name(n), can_set_kbd_mouse(km), can_set_gamepad(g)
-      {}
+      Binding(const std::string& n, bool km, bool g) : name(n), can_set_kbd_mouse(km), can_set_gamepad(g) {}
     };
 
     typedef ORSave::AxisBoundAction::value_type AAction;
     typedef ORSave::ButtonBoundAction::value_type BAction;
 
-    static const boost::array<Binding<AAction>, 6> AXIS_BOUND_ACTION_NAMES;
-    static const boost::array<Binding<BAction>, 5> BUTTON_BOUND_ACTION_NAMES;
+    struct AxisBinding : public Binding {
+      AAction action;
+      AxisBinding(AAction a, const std::string& n, bool km = true, bool g = true) : Binding(n, km, g), action(a) {}
+    };
 
-    // TODO: If I just worked with a parent of the binding classes, I could avoid this silliness
-    template <typename V> void add_row(const Binding<V>& binding, const Channel& chan) {
-      _grid.add_row();
-      _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(binding.name, 0.0)));
+    struct ButtonBinding : public Binding {
+      BAction action;
+      ButtonBinding(BAction a, const std::string& n, bool km = true, bool g = true) : Binding(n, km, g), action(a) {}
+    };
 
-      std::string kbd_desc = chan.desc(CHANNEL_DESC_TYPE_KEYBOARD);
-      std::string mouse_desc = chan.desc(CHANNEL_DESC_TYPE_MOUSE);
-      std::string gp_desc = chan.desc(CHANNEL_DESC_TYPE_GAMEPAD);
+    struct BindingRowWidgets {
+      boost::shared_ptr<GUI::Widget> keyboard_binding;
+      boost::shared_ptr<GUI::Widget> mouse_binding;
+      boost::shared_ptr<GUI::Widget> gamepad_binding;
+    };
 
-      if (binding.can_set_kbd_mouse) {
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button(kbd_desc)));
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button(mouse_desc)));
-      } else {
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(kbd_desc)));
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(mouse_desc)));
-      }
+    static const boost::array<AxisBinding, 6> AXIS_BOUND_ACTION_NAMES;
+    static const boost::array<ButtonBinding, 5> BUTTON_BOUND_ACTION_NAMES;
 
-      if (binding.can_set_gamepad) {
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button(gp_desc)));
-      } else {
-        _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(gp_desc)));
-      }
-    }
-
-    void setup_grid();
+    BindingRowWidgets add_row_common(const Binding& binding);
+    void add_axis_binding_row(const AxisBinding& binding, const Channel& chan);
+    void add_button_binding_row(const ButtonBinding& binding, const Channel& chan);
 
   public:
     ControlSettingsMenuMode(bool at_main_menu);

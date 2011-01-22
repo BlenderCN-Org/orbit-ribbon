@@ -29,54 +29,72 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "font.h"
 #include "globals.h"
 
-const boost::array<ControlSettingsMenuMode::Binding<ControlSettingsMenuMode::AAction>, 6>
+const boost::array<ControlSettingsMenuMode::AxisBinding, 6>
 ControlSettingsMenuMode::AXIS_BOUND_ACTION_NAMES = { {
-  Binding<AAction>(ORSave::AxisBoundAction::TranslateX, "Move Left & Right"),
-  Binding<AAction>(ORSave::AxisBoundAction::TranslateY, "Move Up & Down"),
-  Binding<AAction>(ORSave::AxisBoundAction::TranslateZ, "Move Forward & Back"),
-  Binding<AAction>(ORSave::AxisBoundAction::RotateY, "Turn Left & Right"),
-  Binding<AAction>(ORSave::AxisBoundAction::RotateX, "Turn Up & Down"),
-  Binding<AAction>(ORSave::AxisBoundAction::RotateZ, "Roll Left & Right")
+  AxisBinding(ORSave::AxisBoundAction::TranslateX, "Move Left & Right"),
+  AxisBinding(ORSave::AxisBoundAction::TranslateY, "Move Up & Down"),
+  AxisBinding(ORSave::AxisBoundAction::TranslateZ, "Move Forward & Back"),
+  AxisBinding(ORSave::AxisBoundAction::RotateY, "Turn Left & Right"),
+  AxisBinding(ORSave::AxisBoundAction::RotateX, "Turn Up & Down"),
+  AxisBinding(ORSave::AxisBoundAction::RotateZ, "Roll Left & Right")
 } };
 
-const boost::array<ControlSettingsMenuMode::Binding<ControlSettingsMenuMode::BAction>, 5>
+const boost::array<ControlSettingsMenuMode::ButtonBinding, 5>
 ControlSettingsMenuMode::BUTTON_BOUND_ACTION_NAMES = { {
-  Binding<BAction>(ORSave::ButtonBoundAction::Confirm, "Menu: Confirm", false),
-  Binding<BAction>(ORSave::ButtonBoundAction::Cancel, "Menu: Cancel", false),
-  Binding<BAction>(ORSave::ButtonBoundAction::Pause, "Pause", false),
-  Binding<BAction>(ORSave::ButtonBoundAction::ForceQuit, "Force Quit", false, false),
-  Binding<BAction>(ORSave::ButtonBoundAction::ResetNeutral, "Reset Input Neutrals", false, false),
+  ButtonBinding(ORSave::ButtonBoundAction::Confirm, "Menu: Confirm", false),
+  ButtonBinding(ORSave::ButtonBoundAction::Cancel, "Menu: Cancel", false),
+  ButtonBinding(ORSave::ButtonBoundAction::Pause, "Pause", false),
+  ButtonBinding(ORSave::ButtonBoundAction::ForceQuit, "Force Quit", false, false),
+  ButtonBinding(ORSave::ButtonBoundAction::ResetNeutral, "Reset Input Neutrals", false, false),
 } };
 
-void ControlSettingsMenuMode::setup_grid() {
-  _grid.clear();
+ControlSettingsMenuMode::BindingRowWidgets ControlSettingsMenuMode::add_row_common(const Binding& binding) {
+  BindingRowWidgets w;
+  w.keyboard_binding.reset(binding.can_set_kbd_mouse ? (GUI::Widget*)(new GUI::Button()) : (GUI::Widget*)(new GUI::Label));
+  w.mouse_binding.reset(binding.can_set_kbd_mouse ? (GUI::Widget*)(new GUI::Button()) : (GUI::Widget*)(new GUI::Label));
+  w.gamepad_binding.reset(binding.can_set_gamepad ? (GUI::Widget*)(new GUI::Button()) : (GUI::Widget*)(new GUI::Label));
 
+  _grid.add_row();
+  _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(binding.name, 0.0)));
+  _grid.add_cell(w.keyboard_binding);
+  _grid.add_cell(w.mouse_binding);
+  _grid.add_cell(w.gamepad_binding);
+
+  return w;
+}
+
+void ControlSettingsMenuMode::add_axis_binding_row(const AxisBinding& binding, const Channel& chan) {
+  BindingRowWidgets w = add_row_common(binding);
+}
+
+void ControlSettingsMenuMode::add_button_binding_row(const ButtonBinding& binding, const Channel& chan) {
+  BindingRowWidgets w = add_row_common(binding);
+}
+
+ControlSettingsMenuMode::ControlSettingsMenuMode(bool at_main_menu) :
+  _grid(700, 20, 12), _at_main_menu(at_main_menu)
+{
   _grid.add_row();
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::BlankWidget()));
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("Keyboard")));
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("Mouse")));
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("Gamepad/Joystick")));
 
-  BOOST_FOREACH(const Binding<AAction>& binding, AXIS_BOUND_ACTION_NAMES) {
+  BOOST_FOREACH(const AxisBinding& binding, AXIS_BOUND_ACTION_NAMES) {
     const Channel& channel = Input::get_axis_ch(binding.action);
-    add_row(binding, channel);
+    add_axis_binding_row(binding, channel);
   }
 
-  BOOST_FOREACH(const Binding<BAction>& binding, BUTTON_BOUND_ACTION_NAMES) {
+  BOOST_FOREACH(const ButtonBinding& binding, BUTTON_BOUND_ACTION_NAMES) {
     const Channel& channel = Input::get_button_ch(binding.action);
-    add_row(binding, channel);
+    add_button_binding_row(binding, channel);
   }
 
-  _grid.add_row();
+  _grid.add_row(); // Blank separator row
 
   _grid.add_row(true);
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("Done")));
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("Reset All to Defaults")));
-}
-
-ControlSettingsMenuMode::ControlSettingsMenuMode(bool at_main_menu) :
-  _grid(700, 20, 12), _at_main_menu(at_main_menu)
-{
 }
 
 bool ControlSettingsMenuMode::handle_input() {
@@ -111,8 +129,6 @@ void ControlSettingsMenuMode::draw_2d(bool top __attribute__ ((unused))) {
 }
 
 void ControlSettingsMenuMode::now_at_top() {
-  // FIXME: This clears the focus. Maybe I do need Button::set_value after all.
-  setup_grid();
 }
 
 bool RebindingDialogMenuMode::handle_input() {
