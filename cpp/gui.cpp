@@ -369,11 +369,6 @@ void Menu::add_widget(const boost::shared_ptr<Widget>& widget) {
   clear_region_map_cache();
 }
 
-void Menu::clear() {
-  _widgets.clear();
-  clear_region_map_cache();
-}
-
 void Menu::process() {
   WidgetLayout::process();
 
@@ -436,11 +431,6 @@ void Grid::add_row(bool force_left_focus) {
 
 void Grid::add_cell(const boost::shared_ptr<Widget>& widget) {
   _rows.back().cells.push_back(widget);
-  clear_region_map_cache();
-}
-
-void Grid::clear() {
-  _rows.clear();
   clear_region_map_cache();
 }
 

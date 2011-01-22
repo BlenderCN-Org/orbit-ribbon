@@ -73,7 +73,7 @@ namespace GUI {
       float _x_align;
 
     public:
-      Label(const std::string& label, float x_align = 0.5) : _label(label), _x_align(x_align) {}
+      Label(const std::string& label = "", float x_align = 0.5) : _label(label), _x_align(x_align) {}
       void draw(const Box& box);
       void process(const Box& box) {}
       bool focusable() { return false; }
@@ -84,7 +84,7 @@ namespace GUI {
       std::string _label;
 
     public:
-      Button(const std::string& label) : _label(label) {}
+      Button(const std::string& label = "") : _label(label) {}
       void draw(const Box& box);
       void process(const Box& box);
   };
@@ -95,7 +95,7 @@ namespace GUI {
       bool _value;
 
     public:
-      Checkbox(const std::string& label, bool value = false) : _label(label), _value(value) {}
+      Checkbox(const std::string& label = "", bool value = false) : _label(label), _value(value) {}
       void draw(const Box& box);
       void process(const Box& box);
 
@@ -111,7 +111,7 @@ namespace GUI {
       Box _gauge_area(const Box& box);
 
     public:
-      Slider(const std::string& label, float value = 0.0) :
+      Slider(const std::string& label = "", float value = 0.0) :
         _label(label), _value(value)
       {}
 
@@ -149,8 +149,6 @@ namespace GUI {
 
       virtual void draw(bool frame);
       virtual void process();
-
-      virtual void clear() =0;
   };
 
   class Menu : public WidgetLayout {
@@ -170,7 +168,6 @@ namespace GUI {
       {}
 
       void add_widget(const boost::shared_ptr<Widget>& widget);
-      void clear();
 
       void process();
   };
@@ -198,7 +195,6 @@ namespace GUI {
 
       void add_row(bool force_left_focus = false);
       void add_cell(const boost::shared_ptr<Widget>& widget);
-      void clear();
 
       void process();
   };
