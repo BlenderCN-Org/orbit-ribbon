@@ -29,43 +29,45 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "input.h"
 #include "mode.h"
 
+struct ActionDesc {
+  std::string name;
+  bool can_set_kbd_mouse;
+  bool can_set_gamepad;
+  ActionDesc(const std::string& n, bool km, bool g) : name(n), can_set_kbd_mouse(km), can_set_gamepad(g) {}
+};
+
+struct BindingDesc {
+  const ActionDesc* action_desc;
+  ORSave::InputDeviceNameType::value_type dev;
+  BindingDesc(const ActionDesc& a, ORSave::InputDeviceNameType::value_type d) :
+    action_desc(&a), dev(d)
+  {}
+};
+
 class ControlSettingsMenuMode : public Mode {
   private:
     GUI::Grid _grid;
     bool _at_main_menu;
 
-    struct Binding {
-      std::string name;
-      bool can_set_kbd_mouse;
-      bool can_set_gamepad;
-      Binding(const std::string& n, bool km, bool g) : name(n), can_set_kbd_mouse(km), can_set_gamepad(g) {}
-    };
-
     typedef ORSave::AxisBoundAction::value_type AAction;
     typedef ORSave::ButtonBoundAction::value_type BAction;
 
-    struct AxisBinding : public Binding {
+    struct AxisActionDesc : public ActionDesc {
       AAction action;
-      AxisBinding(AAction a, const std::string& n, bool km = true, bool g = true) : Binding(n, km, g), action(a) {}
+      AxisActionDesc(AAction a, const std::string& n, bool km = true, bool g = true) : ActionDesc(n, km, g), action(a) {}
     };
 
-    struct ButtonBinding : public Binding {
+    struct ButtonActionDesc : public ActionDesc {
       BAction action;
-      ButtonBinding(BAction a, const std::string& n, bool km = true, bool g = true) : Binding(n, km, g), action(a) {}
+      ButtonActionDesc(BAction a, const std::string& n, bool km = true, bool g = true) : ActionDesc(n, km, g), action(a) {}
     };
 
-    struct BindingRowWidgets {
-      boost::shared_ptr<GUI::Widget> keyboard_binding;
-      boost::shared_ptr<GUI::Widget> mouse_binding;
-      boost::shared_ptr<GUI::Widget> gamepad_binding;
-    };
+    std::map<GUI::Widget*, BindingDesc> _binding_widgets;
 
-    static const boost::array<AxisBinding, 6> AXIS_BOUND_ACTION_NAMES;
-    static const boost::array<ButtonBinding, 5> BUTTON_BOUND_ACTION_NAMES;
+    void add_row(const ActionDesc& action, const Channel& chan);
 
-    BindingRowWidgets add_row_common(const Binding& binding);
-    void add_axis_binding_row(const AxisBinding& binding, const Channel& chan);
-    void add_button_binding_row(const ButtonBinding& binding, const Channel& chan);
+    static const boost::array<AxisActionDesc, 6> AXIS_BOUND_ACTION_NAMES;
+    static const boost::array<ButtonActionDesc, 5> BUTTON_BOUND_ACTION_NAMES;
 
   public:
     ControlSettingsMenuMode(bool at_main_menu);
@@ -83,51 +85,19 @@ class ControlSettingsMenuMode : public Mode {
 
 class RebindingDialogMenuMode : public Mode {
   protected:
-    unsigned int _desc_type;
     std::string _old_value;
-    std::string _binding_desc;
+    const BindingDesc* _binding_desc;
+
+    std::string _title;
 
   public:
-    RebindingDialogMenuMode(unsigned int desc_type, const std::string& old_value, const std::string& binding_desc) :
-      _desc_type(desc_type), _old_value(old_value), _binding_desc("Rebinding Action: " +  binding_desc)
-    {}
-
+    RebindingDialogMenuMode(const std::string& old_value, const BindingDesc* binding_desc);
     bool execute_after_lower_mode() { return true; }
     bool simulation_disabled() { return true; }
     bool mouse_cursor_enabled() { return false; }
 
     bool handle_input();
     void draw_2d(bool top);
-};
-
-class AxisRebindingDialogMenuMode : public RebindingDialogMenuMode {
-  private:
-    ORSave::AxisBoundAction::value_type _action;
-
-  public:
-    AxisRebindingDialogMenuMode(
-      ORSave::AxisBoundAction::value_type action,
-      unsigned int desc_type, const std::string& old_value, const std::string& binding_desc
-      ) : RebindingDialogMenuMode(desc_type, old_value, binding_desc), _action(action) 
-    {}
-
-    bool handle_input();
-};
-
-class ButtonRebindingDialogMenuMode : public RebindingDialogMenuMode {
-  private:
-    ORSave::ButtonBoundAction::value_type _action;
-    std::string _neg_name, _pos_name;
-
-  public:
-    ButtonRebindingDialogMenuMode(
-      ORSave::ButtonBoundAction::value_type action,
-      const std::string& neg_name, const std::string& pos_name,
-      unsigned int desc_type, const std::string& old_value, const std::string& binding_desc
-      ) : RebindingDialogMenuMode(desc_type, old_value, binding_desc), _action(action), _neg_name(neg_name), _pos_name(pos_name)
-    {}
-
-    bool handle_input();
 };
 
 #endif

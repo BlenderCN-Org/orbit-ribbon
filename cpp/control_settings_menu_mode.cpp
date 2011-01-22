@@ -26,50 +26,46 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "background.h"
 #include "control_settings_menu_mode.h"
 #include "display.h"
+#include "except.h"
 #include "font.h"
 #include "globals.h"
+#include "mode.h"
 
-const boost::array<ControlSettingsMenuMode::AxisBinding, 6>
+const boost::array<ControlSettingsMenuMode::AxisActionDesc, 6>
 ControlSettingsMenuMode::AXIS_BOUND_ACTION_NAMES = { {
-  AxisBinding(ORSave::AxisBoundAction::TranslateX, "Move Left & Right"),
-  AxisBinding(ORSave::AxisBoundAction::TranslateY, "Move Up & Down"),
-  AxisBinding(ORSave::AxisBoundAction::TranslateZ, "Move Forward & Back"),
-  AxisBinding(ORSave::AxisBoundAction::RotateY, "Turn Left & Right"),
-  AxisBinding(ORSave::AxisBoundAction::RotateX, "Turn Up & Down"),
-  AxisBinding(ORSave::AxisBoundAction::RotateZ, "Roll Left & Right")
+  AxisActionDesc(ORSave::AxisBoundAction::TranslateX, "Move Left & Right"),
+  AxisActionDesc(ORSave::AxisBoundAction::TranslateY, "Move Up & Down"),
+  AxisActionDesc(ORSave::AxisBoundAction::TranslateZ, "Move Forward & Back"),
+  AxisActionDesc(ORSave::AxisBoundAction::RotateY, "Turn Left & Right"),
+  AxisActionDesc(ORSave::AxisBoundAction::RotateX, "Turn Up & Down"),
+  AxisActionDesc(ORSave::AxisBoundAction::RotateZ, "Roll Left & Right")
 } };
 
-const boost::array<ControlSettingsMenuMode::ButtonBinding, 5>
+const boost::array<ControlSettingsMenuMode::ButtonActionDesc, 5>
 ControlSettingsMenuMode::BUTTON_BOUND_ACTION_NAMES = { {
-  ButtonBinding(ORSave::ButtonBoundAction::Confirm, "Menu: Confirm", false),
-  ButtonBinding(ORSave::ButtonBoundAction::Cancel, "Menu: Cancel", false),
-  ButtonBinding(ORSave::ButtonBoundAction::Pause, "Pause", false),
-  ButtonBinding(ORSave::ButtonBoundAction::ForceQuit, "Force Quit", false, false),
-  ButtonBinding(ORSave::ButtonBoundAction::ResetNeutral, "Reset Input Neutrals", false, false),
+  ButtonActionDesc(ORSave::ButtonBoundAction::Confirm, "Menu: Confirm", false),
+  ButtonActionDesc(ORSave::ButtonBoundAction::Cancel, "Menu: Cancel", false),
+  ButtonActionDesc(ORSave::ButtonBoundAction::Pause, "Pause", false),
+  ButtonActionDesc(ORSave::ButtonBoundAction::ForceQuit, "Force Quit", false, false),
+  ButtonActionDesc(ORSave::ButtonBoundAction::ResetNeutral, "Reset Input Neutrals", false, false),
 } };
 
-ControlSettingsMenuMode::BindingRowWidgets ControlSettingsMenuMode::add_row_common(const Binding& binding) {
-  BindingRowWidgets w;
-  w.keyboard_binding.reset(binding.can_set_kbd_mouse ? (GUI::Widget*)(new GUI::Button()) : (GUI::Widget*)(new GUI::Label));
-  w.mouse_binding.reset(binding.can_set_kbd_mouse ? (GUI::Widget*)(new GUI::Button()) : (GUI::Widget*)(new GUI::Label));
-  w.gamepad_binding.reset(binding.can_set_gamepad ? (GUI::Widget*)(new GUI::Button()) : (GUI::Widget*)(new GUI::Label));
+void ControlSettingsMenuMode::add_row(const ActionDesc& action, const Channel& chan) {
+  boost::shared_ptr<GUI::Widget> k_bind_widget(action.can_set_kbd_mouse ? (GUI::Widget*)(new GUI::Button()) : (GUI::Widget*)(new GUI::Label));
+  boost::shared_ptr<GUI::Widget> m_bind_widget(action.can_set_kbd_mouse ? (GUI::Widget*)(new GUI::Button()) : (GUI::Widget*)(new GUI::Label));
+  boost::shared_ptr<GUI::Widget> g_bind_widget(action.can_set_gamepad ? (GUI::Widget*)(new GUI::Button()) : (GUI::Widget*)(new GUI::Label));
 
   _grid.add_row();
-  _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(binding.name, 0.0)));
-  _grid.add_cell(w.keyboard_binding);
-  _grid.add_cell(w.mouse_binding);
-  _grid.add_cell(w.gamepad_binding);
+  _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label(action.name, 0.0)));
+  _grid.add_cell(k_bind_widget);
+  _grid.add_cell(m_bind_widget);
+  _grid.add_cell(g_bind_widget);
 
-  return w;
+  _binding_widgets.insert(std::pair<GUI::Widget*, BindingDesc>(k_bind_widget.get(), BindingDesc(action, ORSave::InputDeviceNameType::Keyboard)));
+  _binding_widgets.insert(std::pair<GUI::Widget*, BindingDesc>(m_bind_widget.get(), BindingDesc(action, ORSave::InputDeviceNameType::Mouse)));
+  _binding_widgets.insert(std::pair<GUI::Widget*, BindingDesc>(g_bind_widget.get(), BindingDesc(action, ORSave::InputDeviceNameType::Gamepad)));
 }
 
-void ControlSettingsMenuMode::add_axis_binding_row(const AxisBinding& binding, const Channel& chan) {
-  BindingRowWidgets w = add_row_common(binding);
-}
-
-void ControlSettingsMenuMode::add_button_binding_row(const ButtonBinding& binding, const Channel& chan) {
-  BindingRowWidgets w = add_row_common(binding);
-}
 
 ControlSettingsMenuMode::ControlSettingsMenuMode(bool at_main_menu) :
   _grid(700, 20, 12), _at_main_menu(at_main_menu)
@@ -80,14 +76,14 @@ ControlSettingsMenuMode::ControlSettingsMenuMode(bool at_main_menu) :
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("Mouse")));
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Label("Gamepad/Joystick")));
 
-  BOOST_FOREACH(const AxisBinding& binding, AXIS_BOUND_ACTION_NAMES) {
+  BOOST_FOREACH(const AxisActionDesc& binding, AXIS_BOUND_ACTION_NAMES) {
     const Channel& channel = Input::get_axis_ch(binding.action);
-    add_axis_binding_row(binding, channel);
+    add_row(binding, channel);
   }
 
-  BOOST_FOREACH(const ButtonBinding& binding, BUTTON_BOUND_ACTION_NAMES) {
+  BOOST_FOREACH(const ButtonActionDesc& binding, BUTTON_BOUND_ACTION_NAMES) {
     const Channel& channel = Input::get_button_ch(binding.action);
-    add_button_binding_row(binding, channel);
+    add_row(binding, channel);
   }
 
   _grid.add_row(); // Blank separator row
@@ -106,9 +102,15 @@ bool ControlSettingsMenuMode::handle_input() {
     BOOST_FOREACH(SDL_Event& e, Globals::frame_events) {
       if (e.type == SDL_USEREVENT) {
         if (e.user.code == GUI::WIDGET_CLICKED) {
-          Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(new RebindingDialogMenuMode(
-            1, "X", "Shot Web"
-          )));
+          GUI::Widget* w = (GUI::Widget*)(e.user.data1);
+          std::map<GUI::Widget*, BindingDesc>::iterator bind_widget_iter = _binding_widgets.find(w);
+          if (bind_widget_iter != _binding_widgets.end()) {
+            Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(
+              new RebindingDialogMenuMode("", &(bind_widget_iter->second))
+            ));
+          } else {
+            throw GameException("Mysterious click event in control settings input handler!");
+          }
         }
       }
     }
@@ -131,6 +133,11 @@ void ControlSettingsMenuMode::draw_2d(bool top __attribute__ ((unused))) {
 void ControlSettingsMenuMode::now_at_top() {
 }
 
+RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, const BindingDesc* binding_desc) :
+  _old_value(old_value), _binding_desc(binding_desc), _title("Rebinding: " + binding_desc->action_desc->name)
+{
+}
+
 bool RebindingDialogMenuMode::handle_input() {
   if (Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).matches_frame_events()) {
     Globals::mode_stack->next_frame_pop_mode();
@@ -147,18 +154,10 @@ void RebindingDialogMenuMode::draw_2d(bool top __attribute__ ((unused))) {
   Box dialog_area(Point(0,0) + (Display::get_screen_size() - REBINDING_DIALOG_SIZE)/2, REBINDING_DIALOG_SIZE);
   GUI::draw_diamond_box(dialog_area, 0, 0, 0, 0.95);
 
-  int text_width = Globals::sys_font->get_width(REBINDING_DIALOG_FONT_HEIGHT, _binding_desc);
+  int text_width = Globals::sys_font->get_width(REBINDING_DIALOG_FONT_HEIGHT, _title);
   Globals::sys_font->draw(
     dialog_area.top_left + Vector((dialog_area.size.x - text_width)/2, REBINDING_DIALOG_FONT_HEIGHT/2),
     REBINDING_DIALOG_FONT_HEIGHT,
-    _binding_desc
+    _title
   );
-}
-
-bool AxisRebindingDialogMenuMode::handle_input() {
-  return RebindingDialogMenuMode::handle_input();
-}
-
-bool ButtonRebindingDialogMenuMode::handle_input() {
-  return RebindingDialogMenuMode::handle_input();
 }
