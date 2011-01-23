@@ -77,6 +77,9 @@ namespace GUI {
       void draw(const Box& box);
       void process(const Box& box) {}
       bool focusable() { return false; }
+
+      std::string get_label() { return _label; }
+      void set_label(const std::string& s) { _label = s; }
   };
 
   class Button : public Widget {
@@ -87,6 +90,9 @@ namespace GUI {
       Button(const std::string& label = "") : _label(label) {}
       void draw(const Box& box);
       void process(const Box& box);
+
+      std::string get_label() { return _label; }
+      void set_label(const std::string& s) { _label = s; }
   };
 
   class Checkbox : public Widget {
@@ -99,8 +105,11 @@ namespace GUI {
       void draw(const Box& box);
       void process(const Box& box);
 
-      void set_value(bool value) { _value = value; }
+      std::string get_label() { return _label; }
+      void set_label(const std::string& s) { _label = s; }
+
       bool get_value() { return _value; }
+      void set_value(bool value) { _value = value; }
   };
 
   class Slider : public Widget {
@@ -118,8 +127,11 @@ namespace GUI {
       void draw(const Box& box);
       void process(const Box& box);
 
-      void set_value(float value) { _value = value; }
+      std::string get_label() { return _label; }
+      void set_label(const std::string& s) { _label = s; }
+
       float get_value() { return _value; }
+      void set_value(float value) { _value = value; }
   };
 
   class WidgetLayout {
