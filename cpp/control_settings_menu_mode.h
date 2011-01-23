@@ -40,7 +40,9 @@ struct ActionDesc {
 struct AxisActionDesc : public ActionDesc {
   typedef ORSave::AxisBoundAction::value_type AAction;
   AAction action;
-  AxisActionDesc(AAction a, const std::string& n, bool km = true, bool g = true) : ActionDesc(n, km, g), action(a) {}
+  std::string verb, neg_name, pos_name;
+  AxisActionDesc(AAction a, const std::string& verb, const std::string& neg, const std::string& pos, bool km = true, bool g = true)
+    : ActionDesc(verb + " " + neg + " & " + pos, km, g), action(a), verb(verb), neg_name(neg), pos_name(pos) {}
 };
 
 struct ButtonActionDesc : public ActionDesc {

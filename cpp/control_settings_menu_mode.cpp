@@ -33,12 +33,12 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 const boost::array<AxisActionDesc, 6>
 ControlSettingsMenuMode::AXIS_BOUND_ACTION_NAMES = { {
-  AxisActionDesc(ORSave::AxisBoundAction::TranslateX, "Move Left & Right"),
-  AxisActionDesc(ORSave::AxisBoundAction::TranslateY, "Move Up & Down"),
-  AxisActionDesc(ORSave::AxisBoundAction::TranslateZ, "Move Forward & Back"),
-  AxisActionDesc(ORSave::AxisBoundAction::RotateY, "Turn Left & Right"),
-  AxisActionDesc(ORSave::AxisBoundAction::RotateX, "Turn Up & Down"),
-  AxisActionDesc(ORSave::AxisBoundAction::RotateZ, "Roll Left & Right")
+  AxisActionDesc(ORSave::AxisBoundAction::TranslateX, "Move", "Left", "Right"),
+  AxisActionDesc(ORSave::AxisBoundAction::TranslateY, "Move", "Up", "Down"),
+  AxisActionDesc(ORSave::AxisBoundAction::TranslateZ, "Move", "Forward", "Back"),
+  AxisActionDesc(ORSave::AxisBoundAction::RotateY, "Turn", "Left", "Right"),
+  AxisActionDesc(ORSave::AxisBoundAction::RotateX, "Turn", "Up", "Down"),
+  AxisActionDesc(ORSave::AxisBoundAction::RotateZ, "Roll", "Left", "Right")
 } };
 
 const boost::array<ButtonActionDesc, 5>
@@ -186,7 +186,7 @@ RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, c
     case ORSave::InputDeviceNameType::Mouse:
       devname = "mouse";
       if (_axis_mode) {
-        _instruction = "Move the mouse, or press a button!";
+        _instruction = "Move the mouse, or press a mouse button!";
       } else {
         _instruction = "Press a mouse button!";
       }
