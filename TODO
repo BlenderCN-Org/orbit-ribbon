@@ -1,8 +1,4 @@
 == ROADMAP ==
-* Get it to build on Windows
-* More verbose output, and a log file that records output
-* Get it to run on Windows in -mwindows mode (may require i.e. a seperate main function)
----> Release as alpha1. Dan can try it out at this stage.
 * Port orbit-edit to Blender 2.5, for exclusive use
 * Skeletal animation (implement only basic running and fly-to-run anims at first)
 * Music & sound effects
@@ -34,21 +30,22 @@ Thinh's ideas:
 	- Uses g++'s profiling mechanism with some kind of demo
 
 - In all the places in the program that show a copyright notice, also mention the font license.
+- Find a way to make it really easy to update the copyright notice everywhere at the same time
 
+- Refactor the over-entrenched distinction between axis and button input bindings
 - Smarter way to deal with inversion settings, so that when inversion is on for an action:
   - Reverse label in control settings (i.e. "Move down & up", not "Move up & down")
   - In binding dialog, flip input bindings before saving
-- Put config and log in an orbit ribbon directory ('Orbit Ribbon' on Windows, '.orbit-ribbon' on Linux)
+- Put config and log in an orbit ribbon directory ('Orbit Ribbon' in appdata on Windows, '.orbit-ribbon' in home on Linux)
 - When mouse cursor is visible and fullscreen mode is off, allow cursor to leave the window
+- When Saving::save is called, it should only actually write the save file if contents have differed
 - Use boost::format instead of lexical_cast wherever it makes sense (which is most places)
 - Don't hide/reset mouse cursor when in transition between two cursor-showing modes
 - Seperate most of the custom SCons stuff into python files in a site_scons directory
 - Use a dialog box to show fatal errors in Windows
 - Speed cap enforced with non-linear drag
 - Use a pool of minizip handles to make loading faster
-- After generating meshes in memory from XML, save to raw local system cache for faster loading later 
-  - Need to make sure to discard cache if environment changes, or if source data is updated
-  - Maybe can also cache textures this way? Probably not going to get much faster than PNG, tho...
+- Use XDR or CDR for faster-loading XML data
 - Use valgrind to check for leaks on display mode changing restart
 - For the sake of UI juiciness and following the theme, give the mouse cursor a little bit of momentum ala Per.Oxyd
 - Come up with a simple way to do documentation; doxygen's usual format is a pain in the ass
@@ -56,7 +53,7 @@ Thinh's ideas:
 - Make the naming of variables consistent (in particular, use underscore prefix for members)
 - Make sure mipmapping and texture compression are both actually working
   - Do mipmapping in advance, when generating ORE file
-- Use a test texture instead of a test color for untextured faces
+- Make sure that untextured faces are very obviously detectable; need a REALLY ugly default texture 
 - Consider using texture packing
 - Have the ORE file include pre-calculated information about how much memory must be allocated for the VBOs
 - Show a loading animation while loading
