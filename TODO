@@ -33,6 +33,7 @@ Thinh's ideas:
 - Find a way to make it really easy to update the copyright notice everywhere at the same time
 
 - Refactor the over-entrenched distinction between axis and button input bindings
+- Refactor text display to allow easy alignment within a box
 - Smarter way to deal with inversion settings, so that when inversion is on for an action:
   - Reverse label in control settings (i.e. "Move down & up", not "Move up & down")
   - In binding dialog, flip input bindings before saving
