@@ -800,7 +800,6 @@ void Input::set_channels_from_config() {
   insert_binding(ORSave::ButtonBoundAction::Confirm, _kbd->key_channel(SDLK_SPACE), _button_action_map);
   insert_binding(ORSave::ButtonBoundAction::Confirm, _kbd->key_channel(SDLK_KP_ENTER), _button_action_map);
   insert_binding(ORSave::ButtonBoundAction::Cancel, _kbd->key_channel(SDLK_ESCAPE), _button_action_map);
-  insert_binding(ORSave::ButtonBoundAction::Cancel, _kbd->key_channel(SDLK_BACKSPACE), _button_action_map);
   insert_binding(ORSave::ButtonBoundAction::Pause, _kbd->key_channel(SDLK_ESCAPE), _button_action_map);
   insert_binding(ORSave::ButtonBoundAction::Pause, _kbd->key_channel(SDLK_PAUSE), _button_action_map);
   insert_binding(ORSave::ButtonBoundAction::ResetNeutral, _kbd->key_channel(SDLK_F10), _button_action_map);
