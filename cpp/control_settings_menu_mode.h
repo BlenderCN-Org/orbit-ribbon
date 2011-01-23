@@ -88,7 +88,8 @@ class RebindingDialogMenuMode : public Mode {
     std::string _old_value;
     const BindingDesc* _binding_desc;
 
-    std::string _title;
+    std::string _title, _instruction;
+    bool _axis_mode;
 
   public:
     RebindingDialogMenuMode(const std::string& old_value, const BindingDesc* binding_desc);

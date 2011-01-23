@@ -173,8 +173,37 @@ void ControlSettingsMenuMode::now_at_top() {
 }
 
 RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, const BindingDesc* binding_desc) :
-  _old_value(old_value), _binding_desc(binding_desc), _title("Rebinding: " + binding_desc->action_desc->name)
+  _old_value(old_value), _binding_desc(binding_desc)
 {
+  _axis_mode = (dynamic_cast<const AxisActionDesc*>(binding_desc->action_desc) != NULL);
+
+  std::string devname;
+  switch (_binding_desc->dev) {
+    case ORSave::InputDeviceNameType::Keyboard:
+      devname = "keyboard";
+      _instruction = "Press a key!";
+      break;
+    case ORSave::InputDeviceNameType::Mouse:
+      devname = "mouse";
+      if (_axis_mode) {
+        _instruction = "Move the mouse, or press a button!";
+      } else {
+        _instruction = "Press a mouse button!";
+      }
+      break;
+    case ORSave::InputDeviceNameType::Gamepad:
+      devname = "gamepad/joystick";
+      if (_axis_mode) {
+        _instruction = "Press a button or move a stick!";
+      } else {
+        _instruction = "Press a button!";
+      }
+      break;
+    default:
+      throw GameException("Unknown input device name type in rdmm ctor");
+      break;
+  }
+  _title = "Assign " + devname + " mapping for:";
 }
 
 bool RebindingDialogMenuMode::handle_input() {
@@ -185,18 +214,52 @@ bool RebindingDialogMenuMode::handle_input() {
   return true;
 }
 
-const Size REBINDING_DIALOG_SIZE(400,400);
-const int REBINDING_DIALOG_FONT_HEIGHT = 20;
+const Size REBINDING_DIALOG_SIZE(400,240);
+const int REBINDING_DIALOG_MINOR_FONT_HEIGHT = 16;
+const int REBINDING_DIALOG_MAJOR_FONT_HEIGHT = 24;
 void RebindingDialogMenuMode::draw_2d(bool top __attribute__ ((unused))) {
   GUI::draw_box(Box(Point(0,0), Display::get_screen_size()), 0.3, 0.3, 0.3, 0.4);
 
   Box dialog_area(Point(0,0) + (Display::get_screen_size() - REBINDING_DIALOG_SIZE)/2, REBINDING_DIALOG_SIZE);
   GUI::draw_diamond_box(dialog_area, 0, 0, 0, 0.95);
 
-  int text_width = Globals::sys_font->get_width(REBINDING_DIALOG_FONT_HEIGHT, _title);
-  Globals::sys_font->draw(
-    dialog_area.top_left + Vector((dialog_area.size.x - text_width)/2, REBINDING_DIALOG_FONT_HEIGHT/2),
-    REBINDING_DIALOG_FONT_HEIGHT,
-    _title
-  );
+  Point pos = dialog_area.top_left;
+  pos.y += REBINDING_DIALOG_MINOR_FONT_HEIGHT*0.5;
+
+  int text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MINOR_FONT_HEIGHT, _title);
+  Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MINOR_FONT_HEIGHT, _title);
+  pos.y += REBINDING_DIALOG_MINOR_FONT_HEIGHT*1.2;
+
+  const std::string& action_name = _binding_desc->action_desc->name;
+  text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MAJOR_FONT_HEIGHT, action_name);
+  Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MAJOR_FONT_HEIGHT, action_name);
+  pos.y += REBINDING_DIALOG_MAJOR_FONT_HEIGHT*2.5;
+
+  text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MAJOR_FONT_HEIGHT, _instruction);
+  Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MAJOR_FONT_HEIGHT, _instruction);
+  pos.y += REBINDING_DIALOG_MAJOR_FONT_HEIGHT*2.5;
+
+  if (_old_value.size() > 0) {
+    static const std::string to_replace("Replacing old mapping:");
+    text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MINOR_FONT_HEIGHT, to_replace);
+    Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MINOR_FONT_HEIGHT, to_replace);
+    pos.y += REBINDING_DIALOG_MINOR_FONT_HEIGHT*1.2;
+
+    text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MINOR_FONT_HEIGHT, _old_value);
+    Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MINOR_FONT_HEIGHT, _old_value);
+    pos.y += REBINDING_DIALOG_MINOR_FONT_HEIGHT*1.2;
+
+    static const std::string del_instr("Press [Delete] to clear this mapping");
+    text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MINOR_FONT_HEIGHT, del_instr);
+    Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MINOR_FONT_HEIGHT, del_instr);
+    pos.y += REBINDING_DIALOG_MINOR_FONT_HEIGHT*1.2;
+
+    static const std::string cancel_instr("Press " + Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).desc() + " to leave it as is");
+    text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MINOR_FONT_HEIGHT, cancel_instr);
+    Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MINOR_FONT_HEIGHT, cancel_instr);
+  } else {
+    static const std::string cancel_instr("Press " + Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).desc() + " to leave it unmapped");
+    text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MINOR_FONT_HEIGHT, cancel_instr);
+    Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MINOR_FONT_HEIGHT, cancel_instr);
+  }
 }
