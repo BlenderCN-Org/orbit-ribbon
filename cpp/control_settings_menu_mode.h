@@ -34,6 +34,19 @@ struct ActionDesc {
   bool can_set_kbd_mouse;
   bool can_set_gamepad;
   ActionDesc(const std::string& n, bool km, bool g) : name(n), can_set_kbd_mouse(km), can_set_gamepad(g) {}
+  virtual ~ActionDesc() {}
+};
+
+struct AxisActionDesc : public ActionDesc {
+  typedef ORSave::AxisBoundAction::value_type AAction;
+  AAction action;
+  AxisActionDesc(AAction a, const std::string& n, bool km = true, bool g = true) : ActionDesc(n, km, g), action(a) {}
+};
+
+struct ButtonActionDesc : public ActionDesc {
+  typedef ORSave::ButtonBoundAction::value_type BAction;
+  BAction action;
+  ButtonActionDesc(BAction a, const std::string& n, bool km = true, bool g = true) : ActionDesc(n, km, g), action(a) {}
 };
 
 struct BindingDesc {
@@ -48,19 +61,6 @@ class ControlSettingsMenuMode : public Mode {
   private:
     GUI::Grid _grid;
     bool _at_main_menu;
-
-    typedef ORSave::AxisBoundAction::value_type AAction;
-    typedef ORSave::ButtonBoundAction::value_type BAction;
-
-    struct AxisActionDesc : public ActionDesc {
-      AAction action;
-      AxisActionDesc(AAction a, const std::string& n, bool km = true, bool g = true) : ActionDesc(n, km, g), action(a) {}
-    };
-
-    struct ButtonActionDesc : public ActionDesc {
-      BAction action;
-      ButtonActionDesc(BAction a, const std::string& n, bool km = true, bool g = true) : ActionDesc(n, km, g), action(a) {}
-    };
 
     std::map<GUI::Widget*, BindingDesc> _binding_widgets;
 

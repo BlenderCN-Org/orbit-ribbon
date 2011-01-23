@@ -31,7 +31,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "mode.h"
 
-const boost::array<ControlSettingsMenuMode::AxisActionDesc, 6>
+const boost::array<AxisActionDesc, 6>
 ControlSettingsMenuMode::AXIS_BOUND_ACTION_NAMES = { {
   AxisActionDesc(ORSave::AxisBoundAction::TranslateX, "Move Left & Right"),
   AxisActionDesc(ORSave::AxisBoundAction::TranslateY, "Move Up & Down"),
@@ -41,7 +41,7 @@ ControlSettingsMenuMode::AXIS_BOUND_ACTION_NAMES = { {
   AxisActionDesc(ORSave::AxisBoundAction::RotateZ, "Roll Left & Right")
 } };
 
-const boost::array<ControlSettingsMenuMode::ButtonActionDesc, 5>
+const boost::array<ButtonActionDesc, 5>
 ControlSettingsMenuMode::BUTTON_BOUND_ACTION_NAMES = { {
   ButtonActionDesc(ORSave::ButtonBoundAction::Confirm, "Menu: Confirm", false),
   ButtonActionDesc(ORSave::ButtonBoundAction::Cancel, "Menu: Cancel", false),
@@ -105,8 +105,9 @@ bool ControlSettingsMenuMode::handle_input() {
           GUI::Widget* w = (GUI::Widget*)(e.user.data1);
           std::map<GUI::Widget*, BindingDesc>::iterator bind_widget_iter = _binding_widgets.find(w);
           if (bind_widget_iter != _binding_widgets.end()) {
+            GUI::Button* b = (GUI::Button*)w;
             Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(
-              new RebindingDialogMenuMode("", &(bind_widget_iter->second))
+              new RebindingDialogMenuMode(b->get_label(), &(bind_widget_iter->second))
             ));
           } else {
             throw GameException("Mysterious click event in control settings input handler!");
@@ -131,6 +132,44 @@ void ControlSettingsMenuMode::draw_2d(bool top __attribute__ ((unused))) {
 }
 
 void ControlSettingsMenuMode::now_at_top() {
+  for (std::map<GUI::Widget*, BindingDesc>::iterator i = _binding_widgets.begin(); i != _binding_widgets.end(); ++i) {
+    unsigned int desc_type = 0;
+    switch (i->second.dev) {
+      case ORSave::InputDeviceNameType::Keyboard:
+        desc_type = CHANNEL_DESC_TYPE_KEYBOARD;
+        break;
+      case ORSave::InputDeviceNameType::Mouse:
+        desc_type = CHANNEL_DESC_TYPE_MOUSE;
+        break;
+      case ORSave::InputDeviceNameType::Gamepad:
+        desc_type = CHANNEL_DESC_TYPE_GAMEPAD;
+        break;
+      default:
+        throw GameException("Unknown input device when populating control settings menu mode");
+        break;
+    }
+
+    std::string cur_setting;
+    const AxisActionDesc* adesc = dynamic_cast<const AxisActionDesc*>(i->second.action_desc);
+    const ButtonActionDesc* bdesc = dynamic_cast<const ButtonActionDesc*>(i->second.action_desc);
+    if (adesc) {
+      cur_setting = Input::get_axis_ch(adesc->action).desc(desc_type);
+    } else if (bdesc) {
+      cur_setting = Input::get_button_ch(bdesc->action).desc(desc_type);
+    } else {
+      throw GameException("Failed to dyn cast binding in control settings mode");
+    }
+
+    GUI::Button* btn = dynamic_cast<GUI::Button*>(i->first);
+    GUI::Label* lbl = dynamic_cast<GUI::Label*>(i->first);
+    if (btn) {
+      btn->set_label(cur_setting);
+    } else if (lbl) {
+      lbl->set_label(cur_setting);
+    } else {
+      throw GameException("Unknown widget in _binding_widgets of control settings mode");
+    }
+  }
 }
 
 RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, const BindingDesc* binding_desc) :
