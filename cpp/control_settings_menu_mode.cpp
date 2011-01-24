@@ -325,6 +325,17 @@ bool RebindingDialogMenuMode::handle_input() {
         _config_dev->button_bind().erase(_button_bind_iter);
       }
 
+      std::auto_ptr<ORSave::ButtonBindType> binding(new ORSave::ButtonBindType);
+      binding->action(static_cast<const ButtonActionDesc*>(_binding_desc->action_desc)->action);
+      if (dynamic_cast<ORSave::ButtonBoundInputType*>(_detected_input.get())) {
+        binding->input(static_cast<ORSave::ButtonBoundInputType*>(_detected_input.release()));
+      } else {
+        std::auto_ptr<ORSave::PseudoButtonInputType> pseudo_button_input(new ORSave::PseudoButtonInputType);
+        pseudo_button_input->axis(static_cast<ORSave::AxisBoundInputType*>(_detected_input.release()));
+        binding->input(pseudo_button_input.release());
+      }
+
+      _config_dev->button_bind().push_back(binding.release());
       Input::set_channels_from_config();
       Globals::mode_stack->next_frame_pop_mode();
     }
