@@ -278,7 +278,11 @@ bool RebindingDialogMenuMode::handle_input() {
         if (_binding_desc->dev == ORSave::InputDeviceNameType::Mouse) {
           std::auto_ptr<ORSave::MouseButtonInputType> input(new ORSave::MouseButtonInputType);
           input->buttonNum(event.button.button);
-          _detected_input = input;
+          if (_axis_mode && _detected_input.get()) {
+            _detected_input_2 = input;
+          } else {
+            _detected_input = input;
+          }
         }
         break;
       case SDL_JOYBUTTONDOWN:
