@@ -70,7 +70,7 @@ class ControlSettingsMenuMode : public Mode {
     void add_row(const ActionDesc& action, const Channel& chan);
 
     static const boost::array<AxisActionDesc, 6> AXIS_BOUND_ACTION_NAMES;
-    static const boost::array<ButtonActionDesc, 5> BUTTON_BOUND_ACTION_NAMES;
+    static const boost::array<ButtonActionDesc, 6> BUTTON_BOUND_ACTION_NAMES;
 
   public:
     ControlSettingsMenuMode(bool at_main_menu);

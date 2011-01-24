@@ -42,8 +42,9 @@ ControlSettingsMenuMode::AXIS_BOUND_ACTION_NAMES = { {
   AxisActionDesc(ORSave::AxisBoundAction::RotateZ, "Roll", "Left", "Right")
 } };
 
-const boost::array<ButtonActionDesc, 5>
+const boost::array<ButtonActionDesc, 6>
 ControlSettingsMenuMode::BUTTON_BOUND_ACTION_NAMES = { {
+  ButtonActionDesc(ORSave::ButtonBoundAction::OrientForward, "Orient Forward"),
   ButtonActionDesc(ORSave::ButtonBoundAction::Confirm, "Menu: Confirm", false),
   ButtonActionDesc(ORSave::ButtonBoundAction::Cancel, "Menu: Cancel", false),
   ButtonActionDesc(ORSave::ButtonBoundAction::Pause, "Pause", false),
