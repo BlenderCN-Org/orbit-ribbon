@@ -265,7 +265,7 @@ bool MouseMovementChannel::is_on() const {
 
 bool MouseMovementChannel::matches_frame_events() const {
   // Could implement this, but can't think of any use for it...
-  throw GameException("MMC MFE Unimplemented");
+  return false;
 }
 
 float MouseMovementChannel::get_value() const {
