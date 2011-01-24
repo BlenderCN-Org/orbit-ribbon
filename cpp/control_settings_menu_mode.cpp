@@ -243,12 +243,11 @@ RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, c
 
 bool RebindingDialogMenuMode::handle_input() {
   BOOST_FOREACH(SDL_Event& event, Globals::frame_events) {
-    bool got_match = false;
     switch (event.type) {
       case SDL_KEYDOWN:
         if (event.key.keysym.sym == SDLK_ESCAPE) {
           Globals::mode_stack->next_frame_pop_mode();
-          got_match = true;
+          return true;
         } else if (event.key.keysym.sym == SDLK_DELETE) {
           if (_config_dev) {
             if (_axis_mode && _axis_bind_iter != _config_dev->axis_bind().end()) {
@@ -259,8 +258,20 @@ bool RebindingDialogMenuMode::handle_input() {
           }
           Input::set_channels_from_config();
           Globals::mode_stack->next_frame_pop_mode();
-          got_match = true;
+          return true;
         } else if (_binding_desc->dev == ORSave::InputDeviceNameType::Keyboard) {
+          if (event.key.keysym.sym == SDLK_PAUSE || event.key.keysym.sym == SDLK_F10 || event.key.keysym.sym == SDLK_F4) {
+            // Ignore keys that correspond to some of the fixed default keyboard mappings
+          } else {
+            std::auto_ptr<ORSave::KeyInputType> input(new ORSave::KeyInputType);
+            input->key(event.key.keysym.sym);
+
+            if (_axis_mode && _detected_input.get()) {
+              _detected_input_2 = input;
+            } else {
+              _detected_input = input;
+            }
+          }
         }
         break;
       case SDL_MOUSEBUTTONDOWN:
@@ -283,7 +294,40 @@ bool RebindingDialogMenuMode::handle_input() {
         // Do nothing
         break;
     }
-    if (got_match) { break; }
+  }
+
+  if (_config_dev) {
+    if (_axis_mode && _detected_input.get() && _detected_input_2.get()) {
+      if (_axis_bind_iter != _config_dev->axis_bind().end()) {
+        _config_dev->axis_bind().erase(_axis_bind_iter);
+      }
+
+      std::auto_ptr<ORSave::AxisBindType> binding(new ORSave::AxisBindType);
+      binding->action(dynamic_cast<const AxisActionDesc*>(_binding_desc->action_desc)->action);
+      if (true) {
+        // TODO: Check if we perhaps don't really need a pseudo axis
+        std::auto_ptr<ORSave::PseudoAxisInputType> pseudo_axis_input(new ORSave::PseudoAxisInputType);
+
+        // TODO: Check if this common case actually applies
+        pseudo_axis_input->posInvert(false);
+        pseudo_axis_input->negInvert(true);
+        pseudo_axis_input->negative(_detected_input.release());
+        pseudo_axis_input->positive(_detected_input_2.release());
+
+        binding->input(pseudo_axis_input.release());
+      }
+
+      _config_dev->axis_bind().push_back(binding.release());
+      Input::set_channels_from_config();
+      Globals::mode_stack->next_frame_pop_mode();
+    } else if (!_axis_mode && _detected_input.get()) {
+      if (_button_bind_iter != _config_dev->button_bind().end()) {
+        _config_dev->button_bind().erase(_button_bind_iter);
+      }
+
+      Input::set_channels_from_config();
+      Globals::mode_stack->next_frame_pop_mode();
+    }
   }
 
   return true;
