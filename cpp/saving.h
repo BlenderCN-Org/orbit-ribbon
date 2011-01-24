@@ -35,7 +35,7 @@ class Saving {
 
   public:
     static ORSave::SaveType& get();
-    static ORSave::ConfigType::inputDevice_iterator get_input_device(ORSave::InputDeviceNameType::value_type dev_type);
+    static ORSave::InputDeviceType& get_input_device(ORSave::InputDeviceNameType::value_type dev_type);
 
     static void load();
     static void save();
