@@ -93,8 +93,10 @@ class RebindingDialogMenuMode : public Mode {
 
     std::string _title, _instruction;
     bool _axis_mode;
-
-    std::auto_ptr<ORSave::BoundInputType> _input;
+    std::auto_ptr<ORSave::BoundInputType> _detected_input;
+    ORSave::InputDeviceType* _config_dev;
+    ORSave::InputDeviceType::axis_bind_iterator _axis_bind_iter;
+    ORSave::InputDeviceType::button_bind_iterator _button_bind_iter;
 
   public:
     RebindingDialogMenuMode(const std::string& old_value, const BindingDesc* binding_desc);

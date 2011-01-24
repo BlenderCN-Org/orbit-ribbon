@@ -30,6 +30,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "font.h"
 #include "globals.h"
 #include "mode.h"
+#include "saving.h"
 
 const boost::array<AxisActionDesc, 6>
 ControlSettingsMenuMode::AXIS_BOUND_ACTION_NAMES = { {
@@ -173,7 +174,7 @@ void ControlSettingsMenuMode::now_at_top() {
 }
 
 RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, const BindingDesc* binding_desc) :
-  _old_value(old_value), _binding_desc(binding_desc)
+  _old_value(old_value), _binding_desc(binding_desc), _config_dev(NULL)
 {
   _axis_mode = (dynamic_cast<const AxisActionDesc*>(binding_desc->action_desc) != NULL);
 
@@ -204,6 +205,40 @@ RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, c
       break;
   }
   _title = "Assign " + devname + " mapping for:";
+
+  try {
+    _config_dev = &Saving::get_input_device(_binding_desc->dev);
+  } catch (const NoSuchDeviceException& e) {
+    // If it's just that no gamepad has been plugged in, no big deal
+    // Note that whether or not there's an existing gamepad config, we still want to open the dialog
+    // This allows the user to clear gamepad bindings even if it's not currently plugged in
+    if (binding_desc->dev != ORSave::InputDeviceNameType::Gamepad) {
+      throw;
+    }
+  }
+
+  if (_config_dev) {
+    _axis_bind_iter = _config_dev->axis_bind().end();
+    _button_bind_iter = _config_dev->button_bind().end();
+
+    if (_axis_mode) {
+      ORSave::AxisBoundAction a = dynamic_cast<const AxisActionDesc*>(binding_desc->action_desc)->action;
+      for (ORSave::InputDeviceType::axis_bind_iterator i = _config_dev->axis_bind().begin(); i != _config_dev->axis_bind().end(); ++i) {
+        if (i->action() == a) {
+          _axis_bind_iter = i;
+          break;
+        }
+      }
+    } else {
+      ORSave::ButtonBoundAction a = dynamic_cast<const ButtonActionDesc*>(binding_desc->action_desc)->action;
+      for (ORSave::InputDeviceType::button_bind_iterator i = _config_dev->button_bind().begin(); i != _config_dev->button_bind().end(); ++i) {
+        if (i->action() == a) {
+          _button_bind_iter = i;
+          break;
+        }
+      }
+    }
+  }
 }
 
 bool RebindingDialogMenuMode::handle_input() {
@@ -215,7 +250,13 @@ bool RebindingDialogMenuMode::handle_input() {
           Globals::mode_stack->next_frame_pop_mode();
           got_match = true;
         } else if (event.key.keysym.sym == SDLK_DELETE) {
-          // TODO: Clear this binding
+          if (_config_dev) {
+            if (_axis_mode && _axis_bind_iter != _config_dev->axis_bind().end()) {
+              _config_dev->axis_bind().erase(_axis_bind_iter);
+            } else if (!_axis_mode && _button_bind_iter != _config_dev->button_bind().end()) {
+              _config_dev->button_bind().erase(_button_bind_iter);
+            }
+          }
           Input::set_channels_from_config();
           Globals::mode_stack->next_frame_pop_mode();
           got_match = true;

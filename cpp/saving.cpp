@@ -48,7 +48,7 @@ ORSave::InputDeviceType& Saving::get_input_device(ORSave::InputDeviceNameType::v
       return idev;
     }
   }
-  throw GameException("Unable to locate input device config in save file matching requested type");
+  throw NoSuchDeviceException("Unable to locate input device config in save file matching requested type");
 }
 
 #define CONF_DFLT(C, P, A, V) if (!C.P()) { C.A(V); }

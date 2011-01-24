@@ -32,11 +32,11 @@ class Saving {
     static boost::scoped_ptr<ORSave::SaveType> _save;
 
     static boost::filesystem::path save_path();
-    
+
   public:
     static ORSave::SaveType& get();
     static ORSave::InputDeviceType& get_input_device(ORSave::InputDeviceNameType::value_type dev_type);
-    
+
     static void load();
     static void save();
 };

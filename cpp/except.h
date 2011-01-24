@@ -39,7 +39,11 @@ class GameException : public std::exception {
 class GameQuitException : public GameException {
   public:
     GameQuitException(const std::string& msg) : GameException(msg) {}
-    virtual ~GameQuitException() throw() {}
+};
+
+class NoSuchDeviceException : public GameException {
+  public:
+    NoSuchDeviceException(const std::string& msg) : GameException(msg) {}
 };
 
 class DisplayModeResetException : public std::exception {
