@@ -233,6 +233,20 @@ class GamepadButtonChannel : public Channel {
     std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const;
 };
 
+class InvertAxisChannel : public Channel {
+  private:
+    boost::shared_ptr<Channel> _chn;
+
+  public:
+    InvertAxisChannel(const boost::shared_ptr<Channel>& chn);
+
+    bool is_on() const;
+    bool matches_frame_events() const;
+    float get_value() const;
+    void set_neutral();
+    std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const;
+};
+
 class PseudoAxisChannel : public Channel {
   private:
     boost::shared_ptr<Channel> _neg;

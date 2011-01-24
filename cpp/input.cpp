@@ -389,6 +389,35 @@ std::string GamepadButtonChannel::desc(unsigned int desc_type) const {
   }
 }
 
+InvertAxisChannel::InvertAxisChannel(const boost::shared_ptr<Channel>& chn) :
+  _chn(chn)
+{}
+
+bool InvertAxisChannel::is_on() const {
+  return _chn->is_on();
+}
+
+bool InvertAxisChannel::matches_frame_events() const {
+  return _chn->matches_frame_events();
+}
+
+float InvertAxisChannel::get_value() const {
+  return -1*(_chn->get_value());
+}
+
+void InvertAxisChannel::set_neutral() {
+  _chn->set_neutral();
+}
+
+std::string InvertAxisChannel::desc(unsigned int desc_type) const {
+  std::string d = _chn->desc(desc_type);
+  if (d.size() > 0) {
+    return "-" + d;
+  } else {
+    return "";
+  }
+}
+
 PseudoAxisChannel::PseudoAxisChannel(const boost::shared_ptr<Channel>& neg, const boost::shared_ptr<Channel>& pos, bool neg_invert, bool pos_invert) :
   _neg(neg),
   _pos(pos),
@@ -426,11 +455,7 @@ std::string PseudoAxisChannel::desc(unsigned int desc_type) const {
   std::string n = _neg->desc(desc_type);
   std::string p = _pos->desc(desc_type);
   if (n.size() > 0 && p.size() > 0) {
-    if (n == p) {
-      return (_pos_invert ? "-" : "+") + n;
-    } else {
-      return (_neg_invert ? "" : "-") + n + ":" + (_pos_invert ? "-" : "") + p;
-    }
+    return (_neg_invert ? "" : "-") + n + ":" + (_pos_invert ? "-" : "") + p;
   } else {
     return "";
   }
@@ -728,6 +753,10 @@ boost::shared_ptr<Channel> Input::xml_to_channel(const ORSave::BoundInputType& i
       static_cast<const ORSave::GamepadAxisInputType*>(&i)->gamepadNum(),
       static_cast<const ORSave::GamepadAxisInputType*>(&i)->axisNum()
     );
+  } else if (typeid(i) == typeid(ORSave::InvertAxisInputType)) {
+    chn = boost::shared_ptr<Channel>(new InvertAxisChannel(
+      xml_to_channel(static_cast<const ORSave::InvertAxisInputType*>(&i)->axis())
+    ));
   } else if (typeid(i) == typeid(ORSave::PseudoButtonInputType)) {
     chn = boost::shared_ptr<Channel>(new PseudoButtonChannel(
       xml_to_channel(static_cast<const ORSave::PseudoButtonInputType*>(&i)->axis())
