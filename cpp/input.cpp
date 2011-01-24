@@ -625,16 +625,18 @@ void Input::init() {
   // Set up any gamepads, finding input configuration based on the gamepad's model if possible
   _gp_man = boost::shared_ptr<GamepadManager>(new GamepadManager);
   _sources.push_back(&*_gp_man);
-  if (_gp_man->get_num_gamepads() > 0) {
-    try {
-      ORSave::InputDeviceType& gp_input = Saving::get_input_device(ORSave::InputDeviceNameType::Gamepad); // Can throw GameException
-      if (gp_input.axis_bind().size() == 0 && gp_input.button_bind().size() == 0) {
-        throw GameException("It's empty"); // If a input config exists but is empty, act like we couldn't find an input config at all
-      }
-    } catch (const GameException& e) {
+  try {
+    ORSave::ConfigType::inputDevice_iterator gp_input = Saving::get_input_device(ORSave::InputDeviceNameType::Gamepad); // Can throw GameException
+    if (gp_input->axis_bind().size() == 0 && gp_input->button_bind().size() == 0) {
+      // If a gamepad input config exists but is empty, delete it and search for a new preset
+      Saving::get().config().inputDevice().erase(gp_input);
+      throw GameException("It was empty");
+    }
+  } catch (const GameException& e) {
+    bool found = false;
+    if (_gp_man->get_num_gamepads() > 0) {
       std::string gp_name = _gp_man->get_first_gamepad_name();
       Debug::status_msg("Attempting to find an appropriate input configuration for gamepad: '" + gp_name + "'");
-      bool found = false;
       BOOST_FOREACH(const ORSave::PresetType& preset, _preset_list->preset()) {
         BOOST_FOREACH(const std::string& match_name, preset.deviceMatchString()) {
           if (gp_name.find(match_name) != std::string::npos) {
@@ -649,12 +651,15 @@ void Input::init() {
           break;
         }
       }
-      if (!found) {
-        Debug::status_msg("Unable to find an appropriate gamepad input configuration");
-      }
+    }
+    if (!found) {
+      Debug::status_msg("Unable to find an appropriate gamepad input configuration");
+      std::auto_ptr<ORSave::InputDeviceType> input_dev(new ORSave::InputDeviceType);
+      input_dev->device(ORSave::InputDeviceNameType::Gamepad);
+      Saving::get().config().inputDevice().push_back(input_dev.release());
     }
   }
-  
+
   // Create Channel instances to match the configs, and also create Channels for default mappings (i.e. ForceQuit)
   set_channels_from_config();
   

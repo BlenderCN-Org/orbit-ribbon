@@ -207,7 +207,7 @@ RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, c
   _title = "Assign " + devname + " mapping for:";
 
   try {
-    _config_dev = &Saving::get_input_device(_binding_desc->dev);
+    _config_dev = &*Saving::get_input_device(_binding_desc->dev);
   } catch (const NoSuchDeviceException& e) {
     // If it's just that no gamepad has been plugged in, no big deal
     // Note that whether or not there's an existing gamepad config, we still want to open the dialog
