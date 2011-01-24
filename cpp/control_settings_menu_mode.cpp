@@ -222,7 +222,7 @@ RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, c
     _button_bind_iter = _config_dev->button_bind().end();
 
     if (_axis_mode) {
-      ORSave::AxisBoundAction a = dynamic_cast<const AxisActionDesc*>(binding_desc->action_desc)->action;
+      ORSave::AxisBoundAction a = static_cast<const AxisActionDesc*>(binding_desc->action_desc)->action;
       for (ORSave::InputDeviceType::axis_bind_iterator i = _config_dev->axis_bind().begin(); i != _config_dev->axis_bind().end(); ++i) {
         if (i->action() == a) {
           _axis_bind_iter = i;
@@ -230,7 +230,7 @@ RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, c
         }
       }
     } else {
-      ORSave::ButtonBoundAction a = dynamic_cast<const ButtonActionDesc*>(binding_desc->action_desc)->action;
+      ORSave::ButtonBoundAction a = static_cast<const ButtonActionDesc*>(binding_desc->action_desc)->action;
       for (ORSave::InputDeviceType::button_bind_iterator i = _config_dev->button_bind().begin(); i != _config_dev->button_bind().end(); ++i) {
         if (i->action() == a) {
           _button_bind_iter = i;
@@ -303,7 +303,7 @@ bool RebindingDialogMenuMode::handle_input() {
       }
 
       std::auto_ptr<ORSave::AxisBindType> binding(new ORSave::AxisBindType);
-      binding->action(dynamic_cast<const AxisActionDesc*>(_binding_desc->action_desc)->action);
+      binding->action(static_cast<const AxisActionDesc*>(_binding_desc->action_desc)->action);
       if (true) {
         // TODO: Check if we perhaps don't really need a pseudo axis
         std::auto_ptr<ORSave::PseudoAxisInputType> pseudo_axis_input(new ORSave::PseudoAxisInputType);
@@ -349,9 +349,19 @@ void RebindingDialogMenuMode::draw_2d(bool top __attribute__ ((unused))) {
   Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MINOR_FONT_HEIGHT, _title);
   pos.y += REBINDING_DIALOG_MINOR_FONT_HEIGHT*1.2;
 
-  const std::string& action_name = _binding_desc->action_desc->name;
-  text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MAJOR_FONT_HEIGHT, action_name);
-  Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MAJOR_FONT_HEIGHT, action_name);
+  std::string action_text;
+  if (_axis_mode) {
+    action_text = static_cast<const AxisActionDesc*>(_binding_desc->action_desc)->verb + " ";
+    if (_detected_input.get()) {
+      action_text += static_cast<const AxisActionDesc*>(_binding_desc->action_desc)->pos_name;
+    } else {
+      action_text += static_cast<const AxisActionDesc*>(_binding_desc->action_desc)->neg_name;
+    }
+  } else {
+    action_text = _binding_desc->action_desc->name;
+  }
+  text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MAJOR_FONT_HEIGHT, action_text);
+  Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MAJOR_FONT_HEIGHT, action_text);
   pos.y += REBINDING_DIALOG_MAJOR_FONT_HEIGHT*2.5;
 
   text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MAJOR_FONT_HEIGHT, _instruction);
