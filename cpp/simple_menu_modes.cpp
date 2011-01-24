@@ -88,10 +88,6 @@ void SimpleMenuMode::draw_2d(bool top) {
   }
 }
 
-void SimpleMenuMode::pushed_below_top() {
-  _menu.unfocus();
-}
-
 MainMenuMode::MainMenuMode() :
   SimpleMenuMode(true, 180, 22, 8, Vector(0, 0.3)),
   _title_tex(GLOOTexture::load("title"))

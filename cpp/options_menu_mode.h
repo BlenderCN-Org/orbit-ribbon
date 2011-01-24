@@ -61,7 +61,6 @@ class OptionsMenuMode : public Mode {
     void draw_3d_far(bool top);
     void draw_2d(bool top);
 
-    void pushed_below_top();
     void now_at_top();
 };
 

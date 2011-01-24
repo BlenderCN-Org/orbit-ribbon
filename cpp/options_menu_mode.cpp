@@ -134,10 +134,6 @@ void OptionsMenuMode::draw_2d(bool top) {
   }
 }
 
-void OptionsMenuMode::pushed_below_top() {
-  _menu.unfocus();
-}
-
 void OptionsMenuMode::now_at_top() {
   ORSave::ConfigType& c = Saving::get().config();
 

@@ -51,8 +51,6 @@ class SimpleMenuMode : public Mode {
     void draw_3d_far(bool top);
     void draw_2d(bool top);
     
-    void pushed_below_top();
-    
     virtual void handle_menu_selection(const std::string& item) =0;
 };
 
