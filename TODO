@@ -29,6 +29,11 @@ Thinh's ideas:
 	- Builds the entire project at once to see if g++'s unit-at-a-time thing helps
 	- Uses g++'s profiling mechanism with some kind of demo
 
+- Consider an alternate input mode that uses combinations of stick motions to indicate action
+  - Note: 2 sticks gives us 16 possible direction combinations. With 6 axes of motion, we would only need 12.
+  - However, it is a little problematic because it doesn't allow us to express all *combinations* of those 6 axes.
+  - Still, might be cool.
+
 - In all the places in the program that show a copyright notice, also mention the font license.
 - Find a way to make it really easy to update the copyright notice everywhere at the same time
 
