@@ -367,6 +367,7 @@ void Menu::populate_widget_region_map(WidgetLayout::RegionMap& m) {
 void Menu::add_widget(const boost::shared_ptr<Widget>& widget) {
   _widgets.push_back(widget);
   clear_region_map_cache();
+  if (!get_focus() && widget->focusable()) { set_focus(&*widget); }
 }
 
 void Menu::process() {
@@ -432,6 +433,7 @@ void Grid::add_row(bool force_left_focus) {
 void Grid::add_cell(const boost::shared_ptr<Widget>& widget) {
   _rows.back().cells.push_back(widget);
   clear_region_map_cache();
+  if (!get_focus() && widget->focusable()) { set_focus(&*widget); }
 }
 
 void Grid::process() {
