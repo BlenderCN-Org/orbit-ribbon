@@ -30,7 +30,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "input.h"
 
-MouseCursor::MouseCursor() : _cursor_img(GLOOTexture::load("cursor")), _visible(false) {
+MouseCursor::MouseCursor() : _cursor_img(GLOOTexture::load("cursor")), _visible(false), _got_first_event(false) {
   reset_pos();
 }
 
@@ -43,25 +43,29 @@ void MouseCursor::process_events() {
   }
   
   // Check for mouse motion events, which move the mouse cursor and make it visible
-  if (SDL_GetTicks() > 500) { // We often get garbage mousemotion events right after the program starts
-    BOOST_FOREACH(SDL_Event event, Globals::frame_events) {
-      if (event.type == SDL_MOUSEMOTION) {
+  BOOST_FOREACH(SDL_Event event, Globals::frame_events) {
+    if (event.type == SDL_MOUSEMOTION) {
+      if (_got_first_event) {
         _visible = true;
         _pos += Vector(event.motion.xrel, event.motion.yrel);
+      } else {
+        // SDL likes to emit a movement event when it warps the cursor, which is annoying
+        // We only want to make the cursor visible on actual user mouse movement
+        _got_first_event = true;
       }
     }
-    
-    if (_pos.x < 0) {
-      _pos.x = 0;
-    } else if (_pos.x >= Display::get_screen_width()) {
-      _pos.x = Display::get_screen_width()-1;
-    }
-    
-    if (_pos.y < 0) {
-      _pos.y = 0;
-    } else if (_pos.y >= Display::get_screen_height()) {
-      _pos.y = Display::get_screen_height()-1;
-    }
+  }
+
+  if (_pos.x < 0) {
+    _pos.x = 0;
+  } else if (_pos.x >= Display::get_screen_width()) {
+    _pos.x = Display::get_screen_width()-1;
+  }
+
+  if (_pos.y < 0) {
+    _pos.y = 0;
+  } else if (_pos.y >= Display::get_screen_height()) {
+    _pos.y = Display::get_screen_height()-1;
   }
 }
 
