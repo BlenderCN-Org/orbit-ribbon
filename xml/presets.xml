@@ -20,7 +20,7 @@
 		<axis_bind action="TranslateZ">
 			<input xsi:type="orsave:PseudoAxisInputType" posInvert="false" negInvert="true">
 				<negative xsi:type="orsave:KeyInputType" key="304" />
-				<positive xsi:type="orsave:KeyInputType" key="47" />
+				<positive xsi:type="orsave:KeyInputType" key="32" />
 			</input>
 		</axis_bind>
 		<axis_bind action="RotateX">
