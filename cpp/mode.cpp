@@ -147,7 +147,6 @@ void ModeStack::execute_draw_phase(bool top) {
     if (cur_mode.mode->mouse_cursor_enabled()) {
       if (_mouse_inactive) {
         _mouse_inactive = false;
-        Globals::mouse_cursor->reset_pos();
       }
       Globals::mouse_cursor->draw();
     } else if (!_mouse_inactive) {

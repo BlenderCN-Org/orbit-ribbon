@@ -46,7 +46,7 @@ Thinh's ideas:
 - When mouse cursor is visible and fullscreen mode is off, allow cursor to leave the window
 - When Saving::save is called, it should only actually write the save file if contents have differed
 - Use boost::format instead of lexical_cast wherever it makes sense (which is most places)
-- Don't hide/reset mouse cursor when in transition between two cursor-showing modes
+- Don't hide mouse cursor when in transition between two cursor-showing modes
 - Seperate most of the custom SCons stuff into python files in a site_scons directory
 - Use a dialog box to show fatal errors in Windows
 - Speed cap enforced with non-linear drag
