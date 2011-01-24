@@ -625,16 +625,16 @@ void Input::init() {
   // Set up any gamepads, finding input configuration based on the gamepad's model if possible
   _gp_man = boost::shared_ptr<GamepadManager>(new GamepadManager);
   _sources.push_back(&*_gp_man);
-  try {
-    ORSave::ConfigType::inputDevice_iterator gp_input = Saving::get_input_device(ORSave::InputDeviceNameType::Gamepad); // Can throw GameException
-    if (gp_input->axis_bind().size() == 0 && gp_input->button_bind().size() == 0) {
-      // If a gamepad input config exists but is empty, delete it and search for a new preset
-      Saving::get().config().inputDevice().erase(gp_input);
-      throw GameException("It was empty");
-    }
-  } catch (const GameException& e) {
-    bool found = false;
-    if (_gp_man->get_num_gamepads() > 0) {
+  if (_gp_man->get_num_gamepads() > 0) {
+    try {
+      ORSave::ConfigType::inputDevice_iterator gp_input = Saving::get_input_device(ORSave::InputDeviceNameType::Gamepad); // Can throw GameException
+      if (gp_input->axis_bind().size() == 0 && gp_input->button_bind().size() == 0) {
+        // If a gamepad input config exists but is empty, delete it and search for a new preset
+        Saving::get().config().inputDevice().erase(gp_input);
+        throw GameException("It was empty");
+      }
+    } catch (const GameException& e) {
+      bool found = false;
       std::string gp_name = _gp_man->get_first_gamepad_name();
       Debug::status_msg("Attempting to find an appropriate input configuration for gamepad: '" + gp_name + "'");
       BOOST_FOREACH(const ORSave::PresetType& preset, _preset_list->preset()) {
@@ -651,12 +651,13 @@ void Input::init() {
           break;
         }
       }
-    }
-    if (!found) {
-      Debug::status_msg("Unable to find an appropriate gamepad input configuration");
-      std::auto_ptr<ORSave::InputDeviceType> input_dev(new ORSave::InputDeviceType);
-      input_dev->device(ORSave::InputDeviceNameType::Gamepad);
-      Saving::get().config().inputDevice().push_back(input_dev.release());
+      if (!found) {
+        // No preset found, but insert a blank one so user can configure controls themself
+        Debug::status_msg("Unable to find an appropriate gamepad input configuration");
+        std::auto_ptr<ORSave::InputDeviceType> input_dev(new ORSave::InputDeviceType);
+        input_dev->device(ORSave::InputDeviceNameType::Gamepad);
+        Saving::get().config().inputDevice().push_back(input_dev.release());
+      }
     }
   }
 

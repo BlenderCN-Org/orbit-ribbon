@@ -210,9 +210,8 @@ RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, c
   try {
     _config_dev = &*Saving::get_input_device(_binding_desc->dev);
   } catch (const NoSuchDeviceException& e) {
-    // If it's just that no gamepad has been plugged in, no big deal
-    // Note that whether or not there's an existing gamepad config, we still want to open the dialog
-    // This allows the user to clear gamepad bindings even if it's not currently plugged in
+    // If it's just that no gamepad has been plugged in, we still want to open the dialog
+    // This allows the user to clear gamepad bindings even if one's not currently plugged in
     if (binding_desc->dev != ORSave::InputDeviceNameType::Gamepad) {
       throw;
     }
