@@ -211,7 +211,7 @@ void AvatarGameObj::step_impl() {
   chn = &Input::get_axis_ch(ORSave::AxisBoundAction::TranslateZ);
   if (chn->is_on()) {
     float v = (chn->get_value())*(MAX_ACCEL/MAX_FPS);
-    dBodyAddRelForce(body, 0.0, 0.0, v);
+    dBodyAddRelForce(body, 0.0, 0.0, -v);
   }
   
   const dReal* avel = dBodyGetAngularVel(body);
