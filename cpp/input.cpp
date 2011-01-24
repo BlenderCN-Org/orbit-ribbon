@@ -426,7 +426,11 @@ std::string PseudoAxisChannel::desc(unsigned int desc_type) const {
   std::string n = _neg->desc(desc_type);
   std::string p = _pos->desc(desc_type);
   if (n.size() > 0 && p.size() > 0) {
-    return n + "-" + p;
+    if (n == p) {
+      return (_pos_invert ? "-" : "+") + n;
+    } else {
+      return (_neg_invert ? "" : "-") + n + ":" + (_pos_invert ? "-" : "") + p;
+    }
   } else {
     return "";
   }
