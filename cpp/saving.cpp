@@ -42,10 +42,11 @@ ORSave::SaveType& Saving::get() {
   throw GameException("Attempted to get save data before it had been loaded.");
 }
 
-ORSave::InputDeviceType& Saving::get_input_device(ORSave::InputDeviceNameType::value_type dev_type) {
-  BOOST_FOREACH(ORSave::InputDeviceType& idev, get().config().inputDevice()) {
-    if (idev.device() == dev_type) {
-      return idev;
+ORSave::ConfigType::inputDevice_iterator Saving::get_input_device(ORSave::InputDeviceNameType::value_type dev_type) {
+  ORSave::ConfigType& conf = get().config();
+  for (ORSave::ConfigType::inputDevice_iterator i = conf.inputDevice().begin(); i != conf.inputDevice().end(); ++i) {
+    if (i->device() == dev_type) {
+      return i;
     }
   }
   throw NoSuchDeviceException("Unable to locate input device config in save file matching requested type");
