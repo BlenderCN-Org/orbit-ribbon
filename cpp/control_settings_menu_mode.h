@@ -23,6 +23,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_CONTROL_SETTINGS_MENU_MODE_H
 
 #include <boost/array.hpp>
+#include <memory>
 
 #include "autoxsd/save.h"
 #include "gui.h"
@@ -86,12 +87,14 @@ class ControlSettingsMenuMode : public Mode {
 };
 
 class RebindingDialogMenuMode : public Mode {
-  protected:
+  private:
     std::string _old_value;
     const BindingDesc* _binding_desc;
 
     std::string _title, _instruction;
     bool _axis_mode;
+
+    std::auto_ptr<ORSave::BoundInputType> _input;
 
   public:
     RebindingDialogMenuMode(const std::string& old_value, const BindingDesc* binding_desc);

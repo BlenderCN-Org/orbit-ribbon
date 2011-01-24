@@ -207,8 +207,42 @@ RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, c
 }
 
 bool RebindingDialogMenuMode::handle_input() {
-  if (Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).matches_frame_events()) {
-    Globals::mode_stack->next_frame_pop_mode();
+  BOOST_FOREACH(SDL_Event& event, Globals::frame_events) {
+    bool got_match = false;
+    switch (event.type) {
+      case SDL_KEYDOWN:
+        if (event.key.keysym.sym == SDLK_ESCAPE) {
+          Globals::mode_stack->next_frame_pop_mode();
+          got_match = true;
+        } else if (event.key.keysym.sym == SDLK_DELETE) {
+          // TODO: Clear this binding
+          Input::set_channels_from_config();
+          Globals::mode_stack->next_frame_pop_mode();
+          got_match = true;
+        } else if (_binding_desc->dev == ORSave::InputDeviceNameType::Keyboard) {
+        }
+        break;
+      case SDL_MOUSEBUTTONDOWN:
+        if (_binding_desc->dev == ORSave::InputDeviceNameType::Mouse) {
+        }
+        break;
+      case SDL_JOYBUTTONDOWN:
+        if (_binding_desc->dev == ORSave::InputDeviceNameType::Gamepad) {
+        }
+        break;
+      case SDL_MOUSEMOTION:
+        if (_binding_desc->dev == ORSave::InputDeviceNameType::Mouse) {
+        }
+        break;
+      case SDL_JOYAXISMOTION:
+        if (_binding_desc->dev == ORSave::InputDeviceNameType::Gamepad) {
+        }
+        break;
+      default:
+        // Do nothing
+        break;
+    }
+    if (got_match) { break; }
   }
 
   return true;
@@ -254,7 +288,7 @@ void RebindingDialogMenuMode::draw_2d(bool top __attribute__ ((unused))) {
     Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MINOR_FONT_HEIGHT, del_instr);
     pos.y += REBINDING_DIALOG_MINOR_FONT_HEIGHT*1.2;
 
-    static const std::string cancel_instr("Press " + Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).desc() + " to leave it as is");
+    static const std::string cancel_instr("Press [Escape] to leave it as is");
     text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MINOR_FONT_HEIGHT, cancel_instr);
     Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MINOR_FONT_HEIGHT, cancel_instr);
   } else {
