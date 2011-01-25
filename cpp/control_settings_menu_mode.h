@@ -95,8 +95,12 @@ class RebindingDialogMenuMode : public Mode {
     bool _axis_mode;
     std::auto_ptr<ORSave::BoundInputType> _detected_input, _detected_input_2;
     ORSave::InputDeviceType* _config_dev;
+    int _detected_axis_num, _detected_axis_num_2;
+    bool _detected_axis_negative, _detected_axis_negative_2;
     ORSave::InputDeviceType::axis_bind_iterator _axis_bind_iter;
     ORSave::InputDeviceType::button_bind_iterator _button_bind_iter;
+
+    bool is_clear_winning_axis(int x, int y, float min_delta);
 
   public:
     RebindingDialogMenuMode(const std::string& old_value, const BindingDesc* binding_desc);

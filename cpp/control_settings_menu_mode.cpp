@@ -20,6 +20,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
 #include <boost/foreach.hpp>
+#include <cmath>
 #include <string>
 #include <list>
 
@@ -174,8 +175,22 @@ void ControlSettingsMenuMode::now_at_top() {
   }
 }
 
+bool RebindingDialogMenuMode::is_clear_winning_axis(int x, int y, float min_delta) {
+  if (std::max(std::fabs(x), std::fabs(x)) < min_delta) {
+    // Reject small motions
+    return false;
+  }
+  if (std::fabs(std::fabs(x) - std::fabs(y)) < min_delta) {
+    // Reject ambiguously diagonal motions
+    return false;
+  }
+  return true;
+}
+
 RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, const BindingDesc* binding_desc) :
-  _old_value(old_value), _binding_desc(binding_desc), _config_dev(NULL)
+  _old_value(old_value), _binding_desc(binding_desc), _config_dev(NULL),
+  _detected_axis_num(-1), _detected_axis_num_2(-1),
+  _detected_axis_negative(false), _detected_axis_negative_2(false)
 {
   _axis_mode = (dynamic_cast<const AxisActionDesc*>(binding_desc->action_desc) != NULL);
 
@@ -241,7 +256,9 @@ RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, c
   }
 }
 
+const float REBINDING_MINIMUM_MOUSE_REL_MOTION = 2.0;
 bool RebindingDialogMenuMode::handle_input() {
+  // TODO: Ye gods, refactor this
   BOOST_FOREACH(SDL_Event& event, Globals::frame_events) {
     switch (event.type) {
       case SDL_KEYDOWN:
@@ -287,14 +304,33 @@ bool RebindingDialogMenuMode::handle_input() {
         break;
       case SDL_JOYBUTTONDOWN:
         if (_binding_desc->dev == ORSave::InputDeviceNameType::Gamepad) {
+          std::auto_ptr<ORSave::GamepadButtonInputType> input(new ORSave::GamepadButtonInputType);
         }
         break;
       case SDL_MOUSEMOTION:
-        if (_binding_desc->dev == ORSave::InputDeviceNameType::Mouse) {
+        if (_axis_mode && _binding_desc->dev == ORSave::InputDeviceNameType::Mouse) {
+          if (is_clear_winning_axis(event.motion.xrel, event.motion.yrel, REBINDING_MINIMUM_MOUSE_REL_MOTION)) {
+            std::auto_ptr<ORSave::MouseMovementInputType> input(new ORSave::MouseMovementInputType);
+            int axis_num = std::fabs(event.motion.xrel) > std::fabs(event.motion.yrel) ? 0 : 1;
+            input->axisNum(axis_num);
+            int value = axis_num == 0 ? event.motion.xrel : event.motion.yrel;
+            bool negative = value < 0;
+            // Don't map both sides of an axis action to the same input axis going in the same direction
+            if (_detected_input.get() && (axis_num != _detected_axis_num || negative != _detected_axis_negative)) {
+              _detected_input_2 = input;
+              _detected_axis_num_2 = axis_num;
+              _detected_axis_negative_2 = negative;
+            } else {
+              _detected_input = input;
+              _detected_axis_num = axis_num;
+              _detected_axis_negative = negative;
+            }
+          }
         }
         break;
       case SDL_JOYAXISMOTION:
-        if (_binding_desc->dev == ORSave::InputDeviceNameType::Gamepad) {
+        if (_axis_mode && _binding_desc->dev == ORSave::InputDeviceNameType::Gamepad) {
+          std::auto_ptr<ORSave::GamepadAxisInputType> input(new ORSave::GamepadAxisInputType);
         }
         break;
       default:
@@ -311,13 +347,27 @@ bool RebindingDialogMenuMode::handle_input() {
 
       std::auto_ptr<ORSave::AxisBindType> binding(new ORSave::AxisBindType);
       binding->action(static_cast<const AxisActionDesc*>(_binding_desc->action_desc)->action);
-      if (true) {
-        // TODO: Check if we perhaps don't really need a pseudo axis
+      if (_detected_axis_num >= 0 && _detected_axis_num == _detected_axis_num_2) {
+        if (dynamic_cast<ORSave::AxisBoundInputType*>(_detected_input.get())) {
+        } else {
+          throw GameException("In RDMM, detected axis num is non-negative, but non-axis input type!");
+        }
+        std::auto_ptr<ORSave::AxisBoundInputType> axis_input(static_cast<ORSave::AxisBoundInputType*>(_detected_input.release()));
+
+        if (_detected_axis_negative && !_detected_axis_negative_2) {
+          binding->input(axis_input.release());
+        } else if (!_detected_axis_negative && _detected_axis_negative_2) {
+          std::auto_ptr<ORSave::InvertAxisInputType> invert_input(new ORSave::InvertAxisInputType);
+          invert_input->axis(axis_input.release());
+          binding->input(invert_input.release());
+        } else {
+          throw GameException("In RDMM, same axis supplied for two directions, but unexpected axis negation values");
+        }
+      } else {
         std::auto_ptr<ORSave::PseudoAxisInputType> pseudo_axis_input(new ORSave::PseudoAxisInputType);
 
-        // TODO: Check if this common case actually applies
-        pseudo_axis_input->posInvert(false);
-        pseudo_axis_input->negInvert(true);
+        pseudo_axis_input->posInvert(_detected_axis_negative);
+        pseudo_axis_input->negInvert(!_detected_axis_negative);
         pseudo_axis_input->negative(_detected_input.release());
         pseudo_axis_input->positive(_detected_input_2.release());
 
