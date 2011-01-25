@@ -24,6 +24,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <string>
 #include <list>
 
+#include <boost/lexical_cast.hpp>
+#include "debug.h"
+
 #include "background.h"
 #include "control_settings_menu_mode.h"
 #include "display.h"
@@ -202,7 +205,7 @@ bool RebindingDialogMenuMode::is_clear_winning_axis(int x, int y, float min_delt
 }
 
 RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, const BindingDesc* binding_desc) :
-  _old_value(old_value), _binding_desc(binding_desc), _config_dev(NULL),
+  _old_value(old_value), _binding_desc(binding_desc), _config_dev(NULL), _calm(false),
   _detected_axis_num(-1), _detected_axis_num_2(-1),
   _detected_axis_negative(false), _detected_axis_negative_2(false)
 {
@@ -271,8 +274,102 @@ RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, c
 }
 
 const float REBINDING_MINIMUM_MOUSE_REL_MOTION = 3.0;
+const float REBINDING_MINIMUM_GAMEPAD_AXIS_VALUE = 0.3;
 bool RebindingDialogMenuMode::handle_input() {
-  // TODO: Ye gods, refactor this
+  // TODO: Ye flatulent hairless molerat gods but I need to refactor this whole method!
+
+  // When considering joystick input for axis, we have to use Input, not the information in the SDL event.
+  // Some gamepads have weird neutral positions (i.e. PS3 shoulder buttons rest at -1.0).
+  // Our Input module treats value as difference-from-neutral, but SDL always assumes neutral at 1.0 for value.
+  // Additionally, some gamepads have analog buttons that report as both button and axis.
+  // In such cases, we need to always prefer the axis input over the button input.
+  if (_axis_mode && _binding_desc->dev == ORSave::InputDeviceNameType::Gamepad) {
+    bool calm_this_frame = true;
+
+    boost::shared_ptr<Channel> null_chn = Input::get_null_channel();
+    boost::shared_ptr<Channel> cand;
+    int cand_gamepad_num = -1;
+    int cand_axis_num = -1;
+
+    const GamepadManager& gp_man = Input::get_gamepad_manager();
+    for (Uint8 pad_num = 0; pad_num < gp_man.get_num_gamepads(); ++pad_num) {
+      for (Uint8 axis_num = 0; axis_num < gp_man.get_num_axes(pad_num); ++axis_num) {
+        boost::shared_ptr<Channel> axis = gp_man.axis_channel(pad_num, axis_num);
+        float axis_value = std::fabs(axis->get_value());
+        if (axis_value > REBINDING_MINIMUM_GAMEPAD_AXIS_VALUE) {
+          Debug::debug_msg("UNCALM ON AXIS " + boost::lexical_cast<std::string>((int)axis_num));
+          calm_this_frame = false;
+          if (!cand || dynamic_cast<GamepadButtonChannel*>(cand.get())) {
+            cand = axis;
+            cand_gamepad_num = pad_num;
+            cand_axis_num = axis_num;
+          } else if (dynamic_cast<GamepadAxisChannel*>(cand.get())) {
+            float cand_value = std::fabs(cand->get_value());
+            if (axis_value > cand_value) {
+              cand = axis;
+              cand_gamepad_num = pad_num;
+              cand_axis_num = axis_num;
+            }
+          } else {
+            throw GameException("Unknown type in gamepad binding candidate assign");
+          }
+        }
+      }
+
+      for (Uint8 button_num = 0; button_num < gp_man.get_num_buttons(pad_num); ++button_num) {
+        boost::shared_ptr<Channel> button = gp_man.button_channel(pad_num, button_num);
+        if (button->is_on()) {
+          Debug::debug_msg("UNCALM ON BUTTON " + boost::lexical_cast<std::string>((int)button_num));
+          calm_this_frame = false;
+          if (!cand) {
+            cand = button;
+            cand_gamepad_num = pad_num;
+            break;
+          }
+        }
+      }
+    }
+
+    if (_calm && cand) {
+      std::auto_ptr<ORSave::BoundInputType> input;
+      if (dynamic_cast<GamepadButtonChannel*>(cand.get())) {
+        std::auto_ptr<ORSave::GamepadButtonInputType> button_input(new ORSave::GamepadButtonInputType);
+        button_input->gamepadNum(cand_gamepad_num);
+        button_input->buttonNum(cand_axis_num);
+        input = button_input;
+      } else if (dynamic_cast<GamepadAxisChannel*>(cand.get())) {
+        std::auto_ptr<ORSave::GamepadAxisInputType> axis_input(new ORSave::GamepadAxisInputType);
+        axis_input->gamepadNum(cand_gamepad_num);
+        axis_input->axisNum(cand_axis_num);
+        input = axis_input;
+      } else {
+        throw GameException("Unknown type in gamepad input assign from candidate");
+      }
+
+      bool negative = cand->get_value() < 0;
+      if (_detected_input.get()) {
+        // Don't map both sides of an axis action to the same input axis going in the same direction
+        if (cand_axis_num != _detected_axis_num || negative != _detected_axis_negative) {
+          calm_this_frame = false;
+          _detected_input_2 = input;
+          if (dynamic_cast<GamepadAxisChannel*>(cand.get())) {
+            _detected_axis_num_2 = cand_axis_num;
+            _detected_axis_negative_2 = negative;
+          }
+        }
+      } else {
+        calm_this_frame = false;
+        _detected_input = input;
+        if (dynamic_cast<GamepadAxisChannel*>(cand.get())) {
+          _detected_axis_num = cand_axis_num;
+          _detected_axis_negative = negative;
+        }
+      }
+    }
+
+    _calm = calm_this_frame;
+  }
+
   BOOST_FOREACH(SDL_Event& event, Globals::frame_events) {
     switch (event.type) {
       case SDL_KEYDOWN:
@@ -305,6 +402,16 @@ bool RebindingDialogMenuMode::handle_input() {
           }
         }
         break;
+      case SDL_JOYBUTTONDOWN:
+        if (!_axis_mode && _binding_desc->dev == ORSave::InputDeviceNameType::Gamepad) {
+          // Why is it only this simple out of axis mode? Because some gamepads map a button and an axis to the same physical input.
+          // In those cases, we want to make sure to prefer the axis over the button when assigning to _detected_input.
+          std::auto_ptr<ORSave::GamepadButtonInputType> input(new ORSave::GamepadButtonInputType);
+          input->gamepadNum(event.jbutton.which);
+          input->buttonNum(event.jbutton.button);
+          _detected_input = input;
+        }
+        break;
       case SDL_MOUSEBUTTONDOWN:
         if (_binding_desc->dev == ORSave::InputDeviceNameType::Mouse) {
           std::auto_ptr<ORSave::MouseButtonInputType> input(new ORSave::MouseButtonInputType);
@@ -314,11 +421,6 @@ bool RebindingDialogMenuMode::handle_input() {
           } else {
             _detected_input = input;
           }
-        }
-        break;
-      case SDL_JOYBUTTONDOWN:
-        if (_binding_desc->dev == ORSave::InputDeviceNameType::Gamepad) {
-          std::auto_ptr<ORSave::GamepadButtonInputType> input(new ORSave::GamepadButtonInputType);
         }
         break;
       case SDL_MOUSEMOTION:
@@ -342,15 +444,15 @@ bool RebindingDialogMenuMode::handle_input() {
           }
         }
         break;
-      case SDL_JOYAXISMOTION:
-        if (_axis_mode && _binding_desc->dev == ORSave::InputDeviceNameType::Gamepad) {
-          std::auto_ptr<ORSave::GamepadAxisInputType> input(new ORSave::GamepadAxisInputType);
-        }
-        break;
       default:
-        // Do nothing
+        // Do nothing.
         break;
     }
+  }
+
+  if (_detected_input.get() && _detected_input_2.get() && typeid(_detected_input.get()) != typeid(_detected_input_2.get())) {
+    // Don't create a pseudo-axis mapping with two different types of inputs
+    _detected_input_2.reset();
   }
 
   if (_config_dev) {
@@ -362,14 +464,14 @@ bool RebindingDialogMenuMode::handle_input() {
       std::auto_ptr<ORSave::AxisBindType> binding(new ORSave::AxisBindType);
       binding->action(static_cast<const AxisActionDesc*>(_binding_desc->action_desc)->action);
 
-      // Since the user was asked to do the input that causes the desired effect, and inversion is applied to this
-      // action, we should swap the inputs they gave before saving the pre-inversion state to the config file.
-      // Note that we apply inverted rotation to the RotateX action; user thinks of it as look up/down, but inside
-      // the code we think of it as rotating about the x axis.
       if (
         (Saving::get().config().invertTranslateY() && binding->action() == ORSave::AxisBoundAction::TranslateY)
         || (Saving::get().config().invertRotateY() && binding->action() == ORSave::AxisBoundAction::RotateX)
       ) {
+        // Since the user was asked to do the input that causes the desired effect, and inversion is applied to this
+        // action, we should swap the inputs they gave before saving the pre-inversion state to the config file.
+        // Note that we apply inverted rotation to the RotateX action; user thinks of it as look up/down, but inside
+        // the code we think of it as rotating about the x axis.
         std::auto_ptr<ORSave::BoundInputType> temp_input = _detected_input;
         _detected_input = _detected_input_2;
         _detected_input_2 = temp_input;
@@ -468,8 +570,14 @@ void RebindingDialogMenuMode::draw_2d(bool top __attribute__ ((unused))) {
   Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MAJOR_FONT_HEIGHT, action_text);
   pos.y += REBINDING_DIALOG_MAJOR_FONT_HEIGHT*2.5;
 
-  text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MAJOR_FONT_HEIGHT, _instruction);
-  Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MAJOR_FONT_HEIGHT, _instruction);
+  std::string instr_text;
+  if (_axis_mode && _binding_desc->dev == ORSave::InputDeviceNameType::Gamepad && !_calm) {
+    instr_text = "Please release all inputs.";
+  } else {
+    instr_text = _instruction;
+  }
+  text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MAJOR_FONT_HEIGHT, instr_text);
+  Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MAJOR_FONT_HEIGHT, instr_text);
   pos.y += REBINDING_DIALOG_MAJOR_FONT_HEIGHT*2.5;
 
   if (_old_value.size() > 0) {
@@ -491,7 +599,7 @@ void RebindingDialogMenuMode::draw_2d(bool top __attribute__ ((unused))) {
     text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MINOR_FONT_HEIGHT, cancel_instr);
     Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MINOR_FONT_HEIGHT, cancel_instr);
   } else {
-    static const std::string cancel_instr("Press " + Input::get_button_ch(ORSave::ButtonBoundAction::Cancel).desc() + " to leave it unmapped");
+    static const std::string cancel_instr("Press [Escape] to leave it unmapped");
     text_width = Globals::sys_font->get_width(REBINDING_DIALOG_MINOR_FONT_HEIGHT, cancel_instr);
     Globals::sys_font->draw(pos + Vector((dialog_area.size.x - text_width)/2, 0), REBINDING_DIALOG_MINOR_FONT_HEIGHT, cancel_instr);
   }
