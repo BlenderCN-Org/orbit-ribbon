@@ -37,6 +37,8 @@ Thinh's ideas:
 - In all the places in the program that show a copyright notice, also mention the font license.
 - Find a way to make it really easy to update the copyright notice everywhere at the same time
 
+- Possibly make Confirm refocus menu and disable mouse cursor
+  - Make it so that if mouse motion caused the Confirm, this doesn't happen (re-enable same frame in MouseCursor?)
 - Refactor the over-entrenched distinction between axis and button input bindings
 - Refactor text display to allow easy alignment within a box
 - Smarter way to deal with inversion settings, so that when inversion is on for an action:
