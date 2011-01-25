@@ -43,7 +43,7 @@ const float MAX_MOUSE_SENSITIVITY_FULL = 5;
 const float MIN_MOUSE_SENSITIVITY_FULL = 50;
 
 // How far from -1, 0, or 1 where we consider an input axis to just be at those exact values
-const float Input::DEAD_ZONE = 0.001;
+const float Input::DEAD_ZONE = 0.003;
 
 bool Channel::is_partially_on() const {
   return is_on();
@@ -336,7 +336,7 @@ bool GamepadAxisChannel::is_on() const {
 bool GamepadAxisChannel::matches_frame_events() const {
   // Need to implement this to make it act like a button, and notice when it moves from "off" to "on"
   bool ret = false;
-  if (std::fabs(_last_pseudo_frame_event_value) < Input::DEAD_ZONE && std::fabs(get_value()) >= Input::DEAD_ZONE) {
+  if (std::fabs(_last_pseudo_frame_event_value) < 0.5 && std::fabs(get_value()) >= 0.5) {
     ret = true;
   }
   
@@ -362,7 +362,7 @@ void GamepadAxisChannel::set_neutral() {
 std::string GamepadAxisChannel::desc(unsigned int desc_type) const {
   // TODO Allow use of human-readable joystick axis names
   if (desc_type & CHANNEL_DESC_TYPE_GAMEPAD) {
-    return (boost::format("Gamepad(%u)Axis%u") % (_gamepad+1) % (_axis+1)).str();
+    return (boost::format("Pad%uAxis%u") % (_gamepad+1) % (_axis+1)).str();
   } else {
     return "";
   }
@@ -379,7 +379,6 @@ bool GamepadButtonChannel::is_on() const {
 }
 
 bool GamepadButtonChannel::matches_frame_events() const {
-  // FIXME Will this work with joystick events disabled? Probably not...
   BOOST_FOREACH(const SDL_Event& event, Globals::frame_events) {
     if (event.type == SDL_JOYBUTTONDOWN && event.jbutton.which == _gamepad && event.jbutton.button == _button) {
       return true;
@@ -402,7 +401,7 @@ void GamepadButtonChannel::set_neutral() {
 std::string GamepadButtonChannel::desc(unsigned int desc_type) const {
   // TODO Allow use of human-readable joystick button names
   if (desc_type & CHANNEL_DESC_TYPE_GAMEPAD) {
-    return (boost::format("Gamepad(%u)Btn%u") % (_gamepad+1) % (_button+1)).str();
+    return (boost::format("Pad%uBtn%u") % (_gamepad+1) % (_button+1)).str();
   } else {
     return "";
   }
@@ -630,11 +629,12 @@ std::map<ORSave::ButtonBoundAction::value_type, boost::shared_ptr<Channel> > Inp
 boost::scoped_ptr<ORSave::PresetListType> Input::_preset_list;
 
 void Input::init() {
-  _null_channel = boost::shared_ptr<Channel>(new NullChannel);
+  SDL_JoystickEventState(SDL_ENABLE);
 
   _kbd = boost::shared_ptr<Keyboard>(new Keyboard);
   _mouse = boost::shared_ptr<Mouse>(new Mouse);
   _gp_man = boost::shared_ptr<GamepadManager>(new GamepadManager);
+  _null_channel = boost::shared_ptr<Channel>(new NullChannel);
 
   _sources.push_back(&*_kbd);
   _sources.push_back(&*_mouse);
@@ -655,12 +655,14 @@ void Input::deinit() {
   _button_action_map.clear();
   _preset_list.reset();
 
+  _sources.clear();
+
   _gp_man.reset();
   _mouse.reset();
   _kbd.reset();
   _null_channel.reset();
 
-  _sources.clear();
+  SDL_JoystickEventState(SDL_IGNORE);
 }
 
 void Input::update() {
