@@ -334,11 +334,14 @@ class Input {
     friend class App;
   
   public:
+    static const float DEAD_ZONE;
+
     static boost::shared_ptr<Channel> get_null_channel() { return _null_channel; }
-    
+    static const GamepadManager& get_gamepad_manager() { return *_gp_man; }
+
     static const ORSave::PresetType& get_preset(const std::string& name);
     static const ORSave::PresetListType& get_preset_list() { return *_preset_list; }
-    
+
     static void load_config_presets();
     static void set_channels_from_config();
     static const Channel& get_axis_ch(ORSave::AxisBoundAction::value_type action);

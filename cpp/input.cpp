@@ -38,12 +38,12 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "input.h"
 #include "saving.h"
 
-// How far from -1, 0, or 1 where we consider an input axis to just be at those exact values
-const float DEAD_ZONE = 0.001;
-
 // At maximum and minimum sensitivity, how far the mouse has to move in a single step to be equivalent to full axis tilt
 const float MAX_MOUSE_SENSITIVITY_FULL = 5;
 const float MIN_MOUSE_SENSITIVITY_FULL = 50;
+
+// How far from -1, 0, or 1 where we consider an input axis to just be at those exact values
+const float Input::DEAD_ZONE = 0.001;
 
 bool Channel::is_partially_on() const {
   return is_on();
@@ -297,11 +297,11 @@ GamepadAxisChannel::GamepadAxisChannel(GamepadManager* gamepad_man, Uint8 gamepa
 
 float sint16_to_axis_float(Sint16 val) {
   float v = float(val)/32768.0;
-  if (v > 1.0 - DEAD_ZONE) {
+  if (v > 1.0 - Input::DEAD_ZONE) {
     return 1.0;
-  } else if (v < -1.0 + DEAD_ZONE) {
+  } else if (v < -1.0 + Input::DEAD_ZONE) {
     return -1.0;
-  } else if (v > -DEAD_ZONE && v < DEAD_ZONE) {
+  } else if (v > -Input::DEAD_ZONE && v < Input::DEAD_ZONE) {
     return 0.0;
   } else {
     return v;
@@ -309,7 +309,7 @@ float sint16_to_axis_float(Sint16 val) {
 }
 
 bool GamepadAxisChannel::is_on() const {
-  if (std::fabs(_neutral_value - sint16_to_axis_float(SDL_JoystickGetAxis(_gamepad_man->_gamepads[_gamepad], _axis))) > DEAD_ZONE) {
+  if (std::fabs(_neutral_value - sint16_to_axis_float(SDL_JoystickGetAxis(_gamepad_man->_gamepads[_gamepad], _axis))) > Input::DEAD_ZONE) {
     return true;
   }
   return false;
@@ -318,7 +318,7 @@ bool GamepadAxisChannel::is_on() const {
 bool GamepadAxisChannel::matches_frame_events() const {
   // Need to implement this to make it act like a button, and notice when it moves from "off" to "on"
   bool ret = false;
-  if (std::fabs(_last_pseudo_frame_event_value) < DEAD_ZONE && std::fabs(get_value()) >= DEAD_ZONE) {
+  if (std::fabs(_last_pseudo_frame_event_value) < Input::DEAD_ZONE && std::fabs(get_value()) >= Input::DEAD_ZONE) {
     ret = true;
   }
   
@@ -361,6 +361,7 @@ bool GamepadButtonChannel::is_on() const {
 }
 
 bool GamepadButtonChannel::matches_frame_events() const {
+  // FIXME Will this work with joystick events disabled? Probably not...
   BOOST_FOREACH(const SDL_Event& event, Globals::frame_events) {
     if (event.type == SDL_JOYBUTTONDOWN && event.jbutton.which == _gamepad && event.jbutton.button == _button) {
       return true;
@@ -612,7 +613,7 @@ boost::scoped_ptr<ORSave::PresetListType> Input::_preset_list;
 
 void Input::init() {
   _null_channel = boost::shared_ptr<Channel>(new NullChannel);
-  
+
   _kbd = boost::shared_ptr<Keyboard>(new Keyboard);
   _mouse = boost::shared_ptr<Mouse>(new Mouse);
   _gp_man = boost::shared_ptr<GamepadManager>(new GamepadManager);
