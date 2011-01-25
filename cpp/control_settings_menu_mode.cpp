@@ -361,6 +361,28 @@ bool RebindingDialogMenuMode::handle_input() {
 
       std::auto_ptr<ORSave::AxisBindType> binding(new ORSave::AxisBindType);
       binding->action(static_cast<const AxisActionDesc*>(_binding_desc->action_desc)->action);
+
+      // Since the user was asked to do the input that causes the desired effect, and inversion is applied to this
+      // action, we should swap the inputs they gave before saving the pre-inversion state to the config file.
+      // Note that we apply inverted rotation to the RotateX action; user thinks of it as look up/down, but inside
+      // the code we think of it as rotating about the x axis.
+      if (
+        (Saving::get().config().invertTranslateY() && binding->action() == ORSave::AxisBoundAction::TranslateY)
+        || (Saving::get().config().invertRotateY() && binding->action() == ORSave::AxisBoundAction::RotateX)
+      ) {
+        std::auto_ptr<ORSave::BoundInputType> temp_input = _detected_input;
+        _detected_input = _detected_input_2;
+        _detected_input_2 = temp_input;
+
+        int temp_axis_num = _detected_axis_num;
+        _detected_axis_num = _detected_axis_num_2;
+        _detected_axis_num_2 = temp_axis_num;
+
+        bool temp_axis_negative = _detected_axis_negative;
+        _detected_axis_negative = _detected_axis_negative_2;
+        _detected_axis_negative_2 = temp_axis_negative;
+      }
+
       if (_detected_axis_num >= 0 && _detected_axis_num == _detected_axis_num_2) {
         if (dynamic_cast<ORSave::AxisBoundInputType*>(_detected_input.get())) {
         } else {
