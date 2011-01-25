@@ -136,6 +136,24 @@ const boost::shared_ptr<Channel> Mouse::movement_channel(Uint8 btn) const {
   return _channels[i->second];
 }
 
+unsigned int GamepadManager::get_num_axes(Uint8 gamepad_num) const {
+  std::map<Uint8, std::map<Uint8, unsigned int> >::const_iterator i = _gamepad_axis_map.find(gamepad_num);
+  if (i == _gamepad_axis_map.end()) {
+    return 0;
+  } else {
+    return i->second.size();
+  }
+}
+
+unsigned int GamepadManager::get_num_buttons(Uint8 gamepad_num) const {
+  std::map<Uint8, std::map<Uint8, unsigned int> >::const_iterator i = _gamepad_button_map.find(gamepad_num);
+  if (i == _gamepad_button_map.end()) {
+    return 0;
+  } else {
+    return i->second.size();
+  }
+}
+
 const boost::shared_ptr<Channel> GamepadManager::axis_channel(Uint8 gamepad_num, Uint8 axis_num) const {
   std::map<Uint8, std::map<Uint8, unsigned int> >::const_iterator i = _gamepad_axis_map.find(gamepad_num);
   if (i == _gamepad_axis_map.end()) {
