@@ -64,6 +64,7 @@ class ControlSettingsMenuMode : public Mode {
   private:
     GUI::Grid _grid;
     bool _at_main_menu;
+    boost::shared_ptr<GUI::Widget> _done_btn, _reset_btn;
 
     std::map<GUI::Widget*, BindingDesc> _binding_widgets;
 

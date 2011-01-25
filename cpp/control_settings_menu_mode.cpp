@@ -71,7 +71,9 @@ void ControlSettingsMenuMode::add_row(const ActionDesc& action, const Channel& c
 
 
 ControlSettingsMenuMode::ControlSettingsMenuMode(bool at_main_menu) :
-  _grid(700, 20, 12), _at_main_menu(at_main_menu)
+  _grid(700, 20, 12), _at_main_menu(at_main_menu),
+  _done_btn(new GUI::Button("Done")),
+  _reset_btn(new GUI::Button("Reset All to Defaults"))
 {
   _grid.add_row();
   _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::BlankWidget()));
@@ -92,8 +94,8 @@ ControlSettingsMenuMode::ControlSettingsMenuMode(bool at_main_menu) :
   _grid.add_row(); // Blank separator row
 
   _grid.add_row(true);
-  _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("Done")));
-  _grid.add_cell(boost::shared_ptr<GUI::Widget>(new GUI::Button("Reset All to Defaults")));
+  _grid.add_cell(_done_btn);
+  _grid.add_cell(_reset_btn);
 }
 
 bool ControlSettingsMenuMode::handle_input() {
@@ -105,15 +107,20 @@ bool ControlSettingsMenuMode::handle_input() {
     BOOST_FOREACH(SDL_Event& e, Globals::frame_events) {
       if (e.type == SDL_USEREVENT) {
         if (e.user.code == GUI::WIDGET_CLICKED) {
-          GUI::Widget* w = (GUI::Widget*)(e.user.data1);
-          std::map<GUI::Widget*, BindingDesc>::iterator bind_widget_iter = _binding_widgets.find(w);
-          if (bind_widget_iter != _binding_widgets.end()) {
-            GUI::Button* b = (GUI::Button*)w;
-            Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(
-              new RebindingDialogMenuMode(b->get_label(), &(bind_widget_iter->second))
-            ));
+          if (e.user.data1 == (void*)(_done_btn.get())) {
+            Globals::mode_stack->next_frame_pop_mode();
+          } else if (e.user.data1 == (void*)(_reset_btn.get())) {
           } else {
-            throw GameException("Mysterious click event in control settings input handler!");
+            GUI::Widget* w = (GUI::Widget*)(e.user.data1);
+            std::map<GUI::Widget*, BindingDesc>::iterator bind_widget_iter = _binding_widgets.find(w);
+            if (bind_widget_iter != _binding_widgets.end()) {
+              GUI::Button* b = (GUI::Button*)w;
+              Globals::mode_stack->next_frame_push_mode(boost::shared_ptr<Mode>(
+                new RebindingDialogMenuMode(b->get_label(), &(bind_widget_iter->second))
+              ));
+            } else {
+              throw GameException("Mysterious click event in control settings input handler!");
+            }
           }
         }
       }
