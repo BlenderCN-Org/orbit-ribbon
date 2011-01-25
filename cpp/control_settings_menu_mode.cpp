@@ -69,6 +69,46 @@ void ControlSettingsMenuMode::add_row(const ActionDesc& action, const Channel& c
   _binding_widgets.insert(std::pair<GUI::Widget*, BindingDesc>(g_bind_widget.get(), BindingDesc(action, ORSave::InputDeviceNameType::Gamepad)));
 }
 
+void ControlSettingsMenuMode::load_widget_labels() {
+  for (std::map<GUI::Widget*, BindingDesc>::iterator i = _binding_widgets.begin(); i != _binding_widgets.end(); ++i) {
+    unsigned int desc_type = 0;
+    switch (i->second.dev) {
+      case ORSave::InputDeviceNameType::Keyboard:
+        desc_type = CHANNEL_DESC_TYPE_KEYBOARD;
+        break;
+      case ORSave::InputDeviceNameType::Mouse:
+        desc_type = CHANNEL_DESC_TYPE_MOUSE;
+        break;
+      case ORSave::InputDeviceNameType::Gamepad:
+        desc_type = CHANNEL_DESC_TYPE_GAMEPAD;
+        break;
+      default:
+        throw GameException("Unknown input device when populating control settings menu mode");
+        break;
+    }
+
+    std::string cur_setting;
+    const AxisActionDesc* adesc = dynamic_cast<const AxisActionDesc*>(i->second.action_desc);
+    const ButtonActionDesc* bdesc = dynamic_cast<const ButtonActionDesc*>(i->second.action_desc);
+    if (adesc) {
+      cur_setting = Input::get_axis_ch(adesc->action).desc(desc_type);
+    } else if (bdesc) {
+      cur_setting = Input::get_button_ch(bdesc->action).desc(desc_type);
+    } else {
+      throw GameException("Failed to dyn cast binding in control settings mode");
+    }
+
+    GUI::Button* btn = dynamic_cast<GUI::Button*>(i->first);
+    GUI::Label* lbl = dynamic_cast<GUI::Label*>(i->first);
+    if (btn) {
+      btn->set_label(cur_setting);
+    } else if (lbl) {
+      lbl->set_label(cur_setting);
+    } else {
+      throw GameException("Unknown widget in _binding_widgets of control settings mode");
+    }
+  }
+}
 
 ControlSettingsMenuMode::ControlSettingsMenuMode(bool at_main_menu) :
   _grid(700, 20, 12), _at_main_menu(at_main_menu),
@@ -110,6 +150,10 @@ bool ControlSettingsMenuMode::handle_input() {
           if (e.user.data1 == (void*)(_done_btn.get())) {
             Globals::mode_stack->next_frame_pop_mode();
           } else if (e.user.data1 == (void*)(_reset_btn.get())) {
+            Saving::get().config().inputDevice().clear();
+            Input::load_config_presets();
+            Input::set_channels_from_config();
+            load_widget_labels();
           } else {
             GUI::Widget* w = (GUI::Widget*)(e.user.data1);
             std::map<GUI::Widget*, BindingDesc>::iterator bind_widget_iter = _binding_widgets.find(w);
@@ -142,44 +186,7 @@ void ControlSettingsMenuMode::draw_2d(bool top __attribute__ ((unused))) {
 }
 
 void ControlSettingsMenuMode::now_at_top() {
-  for (std::map<GUI::Widget*, BindingDesc>::iterator i = _binding_widgets.begin(); i != _binding_widgets.end(); ++i) {
-    unsigned int desc_type = 0;
-    switch (i->second.dev) {
-      case ORSave::InputDeviceNameType::Keyboard:
-        desc_type = CHANNEL_DESC_TYPE_KEYBOARD;
-        break;
-      case ORSave::InputDeviceNameType::Mouse:
-        desc_type = CHANNEL_DESC_TYPE_MOUSE;
-        break;
-      case ORSave::InputDeviceNameType::Gamepad:
-        desc_type = CHANNEL_DESC_TYPE_GAMEPAD;
-        break;
-      default:
-        throw GameException("Unknown input device when populating control settings menu mode");
-        break;
-    }
-
-    std::string cur_setting;
-    const AxisActionDesc* adesc = dynamic_cast<const AxisActionDesc*>(i->second.action_desc);
-    const ButtonActionDesc* bdesc = dynamic_cast<const ButtonActionDesc*>(i->second.action_desc);
-    if (adesc) {
-      cur_setting = Input::get_axis_ch(adesc->action).desc(desc_type);
-    } else if (bdesc) {
-      cur_setting = Input::get_button_ch(bdesc->action).desc(desc_type);
-    } else {
-      throw GameException("Failed to dyn cast binding in control settings mode");
-    }
-
-    GUI::Button* btn = dynamic_cast<GUI::Button*>(i->first);
-    GUI::Label* lbl = dynamic_cast<GUI::Label*>(i->first);
-    if (btn) {
-      btn->set_label(cur_setting);
-    } else if (lbl) {
-      lbl->set_label(cur_setting);
-    } else {
-      throw GameException("Unknown widget in _binding_widgets of control settings mode");
-    }
-  }
+  load_widget_labels();
 }
 
 bool RebindingDialogMenuMode::is_clear_winning_axis(int x, int y, float min_delta) {

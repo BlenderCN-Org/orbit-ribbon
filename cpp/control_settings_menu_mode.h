@@ -69,6 +69,7 @@ class ControlSettingsMenuMode : public Mode {
     std::map<GUI::Widget*, BindingDesc> _binding_widgets;
 
     void add_row(const ActionDesc& action, const Channel& chan);
+    void load_widget_labels();
 
     static const boost::array<AxisActionDesc, 6> AXIS_BOUND_ACTION_NAMES;
     static const boost::array<ButtonActionDesc, 6> BUTTON_BOUND_ACTION_NAMES;

@@ -613,89 +613,19 @@ boost::scoped_ptr<ORSave::PresetListType> Input::_preset_list;
 void Input::init() {
   _null_channel = boost::shared_ptr<Channel>(new NullChannel);
   
-  // Load the encapsulated presets list
-  try {
-    std::stringstream ss(CAPSULE_PRESETS_XML);
-    ORSave::presets_paggr presets_p;
-    xml_schema::document_pimpl doc_p(presets_p.root_parser(), presets_p.root_namespace(), presets_p.root_name(), true);
-    presets_p.pre();
-    doc_p.parse(ss);
-    _preset_list.reset(presets_p.post());
-  } catch (const xml_schema::parser_exception& e) {
-    throw GameException(std::string("Parsing problem while loading presets data : ") + e.text());
-  } catch (const std::exception& e) {
-    throw GameException(std::string("Error while loading presets data : ") + e.what());
-  }
-  
-  bool config_dirty = false;
-  
-  // Set up the keyboard input source. If no keyboard input config exists, create one from the default preset.
   _kbd = boost::shared_ptr<Keyboard>(new Keyboard);
-  _sources.push_back(&*_kbd);
-  try {
-    Saving::get_input_device(ORSave::InputDeviceNameType::Keyboard);
-  } catch (const GameException& e) {
-    Debug::status_msg("Loading default input configuration for keyboard");
-    Saving::get().config().inputDevice().push_back(get_preset("Default Keyboard Mapping").inputDevice()._clone());
-    config_dirty = true;
-  }
-  
-  // Set up the mouse input source. If no mouse input config exists, create one from the default preset.
   _mouse = boost::shared_ptr<Mouse>(new Mouse);
-  _sources.push_back(&*_mouse);
-  try {
-    Saving::get_input_device(ORSave::InputDeviceNameType::Mouse);
-  } catch (const GameException& e) {
-    Debug::status_msg("Loading default input configuration for mouse");
-    Saving::get().config().inputDevice().push_back(get_preset("Default Mouse Mapping").inputDevice()._clone());
-    config_dirty = true;
-  }
-  
-  // Set up any gamepads, finding input configuration based on the gamepad's model if possible
   _gp_man = boost::shared_ptr<GamepadManager>(new GamepadManager);
+
+  _sources.push_back(&*_kbd);
+  _sources.push_back(&*_mouse);
   _sources.push_back(&*_gp_man);
-  if (_gp_man->get_num_gamepads() > 0) {
-    try {
-      ORSave::ConfigType::inputDevice_iterator gp_input = Saving::get_input_device(ORSave::InputDeviceNameType::Gamepad); // Can throw GameException
-      if (gp_input->axis_bind().size() == 0 && gp_input->button_bind().size() == 0) {
-        // If a gamepad input config exists but is empty, delete it and search for a new preset
-        Saving::get().config().inputDevice().erase(gp_input);
-        throw GameException("It was empty");
-      }
-    } catch (const GameException& e) {
-      bool found = false;
-      std::string gp_name = _gp_man->get_first_gamepad_name();
-      Debug::status_msg("Attempting to find an appropriate input configuration for gamepad: '" + gp_name + "'");
-      BOOST_FOREACH(const ORSave::PresetType& preset, _preset_list->preset()) {
-        BOOST_FOREACH(const std::string& match_name, preset.deviceMatchString()) {
-          if (gp_name.find(match_name) != std::string::npos) {
-            Debug::status_msg("Loaded gamepad input configuration: '" + preset.presetName() + "'");
-            Saving::get().config().inputDevice().push_back(preset.inputDevice()._clone());
-            found = true;
-            config_dirty = true;
-            break;
-          }
-        }
-        if (found) {
-          break;
-        }
-      }
-      if (!found) {
-        // No preset found, but insert a blank one so user can configure controls themself
-        Debug::status_msg("Unable to find an appropriate gamepad input configuration");
-        std::auto_ptr<ORSave::InputDeviceType> input_dev(new ORSave::InputDeviceType);
-        input_dev->device(ORSave::InputDeviceNameType::Gamepad);
-        Saving::get().config().inputDevice().push_back(input_dev.release());
-      }
-    }
-  }
+
+  // Load default settings for any input devices not described in the config
+  load_config_presets();
 
   // Create Channel instances to match the configs, and also create Channels for default mappings (i.e. ForceQuit)
   set_channels_from_config();
-  
-  if (config_dirty) {
-    Saving::save();
-  }
   
   SDL_Delay(100); // Without this delay we don't always seem to get useful joystick values
   set_neutral();
@@ -792,6 +722,80 @@ template<typename A, typename C, typename M> void insert_binding(A action, const
     map.insert(typename M::value_type(action, top_chn));
   } else {
     (static_cast<MultiOrChannel*>(&*(i->second)))->add_channel(chn);
+  }
+}
+
+void Input::load_config_presets() {
+  // Load the encapsulated presets list
+  try {
+    std::stringstream ss(CAPSULE_PRESETS_XML);
+    ORSave::presets_paggr presets_p;
+    xml_schema::document_pimpl doc_p(presets_p.root_parser(), presets_p.root_namespace(), presets_p.root_name(), true);
+    presets_p.pre();
+    doc_p.parse(ss);
+    _preset_list.reset(presets_p.post());
+  } catch (const xml_schema::parser_exception& e) {
+    throw GameException(std::string("Parsing problem while loading presets data : ") + e.text());
+  } catch (const std::exception& e) {
+    throw GameException(std::string("Error while loading presets data : ") + e.what());
+  }
+
+  bool config_dirty = false;
+
+  try {
+    Saving::get_input_device(ORSave::InputDeviceNameType::Keyboard);
+  } catch (const NoSuchDeviceException& e) {
+    Debug::status_msg("Loading default input configuration for keyboard");
+    Saving::get().config().inputDevice().push_back(get_preset("Default Keyboard Mapping").inputDevice()._clone());
+    config_dirty = true;
+  }
+
+  try {
+    Saving::get_input_device(ORSave::InputDeviceNameType::Mouse);
+  } catch (const GameException& e) {
+    Debug::status_msg("Loading default input configuration for mouse");
+    Saving::get().config().inputDevice().push_back(get_preset("Default Mouse Mapping").inputDevice()._clone());
+    config_dirty = true;
+  }
+
+  if (_gp_man->get_num_gamepads() > 0) {
+    try {
+      ORSave::ConfigType::inputDevice_iterator gp_input = Saving::get_input_device(ORSave::InputDeviceNameType::Gamepad); // Can throw GameException
+      if (gp_input->axis_bind().size() == 0 && gp_input->button_bind().size() == 0) {
+        // If a gamepad input config exists but is empty, delete it and search for a new preset
+        Saving::get().config().inputDevice().erase(gp_input);
+        throw GameException("It was empty");
+      }
+    } catch (const GameException& e) {
+      bool found = false;
+      std::string gp_name = _gp_man->get_first_gamepad_name();
+      Debug::status_msg("Attempting to find an appropriate input configuration for gamepad: '" + gp_name + "'");
+      BOOST_FOREACH(const ORSave::PresetType& preset, _preset_list->preset()) {
+        BOOST_FOREACH(const std::string& match_name, preset.deviceMatchString()) {
+          if (gp_name.find(match_name) != std::string::npos) {
+            Debug::status_msg("Loaded gamepad input configuration: '" + preset.presetName() + "'");
+            Saving::get().config().inputDevice().push_back(preset.inputDevice()._clone());
+            found = true;
+            config_dirty = true;
+            break;
+          }
+        }
+        if (found) {
+          break;
+        }
+      }
+      if (!found) {
+        // No preset found, but insert a blank one so user can configure controls themself
+        Debug::status_msg("Unable to find an appropriate gamepad input configuration");
+        std::auto_ptr<ORSave::InputDeviceType> input_dev(new ORSave::InputDeviceType);
+        input_dev->device(ORSave::InputDeviceNameType::Gamepad);
+        Saving::get().config().inputDevice().push_back(input_dev.release());
+      }
+    }
+  }
+
+  if (config_dirty) {
+    Saving::save();
   }
 }
 

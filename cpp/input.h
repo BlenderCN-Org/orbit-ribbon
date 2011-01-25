@@ -339,6 +339,7 @@ class Input {
     static const ORSave::PresetType& get_preset(const std::string& name);
     static const ORSave::PresetListType& get_preset_list() { return *_preset_list; }
     
+    static void load_config_presets();
     static void set_channels_from_config();
     static const Channel& get_axis_ch(ORSave::AxisBoundAction::value_type action);
     static const Channel& get_button_ch(ORSave::ButtonBoundAction::value_type action);
