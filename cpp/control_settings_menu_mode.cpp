@@ -270,7 +270,7 @@ RebindingDialogMenuMode::RebindingDialogMenuMode(const std::string& old_value, c
   }
 }
 
-const float REBINDING_MINIMUM_MOUSE_REL_MOTION = 2.0;
+const float REBINDING_MINIMUM_MOUSE_REL_MOTION = 3.0;
 bool RebindingDialogMenuMode::handle_input() {
   // TODO: Ye gods, refactor this
   BOOST_FOREACH(SDL_Event& event, Globals::frame_events) {
