@@ -223,7 +223,7 @@ class GamepadButtonChannel : public Channel {
     GamepadManager* _gamepad_man;
     Uint8 _gamepad;
     Uint8 _button;
-    Uint8 _neutral_state;
+    bool _current_state;
     
     GamepadButtonChannel(GamepadManager* gamepad_man, Uint8 gamepad, Uint8 button);
   
@@ -231,7 +231,6 @@ class GamepadButtonChannel : public Channel {
     bool is_on() const;
     bool matches_frame_events() const;
     float get_value() const;
-    void set_neutral();
     std::string desc(unsigned int desc_type = CHANNEL_DESC_TYPE_ALL) const;
 };
 
