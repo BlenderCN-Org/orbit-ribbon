@@ -117,13 +117,7 @@ GamepadManager::~GamepadManager() {
 }
 
 void GamepadManager::update() {
-  // Update all button states. Have to do this because I had serious bugginess using SDL_JoystickGetButton.
-  // To check to see if it's still there, uncomment the relevant code in GamepadButtonChannel::is_on.
-  BOOST_FOREACH(const SDL_Event& event, Globals::frame_events) {
-    if (event.type == SDL_JOYBUTTONDOWN || event.type == SDL_JOYBUTTONUP) {
-      ((GamepadButtonChannel*)button_channel(event.jbutton.which, event.jbutton.button).get())->_current_state = (event.jbutton.state == SDL_PRESSED);
-    }
-  }
+  SDL_JoystickUpdate();
 }
 
 const boost::shared_ptr<Channel> Mouse::button_channel(Uint8 btn) const {
@@ -377,15 +371,11 @@ std::string GamepadAxisChannel::desc(unsigned int desc_type) const {
 GamepadButtonChannel::GamepadButtonChannel(GamepadManager* gamepad_man, Uint8 gamepad, Uint8 button) :
   _gamepad_man(gamepad_man),
   _gamepad(gamepad),
-  _button(button),
-  _current_state(false)
+  _button(button)
 {}
 
 bool GamepadButtonChannel::is_on() const {
-  return _current_state;
-
-  // Commented out because it was highly buggy on my PS3 controller. SDL's own joystick test had same issue.
-  //return SDL_JoystickGetButton(_gamepad_man->_gamepads[_gamepad], _button) != _neutral_state;
+  return SDL_JoystickGetButton(_gamepad_man->_gamepads[_gamepad], _button) != _neutral_state;
 }
 
 bool GamepadButtonChannel::matches_frame_events() const {
@@ -402,6 +392,10 @@ float GamepadButtonChannel::get_value() const {
     return 1.0;
   }
   return 0.0;
+}
+
+void GamepadButtonChannel::set_neutral() {
+  _neutral_state = SDL_JoystickGetButton(_gamepad_man->_gamepads[_gamepad], _button);
 }
 
 std::string GamepadButtonChannel::desc(unsigned int desc_type) const {
