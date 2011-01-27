@@ -37,6 +37,7 @@ Thinh's ideas:
 - In all the places in the program that show a copyright notice, also mention the font license.
 - Find a way to make it really easy to update the copyright notice everywhere at the same time
 
+- Repeated error where I confuse 'const shared_ptr<X>' with 'shared_ptr<const X>', doh! Should fix this.
 - Possibly make Confirm refocus menu and disable mouse cursor
   - Make it so that if mouse motion caused the Confirm, this doesn't happen (re-enable same frame in MouseCursor?)
 - Fix flickering problem when mouse motion associated with UIX or UIY
