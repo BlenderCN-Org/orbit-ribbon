@@ -629,7 +629,7 @@ std::map<ORSave::ButtonBoundAction::value_type, boost::shared_ptr<Channel> > Inp
 boost::scoped_ptr<ORSave::PresetListType> Input::_preset_list;
 
 void Input::init() {
-  SDL_JoystickEventState(SDL_ENABLE);
+  SDL_JoystickEventState(SDL_IGNORE);
 
   _kbd = boost::shared_ptr<Keyboard>(new Keyboard);
   _mouse = boost::shared_ptr<Mouse>(new Mouse);
