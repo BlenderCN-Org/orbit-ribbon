@@ -297,7 +297,6 @@ bool RebindingDialogMenuMode::handle_input() {
         boost::shared_ptr<Channel> axis = gp_man.axis_channel(pad_num, axis_num);
         float axis_value = std::fabs(axis->get_value());
         if (axis_value > REBINDING_MINIMUM_GAMEPAD_AXIS_VALUE) {
-          Debug::debug_msg("UNCALM ON AXIS " + boost::lexical_cast<std::string>((int)axis_num));
           calm_this_frame = false;
           if (!cand || dynamic_cast<GamepadButtonChannel*>(cand.get())) {
             cand = axis;
@@ -319,11 +318,11 @@ bool RebindingDialogMenuMode::handle_input() {
       for (Uint8 button_num = 0; button_num < gp_man.get_num_buttons(pad_num); ++button_num) {
         boost::shared_ptr<Channel> button = gp_man.button_channel(pad_num, button_num);
         if (button->is_on()) {
-          Debug::debug_msg("UNCALM ON BUTTON " + boost::lexical_cast<std::string>((int)button_num));
           calm_this_frame = false;
           if (!cand) {
             cand = button;
             cand_gamepad_num = pad_num;
+            cand_axis_num = button_num;
             break;
           }
         }
@@ -486,8 +485,7 @@ bool RebindingDialogMenuMode::handle_input() {
       }
 
       if (_detected_axis_num >= 0 && _detected_axis_num == _detected_axis_num_2) {
-        if (dynamic_cast<ORSave::AxisBoundInputType*>(_detected_input.get())) {
-        } else {
+        if (!dynamic_cast<ORSave::AxisBoundInputType*>(_detected_input.get())) {
           throw GameException("In RDMM, detected axis num is non-negative, but non-axis input type!");
         }
         std::auto_ptr<ORSave::AxisBoundInputType> axis_input(static_cast<ORSave::AxisBoundInputType*>(_detected_input.release()));
