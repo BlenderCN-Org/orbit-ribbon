@@ -1,6 +1,7 @@
 == ROADMAP ==
 * Port orbit-edit to Blender 2.5, for exclusive use
 * Skeletal animation (implement only basic running and fly-to-run anims at first)
+---> Release as alpha2. Try to reach this point by end of service.
 * Music & sound effects
 * More animations, and smooth animation merging
 * Create simple versions of some of the story missions
@@ -9,7 +10,6 @@
 * Particles
 * Do a Shadow-of-the-Colossus texture-parallax effect
 * Inside/outside effect (HDR?), with light shining through leaves nicely if possible
----> Release as alpha2. Try to reach this point by end of service.
 * Improve background stuff (as it is now orbiting stuff is ludicrously oversized)
   - Alternately; find a way to make large objects part of the canon, so we get neat ring effect
 
