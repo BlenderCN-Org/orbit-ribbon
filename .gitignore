@@ -17,6 +17,7 @@ cpp/minizip/*.o
 .sconsign.dblite
 *.swp
 *.blend1
+*.blend2
 *~
 *.ore
 xsde/*
