@@ -29,9 +29,6 @@ bl_addon_info = {
 
 #### REGISTER
 
-def menu_func(self, context):
-  pass
-
 def register():
   pass
 
