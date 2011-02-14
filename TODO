@@ -25,11 +25,9 @@ Thinh's ideas:
 - Reduced rotation speed, cap
 
 Blender addons:
-  - Change-tracking (increment version number on any object that is changed)
-  - Export as ORE (depends on change-tracking)
+  - Export as ORE
     - Don't remove scale from original blend; form a mesh ORE entry for each scale-mesh pairing in blend
-  - Subscenes
-  - Confirm quit (depends on change-tracking)
+    - Maybe hash Blender object marshal to know when we can avoid reprocessing?
   - Generic edit lighting (when showing textured 3d view, render with some extra lights just to make life easier)
 
 - Consider having an optimized-output build mode that does some of the following:
