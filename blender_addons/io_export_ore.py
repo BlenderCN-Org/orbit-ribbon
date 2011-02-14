@@ -29,7 +29,9 @@ bl_addon_info = {
 
 import bpy
 from io_utils import ExportHelper
-import os
+import os, re, sys, zipfile, datetime
+from math import *
+
 
 class Export_Ore(bpy.types.Operator, ExportHelper):
   """Exports all scenes as an Orbit Ribbon Episode file."""
@@ -43,6 +45,18 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
     return True
   
   def execute(self, context):
+    try:
+      import Image
+    except ImportError:
+      self.report({'ERROR'}, "ORE export requires the Python Imaging Library, please install it")
+      return {'CANCELLED'}
+
+    try:
+      import lxml.etree
+    except ImportError:
+      self.report({'ERROR'}, "ORE export requires the lxml library, please install it")
+      return {'CANCELLED'}
+
     print("Writing ORE %s" % self.filepath)
     return {'FINISHED'}
   
