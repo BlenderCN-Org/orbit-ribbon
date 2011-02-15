@@ -15,8 +15,8 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/
 #
 
-bl_addon_info = {
-  "name": "Export ORE (Orbit Ribbon Episode)",
+bl_info = {
+  "name": "Export Orbit Ribbon Episode",
   "author": "David Mike Simon",
   "version": (0, 1),
   "blender": (2, 5, 6),
@@ -37,8 +37,8 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
   """Exports all scenes as an Orbit Ribbon Episode file."""
   filetype_desc = "Orbit Ribbon Episode (.ore)"
   filename_ext = ".ore"
-  bl_idname = "export_ore"
-  bl_label = "Export ORE"
+  bl_idname = "export.ore"
+  bl_label = "Export Orbit Ribbon Episode"
   
   @classmethod
   def poll(cls, context):
@@ -48,7 +48,7 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
     try:
       import lxml.etree
     except ImportError:
-      self.report({'ERROR'}, "ORE export requires the lxml library, please install it")
+      self.report({'ERROR'}, "Orbit Ribbon Episode export requires the lxml library, please install it")
       return {'CANCELLED'}
 
     print("Writing ORE %s" % self.filepath)
@@ -63,12 +63,14 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
 
 def menu_func(self, context):
   op = self.layout.operator(Export_Ore.bl_idname, text=Export_Ore.filetype_desc)
-  op.filepath = os.path.splitext(bpy.data.filepath)[0] + ".ore" # Default save path
+  op.filepath = os.path.splitext(bpy.data.filepath)[0]  # Default save path (Blender automatically adds .ore extension)
 
 def register():
+  bpy.utils.register_module(__name__)
   bpy.types.INFO_MT_file_export.append(menu_func)
 
 def unregister():
+  bpy.utils.unregister_module(__name__)
   bpy.types.INFO_MT_file_export.remove(menu_func)
 
 if __name__ == "__main__":
