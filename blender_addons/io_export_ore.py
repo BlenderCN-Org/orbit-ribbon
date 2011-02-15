@@ -46,12 +46,6 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
   
   def execute(self, context):
     try:
-      import Image
-    except ImportError:
-      self.report({'ERROR'}, "ORE export requires the Python Imaging Library, please install it")
-      return {'CANCELLED'}
-
-    try:
       import lxml.etree
     except ImportError:
       self.report({'ERROR'}, "ORE export requires the lxml library, please install it")
