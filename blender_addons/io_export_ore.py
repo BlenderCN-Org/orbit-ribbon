@@ -35,9 +35,9 @@ from math import *
 MATRIX_BLEN2ORE = mathutils.Matrix.Rotation(-90, 4, 'X')
 MATRIX_INV_BLEN2ORE = MATRIX_BLEN2ORE.copy().invert()
 
-OREANIM_NAMESPACE = "http://www.orbit-ribbon.org/OREAnim1"
-OREANIM_NS_PREFIX = "{%s}" % OREANIM_NAMESPACE
-OREANIM_NSMAP = {"oreanim" : OREANIM_NAMESPACE}
+OREPKG_NS = "http://www.orbit-ribbon.org/ORE1"
+OREANIM_NS = "http://www.orbit-ribbon.org/OREAnim1"
+SCHEMA_NS = "http://www.w3.org/2001/XMLSchema-instance"
 
 def fixcoords(t): # Given a 3-sequence, returns it so that axes changed to fit OpenGL standards (y is up, z is forward)
   t = mathutils.Vector(t) * MATRIX_BLEN2ORE
@@ -57,6 +57,8 @@ def genrotmatrix(x, y, z): # Returns a 9-tuple for a column-major 3x3 rotation m
     m[2][0], m[2][1], m[2][2],
   )
 
+def include_image(zfh, path):
+  zfh.write(os.path.join(os.path.dirname(bpy.data.filepath), path), "image-%s" % os.path.basename(path), zipfile.ZIP_STORED)
 
 class Export_Ore(bpy.types.Operator, ExportHelper):
   """Exports all scenes as an Orbit Ribbon Episode file."""
@@ -81,13 +83,97 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
       self.report({'ERROR'}, "Parsing error: %s" % e)
       return {'CANCELLED'}
 
+    # Try to find the pkgDesc root node
+    pkgDesc = None
+    for child in descDoc.childNodes:
+      if child.localName == 'pkgDesc':
+        pkgDesc = child
+        break
+    if pkgDesc is None:
+      self.report({'ERROR'}, "Document has no pkgDesc element")
+      return {'CANCELLED'}
+
     # Create a new ORE file; just a regular zipfile
     zfh = zipfile.ZipFile(self.filepath, mode = "w", compression = zipfile.ZIP_DEFLATED)
     zfh.writestr("ore-version", "1") # ORE file format version (this will be 1 until the first backwards-incompatible change after release)
-    zfh.writestr("ore-name", descDoc.xpath("niceName/text()")[0]) # The nice name of the ORE package, separate so that we can get it without XML
+
+    # Write the nice name of the ORE package, separate so that we can get it without XML
+    niceName = None
+    for child in pkgDesc.childNodes:
+      if child.localName == 'niceName':
+        niceName = child.childNodes[0].nodeValue
+        break
+    if niceName is None:
+      self.report({'ERROR'}, "Pkg desc has no niceName element")
+      return {'CANCELLED'}
+    zfh.writestr("ore-name", niceName)
+
+    # Find all the xml elements that correspond to area and mission scenes
+    sceneNodes = []
+    for child in pkgDesc.childNodes:
+      if child.localName != 'area':
+        continue
+      sceneNodes.append(child)
+      for subchild in child.childNodes:
+        if subchild.localName != 'mission':
+          continue
+        sceneNodes.append(subchild)
+
+    # Add scene information to the desc document
+    for node in sceneNodes:
+      if not node.hasAttribute("sceneName"):
+        self.report({'ERROR'}, "Area or mission has no sceneName!")
+        return {'CANCELLED'}
+      sceneName = node.getAttribute("sceneName")
+      if not sceneName in bpy.data.scenes.keys():
+        self.report({'ERROR'}, "Couldn't find any scene named %s" % sceneName)
+        return {'CANCELLED'}
+      for obj in bpy.data.scenes[sceneName].objects:
+        if obj.type == "MESH" or obj.type == "SURFACE":
+          try:
+            objNode = descDoc.createElementNS(OREPKG_NS, "obj")
+            objNode.setAttribute("objName", obj.name)
+            objNode.setAttribute("dataName", obj.data.name)
+            node.appendChild(objNode)
+
+            posNode = descDoc.createElementNS(OREPKG_NS, "pos")
+            posNode.appendChild(descDoc.createTextNode(" ".join([str(x) for x in fixcoords(obj.location)])))
+            objNode.appendChild(posNode)
+
+            rotNode = descDoc.createElementNS(OREPKG_NS, "rot")
+            rotNode.appendChild(descDoc.createTextNode(" ".join([str(x) for x in genrotmatrix(*obj.rotation_euler)])))
+            objNode.appendChild(rotNode)
+
+            libDataMatch = re.match(r"LIB(.+?)(?:\.\d+)?$", obj.data.name)
+            if obj.type == "SURFACE":
+              # At the moment, the only thing surfaces are used for are bubbles
+              objNode.setAttribute("implName", "Bubble")
+              objNode.setAttributeNS(SCHEMA_NS, "type", "{%s}BubbleObjType" % OREPKG_NS)
+              radNode = descDoc.createElementNS(OREPKG_NS, "radius")
+              radNode.appendChild(descDoc.createTextNode(str((sum(obj.dimensions)/3))))
+              objNode.appendChild(radNode)
+            elif libDataMatch:
+              # If it's a library object, have the game try to find a matching implementation
+              # The default mesh object implementation will be used if this doesn't match
+              objNode.setAttribute("implName", libDataMatch.group(1))
+          except Exception as e:
+            self.report({'ERROR'}, "Problem exporting object %s: %s" % (obj.name, e))
+            return {'CANCELLED'}
+
+    zfh.writestr("ore-desc", descDoc.toxml(encoding='UTF-8'))
+
+    include_image(zfh, "images/cursor.png")
+    include_image(zfh, "images/star.png")
+    include_image(zfh, "images/title.png")
+    include_image(zfh, "images/starmap-1.png")
+    include_image(zfh, "images/starmap-2.png")
+    include_image(zfh, "images/starmap-3.png")
+    include_image(zfh, "images/starmap-4.png")
+    include_image(zfh, "images/starmap-5.png")
+    include_image(zfh, "images/starmap-6.png")
 
     return {'FINISHED'}
-  
+
   def invoke(self, context, event):
     context.window_manager.fileselect_add(self)
     return {'RUNNING_MODAL'}

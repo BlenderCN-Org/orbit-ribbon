@@ -54,6 +54,7 @@
       <xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />
     </xsd:sequence>
     <xsd:attribute name="n" type="xsd:unsignedInt" use="required" />
+    <xsd:attribute name="sceneName" type="xsd:string" use="required" />
   </xsd:complexType>
   
   <xsd:complexType name="SkySettingsType">
@@ -75,6 +76,7 @@
       <xsd:element name="obj" minOccurs="0" maxOccurs="unbounded" type="ObjType" />
     </xsd:sequence>
     <xsd:attribute name="n" type="xsd:unsignedInt" use="required" />
+    <xsd:attribute name="sceneName" type="xsd:string" use="required" />
   </xsd:complexType>
   
   <xsd:complexType name="MissionStateType">
