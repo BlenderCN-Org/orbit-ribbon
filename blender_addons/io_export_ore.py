@@ -45,12 +45,6 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
     return True
   
   def execute(self, context):
-    try:
-      import lxml.etree
-    except ImportError:
-      self.report({'ERROR'}, "ORE export requires the lxml library, please install it")
-      return {'CANCELLED'}
-
     print("Writing ORE %s" % self.filepath)
     return {'FINISHED'}
   
