@@ -2,6 +2,7 @@
 * Port orbit-edit to Blender 2.5, for exclusive use
 * Skeletal animation (implement only basic running and fly-to-run anims at first)
 ---> Release as alpha2. Try to reach this point by end of service.
+* Switch to free fonts (see Downloads/freefont)
 * Music & sound effects
 * More animations, and smooth animation merging
 * Create simple versions of some of the story missions
