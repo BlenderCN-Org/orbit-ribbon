@@ -57,6 +57,72 @@ def genrotmatrix(x, y, z): # Returns a 9-tuple for a column-major 3x3 rotation m
     m[2][0], m[2][1], m[2][2],
   )
 
+def populateMeshNode(meshNode, mesh, doc):
+    imgs = set()
+    faceCount = 0
+
+    imgName = None
+    try:
+      imgName = mesh.uv_textures[0].data[0].image.filepath
+    except IndexError:
+      pass # This mesh has no uv textures
+    else:
+      imgName = re.sub(r"^//", "", imgName)
+      meshNode.setAttribute("texture", os.path.basename(imgName))
+
+    # For each face, add it to the meshNode and add to the vertex list any vertices it has that are new.
+    # We have to do it this way because a given vertex might have several different UV values, depending on which face
+    # it's on.
+    vertices = {} # Map of (pos, normal, uv) tuple to vertex index
+    for fOffset, f in enumerate(mesh.faces):
+      offsets = [(0,1,2)]
+      if len(f.vertices) == 4:
+        # Treat each quad as though it were two triangles
+        offsets.append((0,2,3))
+      for offsetGroup in offsets:
+        vertIndexes = []
+        for offset in offsetGroup:
+          vertex = mesh.vertices[f.vertices[offset]]
+          uv = (0.0, 0.0)
+          if imgName:
+            uv = mesh.uv_textures[0].data[fOffset].uv[offset]
+          vertKey = (tuple(vertex.co), tuple(vertex.normal), tuple(uv))
+          vertIdx = None
+          if vertKey in vertices:
+            # Another face has already referenced this vertex+uv
+            vertIdx = vertices[vertKey]
+          else:
+            # A new vertex+uv
+            vertIdx = len(vertices)
+            vertices[vertKey] = vertIdx
+          vertIndexes.append(vertIdx)
+        fNode = doc.createElementNS(OREPKG_NS, "f")
+        fNode.appendChild(doc.createTextNode(" ".join([str(idx) for idx in vertIndexes])))
+        meshNode.appendChild(fNode)
+        faceCount += 1
+
+    # Load the vertices into the node
+    vertexList = list(vertices.items())
+    vertexList.sort(key = lambda i: i[1])
+    for ((p, n, t), idx) in vertexList:
+      vxNode = doc.createElementNS(OREPKG_NS, "v")
+      ptNode = doc.createElementNS(OREPKG_NS, "p")
+      ptNode.appendChild(doc.createTextNode(" ".join([str(x) for x in fixcoords(p)])))
+      vxNode.appendChild(ptNode)
+      nmNode = doc.createElementNS(OREPKG_NS, "n")
+      nmNode.appendChild(doc.createTextNode(" ".join([str(x) for x in fixcoords(n)])))
+      vxNode.appendChild(nmNode)
+      txNode = doc.createElementNS(OREPKG_NS, "t")
+      txNode.appendChild(doc.createTextNode(" ".join([str(x) for x in t])))
+      vxNode.appendChild(txNode)
+      meshNode.appendChild(vxNode)
+
+    # Set the attributes that let the loader know in advance how much space to allocate
+    meshNode.setAttribute("vertcount", str(len(vertexList)))
+    meshNode.setAttribute("facecount", str(faceCount))
+
+    return imgName
+
 def include_image(zfh, path):
   zfh.write(os.path.join(os.path.dirname(bpy.data.filepath), path), "image-%s" % os.path.basename(path), zipfile.ZIP_STORED)
 
@@ -66,11 +132,11 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
   filename_ext = ".ore"
   bl_idname = "export_ore"
   bl_label = "Export ORE"
-  
+
   @classmethod
   def poll(cls, context):
     return True
-  
+
   def execute(self, context):
     # Load the description from the oredesc text datablock
     descDoc = None
@@ -171,6 +237,24 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
     include_image(zfh, "images/starmap-4.png")
     include_image(zfh, "images/starmap-5.png")
     include_image(zfh, "images/starmap-6.png")
+
+    copiedImages = set() # Set of image names that have already been copied into the zipfile
+
+    for mesh in bpy.data.meshes:
+      # Export each simple mesh as a 1-frame animation
+      animDoc = xml.dom.minidom.Document()
+      animNode = animDoc.createElementNS(OREANIM_NS, "animation")
+      animNode.setAttribute("name", mesh.name)
+      animDoc.appendChild(animNode)
+      meshNode = animDoc.createElementNS(OREANIM_NS, "frame")
+      imgName = populateMeshNode(meshNode, mesh, animDoc)
+      animNode.appendChild(meshNode)
+      if imgName is not None:
+        copiedImages.add(imgName)
+      zfh.writestr("mesh-%s" % mesh.name, animDoc.toxml(encoding='UTF-8'))
+
+    for img in copiedImages:
+      include_image(zfh, img)
 
     return {'FINISHED'}
 
