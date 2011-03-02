@@ -90,7 +90,7 @@ void SimpleMenuMode::draw_2d(bool top) {
 
 MainMenuMode::MainMenuMode() :
   SimpleMenuMode(true, 180, 22, 8, Vector(0, 0.3)),
-  _title_tex(GLOOTexture::load("title"))
+  _title_tex(GLOOTexture::load("title.png"))
 {
   add_entry("play", "Play");
   add_entry("credits", "Credits");

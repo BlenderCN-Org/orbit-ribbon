@@ -30,7 +30,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 #include "input.h"
 
-MouseCursor::MouseCursor() : _cursor_img(GLOOTexture::load("cursor")), _visible(false), _got_first_event(false) {
+MouseCursor::MouseCursor() : _cursor_img(GLOOTexture::load("cursor.png")), _visible(false), _got_first_event(false) {
   reset_pos();
 }
 

@@ -72,15 +72,15 @@ void Background::deinit() {
 }
 
 Background::Background() :
-  _star_tex(GLOOTexture::load("star")),
+  _star_tex(GLOOTexture::load("star.png")),
   _distant_bubble(MeshAnimation::load("mesh-LIBDistantBubble"))
 {
-  _starbox_faces.push_back(GLOOTexture::load("starmap-1"));
-  _starbox_faces.push_back(GLOOTexture::load("starmap-2"));
-  _starbox_faces.push_back(GLOOTexture::load("starmap-3"));
-  _starbox_faces.push_back(GLOOTexture::load("starmap-4"));
-  _starbox_faces.push_back(GLOOTexture::load("starmap-5"));
-  _starbox_faces.push_back(GLOOTexture::load("starmap-6"));
+  _starbox_faces.push_back(GLOOTexture::load("starmap-1.png"));
+  _starbox_faces.push_back(GLOOTexture::load("starmap-2.png"));
+  _starbox_faces.push_back(GLOOTexture::load("starmap-3.png"));
+  _starbox_faces.push_back(GLOOTexture::load("starmap-4.png"));
+  _starbox_faces.push_back(GLOOTexture::load("starmap-5.png"));
+  _starbox_faces.push_back(GLOOTexture::load("starmap-6.png"));
 }
 
 void Background::set_sky(const ORE1::SkySettingsType& sky) {

@@ -68,7 +68,7 @@ struct SDLSurf {
 boost::shared_ptr<GLOOTexture> GLOOTexture::TextureCache::generate(const std::string& id) {
   try {
     // Create an SDL surface from the requested ORE image file
-    boost::shared_ptr<OreFileHandle> fh = Globals::ore->get_fh(std::string("image-") + id + ".tga");
+    boost::shared_ptr<OreFileHandle> fh = Globals::ore->get_fh(std::string("image-") + id);
     SDL_RWops rwops = fh->get_sdl_rwops();
     return boost::shared_ptr<GLOOTexture>(new GLOOTexture(rwops));
   } catch (const std::exception& e) {
@@ -79,7 +79,7 @@ boost::shared_ptr<GLOOTexture> GLOOTexture::TextureCache::generate(const std::st
 GLOOTexture::TextureCache GLOOTexture::_cache;
 
 GLOOTexture::GLOOTexture(SDL_RWops& rwops, bool alpha_tex) {
-  SDLSurf surf(IMG_LoadTGA_RW(&rwops)); //SDLSurf takes care of locking surface now and later unlocking/freeing it
+  SDLSurf surf(IMG_Load_RW(&rwops, 0)); //SDLSurf takes care of locking surface now and later unlocking/freeing it
   if (!(
     surf->format->BitsPerPixel == 8 || (
       surf->format->Bshift == 0 &&

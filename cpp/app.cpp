@@ -422,11 +422,12 @@ void App::load_mission(unsigned int area_num, unsigned int mission_num) {
   // Another possible idea: Have orbit-edit.py notice common objects/textures among all or nearly all missions, then we
   // can load them on ORE load.
   Globals::gameobjs.clear();
-  for (ORE1::AreaType::obj_const_iterator i = area->obj().begin(); i != area->obj().end(); ++i) {
-    Globals::gameobjs.insert(GOMap::value_type(i->objName(), get_factory<GameObjFactorySpec>().create(*i)));
-  }
   if (mission) {
     for (ORE1::MissionType::obj_const_iterator i = mission->obj().begin(); i != mission->obj().end(); ++i) {
+      Globals::gameobjs.insert(GOMap::value_type(i->objName(), get_factory<GameObjFactorySpec>().create(*i)));
+    }
+  } else {
+    for (ORE1::AreaType::obj_const_iterator i = area->obj().begin(); i != area->obj().end(); ++i) {
       Globals::gameobjs.insert(GOMap::value_type(i->objName(), get_factory<GameObjFactorySpec>().create(*i)));
     }
   }
