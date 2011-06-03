@@ -15,7 +15,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/
 #
 
-bl_addon_info = {
+bl_info = {
   "name": "Export ORE (Orbit Ribbon Episode)",
   "author": "David Mike Simon",
   "version": (0, 1),
@@ -130,7 +130,7 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
   """Exports all scenes as an Orbit Ribbon Episode file."""
   filetype_desc = "Orbit Ribbon Episode (.ore)"
   filename_ext = ".ore"
-  bl_idname = "export_ore"
+  bl_idname = "export.ore"
   bl_label = "Export ORE"
 
   @classmethod
@@ -270,9 +270,11 @@ def menu_func(self, context):
   op.filepath = os.path.splitext(bpy.data.filepath)[0] + ".ore" # Default save path
 
 def register():
+  bpy.utils.register_module(__name__)
   bpy.types.INFO_MT_file_export.append(menu_func)
 
 def unregister():
+  bpy.utils.unregister_module(__name__)
   bpy.types.INFO_MT_file_export.remove(menu_func)
 
 if __name__ == "__main__":
