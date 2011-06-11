@@ -572,7 +572,7 @@ if in_windows:
   LINKFLAGS += ' -static -mwindows'
   LIBS.insert(0, 'z')
   LIBS.insert(0, 'boost_system')
-  LIBS.extend(['glew32', 'opengl32', 'glu32', 'm', 'user32', 'gdi32', 'winmm'])
+  LIBS.extend(['png', 'glew32', 'opengl32', 'glu32', 'm', 'user32', 'gdi32', 'winmm'])
 else:
   LIBS.extend(['GL', 'GLU', 'GLEW'])
 
