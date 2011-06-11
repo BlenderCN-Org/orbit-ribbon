@@ -290,7 +290,7 @@ void App::init(const std::vector<std::string>& args, bool display_mode_reset) {
     orePath = boost::filesystem::path(Saving::get().config().lastOre());
   }
   try {
-    Debug::status_msg("Loading ORE package '" + orePath.file_string() + "'");
+    Debug::status_msg("Loading ORE package '" + orePath.string() + "'");
     Globals::ore.reset(new OrePackage(orePath));
   } catch (const OreException& e) {
     // TODO: Display a dialog to the user that lets them pick a different ORE file
@@ -298,7 +298,7 @@ void App::init(const std::vector<std::string>& args, bool display_mode_reset) {
   }
   if (orePathSave) {
     //If a different ORE file was successfully loaded, save that path to the config
-    Saving::get().config().lastOre(orePath.file_string());
+    Saving::get().config().lastOre(orePath.string());
     Saving::save();
   }
 
