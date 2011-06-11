@@ -721,7 +721,7 @@ boost::shared_ptr<Channel> Input::xml_to_channel(const ORSave::BoundInputType& i
     ));
   } else if (typeid(i) == typeid(ORSave::LogicalAndInputType)) {
     chn = boost::shared_ptr<Channel>(new MultiAndChannel());
-    BOOST_FOREACH(ORSave::BoundInputType& i, static_cast<const ORSave::LogicalAndInputType*>(&i)->input()) {
+    BOOST_FOREACH(const ORSave::BoundInputType& i, static_cast<const ORSave::LogicalAndInputType*>(&i)->input()) {
       static_cast<MultiAndChannel*>(&*chn)->add_channel(xml_to_channel(i));
     }
   } else {
