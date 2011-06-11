@@ -13,7 +13,7 @@
 * Inside/outside effect (HDR?), with light shining through leaves nicely if possible
 * Improve background stuff (as it is now orbiting stuff is ludicrously oversized)
   - Alternately; find a way to make large objects part of the canon, so we get neat ring effect
-
+* Try switching ODE to single precision
 * Maybe fix the blinky star problem and also the apparent-star-size changing problem at once:
   - Just use a very simple sphere-like shape instead of a box
   - Or, you know, a significantly more sphere-like shape than the current shape
