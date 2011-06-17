@@ -29,11 +29,11 @@ bl_info = {
 
 import bpy, mathutils
 from io_utils import ExportHelper
-import os, re, sys, zipfile, datetime, xml.dom.minidom
+import os, re, sys, zipfile, datetime, xml.dom.minidom, traceback
 from math import *
 
 MATRIX_BLEN2ORE = mathutils.Matrix.Rotation(-90, 4, 'X')
-MATRIX_INV_BLEN2ORE = MATRIX_BLEN2ORE.copy().invert()
+MATRIX_INV_BLEN2ORE = MATRIX_BLEN2ORE.inverted()
 
 OREPKG_NS = "http://www.orbit-ribbon.org/ORE1"
 OREANIM_NS = "http://www.orbit-ribbon.org/OREAnim1"
@@ -43,12 +43,12 @@ def fixcoords(t): # Given a 3-sequence, returns it so that axes changed to fit O
   t = mathutils.Vector(t) * MATRIX_BLEN2ORE
   return (t[0], t[1], t[2])
 
-def genrotmatrix(x, y, z): # Returns a 9-tuple for a column-major 3x3 rotation matrix with axes corrected ala fixcoords
+def genrotmatrix(rot): # Returns a 9-tuple for a column-major 3x3 rotation matrix with axes corrected ala fixcoords
   m = (
     MATRIX_INV_BLEN2ORE *
-    mathutils.Matrix.Rotation(radians(x), 4, 'X') *
-    mathutils.Matrix.Rotation(radians(y), 4, 'Y') *
-    mathutils.Matrix.Rotation(radians(z), 4, 'Z') *
+    mathutils.Matrix.Rotation(radians(rot.x), 4, 'X') *
+    mathutils.Matrix.Rotation(radians(rot.y), 4, 'Y') *
+    mathutils.Matrix.Rotation(radians(rot.z), 4, 'Z') *
     MATRIX_BLEN2ORE
   )
   return ( # Elide final column and row
@@ -207,7 +207,7 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
             objNode.appendChild(posNode)
 
             rotNode = descDoc.createElementNS(OREPKG_NS, "rot")
-            rotNode.appendChild(descDoc.createTextNode(" ".join([str(x) for x in genrotmatrix(*obj.rotation_euler)])))
+            rotNode.appendChild(descDoc.createTextNode(" ".join([str(x) for x in genrotmatrix(obj.rotation_euler)])))
             objNode.appendChild(rotNode)
 
             libDataMatch = re.match(r"LIB(.+?)(?:\.\d+)?$", obj.data.name)
@@ -223,6 +223,7 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
               # The default mesh object implementation will be used if this doesn't match
               objNode.setAttribute("implName", libDataMatch.group(1))
           except Exception as e:
+            traceback.print_exc()
             self.report({'ERROR'}, "Problem exporting object %s: %s" % (obj.name, e))
             return {'CANCELLED'}
 
