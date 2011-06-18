@@ -29,11 +29,18 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "globals.h"
 
 bool Debug::_logging = false;
+bool Debug::_force_stdout = false;
 
 void Debug::print(const std::string& msg) {
-#ifndef IN_WINDOWS
-  std::cout << msg << std::endl << std::flush;
+  if (
+#ifdef IN_WINDOWS
+  _force_stdout
+#else
+  true
 #endif
+  ) {
+    std::cout << msg << std::endl << std::flush;
+  }
 
   if (_logging) {
     boost::filesystem::ofstream f(Globals::save_dir / LOG_FILENAME, std::ios_base::app | std::ios_base::out);
@@ -48,6 +55,10 @@ void Debug::enable_logging() {
 
 void Debug::disable_logging() {
   _logging = false;
+}
+
+void Debug::force_stdout() {
+  _force_stdout = true;
 }
 
 void Debug::debug_msg(const std::string& msg) {
