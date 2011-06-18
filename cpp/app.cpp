@@ -22,6 +22,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <GL/glew.h>
 #include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
 #include <boost/array.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
@@ -270,6 +271,11 @@ void App::init(const std::vector<std::string>& args, bool display_mode_reset) {
   // Initialize SDL
   if (SDL_Init(INIT_FLAGS_FOR_SDL) < 0) {
     throw GameException(std::string("SDL initialization failed: ") + std::string(SDL_GetError()));
+  }
+
+  // Initialize SDL_Image
+  if (!(IMG_Init(IMG_INIT_PNG)&IMG_INIT_PNG)) {
+    throw GameException(std::string("SDL_Image initialization failed"));
   }
 
   Saving::load(); // No need to check 'present' from here on out; this fills in all unspecified values with their defaults
