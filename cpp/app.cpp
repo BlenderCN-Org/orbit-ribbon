@@ -189,7 +189,6 @@ void App::init(const std::vector<std::string>& args, bool display_mode_reset) {
   visible_opt_desc.add_options()
     ("help,h", "display help message, then exit")
     ("version,V", "display version and author information, then exit")
-    ("stdout,s", "force messages to go to stdout even in Windows")
     ("fullscreen,f", "run game in fullscreen mode (defaults to native resolution)")
     ("windowed,w", "run game in windowed mode (defaults to 800x600)")
     ("area,a", boost::program_options::value<unsigned int>(), "preselect numbered area to play")
@@ -208,20 +207,15 @@ void App::init(const std::vector<std::string>& args, bool display_mode_reset) {
   try {
     boost::program_options::store(boost::program_options::command_line_parser(args).options(opt_desc).positional(pos_desc).run(), vm);
     boost::program_options::notify(vm);
-    if (vm.count("stdout")) {
-      Debug::force_stdout();
-    }
     if (vm.count("mission") and not vm.count("area")) {
       throw GameException("mission specified but no area specified");
     }
   } catch (const std::exception& e) {
-    Debug::force_stdout();
     throw GameException(std::string("Invalid arguments: ") + e.what());
   }
 
   // Deal with command-line arguments that cause the program to end right away
   if (vm.count("help") or vm.count("version")) {
-    Debug::force_stdout();
     Debug::status_msg("");
     Debug::status_msg(std::string("Orbit Ribbon version ") + APP_VERSION);
     Debug::status_msg("");
