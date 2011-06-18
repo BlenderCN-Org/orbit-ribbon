@@ -59,6 +59,8 @@ class GLOOTexture : boost::noncopyable {
     
     friend class TextureCache;
     static TextureCache _cache;
+
+    void throw_pixel_format_exception(const SDL_PixelFormat* format);
   
   public:
     GLOOTexture(SDL_RWops* rwops, bool alpha_tex = false);

@@ -78,47 +78,59 @@ boost::shared_ptr<GLOOTexture> GLOOTexture::TextureCache::generate(const std::st
 
 GLOOTexture::TextureCache GLOOTexture::_cache;
 
+void GLOOTexture::throw_pixel_format_exception(const SDL_PixelFormat* format) {
+  throw GameException(
+    std::string("Unknown pixel format :") +
+    " BPP " + boost::lexical_cast<std::string>((unsigned int)format->BitsPerPixel) +
+    " Rs " + boost::lexical_cast<std::string>((unsigned int)format->Rshift) + 
+    " Gs " + boost::lexical_cast<std::string>((unsigned int)format->Gshift) +
+    " Bs " + boost::lexical_cast<std::string>((unsigned int)format->Bshift) +
+    " As " + boost::lexical_cast<std::string>((unsigned int)format->Ashift)
+  );
+}
+
 GLOOTexture::GLOOTexture(SDL_RWops* rwops, bool alpha_tex) {
   SDLSurf surf(IMG_Load_RW(rwops, 0)); //SDLSurf takes care of locking surface now and later unlocking/freeing it
-  if (!(
-    surf->format->BitsPerPixel == 8 || (
-      surf->format->Bshift == 0 &&
-      surf->format->Gshift == 8 &&
-      surf->format->Rshift == 16 &&
-      (surf->format->BitsPerPixel == 24 || surf->format->Ashift == 24)
-    )
-    )) {
-    throw GameException(
-      std::string("Unknown pixel format :") +
-      " BPP " + boost::lexical_cast<std::string>((unsigned int)surf->format->BitsPerPixel) +
-      " Rs " + boost::lexical_cast<std::string>((unsigned int)surf->format->Rshift) + 
-      " Gs " + boost::lexical_cast<std::string>((unsigned int)surf->format->Gshift) +
-      " Bs " + boost::lexical_cast<std::string>((unsigned int)surf->format->Bshift) +
-      " As " + boost::lexical_cast<std::string>((unsigned int)surf->format->Ashift)
-    );
+  GLenum tgt_format, src_format;
+
+  if (surf->format->BitsPerPixel == 8) {
+    _mipmapped = false;
+    if (alpha_tex) {
+      tgt_format = GL_COMPRESSED_ALPHA;
+      src_format = GL_ALPHA;
+    } else {
+      tgt_format = GL_COMPRESSED_LUMINANCE;
+      src_format = GL_LUMINANCE;
+    }
+  } else if (surf->format->BitsPerPixel >= 24) {
+    _mipmapped = true;
+    tgt_format = GL_COMPRESSED_RGB;
+    if (alpha_tex) {
+      throw GameException("Cannot use multi-channel texture as alpha texture");
+    }
+    if (surf->format->Bshift == 0 && surf->format->Gshift == 8 && surf->format->Rshift == 16) {
+      src_format = GL_BGR;
+    } else if (surf->format->Rshift == 0 && surf->format->Gshift == 8 && surf->format->Bshift == 16) {
+      src_format = GL_RGB;
+    } else {
+      throw_pixel_format_exception(surf->format);
+    }
+    if (surf->format->Ashift) {
+      tgt_format = GL_COMPRESSED_RGBA;
+      src_format = (src_format == GL_RGB ? GL_RGBA : GL_BGRA);
+    }
+  } else {
+    throw_pixel_format_exception(surf->format);
   }
 
   _width = surf->w;
   _height = surf->h;
   glGenTextures(1, &(_tex_name));
   glBindTexture(GL_TEXTURE_2D, _tex_name);
-  if (surf->format->BitsPerPixel == 8) {
-    if (alpha_tex) {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_ALPHA, surf->w, surf->h, 0, GL_ALPHA, GL_UNSIGNED_BYTE, surf->pixels);
-    } else {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_LUMINANCE, surf->w, surf->h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, surf->pixels);
-    }
-    _mipmapped = false;
-  } else {
-    if (alpha_tex) {
-      throw GameException("Cannot use multi-channel texture as alpha texture");
-    }
-    GLenum img_format = (surf->format->BitsPerPixel == 24 ? GL_BGR : GL_BGRA);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA, surf->w, surf->h, 0, img_format, GL_UNSIGNED_BYTE, surf->pixels);
+  glTexImage2D(GL_TEXTURE_2D, 0, tgt_format, surf->w, surf->h, 0, src_format, GL_UNSIGNED_BYTE, surf->pixels);
+  if (_mipmapped) {
     glGenerateMipmap(GL_TEXTURE_2D);
-    _mipmapped = true;
   }
-
   if (glGetError()) {
     throw GameException("GL error while loading texture");
   }
