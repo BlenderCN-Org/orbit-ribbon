@@ -48,8 +48,9 @@ class OreException : public GameException {
 
 class OrePackage;
 class OreFileHandle;
+class OreFileData;
 
-// Allows you to read information from a particular file in an ORE package
+// Allows you to stream information from a particular file in an ORE package
 class OreFileHandle : boost::noncopyable, public std::istream {
   private:
     class OFHStreamBuf : public std::streambuf {
@@ -78,10 +79,27 @@ class OreFileHandle : boost::noncopyable, public std::istream {
     friend class OrePackage;
   
   public:
-    SDL_RWops get_sdl_rwops(); // Do not mix SDL usage with istream usage in one filehandle!
-    
+    unsigned long uncompressed_size();
+
     virtual ~OreFileHandle();
 };
+
+// Loads all the data from a particular file in an ORE package into memory
+class OreFileData : boost::noncopyable {
+  private:
+    char* _data;
+    int _size;
+    SDL_RWops* _rwops;
+
+    OreFileData(OreFileHandle& fh);
+
+    friend class OrePackage;
+
+  public:
+    virtual ~OreFileData();
+    SDL_RWops* get_const_sdl_rwops();
+};
+
 
 // Represents an opened ORE package
 class OrePackage : boost::noncopyable {
@@ -95,6 +113,7 @@ class OrePackage : boost::noncopyable {
     OrePackage(const boost::filesystem::path& p);
     
     boost::shared_ptr<OreFileHandle> get_fh(const std::string& name);
+    boost::shared_ptr<OreFileData> get_data(const std::string& name);
     const ORE1::PkgDescType& get_pkg_desc() const { return *pkg_desc; }
 };
 

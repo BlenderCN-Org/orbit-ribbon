@@ -38,53 +38,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "autoxsd/orepkgdesc.h"
 #include "autoxsd/orepkgdesc-pimpl.h"
 
-// Functions to allow OreFileHandle to work with SDL_RWops
-int sdl_rwops_read(SDL_RWops* context, void* ptr, int size, int maxnum) {
-  int read_amt = unzReadCurrentFile((unzFile)context->hidden.unknown.data1, ptr, size*maxnum);
-  if (read_amt < 0) {
-    throw OreException("Error while reading file from ORE in sdl_rwops_read");
-  }
-  return read_amt;
-}
-
-int sdl_rwops_seek(SDL_RWops* context, int offset, int whence) {
-  if (whence == RW_SEEK_CUR) {
-    if (offset < 0) {
-      throw OreException("Cannot seek backwards");
-    } else if (offset > 0) {
-      // Read offset bytes from the file into a garbage buffer
-      const int BUF_SIZE = 512;
-      static char buf[BUF_SIZE];
-      int remaining = offset;
-      while (remaining > 0) {
-        int readlen = remaining;
-        if (readlen > BUF_SIZE) {
-          readlen = BUF_SIZE;
-        }
-        sdl_rwops_read(context, (void*)buf, readlen, 1);
-        remaining -= readlen;
-      }
-    }
-  } else {
-    throw OreException("Invalid whence value");
-  }
-  return unztell((unzFile)context->hidden.unknown.data1);
-}
-
-int sdl_rwops_write(
-  SDL_RWops* context __attribute__ ((unused)),
-  const void* ptr __attribute__ ((unused)),
-  int size __attribute__ ((unused)),
-  int num __attribute__ ((unused)))
-{
-  throw OreException("Attempted to write to ORE filehandle via SDL RWops");
-}
-
-int sdl_rwops_close(SDL_RWops* context __attribute__ ((unused))) {
-  // Do nothing; de-initialization will occur in OreFileHandle dtor
-  return 0;
-}
-
 void OreFileHandle::OFHStreamBuf::_reset_sptrs(unsigned int len) {
   setg(&(_in_buf[0]), &(_in_buf[0]), &(_in_buf[0]) + len);
 }
@@ -140,19 +93,31 @@ OreFileHandle::OreFileHandle(OrePackage& pkg, const std::string& name) :
   }
 }
 
-SDL_RWops OreFileHandle::get_sdl_rwops() {
-  SDL_RWops ret;
-  ret.seek = &sdl_rwops_seek;
-  ret.read = &sdl_rwops_read;
-  ret.write = &sdl_rwops_write;
-  ret.close = &sdl_rwops_close;
-  ret.hidden.unknown.data1 = (void*)(uf);
-  return ret;
+unsigned long OreFileHandle::uncompressed_size() {
+  unz_file_info pfile_info;
+  unzGetCurrentFileInfo(uf, &pfile_info, NULL, 0, NULL, 0, NULL, 0);
+  return pfile_info.uncompressed_size;
 }
 
 OreFileHandle::~OreFileHandle() {
   unzCloseCurrentFile(uf);
   unzClose(uf);
+}
+
+OreFileData::OreFileData(OreFileHandle& fh) {
+  _size = fh.uncompressed_size();
+  _data = new char[_size];
+  fh.read(_data, _size);
+  _rwops = SDL_RWFromConstMem(_data, int(_size));
+}
+
+OreFileData::~OreFileData() {
+  SDL_FreeRW(_rwops);
+  delete _data;
+}
+
+SDL_RWops* OreFileData::get_const_sdl_rwops() {
+  return _rwops;
 }
 
 OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
@@ -186,4 +151,9 @@ OrePackage::OrePackage(const boost::filesystem::path& p) : path(p) {
 boost::shared_ptr<OreFileHandle> OrePackage::get_fh(const std::string& name) {
   // TODO Implement looking in other OrePackages for files not found in this one ("base packages")
   return boost::shared_ptr<OreFileHandle>(new OreFileHandle(*this, name));
+}
+
+boost::shared_ptr<OreFileData> OrePackage::get_data(const std::string& name) {
+  boost::shared_ptr<OreFileHandle> fh = get_fh(name);
+  return boost::shared_ptr<OreFileData>(new OreFileData(*fh));
 }

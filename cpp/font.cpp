@@ -67,7 +67,7 @@ Font::Font(const unsigned char* img_data, unsigned int img_data_len, const char*
     }
 
     SDL_RWops* img_rw_ops(SDL_RWFromConstMem(img_data, img_data_len));
-    _tex.reset(new GLOOTexture(*img_rw_ops, true));
+    _tex.reset(new GLOOTexture(img_rw_ops, true));
     SDL_FreeRW(img_rw_ops);
   } catch (const xml_schema::parser_exception& e) {
     throw GameException(std::string("Parsing problem while reading font description : ") + e.text());
