@@ -258,6 +258,11 @@ void App::init(const std::vector<std::string>& args, bool display_mode_reset) {
   }
   Globals::save_dir = boost::filesystem::path(tgt_path);
 
+#ifdef IN_WINDOWS
+  Globals::save_dir = Globals::save_dir / "Orbit Ribbon";
+  boost::filesystem::create_directory(Globals::save_dir);
+#endif
+
   Debug::enable_logging();
   Debug::status_msg("");
   Debug::status_msg(std::string("Orbit Ribbon ") + APP_VERSION + " starting...");
