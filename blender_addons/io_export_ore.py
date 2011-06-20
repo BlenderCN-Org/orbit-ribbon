@@ -126,6 +126,42 @@ def populateMeshNode(meshNode, mesh, doc):
 def include_image(zfh, path):
   zfh.write(os.path.join(os.path.dirname(bpy.data.filepath), path), "image-%s" % os.path.basename(path), zipfile.ZIP_STORED)
 
+def add_scene_objs_to_node(tgt_node, desc_doc, objs):
+  for obj in objs:
+    if tgt_node.localName != "area" and obj.name.startswith("BASE"):
+      continue
+    if obj.type == "MESH" or obj.type == "SURFACE":
+      try:
+        obj_node = desc_doc.createElementNS(OREPKG_NS, "obj")
+        obj_node.setAttribute("objName", obj.name)
+        obj_node.setAttribute("dataName", obj.data.name)
+        tgt_node.appendChild(obj_node)
+
+        pos_node = desc_doc.createElementNS(OREPKG_NS, "pos")
+        pos_node.appendChild(desc_doc.createTextNode(" ".join([str(x) for x in fixcoords(obj.location)])))
+        obj_node.appendChild(pos_node)
+
+        rot_node = desc_doc.createElementNS(OREPKG_NS, "rot")
+        rot_node.appendChild(desc_doc.createTextNode(" ".join([str(x) for x in genrotmatrix(obj.rotation_euler)])))
+        obj_node.appendChild(rot_node)
+
+        libDataMatch = re.match(r"LIB(.+?)(?:\.\d+)?$", obj.data.name)
+        if obj.type == "SURFACE":
+          # At the moment, the only thing surfaces are used for are bubbles
+          obj_node.setAttribute("implName", "Bubble")
+          obj_node.setAttributeNS(SCHEMA_NS, "type", "{%s}BubbleObjType" % OREPKG_NS)
+          radNode = desc_doc.createElementNS(OREPKG_NS, "radius")
+          radNode.appendChild(desc_doc.createTextNode(str((sum(obj.dimensions)/3))))
+          obj_node.appendChild(radNode)
+        elif libDataMatch:
+          # If it's a library object, have the game try to find a matching implementation
+          # The default mesh object implementation will be used if this doesn't match
+          obj_node.setAttribute("implName", libDataMatch.group(1))
+      except Exception as e:
+        traceback.print_exc()
+        self.report({'ERROR'}, "Problem exporting object %s: %s" % (obj.name, e))
+        return {'CANCELLED'}
+
 class Export_Ore(bpy.types.Operator, ExportHelper):
   """Exports all scenes as an Orbit Ribbon Episode file."""
   filetype_desc = "Orbit Ribbon Episode (.ore)"
@@ -185,7 +221,7 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
           continue
         sceneNodes.append(subchild)
 
-    # Add scene information to the desc document
+    # Add area and mission scene information to the desc document
     for node in sceneNodes:
       if not node.hasAttribute("sceneName"):
         self.report({'ERROR'}, "Area or mission has no sceneName!")
@@ -194,38 +230,15 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
       if not sceneName in bpy.data.scenes.keys():
         self.report({'ERROR'}, "Couldn't find any scene named %s" % sceneName)
         return {'CANCELLED'}
-      for obj in bpy.data.scenes[sceneName].objects:
-        if obj.type == "MESH" or obj.type == "SURFACE":
-          try:
-            objNode = descDoc.createElementNS(OREPKG_NS, "obj")
-            objNode.setAttribute("objName", obj.name)
-            objNode.setAttribute("dataName", obj.data.name)
-            node.appendChild(objNode)
+      add_scene_objs_to_node(node, descDoc, bpy.data.scenes[sceneName].objects)
 
-            posNode = descDoc.createElementNS(OREPKG_NS, "pos")
-            posNode.appendChild(descDoc.createTextNode(" ".join([str(x) for x in fixcoords(obj.location)])))
-            objNode.appendChild(posNode)
-
-            rotNode = descDoc.createElementNS(OREPKG_NS, "rot")
-            rotNode.appendChild(descDoc.createTextNode(" ".join([str(x) for x in genrotmatrix(obj.rotation_euler)])))
-            objNode.appendChild(rotNode)
-
-            libDataMatch = re.match(r"LIB(.+?)(?:\.\d+)?$", obj.data.name)
-            if obj.type == "SURFACE":
-              # At the moment, the only thing surfaces are used for are bubbles
-              objNode.setAttribute("implName", "Bubble")
-              objNode.setAttributeNS(SCHEMA_NS, "type", "{%s}BubbleObjType" % OREPKG_NS)
-              radNode = descDoc.createElementNS(OREPKG_NS, "radius")
-              radNode.appendChild(descDoc.createTextNode(str((sum(obj.dimensions)/3))))
-              objNode.appendChild(radNode)
-            elif libDataMatch:
-              # If it's a library object, have the game try to find a matching implementation
-              # The default mesh object implementation will be used if this doesn't match
-              objNode.setAttribute("implName", libDataMatch.group(1))
-          except Exception as e:
-            traceback.print_exc()
-            self.report({'ERROR'}, "Problem exporting object %s: %s" % (obj.name, e))
-            return {'CANCELLED'}
+    # Add libscene object information
+    for scene in bpy.data.scenes:
+      if scene.name.startswith("LIB"):
+        sceneNode = descDoc.createElementNS(OREPKG_NS, "libscene")
+        sceneNode.setAttribute("name", scene.name)
+        pkgDesc.appendChild(sceneNode)
+        add_scene_objs_to_node(sceneNode, descDoc, scene.objects)
 
     zfh.writestr("ore-desc", descDoc.toxml(encoding='UTF-8'))
 
