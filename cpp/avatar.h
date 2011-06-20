@@ -57,7 +57,7 @@ class AvatarGameObj : public GameObj {
     unsigned int _norm_coll_steptime;
     unsigned int _run_coll_steptime;
     
-    boost::shared_ptr<MeshAnimation> _anim_fly_to_prerun;
+    boost::shared_ptr<MeshAnimation> _mesh;
     float _uprightness;
     
     float _height; // Distance from top of head to bottom of feet

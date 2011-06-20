@@ -309,7 +309,7 @@ void AvatarGameObj::step_impl() {
 
 void AvatarGameObj::near_draw_impl() {
   glRotatef(-_uprightness*90, 1, 0, 0);
-  _anim_fly_to_prerun->draw();  
+  _mesh->draw();  
 }
 
 AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
@@ -322,7 +322,7 @@ AvatarGameObj::AvatarGameObj(const ORE1::ObjType& obj) :
   _zavel_delta(0.0),
   _norm_coll_steptime(0),
   _run_coll_steptime(0),
-  _anim_fly_to_prerun(MeshAnimation::load("action-LIBAvatar-Run")),
+  _mesh(MeshAnimation::load("mesh-LIBAvatar")),
   _attached(false),
   _attached_this_frame(false)
 {
