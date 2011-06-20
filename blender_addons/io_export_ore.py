@@ -244,7 +244,8 @@ class Export_Ore(bpy.types.Operator, ExportHelper):
     for mesh in bpy.data.meshes:
       # Export each simple mesh as a 1-frame animation
       animDoc = xml.dom.minidom.Document()
-      animNode = animDoc.createElementNS(OREANIM_NS, "animation")
+      animNode = animDoc.createElementNS(OREANIM_NS, "oreanim:animation")
+      animNode.setAttribute("xmlns:oreanim", OREANIM_NS) # Hack, minidom doesn't normally output namespace
       animNode.setAttribute("name", mesh.name)
       animDoc.appendChild(animNode)
       meshNode = animDoc.createElementNS(OREANIM_NS, "frame")
