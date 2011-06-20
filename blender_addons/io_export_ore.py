@@ -128,8 +128,6 @@ def include_image(zfh, path):
 
 def add_scene_objs_to_node(tgt_node, desc_doc, objs):
   for obj in objs:
-    if tgt_node.localName != "area" and obj.name.startswith("BASE"):
-      continue
     if obj.type == "MESH" or obj.type == "SURFACE":
       try:
         obj_node = desc_doc.createElementNS(OREPKG_NS, "obj")
