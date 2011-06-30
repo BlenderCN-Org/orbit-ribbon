@@ -32,25 +32,26 @@ from io_utils import ExportHelper
 import os, re, sys, zipfile, datetime, xml.dom.minidom, traceback
 from math import *
 
-MATRIX_BLEN2ORE = mathutils.Matrix.Rotation(-90, 4, 'X')
-MATRIX_INV_BLEN2ORE = MATRIX_BLEN2ORE.inverted()
+MATRIX_BLEN2ORE = mathutils.Matrix.Rotation(radians(-90), 3, 'Y')
+MATRIX_INV_BLEN2ORE = MATRIX_BLEN2ORE.inverted() 
 
 OREPKG_NS = "http://www.orbit-ribbon.org/ORE1"
 OREANIM_NS = "http://www.orbit-ribbon.org/OREAnim1"
 SCHEMA_NS = "http://www.w3.org/2001/XMLSchema-instance"
 
 def fixcoords(t): # Given a 3-sequence, returns it so that axes changed to fit OpenGL standards (y is up, z is forward)
-  t = mathutils.Vector(t) * MATRIX_BLEN2ORE
+  t = mathutils.Vector(t)
   return (t[0], t[1], t[2])
 
 def genrotmatrix(rot): # Returns a 9-tuple for a column-major 3x3 rotation matrix with axes corrected ala fixcoords
-  m = (
-    MATRIX_INV_BLEN2ORE *
-    mathutils.Matrix.Rotation(radians(rot.x), 4, 'X') *
-    mathutils.Matrix.Rotation(radians(rot.y), 4, 'Y') *
-    mathutils.Matrix.Rotation(radians(rot.z), 4, 'Z') *
-    MATRIX_BLEN2ORE
-  )
+#  m = (
+#    MATRIX_INV_BLEN2ORE *
+#    mathutils.Matrix.Rotation(radians(rot.x), 4, 'X') *
+#    mathutils.Matrix.Rotation(radians(rot.y), 4, 'Y') *
+#    mathutils.Matrix.Rotation(radians(rot.z), 4, 'Z') *
+#    MATRIX_BLEN2ORE
+#  )
+  m = rot.to_matrix()
   return ( # Elide final column and row
     m[0][0], m[0][1], m[0][2],
     m[1][0], m[1][1], m[1][2],
@@ -117,7 +118,7 @@ def populateMeshNode(meshNode, mesh, doc):
       vxNode.appendChild(txNode)
       meshNode.appendChild(vxNode)
 
-    # Set the attributes that let the loader know in advance how much space to allocate
+    # Let the loader know in advance how much space to allocate
     meshNode.setAttribute("vertcount", str(len(vertexList)))
     meshNode.setAttribute("facecount", str(faceCount))
 
@@ -157,8 +158,7 @@ def add_scene_objs_to_node(tgt_node, desc_doc, objs):
           obj_node.setAttribute("implName", libDataMatch.group(1))
       except Exception as e:
         traceback.print_exc()
-        self.report({'ERROR'}, "Problem exporting object %s: %s" % (obj.name, e))
-        return {'CANCELLED'}
+        raise RuntimeError("Problem exporting object %s: %s" % (obj.name, e))
 
 class Export_Ore(bpy.types.Operator, ExportHelper):
   """Exports all scenes as an Orbit Ribbon Episode file."""
