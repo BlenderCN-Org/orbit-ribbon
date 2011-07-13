@@ -32,25 +32,14 @@ from io_utils import ExportHelper
 import os, re, sys, zipfile, datetime, xml.dom.minidom, traceback
 from math import *
 
-MATRIX_BLEN2ORE = mathutils.Matrix.Rotation(radians(-90), 3, 'Y')
-MATRIX_INV_BLEN2ORE = MATRIX_BLEN2ORE.inverted() 
-
 OREPKG_NS = "http://www.orbit-ribbon.org/ORE1"
 OREANIM_NS = "http://www.orbit-ribbon.org/OREAnim1"
 SCHEMA_NS = "http://www.w3.org/2001/XMLSchema-instance"
 
-def fixcoords(t): # Given a 3-sequence, returns it so that axes changed to fit OpenGL standards (y is up, z is forward)
-  t = mathutils.Vector(t)
-  return (t[0], t[1], t[2])
+def t2s(tup): # Returns a string representing the tuple-like, items separated by spaces
+  return " ".join(map(str, tuple(tup)))
 
-def genrotmatrix(rot): # Returns a 9-tuple for a column-major 3x3 rotation matrix with axes corrected ala fixcoords
-#  m = (
-#    MATRIX_INV_BLEN2ORE *
-#    mathutils.Matrix.Rotation(radians(rot.x), 4, 'X') *
-#    mathutils.Matrix.Rotation(radians(rot.y), 4, 'Y') *
-#    mathutils.Matrix.Rotation(radians(rot.z), 4, 'Z') *
-#    MATRIX_BLEN2ORE
-#  )
+def genrotmatrix(rot): # Returns a 9-tuple for a column-major 3x3 rotation matrix
   m = rot.to_matrix()
   return ( # Elide final column and row
     m[0][0], m[0][1], m[0][2],
@@ -108,13 +97,13 @@ def populateMeshNode(meshNode, mesh, doc):
     for ((p, n, t), idx) in vertexList:
       vxNode = doc.createElementNS(OREPKG_NS, "v")
       ptNode = doc.createElementNS(OREPKG_NS, "p")
-      ptNode.appendChild(doc.createTextNode(" ".join([str(x) for x in fixcoords(p)])))
+      ptNode.appendChild(doc.createTextNode(t2s(p)))
       vxNode.appendChild(ptNode)
       nmNode = doc.createElementNS(OREPKG_NS, "n")
-      nmNode.appendChild(doc.createTextNode(" ".join([str(x) for x in fixcoords(n)])))
+      nmNode.appendChild(doc.createTextNode(t2s(n)))
       vxNode.appendChild(nmNode)
       txNode = doc.createElementNS(OREPKG_NS, "t")
-      txNode.appendChild(doc.createTextNode(" ".join([str(x) for x in t])))
+      txNode.appendChild(doc.createTextNode(t2s(t)))
       vxNode.appendChild(txNode)
       meshNode.appendChild(vxNode)
 
@@ -137,11 +126,11 @@ def add_scene_objs_to_node(tgt_node, desc_doc, objs):
         tgt_node.appendChild(obj_node)
 
         pos_node = desc_doc.createElementNS(OREPKG_NS, "pos")
-        pos_node.appendChild(desc_doc.createTextNode(" ".join([str(x) for x in fixcoords(obj.location)])))
+        pos_node.appendChild(desc_doc.createTextNode(t2s(obj.location)))
         obj_node.appendChild(pos_node)
 
         rot_node = desc_doc.createElementNS(OREPKG_NS, "rot")
-        rot_node.appendChild(desc_doc.createTextNode(" ".join([str(x) for x in genrotmatrix(obj.rotation_euler)])))
+        rot_node.appendChild(desc_doc.createTextNode(t2s(genrotmatrix(obj.rotation_euler))))
         obj_node.appendChild(rot_node)
 
         libDataMatch = re.match(r"LIB(.+?)(?:\.\d+)?$", obj.data.name)
