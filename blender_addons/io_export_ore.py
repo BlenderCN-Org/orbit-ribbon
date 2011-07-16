@@ -36,16 +36,21 @@ OREPKG_NS = "http://www.orbit-ribbon.org/ORE1"
 OREANIM_NS = "http://www.orbit-ribbon.org/OREAnim1"
 SCHEMA_NS = "http://www.w3.org/2001/XMLSchema-instance"
 
+MAT_X90 = mathutils.Matrix.Rotation(-pi/2, 3, 'X')
+MAT_INV_X90 = MAT_X90.inverted()
+
+def fixPos(pos): # Rotates a point to transform from Blender format (z-up) to OR format (y-up) 
+  r = mathutils.Vector(tuple(pos)) 
+  r.rotate(MAT_X90)
+  return r
+
 def t2s(tup): # Returns a string representing the tuple-like, items separated by spaces
   return " ".join(map(str, tuple(tup)))
 
-def genrotmatrix(rot): # Returns a 9-tuple for a column-major 3x3 rotation matrix
-  m = rot.to_matrix()
-  return ( # Elide final column and row
-    m[0][0], m[0][1], m[0][2],
-    m[1][0], m[1][1], m[1][2],
-    m[2][0], m[2][1], m[2][2],
-  )
+def genRotMatrix(rot): # Returns a column-major 3x3 rotation matrix as a tuple, in OR format (y-up)
+  m = MAT_X90 * rot.to_matrix() * MAT_INV_X90
+  #m.rotate(MAT_X90)
+  return m[0].to_tuple() + m[1].to_tuple() + m[2].to_tuple()
 
 def populateMeshNode(meshNode, mesh, doc):
     imgs = set()
@@ -97,10 +102,10 @@ def populateMeshNode(meshNode, mesh, doc):
     for ((p, n, t), idx) in vertexList:
       vxNode = doc.createElementNS(OREPKG_NS, "v")
       ptNode = doc.createElementNS(OREPKG_NS, "p")
-      ptNode.appendChild(doc.createTextNode(t2s(p)))
+      ptNode.appendChild(doc.createTextNode(t2s(fixPos(p))))
       vxNode.appendChild(ptNode)
       nmNode = doc.createElementNS(OREPKG_NS, "n")
-      nmNode.appendChild(doc.createTextNode(t2s(n)))
+      nmNode.appendChild(doc.createTextNode(t2s(fixPos(n))))
       vxNode.appendChild(nmNode)
       txNode = doc.createElementNS(OREPKG_NS, "t")
       txNode.appendChild(doc.createTextNode(t2s(t)))
@@ -126,11 +131,11 @@ def add_scene_objs_to_node(tgt_node, desc_doc, objs):
         tgt_node.appendChild(obj_node)
 
         pos_node = desc_doc.createElementNS(OREPKG_NS, "pos")
-        pos_node.appendChild(desc_doc.createTextNode(t2s(obj.location)))
+        pos_node.appendChild(desc_doc.createTextNode(t2s(fixPos(obj.location))))
         obj_node.appendChild(pos_node)
 
         rot_node = desc_doc.createElementNS(OREPKG_NS, "rot")
-        rot_node.appendChild(desc_doc.createTextNode(t2s(genrotmatrix(obj.rotation_euler))))
+        rot_node.appendChild(desc_doc.createTextNode(t2s(genRotMatrix(obj.rotation_euler))))
         obj_node.appendChild(rot_node)
 
         libDataMatch = re.match(r"LIB(.+?)(?:\.\d+)?$", obj.data.name)
