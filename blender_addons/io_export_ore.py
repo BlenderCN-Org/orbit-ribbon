@@ -39,7 +39,7 @@ SCHEMA_NS = "http://www.w3.org/2001/XMLSchema-instance"
 MAT_X90 = mathutils.Matrix.Rotation(-pi/2, 3, 'X')
 MAT_INV_X90 = MAT_X90.inverted()
 
-def fixPos(pos): # Rotates a point to transform from Blender format (z-up) to OR format (y-up) 
+def fixPos(pos): # Rotates a point to transform from Blender format (z-up) to game format (y-up) 
   r = mathutils.Vector(tuple(pos)) 
   r.rotate(MAT_X90)
   return r
@@ -47,9 +47,8 @@ def fixPos(pos): # Rotates a point to transform from Blender format (z-up) to OR
 def t2s(tup): # Returns a string representing the tuple-like, items separated by spaces
   return " ".join(map(str, tuple(tup)))
 
-def genRotMatrix(rot): # Returns a column-major 3x3 rotation matrix as a tuple, in OR format (y-up)
+def genRotMatrix(rot): # Returns a column-major Blender-style 3x3 rotation matrix as a tuple, in game format (y-up)
   m = MAT_X90 * rot.to_matrix() * MAT_INV_X90
-  #m.rotate(MAT_X90)
   return m[0].to_tuple() + m[1].to_tuple() + m[2].to_tuple()
 
 def populateMeshNode(meshNode, mesh, doc):
@@ -142,7 +141,7 @@ def add_scene_objs_to_node(tgt_node, desc_doc, objs):
         if obj.type == "SURFACE":
           # At the moment, the only thing surfaces are used for are bubbles
           obj_node.setAttribute("implName", "Bubble")
-          obj_node.setAttributeNS(SCHEMA_NS, "type", "{%s}BubbleObjType" % OREPKG_NS)
+          obj_node.setAttributeNS(SCHEMA_NS, "xsi:type", "ore:BubbleObjType")
           radNode = desc_doc.createElementNS(OREPKG_NS, "radius")
           radNode.appendChild(desc_doc.createTextNode(str((sum(obj.dimensions)/3))))
           obj_node.appendChild(radNode)
