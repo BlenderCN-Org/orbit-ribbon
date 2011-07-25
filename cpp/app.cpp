@@ -20,6 +20,8 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
+#include <Horde3D.h>
+#include <Horde3DUtils.h>
 #include <GL/glew.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
@@ -292,6 +294,9 @@ void App::init(const std::vector<std::string>& args, bool display_mode_reset) {
   Display::init();
   Background::init();
 
+  // Initialize Horde3D
+  h3dInit();
+
   boost::filesystem::path orePath;
   bool orePathSave = false;
   if (vm.count("ore")) {
@@ -377,6 +382,8 @@ void App::deinit() {
 
   GLOOTexture::deinit();
   GLOOBufferedMesh::deinit();
+
+  h3dRelease();
 
   SDL_Quit();
 

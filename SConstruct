@@ -565,8 +565,9 @@ source_files.append('xsde/libxsde/xsde/libxsde.a')
 # FIXME: This whole nonsense of setting variables should be done with the SCons convenience methods
 #CCFLAGS = '-Wall -Wextra -pedantic-errors -DdDOUBLE'
 CCFLAGS = '-Wall -DdDOUBLE -Ixsde/libxsde'
+#LINKFLAGS = '-Xlinker --verbose'
 LINKFLAGS = ''
-LIBS = ['ode', 'SDL', 'SDL_image', 'boost_filesystem', 'boost_program_options', 'boost_iostreams']
+LIBS = ['ode', 'SDL', 'SDL_image', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'Horde3D', 'Horde3DUtils']
 if in_windows:
   CCFLAGS += ' -DIN_WINDOWS'
   LINKFLAGS += ' -static -mwindows'
