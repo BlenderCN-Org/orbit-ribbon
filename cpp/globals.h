@@ -22,6 +22,8 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_GLOBALS_H
 #define ORBIT_RIBBON_GLOBALS_H
 
+#include <Horde3D.h>
+#include <Horde3DUtils.h>
 #include <SDL/SDL.h>
 #include <vector>
 #include <string>
@@ -55,6 +57,8 @@ class Globals {
     static unsigned int total_steps;
     static GOMap gameobjs;
     static boost::scoped_ptr<ModeStack> mode_stack;
+    static H3DRes pipeRes;
+    static H3DNode cam;
     static boost::filesystem::path save_dir;
     static boost::scoped_ptr<Background> bg;
     static boost::scoped_ptr<Font> sys_font;

@@ -49,10 +49,6 @@ import os, sys, Image, cStringIO, lxml.etree, datetime, time
 
 env = Environment(ENV = {'PATH' : os.environ['PATH']}, tools = ['mingw'])
 
-debug = ARGUMENTS.get('debug', 0)
-if int(debug):
-  CCFLAGS += ' -g'
-
 def getstatusoutput(cmd):
   """Return (status, output) of executing cmd in a shell.
 
@@ -565,6 +561,8 @@ source_files.append('xsde/libxsde/xsde/libxsde.a')
 # FIXME: This whole nonsense of setting variables should be done with the SCons convenience methods
 #CCFLAGS = '-Wall -Wextra -pedantic-errors -DdDOUBLE'
 CCFLAGS = '-Wall -DdDOUBLE -Ixsde/libxsde'
+if int(ARGUMENTS.get('debug', 0)):
+  CCFLAGS += ' -g'
 #LINKFLAGS = '-Xlinker --verbose'
 LINKFLAGS = ''
 LIBS = ['ode', 'SDL', 'SDL_image', 'boost_filesystem', 'boost_program_options', 'boost_iostreams', 'Horde3D', 'Horde3DUtils']

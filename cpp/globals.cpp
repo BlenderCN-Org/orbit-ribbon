@@ -36,6 +36,8 @@ std::vector<SDL_Event> Globals::frame_events;
 unsigned int Globals::total_steps = 0;
 GOMap Globals::gameobjs;
 boost::scoped_ptr<ModeStack> Globals::mode_stack;
+H3DRes Globals::pipeRes;
+H3DNode Globals::cam;
 boost::filesystem::path Globals::save_dir;
 boost::scoped_ptr<Background> Globals::bg;
 boost::scoped_ptr<Font> Globals::sys_font;

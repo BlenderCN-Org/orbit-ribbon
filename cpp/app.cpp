@@ -123,7 +123,8 @@ void App::frame_loop() {
     }
     
     // Output frame and flip buffers
-    SDL_GL_SwapBuffers();
+    h3dRender(Globals::cam);
+    h3dFinalizeFrame();
     
     // Sleep if we're running faster than our maximum fps
     unsigned int frame_ticks = SDL_GetTicks() - frame_start;
@@ -296,6 +297,14 @@ void App::init(const std::vector<std::string>& args, bool display_mode_reset) {
 
   // Initialize Horde3D
   h3dInit();
+  Globals::pipeRes = h3dAddResource(H3DResTypes::Pipeline, "standard.pipeline.xml", 0);
+  Globals::cam = h3dAddCameraNode(H3DRootNode, "Camera", Globals::pipeRes);
+  h3dSetNodeParamI(Globals::cam, H3DCamera::ViewportXI, 0);
+  h3dSetNodeParamI(Globals::cam, H3DCamera::ViewportYI, 0);
+  h3dSetNodeParamI(Globals::cam, H3DCamera::ViewportWidthI, Display::get_screen_width());
+  h3dSetNodeParamI(Globals::cam, H3DCamera::ViewportHeightI, Display::get_screen_height());
+  h3dSetupCameraView(Globals::cam, 45.0f, (float)Display::get_screen_width()/Display::get_screen_height(), 0.5f, 2048.0f);
+  h3dResizePipelineBuffers(Globals::pipeRes, Display::get_screen_width(), Display::get_screen_height());
 
   boost::filesystem::path orePath;
   bool orePathSave = false;
