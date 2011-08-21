@@ -26,14 +26,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/shared_ptr.hpp>
 #include <SDL/SDL.h>
 
+#include "geometry.h"
 #include "globals.h"
-#include "gloo.h"
 #include "mode.h"
 
 template <template <typename> class InterpFunctor> class InterpolationMode : public Mode {
   private:
-    GLOOCamera _camera;
-    InterpFunctor<GLOOCamera> _camera_interpolator;
+    InterpFunctor<Vector> _camera_interpolator;
     boost::shared_ptr<Mode> _src, _tgt;
     unsigned int _ms, _start;
     bool _started, _reverse;
@@ -41,7 +40,7 @@ template <template <typename> class InterpFunctor> class InterpolationMode : pub
   public:
     InterpolationMode(unsigned int ms, const boost::shared_ptr<Mode>& tgt) : _tgt(tgt), _ms(ms), _started(false), _reverse(false) {}
 
-    const GLOOCamera* get_camera(bool top __attribute__ ((unused))) {
+    void set_camera(bool top __attribute__ ((unused))) {
       if (!_started) {
         _started = true;
         _start = SDL_GetTicks();

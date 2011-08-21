@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
-#include <GL/glew.h>
+//#include <GL/glew.h>
 #include <boost/format.hpp>
 #include <cmath>
 #include <string>
@@ -29,27 +29,27 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 const float SIMILARITY_DELTA = 0.0001;
 
-GLfloat rev2rad(GLfloat ang) {
+float rev2rad(float ang) {
   return 2.0*ang*M_PI;
 }
 
-GLfloat rad2rev(GLfloat ang) {
+float rad2rev(float ang) {
   return ang/(M_PI*2.0);
 }
 
-GLfloat rev2deg(GLfloat ang) {
+float rev2deg(float ang) {
   return 360.0*ang;
 }
 
-GLfloat deg2rev(GLfloat ang) {
+float deg2rev(float ang) {
   return ang/360.0;
 }
 
-GLfloat rad2deg(GLfloat ang) {
+float rad2deg(float ang) {
   return (360.0*ang)/(M_PI*2);
 }
 
-GLfloat deg2rad(GLfloat ang) {
+float deg2rad(float ang) {
   return (ang/360.0)*2*M_PI;
 }
 
@@ -102,7 +102,7 @@ Point Point::operator*(const Point& other) const {
   return Point(x*other.x, y*other.y, z*other.z);
 }
 
-Point Point::operator*(GLfloat f) const {
+Point Point::operator*(float f) const {
   return Point(x*f, y*f, z*f);
 }
 
@@ -112,7 +112,7 @@ void Point::operator*=(const Point& other) {
   z *= other.z;
 }
 
-void Point::operator*=(GLfloat f) {
+void Point::operator*=(float f) {
   x *= f;
   y *= f;
   z *= f;
@@ -122,7 +122,7 @@ Point Point::operator/(const Point& other) const {
   return Point(x/other.x, y/other.y, z/other.z);
 }
 
-Point Point::operator/(GLfloat f) const {
+Point Point::operator/(float f) const {
   return Point(x/f, y/f, z/f);
 }
 
@@ -132,7 +132,7 @@ void Point::operator/=(const Point& other) {
   z /= other.z;
 }
 
-void Point::operator/=(GLfloat f) {
+void Point::operator/=(float f) {
   x /= f;
   y /= f;
   z /= f;
@@ -154,11 +154,11 @@ bool Point::near_to(const Point& other) const {
   );
 }
 
-GLfloat Point::mag() const {
+float Point::mag() const {
   return std::sqrt(pow(std::sqrt(x*x + y*y), 2) + z*z);
 }
 
-GLfloat Point::dot_prod(const Point& other) const {
+float Point::dot_prod(const Point& other) const {
   return x*other.x + y*other.y + z*other.z;
 }
 
@@ -170,20 +170,20 @@ Point Point::cross_prod(const Point& other) const {
   );
 }
 
-GLfloat Point::dist_to(const Point& other) const {
+float Point::dist_to(const Point& other) const {
   return std::sqrt(sq_dist_to(other));
 }
 
-GLfloat Point::sq_dist_to(const Point& other) const {
+float Point::sq_dist_to(const Point& other) const {
   return (x-other.x)*(x-other.x) + (y-other.y)*(y-other.y) + (z-other.z)*(z-other.z);
 }
 
-GLfloat Point::ang_to(const Point& other) const {
+float Point::ang_to(const Point& other) const {
   return rad2rev(std::acos((dot_prod(other))/(mag()*other.mag())));
 }
 
 Point Point::to_length(float len) const {
-  GLfloat old_len = mag();
+  float old_len = mag();
   if (old_len != 0.0) {
     return (*this) * (len/old_len);
   } else {
@@ -201,7 +201,7 @@ Point Point::project_onto(const Plane& p) const {
   return *this - (n*dist);
 }
 
-Plane::Plane(GLfloat na, GLfloat nb, GLfloat nc, GLfloat nd) :
+Plane::Plane(float na, float nb, float nc, float nd) :
   a(na), b(nb), c(nc), d(nd)
 {}
 

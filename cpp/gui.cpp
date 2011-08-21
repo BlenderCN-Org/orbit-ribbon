@@ -30,7 +30,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "input.h"
 #include "font.h"
 #include "globals.h"
-#include "gloo.h"
+
 #include "mouse_cursor.h"
 
 namespace GUI {
@@ -42,7 +42,7 @@ static const float CHECKED_COLOR[4] = { 0.2, 0.6, 0.0, 1.0 };
 static const float INNER_CHECKED_COLOR[4] = { 0.4, 0.9, 0.1, 1.0 };
 
 void draw_diamond_box(const Box& box, float r, float g, float b, float a) {
-  GLfloat points[12] = {
+  float points[12] = {
     box.top_left.x + DIAMOND_BOX_BORDER.x/2, box.top_left.y,
     box.top_left.x, box.top_left.y + box.size.y/2,
     box.top_left.x + DIAMOND_BOX_BORDER.x/2, box.top_left.y + box.size.y,
@@ -79,7 +79,7 @@ void draw_diamond_box(const Box& box, const float* color) {
 }
 
 void draw_box(const Box& box, float r, float g, float b, float a) {
-  GLfloat points[8] = {
+  float points[8] = {
     box.top_left.x, box.top_left.y,
     box.top_left.x, box.top_left.y+box.size.y,
     box.top_left.x+box.size.x, box.top_left.y+box.size.y,
@@ -181,7 +181,7 @@ void Slider::draw(const Box& box) {
   gauge_dbox_area.size.x = gauge_dbox_area.size.y*5;
   draw_diamond_box(gauge_dbox_area, focused() ? FOCUSED_COLOR : PASSIVE_COLOR);
 
-  GLfloat gauge_points[10] = {
+  float gauge_points[10] = {
     gauge_area.top_left.x, gauge_area.top_left.y + gauge_area.size.y, // Point 0 : Left tip of triangle
     gauge_area.top_left.x + _value*gauge_area.size.x, gauge_area.top_left.y + gauge_area.size.y, // Point 1 : Bottom of gauge line
     gauge_area.top_left.x + _value*gauge_area.size.x, gauge_area.top_left.y + (1-_value)*gauge_area.size.y, // Point 2 : Top of gauge line
@@ -199,7 +199,7 @@ void Slider::draw(const Box& box) {
   glVertexPointer(2, GL_FLOAT, 0, gauge_points);
 
   const static GLushort triangle_indices[3] = { 0, 1, 2 };
-  GLfloat triangle_colors[9] = {
+  float triangle_colors[9] = {
     0.5, 0.5, 0.5, // Color 0 : Left tip of triangle
     0.3, 0.3+(0.6*_value), 0.3, // Color 1 : Bottom of gauge line
     0.3, 0.3+(0.6*_value), 0.3 // Color 2 : Top of gauge line
@@ -208,7 +208,7 @@ void Slider::draw(const Box& box) {
   glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, triangle_indices);
 
   const static GLushort quad_indices[4] = { 4, 3, 2, 1 };
-  GLfloat quad_colors[15] = { // TODO: Maybe make this area a pretty gradient too
+  float quad_colors[15] = { // TODO: Maybe make this area a pretty gradient too
     0.0, 0.0, 0.0,
     0.1, 0.1, 0.1,
     0.1, 0.1, 0.1,

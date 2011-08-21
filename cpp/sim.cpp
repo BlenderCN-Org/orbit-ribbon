@@ -22,7 +22,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
-#include <GL/glew.h>
+//#include <GL/glew.h>
 #include <ode/ode.h>
 #include <cctype>
 #include <vector>

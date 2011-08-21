@@ -26,12 +26,9 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <map>
 
 class Point;
-class GLOOTexture;
 
 class Font {
   private:
-    boost::shared_ptr<GLOOTexture> _tex;
-
     // Key is max glyph height, value maps input char to offset and width. Offset is -1 for no character (i.e. space)
     std::map<unsigned char, std::map<char, std::pair<short, unsigned char> > > _glyph_data;
 

@@ -20,7 +20,7 @@ You should have received a copy of the GNU General Public License
 along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 */
 
-#include <GL/glew.h>
+//#include <GL/glew.h>
 #include <ode/ode.h>
 #include <boost/array.hpp>
 #include <boost/foreach.hpp>
@@ -35,7 +35,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gameobj.h"
 #include "geometry.h"
 #include "globals.h"
-#include "gloo.h"
+
 
 // Default coefficients for linear and angular damping on new GameObjs
 const float DEFAULT_VEL_DAMP_COEF = 0.15;
@@ -166,7 +166,7 @@ void GameObj::step() {
   
   // Apply damping
   if (b != 0) {
-    GLint i;
+    int i;
     dReal x, y, z;
     dVector3 v;
     

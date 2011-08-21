@@ -30,7 +30,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "cache.h"
 #include "debug.h"
 #include "globals.h"
-#include "gloo.h"
+
 #include "mesh.h"
 #include "ore.h"
 #include "sim.h"
@@ -155,19 +155,19 @@ class _VertexParser : public OREAnim1::VertexType_pskel {
     GLOOVertex _vert;
     
   public:
-    void p(boost::array<GLfloat,3>* pos) {
+    void p(boost::array<float,3>* pos) {
       _vert.x = pos->at(0);
       _vert.y = pos->at(1);
       _vert.z = pos->at(2);
     }
     
-    void n(boost::array<GLfloat,3>* normal) {
+    void n(boost::array<float,3>* normal) {
       _vert.nx = normal->at(0);
       _vert.ny = normal->at(1);
       _vert.nz = normal->at(2);
     }
     
-    void t(boost::array<GLfloat,2>* uv) {
+    void t(boost::array<float,2>* uv) {
       _vert.u = uv->at(0);
       _vert.v = uv->at(1);
     }
@@ -179,7 +179,7 @@ class _VertexParser : public OREAnim1::VertexType_pskel {
 
 class _Coord3DParser : public OREAnim1::Coord3DType_pskel {
   private:
-    boost::array<GLfloat,3> _data;
+    boost::array<float,3> _data;
     unsigned int _idx;
   
   public:
@@ -194,14 +194,14 @@ class _Coord3DParser : public OREAnim1::Coord3DType_pskel {
       ++_idx;
     }
     
-    boost::array<GLfloat,3>* post_Coord3DType() {
+    boost::array<float,3>* post_Coord3DType() {
       return &_data;
     }
 };
 
 class _UvParser : public OREAnim1::Coord2DType_pskel {
   private:
-    boost::array<GLfloat,2> _data;
+    boost::array<float,2> _data;
     unsigned int _idx;
   
   public:
@@ -216,7 +216,7 @@ class _UvParser : public OREAnim1::Coord2DType_pskel {
       ++_idx;
     }
     
-    boost::array<GLfloat,2>* post_Coord2DType() {
+    boost::array<float,2>* post_Coord2DType() {
       return &_data;
     }
 };

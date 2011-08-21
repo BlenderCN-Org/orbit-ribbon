@@ -23,13 +23,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <cmath>
 #include <boost/foreach.hpp>
 #include <boost/random.hpp>
-#include <GL/glew.h>
+//#include <GL/glew.h>
 
 #include "autoxsd/orepkgdesc.h"
 #include "background.h"
 #include "except.h"
 #include "geometry.h"
-#include "gloo.h"
+
 #include "mesh.h"
 
 // Settings for the main star

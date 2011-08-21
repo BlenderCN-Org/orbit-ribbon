@@ -23,7 +23,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/array.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
-#include <GL/glew.h>
+//#include <GL/glew.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 
@@ -40,13 +40,13 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "mode.h"
 #include "mouse_cursor.h"
 #include "performance.h"
-#include "gloo.h"
+
 
 SDL_Surface* screen;
 
 int Display::screen_width = 0;
 int Display::screen_height = 0;
-GLfloat Display::screen_ratio = 0;
+float Display::screen_ratio = 0;
 const SDL_VideoInfo* Display::vid_info = NULL;
 
 const int SDL_VIDEO_FLAGS = SDL_OPENGL | SDL_GL_DOUBLEBUFFER;
@@ -209,7 +209,7 @@ void Display::init() {
   // Quadratic value arrived at emperically, works OK but I don't think it's very realistic
   float sprite_quadratic[] = { 0.0, 0.0, 0.0000015 };
   glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, sprite_quadratic);
-  GLfloat sprite_sizes[2];
+  float sprite_sizes[2];
   glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, sprite_sizes);
   glPointParameterf(GL_POINT_SIZE_MIN, sprite_sizes[0]);
   glPointParameterf(GL_POINT_SIZE_MAX, sprite_sizes[1]);
@@ -231,7 +231,7 @@ void Display::init() {
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
   glEnableClientState(GL_INDEX_ARRAY);
   
-  screen_ratio = GLfloat(screen_width)/GLfloat(screen_height);
+  screen_ratio = float(screen_width)/float(screen_height);
   
   glViewport(0, 0, screen_width, screen_height);
   glMatrixMode(GL_PROJECTION);

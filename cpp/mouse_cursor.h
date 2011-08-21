@@ -23,16 +23,10 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #ifndef ORBIT_RIBBON_MOUSE_CURSOR_H
 #define ORBIT_RIBBON_MOUSE_CURSOR_H
 
-#include <boost/shared_ptr.hpp>
-
 #include "geometry.h"
-#include "gloo.h"
-
-union SDL_Event;
 
 class MouseCursor {
   private:
-    boost::shared_ptr<GLOOTexture> _cursor_img;
     Point _pos;
     bool _visible;
     bool _got_first_event;

@@ -40,9 +40,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 class Background;
 class GameObj;
 class Mode;
-class GLOOFont;
 class Font;
-class GLOOTexture;
 class OrePackage;
 class MouseCursor;
 

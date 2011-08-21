@@ -28,7 +28,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "font.h"
 #include "gameplay_mode.h"
 #include "globals.h"
-#include "gloo.h"
+
 #include "target_ring.h"
 
 #include <boost/format.hpp>

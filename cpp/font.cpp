@@ -28,7 +28,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include "except.h"
 #include "font.h"
-#include "gloo.h"
+
 
 #include "autoxsd/fontdesc.h"
 #include "autoxsd/fontdesc-pimpl.h"
@@ -101,8 +101,8 @@ void Font::draw(const Point& upper_left, float height, const std::string& str) {
   std::pair<unsigned char, short> hy = get_glyph_height_and_y_offset(height);
   std::map<char, std::pair<short, unsigned char> >& glyphmap = _glyph_data[hy.first];
 
-  static GLfloat points[FONT_MAX_STR_LENGTH*8];
-  static GLfloat uv_points[FONT_MAX_STR_LENGTH*8];
+  static float points[FONT_MAX_STR_LENGTH*8];
+  static float uv_points[FONT_MAX_STR_LENGTH*8];
   float x = 0.0;
   Size t = _tex->get_size();
   unsigned int glyphs = 0;

@@ -29,7 +29,6 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/shared_ptr.hpp>
 
 class ModeStack;
-class GLOOCamera;
 
 class Mode {
   public:
@@ -44,7 +43,7 @@ class Mode {
     // ModeStack will descend down the modes calling handle_input until it finds one that returns true
     virtual bool handle_input() { return false; }
     
-    virtual const GLOOCamera* get_camera(bool top __attribute__ ((unused))) { return NULL; }
+    virtual void set_camera(bool top __attribute__ ((unused))) {}
     virtual void draw_3d_far(bool top __attribute__ ((unused))) {}
     virtual void draw_3d_near(bool top __attribute__ ((unused))) {}
     virtual void draw_2d(bool top __attribute__ ((unused))) {}

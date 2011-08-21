@@ -22,7 +22,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 
 #include <Horde3D.h>
 #include <Horde3DUtils.h>
-#include <GL/glew.h>
+//#include <GL/glew.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 #include <boost/array.hpp>
@@ -73,7 +73,7 @@ void App::frame_loop() {
   unsigned int unsimulated_ticks = 0;
   
   while (1) {
-    GLint frame_start = SDL_GetTicks();
+    int frame_start = SDL_GetTicks();
     
     // Fetch the latest state of the input devices
     Input::update();

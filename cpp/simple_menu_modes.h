@@ -28,7 +28,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <map>
 #include <string>
 
-#include "gloo.h"
+
 #include "gui.h"
 #include "mode.h"
 
@@ -55,36 +55,28 @@ class SimpleMenuMode : public Mode {
 };
 
 class MainMenuMode : public SimpleMenuMode {
- private:
-    boost::shared_ptr<GLOOTexture> _title_tex;
-    GLOOCamera _camera;
-
   public:
     MainMenuMode();
-    const GLOOCamera* get_camera(bool top __attribute__ ((unused))) { return &_camera; }
+    void set_camera(bool top __attribute__ ((unused)));
     void handle_menu_selection(const std::string& item);
     void draw_2d(bool top);
 };
 
 class AreaSelectMenuMode : public SimpleMenuMode {
-  private:
-    GLOOCamera _camera;
-
   public:
     AreaSelectMenuMode();
-    const GLOOCamera* get_camera(bool top __attribute__ ((unused))) { return &_camera; }
+    void set_camera(bool top __attribute__ ((unused)));
     void handle_menu_selection(const std::string& item);
 };
 
 class MissionSelectMenuMode : public SimpleMenuMode {
   private:
     unsigned int _area_num;
-    GLOOCamera _camera;
   
   public:
     MissionSelectMenuMode(unsigned int area_num);
     void draw_3d_far(bool top);
-    const GLOOCamera* get_camera(bool top);
+    void set_camera(bool top);
     void handle_menu_selection(const std::string& item);
 };
 

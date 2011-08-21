@@ -24,7 +24,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #define ORBIT_RIBBON_DISPLAY_H
 
 #include <list>
-#include <GL/glew.h>
+//#include <GL/glew.h>
 
 #include "geometry.h"
 
@@ -51,7 +51,7 @@ struct SDL_VideoInfo;
 class Display {
   private:
     static int screen_width, screen_height;
-    static GLfloat screen_ratio;
+    static float screen_ratio;
     static const SDL_VideoInfo* vid_info;
 
   public:

@@ -28,7 +28,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <list>
 
 #include "geometry.h"
-#include "gloo.h"
+
 
 namespace GUI {
   const Vector DIAMOND_BOX_BORDER(8, 2); // A diamond box's contents are drawn this number of pixels from the left/right and top/bottom of the box respectively

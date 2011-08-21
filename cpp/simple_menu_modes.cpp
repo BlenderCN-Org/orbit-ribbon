@@ -36,7 +36,7 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include "gameplay_mode.h"
 #include "gameobj.h"
 #include "globals.h"
-#include "gloo.h"
+
 #include "gui.h"
 #include "input.h"
 #include "interpolation.h"

@@ -29,38 +29,11 @@ along with Orbit Ribbon.  If not, see http://www.gnu.org/licenses/
 #include <boost/utility.hpp>
 #include <ode/ode.h>
 
-#include "gloo.h"
 #include "gameobj.h"
-
-class MeshAnimation;
-class _AnimationParser;
-class _Mesh;
-class _MeshParser;
-
-class MeshAnimation : boost::noncopyable {
-  private:
-    std::vector<boost::shared_ptr<GLOOBufferedMesh> > _frames;
-    std::string _name;
-    
-    MeshAnimation() {}
-    
-    friend class _MeshAnimationParser;
-  
-  public:
-    static boost::shared_ptr<MeshAnimation> load(const std::string& name);
-    
-    dTriMeshDataID get_trimesh_data(unsigned int frame) { return _frames[frame]->get_trimesh_data(); }
-    const GLOOBufferedMesh* get_frame(unsigned int frame) { return &(*_frames[frame]); }
-    const std::string& get_name() { return _name; }
-    void draw();
-};
 
 namespace ORE1 { class ObjType; }
 
 class MeshGameObj : public GameObj {
-  private:
-    boost::shared_ptr<MeshAnimation> _mesh_anim;
-    
   protected:
     void near_draw_impl();
   
